@@ -1,5 +1,10 @@
 string behavior
 ---
 
-uint8 status
+uint8  server_code
+string server_msg
+
+uint8 RECOVERY_DONE = 30
+uint8 INVALID_NAME  = 31
+uint8 CANCELED      = 32
 ---

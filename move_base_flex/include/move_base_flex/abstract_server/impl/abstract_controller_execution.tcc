@@ -49,8 +49,7 @@ template<class LOCAL_PLANNER_BASE>
       boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       std::string package, std::string class_name) :
       condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED),
-      class_loader_local_planner_(package, class_name),
-      moving_(false)
+      class_loader_local_planner_(package, class_name), moving_(false), plugin_code_(255)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -138,6 +137,8 @@ template<class LOCAL_PLANNER_BASE>
     {
       return false; // thread is already running.
     }
+    plugin_code_ = 255;
+    plugin_msg_ = "";
     moving_ = true;
     thread_ = boost::thread(&AbstractControllerExecution::run, this);
     return true;
@@ -165,19 +166,19 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  uint8_t AbstractControllerExecution<LOCAL_PLANNER_BASE>::getErrorCode()
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg)
   {
-    // TODO warong mutex
-    boost::lock_guard<boost::mutex> guard(state_mtx_);
-    return error_code_;
+    boost::lock_guard<boost::mutex> guard(pcode_mtx_);
+    plugin_code_ =  plugin_code;
+    plugin_msg_ = plugin_msg;
   }
 
 template<class LOCAL_PLANNER_BASE>
-  const std::string &AbstractControllerExecution<LOCAL_PLANNER_BASE>::getErrorMessage()
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg)
   {
-    // TODO warong mutex
-    boost::lock_guard<boost::mutex> guard(state_mtx_);
-    return error_message_;
+    boost::lock_guard<boost::mutex> guard(pcode_mtx_);
+    plugin_code = plugin_code_;
+    plugin_msg = plugin_msg_;
   }
 
 template<class LOCAL_PLANNER_BASE>
@@ -310,8 +311,13 @@ template<class LOCAL_PLANNER_BASE>
 
           setState(PLANNING);
 
-          // TODO set error code / message method! with mutex
-          if (local_planner_->computeVelocityCommands(cmd_vel, error_code_, error_message_))
+          uint8_t plugin_code;
+          std::string plugin_msg;
+
+          bool success = local_planner_->computeVelocityCommands(cmd_vel, plugin_code, plugin_msg);
+          setPluginInfo(plugin_code, plugin_msg);
+
+          if(success)
           {
             // set stamped values: frame id, time stamp and sequence number
             cmd_vel_stamped.twist = cmd_vel;

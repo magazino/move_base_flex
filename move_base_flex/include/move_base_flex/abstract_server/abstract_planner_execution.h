@@ -100,6 +100,8 @@ template<typename GLOBAL_PLANNER_BASE>
     bool startPlanning(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
                        const double &tolerance);
 
+    void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
+
     void stopPlanning();
 
     void initialize();
@@ -121,6 +123,9 @@ template<typename GLOBAL_PLANNER_BASE>
 
     void loadParams();
 
+    void setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg);
+
+
   private:
 
     void setLastCycleStartTime();
@@ -129,10 +134,11 @@ template<typename GLOBAL_PLANNER_BASE>
     virtual void initPlannerPlugin() = 0;
 
     boost::mutex state_mtx_;
-    boost::mutex thread_mtx_; // do not allow multi call of the run method
     void setState(PlanningState state);
 
     boost::mutex plan_mtx_;
+
+    boost::mutex pcode_mtx_;
 
     void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, const double &cost);
 
@@ -149,6 +155,9 @@ template<typename GLOBAL_PLANNER_BASE>
 
     // current global plan cost
     double cost_;
+
+    uint8_t plugin_code_;
+    std::string plugin_msg_;
 
     geometry_msgs::PoseStamped start_, goal_;
     double tolerance_;

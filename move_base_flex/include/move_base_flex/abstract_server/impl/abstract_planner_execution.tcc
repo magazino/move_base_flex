@@ -48,7 +48,7 @@ template<class GLOBAL_PLANNER_BASE>
   AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::AbstractPlannerExecution(boost::condition_variable &condition,
                                                                           std::string package, std::string class_name) :
       condition_(condition), state_(STOPPED), planning_(false), has_new_start_(false), has_new_goal_(false),
-      class_loader_global_planner_(package, class_name)
+      class_loader_global_planner_(package, class_name), plugin_code_(255)
   {
     loadParams();
   }
@@ -127,6 +127,23 @@ template<class GLOBAL_PLANNER_BASE>
       calling_duration_ = boost::chrono::microseconds((int)(1e6 / frequency));
     }
   }
+
+
+template<class GLOBAL_PLANNER_BASE>
+  void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg)
+{
+  boost::lock_guard<boost::mutex> guard(pcode_mtx_);
+  plugin_code_ =  plugin_code;
+  plugin_msg_ = plugin_msg;
+}
+
+template<class GLOBAL_PLANNER_BASE>
+  void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg)
+{
+  boost::lock_guard<boost::mutex> guard(pcode_mtx_);
+  plugin_code = plugin_code_;
+  plugin_msg = plugin_msg_;
+}
 
 template<class GLOBAL_PLANNER_BASE>
   void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::setState(PlanningState state)

@@ -91,9 +91,7 @@ template<typename LOCAL_PLANNER_BASE>
 
     ControllerState getState();
 
-    uint8_t getErrorCode();
-
-    const std::string &getErrorMessage();
+    void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
 
     ros::Time getLastCycleStartTime();
 
@@ -121,6 +119,8 @@ template<typename LOCAL_PLANNER_BASE>
 
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
+    void setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg);
+
     // main thread function -> moving the robot
     virtual void run();
 
@@ -144,6 +144,7 @@ template<typename LOCAL_PLANNER_BASE>
     boost::mutex plan_mtx_;
     boost::mutex vel_cmd_mtx_;
     boost::mutex lct_mtx_;
+    boost::mutex pcode_mtx_;
 
     bool new_plan_;
 
@@ -174,8 +175,11 @@ template<typename LOCAL_PLANNER_BASE>
 
     // internal state
     AbstractControllerExecution::ControllerState state_;
-    uint8_t error_code_;
-    std::string error_message_;
+
+    // plugin feedback info
+    uint8_t plugin_code_;
+    std::string plugin_msg_;
+
     double tf_timeout_;
 
     // dynamic reconfigure attributes and methods

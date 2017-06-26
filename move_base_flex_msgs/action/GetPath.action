@@ -17,19 +17,33 @@ geometry_msgs/PoseStamped[] waypoints
 float32 tolerance
 
 ---
-# Possible error codes:
-uint8 NO_ERROR       = 0
-uint8 PLAN_TIMEOUT   = 21
-uint8 EMPTY_PATH     = 22
-uint8 INVALID_PATH   = 23
-uint8 NO_PATH_FOUND  = 24
-uint8 PAT_EXCEEDED   = 25
-uint8 MAX_RETRIES    = 26
-uint8 INTERNAL_ERROR = 29
+# Termination code by the server
+uint8  server_code
+string server_msg
 
-uint8  status        # Termination status, defined on MoveBase action
-uint8  error_code    # Error codes, provided by the plugin when status is PLAN_FAILURE
-string error_msg
+# Possible server codes:
+uint8 FOUND_PATH     = 10
+uint8 EMPTY_PATH     = 11
+uint8 NO_PATH_FOUND  = 12
+uint8 CANCELED       = 13
+uint8 STOPPED        = 14
+uint8 PAT_EXCEEDED   = 15
+uint8 MAX_RETRIES    = 16
+uint8 TF_ERROR       = 17
+uint8 INTERNAL_ERROR = 18
+
+# Termination code by the plugin, can be useful if no success
+# with planning; plugin code is defined by the global planner
+uint8  plugin_code
+string plugin_msg
+
+# Possible predefined plugin codes
+uint8 DO_NOT_APPLY     = 255
+uint8 START_BLOCKED    = 1
+uint8 GOAL_BLOCKED     = 2
+uint8 WAYPOINT_BLOCKED = 3
+uint8 DOOR_CLOSED      = 4
+uint8 DYNAMIC_OBSTACLE = 5
 
 nav_msgs/Path path
 ---

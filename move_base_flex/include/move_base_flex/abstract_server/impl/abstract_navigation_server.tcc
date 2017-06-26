@@ -286,7 +286,11 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::STOPPED:
           ROS_INFO("robot navigation state: stopped");
           ROS_INFO("the planning has been aborted!");
-          action_server_get_path_ptr_->setPreempted();  // setAborted???
+          result.path.header.stamp = ros::Time::now();
+          result.server_code = move_base_flex_msgs::GetPathResult::STOPPED;
+          result.server_msg = "Global planner has been stopped!";
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_get_path_ptr_->setAborted(result, result.server_msg);
           active_planning_ = false;
           break;
 
@@ -294,9 +298,10 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           ROS_INFO("robot navigation state: canceled");
           ROS_INFO("Global planner has been canceled successfully");
           result.path.header.stamp = ros::Time::now();
-          result.status = move_base_flex_msgs::MoveBaseResult::CANCELED;
-          result.error_msg = "Global planner preempted";
-          action_server_get_path_ptr_->setPreempted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::GetPathResult::CANCELED;
+          result.server_msg = "Global planner has been preempted!";
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_get_path_ptr_->setPreempted(result, result.server_msg);
           active_planning_ = false;
           break;
 
@@ -307,7 +312,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
             ROS_INFO_STREAM("Global planner patience has been exceeded! Cancel planning...");
             if (!planning_ptr_->cancel())
             {
-              ROS_WARN_THROTTLE(2.0, "Cancel planning failed or is not supported; must wait until current plan finish");
+              ROS_WARN_THROTTLE(2.0, "Cancel planning failed or is not supported; must wait until current plan finish!");
             }
           }
           else
@@ -325,6 +330,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
           planning_ptr_->getNewPlan(plan, costs);
           planning_ptr_->stopPlanning();
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
 
           if (costs > 0)
           {
@@ -333,31 +339,31 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
           if (!transformPlanToGlobalFrame(plan, global_plan))
           {
-            result.status = move_base_flex_msgs::MoveBaseResult::FAILURE;
-            result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-            result.error_msg = "Cloud not transform the plan to the global frame";
+            result.server_code = move_base_flex_msgs::GetPathResult::TF_ERROR;
+            result.server_msg = "Cloud not transform the plan to the global frame!";
 
-            ROS_ERROR_STREAM(result.error_msg);
-            action_server_get_path_ptr_->setAborted(result, result.error_msg);
+            ROS_ERROR_STREAM(result.server_msg);
+            action_server_get_path_ptr_->setAborted(result, result.server_msg);
             active_planning_ = false;
             break;
           }
 
           if (global_plan.empty())
           {
-            result.status = move_base_flex_msgs::MoveBaseResult::PLAN_FAILURE;
-            result.error_code = move_base_flex_msgs::GetPathResult::EMPTY_PATH;
-            result.error_msg = "Global planner returned an empty path";
+            result.server_code = move_base_flex_msgs::GetPathResult::EMPTY_PATH;
+            result.server_msg = "Global planner returned an empty path!";
 
-            ROS_ERROR_STREAM(result.error_msg);
-            action_server_get_path_ptr_->setAborted(result, result.error_msg);
+            ROS_ERROR_STREAM(result.server_msg);
+            action_server_get_path_ptr_->setAborted(result, result.server_msg);
             active_planning_ = false;
             break;
           }
 
           result.path.poses = global_plan;
-          result.status = move_base_flex_msgs::MoveBaseResult::SUCCESS;
-          action_server_get_path_ptr_->setSucceeded(result);
+          result.server_msg = move_base_flex_msgs::GetPathResult::FOUND_PATH;
+          result.server_msg = "Succeeded: Found a valid plan!";
+          action_server_get_path_ptr_->setSucceeded(result, result.server_msg);
+
           active_planning_ = false;
           break;
 
@@ -365,30 +371,30 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::NO_PLAN_FOUND:
           ROS_INFO("robot navigation state: no plan found");
           result.path.header.stamp = ros::Time::now();
-          result.status = move_base_flex_msgs::MoveBaseResult::PLAN_FAILURE;
-          result.error_code = move_base_flex_msgs::GetPathResult::NO_PATH_FOUND;
-          result.error_msg = "No path found";
-          action_server_get_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::GetPathResult::NO_PATH_FOUND;
+          result.server_msg = "No path found";
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_get_path_ptr_->setAborted(result, result.server_msg);
           active_planning_ = false;
           break;
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::MAX_RETRIES:
           ROS_INFO("Global planner reached the maximum number of retries");
           result.path.header.stamp = ros::Time::now();
-          result.status = move_base_flex_msgs::MoveBaseResult::PLAN_FAILURE;
-          result.error_code = move_base_flex_msgs::GetPathResult::MAX_RETRIES;
-          result.error_msg = "Global planner reached the maximum number of retries";
-          action_server_get_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::GetPathResult::MAX_RETRIES;
+          result.server_msg = "Global planner reached the maximum number of retries";
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_get_path_ptr_->setAborted(result, result.server_msg);
           active_planning_ = false;
           break;
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PAT_EXCEEDED:
           ROS_INFO("Global planner exceeded the patience time");
           result.path.header.stamp = ros::Time::now();
-          result.status = move_base_flex_msgs::MoveBaseResult::PLAN_FAILURE;
-          result.error_code = move_base_flex_msgs::GetPathResult::PAT_EXCEEDED;
-          result.error_msg = "Global planner exceeded the patience time";
-          action_server_get_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::GetPathResult::PAT_EXCEEDED;
+          result.server_msg = "Global planner exceeded the patience time";
+          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_get_path_ptr_->setAborted(result, result.server_msg);
           active_planning_ = false;
           break;
 
@@ -455,10 +461,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     if (!moving_ptr_->startMoving())
     {
       ROS_ERROR_STREAM("Could not start moving, because another moving thread is already / still running!");
-      result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-      result.error_code = move_base_flex_msgs::ExePathResult::INTERNAL_ERROR;
-      result.error_msg = "Could not start moving, because another moving thread is already / still running!";
-      action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+      result.server_code = move_base_flex_msgs::ExePathResult::INTERNAL_ERROR;
+      result.server_msg = "Could not start moving, because another moving thread is already / still running!";
+      action_server_exe_path_ptr_->setAborted(result, result.server_msg);
       return;
     }
 
@@ -466,7 +471,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
     geometry_msgs::PoseStamped robot_pose;
     geometry_msgs::PoseStamped oscillation_pose;
-    geometry_msgs::TwistStamped cmd_vel_stamped;
     bool first_cycle = true;
 
     while (active_moving_ && ros::ok())
@@ -475,12 +479,17 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       {
         ROS_ERROR_STREAM("Could not get the robot pose!");
         result.pose = robot_pose;
-        result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-        result.error_code = move_base_flex_msgs::ExePathResult::INTERNAL_ERROR;
-        result.error_msg = "Could not get the robot pose";
-        action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+        result.server_code = move_base_flex_msgs::ExePathResult::TF_ERROR;
+        result.server_msg = "Could not get the robot pose";
+        action_server_exe_path_ptr_->setAborted(result, result.server_msg);
         break;
       }
+      else
+      {
+        result.pose = robot_pose;
+        feedback.pose = robot_pose;
+      }
+
 
       if (first_cycle)
       {
@@ -492,23 +501,19 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       if (action_server_exe_path_ptr_->isPreemptRequested())
       {
         moving_ptr_->stopMoving();
-        result.pose = robot_pose;
-        result.status = move_base_flex_msgs::MoveBaseResult::CANCELED;
-        result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-        result.error_msg = "Local planner preempted";
-        action_server_exe_path_ptr_->setPreempted(result, result.error_msg);
-        ROS_INFO_STREAM("Action \"ExePath\" preempted");
-        break;
       }
 
       state_moving_input_ = moving_ptr_->getState();
-
-      std::stringstream result_msg_stream; // to concat result msgs
 
       switch (state_moving_input_)
       {
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STOPPED:
           ROS_WARN_STREAM("The moving has been stopped!");
+          result.server_code = move_base_flex_msgs::ExePathResult::STOPPED;
+          result.server_msg = "Local planner preempted";
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setPreempted(result, result.server_msg);
+          ROS_INFO_STREAM("Action \"ExePath\" preempted");
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STARTED:
@@ -525,65 +530,44 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::MAX_RETRIES:
-          ROS_WARN_STREAM("The local planner has been aborted after it exceeded " << "the maximum number of retries!");
-
+          ROS_WARN_STREAM("The local planner has been aborted after it exceeded the maximum number of retries!");
           active_moving_ = false;
-          result.pose = robot_pose;
-          result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-          result.error_code = moving_ptr_->getErrorCode();
-          result.error_msg = moving_ptr_->getErrorMessage();
-
-          result_msg_stream.clear();
-          if (result.error_msg.empty())
-          {
-            result_msg_stream << "Local planned failed with error code: " << result.error_code;
-          }
-          else
-          {
-            result_msg_stream << "Local planned failed (error code: " << result.error_code << "): " << result.error_msg;
-          }
-          action_server_exe_path_ptr_->setAborted(result, result_msg_stream.str());
+          result.server_msg = "The local planner has been aborted after it exceeded the maxinum number if retries!";
+          result.server_code = move_base_flex_msgs::ExePathResult::MAX_RETRIES;
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setAborted(result, result.server_msg);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::PAT_EXCEEDED:
           ROS_WARN_STREAM("The local planner has been aborted after it exceeded the patience time ");
-
           active_moving_ = false;
-          result.pose = robot_pose;
-          result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-          result.error_code = move_base_flex_msgs::ExePathResult::CMD_TIMEOUT;
-          result.error_msg = "Local planner exceeded allocated time";
-          action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::ExePathResult::PAT_EXCEEDED;
+          result.server_msg = "Local planner exceeded allocated time";
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setAborted(result, result.server_msg);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::NO_PLAN:
-          ROS_WARN_STREAM("The local planner has not received any plan");
-
+          ROS_WARN_STREAM("The local planner has been started without any plan!");
           active_moving_ = false;
-          result.pose = robot_pose;
-          result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-          result.error_code = move_base_flex_msgs::ExePathResult::INVALID_PATH;
-          result.error_msg = "No plan provided to local planner";
-          action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::ExePathResult::INTERNAL_ERROR;
+          result.server_msg = "No plan provided to local planner";
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setAborted(result, result.server_msg);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::EMPTY_PLAN:
           ROS_WARN_STREAM("The local planner has received an empty plan");
-
           active_moving_ = false;
-          result.pose = robot_pose;
-          result.status = move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE;
-          result.error_code = move_base_flex_msgs::ExePathResult::INVALID_PATH;
-          result.error_msg = "Empty plan provided to local planner";
-          action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+          result.server_code = move_base_flex_msgs::ExePathResult::INVALID_PATH;
+          result.server_msg = "Empty plan provided to local planner";
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setAborted(result, result.server_msg);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::NO_LOCAL_CMD:
           ROS_WARN_STREAM_THROTTLE(3, "Have not received a velocity command from the local planner!");
-
-          moving_ptr_->getVelocityCmd(cmd_vel_stamped);
-          feedback.twist = cmd_vel_stamped;
-          feedback.pose = robot_pose;
+          moving_ptr_->getVelocityCmd(feedback.twist);
           feedback.dist_to_goal = (float)move_base_flex::distance(robot_pose, goal_pose);
           feedback.angle_to_goal = (float)move_base_flex::angle(robot_pose, goal_pose);
           action_server_exe_path_ptr_->publishFeedback(feedback);
@@ -596,9 +580,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
             oscillation_pose = robot_pose;
           }
 
-          moving_ptr_->getVelocityCmd(cmd_vel_stamped);
-          feedback.twist = cmd_vel_stamped;
-          feedback.pose = robot_pose;
+          moving_ptr_->getVelocityCmd(feedback.twist);
           feedback.dist_to_goal = (float)move_base_flex::distance(robot_pose, goal_pose);
           feedback.angle_to_goal = (float)move_base_flex::angle(robot_pose, goal_pose);
           action_server_exe_path_ptr_->publishFeedback(feedback);
@@ -611,22 +593,20 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                             << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
             moving_ptr_->stopMoving();
             active_moving_ = false;
-            result.pose = robot_pose;
-            result.status = move_base_flex_msgs::MoveBaseResult::OSCILLATION;
-            result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-            result.error_msg = "Oscillation detected!";
-            action_server_exe_path_ptr_->setAborted(result, result.error_msg);
+            result.server_code = move_base_flex_msgs::ExePathResult::OSCILLATION;
+            result.server_msg = "Oscillation detected!";
+            moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+            action_server_exe_path_ptr_->setAborted(result, result.server_msg);
           }
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::ARRIVED_GOAL:
           ROS_INFO_STREAM("Local planner succeeded; arrived to goal");
-
           active_moving_ = false;
-          result.pose = robot_pose;
-          result.status = move_base_flex_msgs::MoveBaseResult::SUCCESS;
-          result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-          action_server_exe_path_ptr_->setSucceeded(result, "Arrived to goal.");
+          result.server_code = move_base_flex_msgs::ExePathResult::ARRIVED;
+          result.server_msg = "Local planner succeeded; arrived to goal!";
+          moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
+          action_server_exe_path_ptr_->setSucceeded(result, result.server_msg);
           break;
       }
 
@@ -693,22 +673,25 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::WRONG_NAME:
           active_recovery_ = false; // stopping the action
           ROS_ERROR_STREAM("Recovery has no plugin found with the name \"" << behavior << "\"!");
-          result.status = move_base_flex_msgs::MoveBaseResult::FAILURE;
-          action_server_recovery_ptr_->setAborted(result, "No recovery plugin loaded with the given name!");
+          result.server_code = move_base_flex_msgs::RecoveryResult::INVALID_NAME;
+          result.server_msg = "No recovery plugin loaded with the given name\"" + behavior + "\"!";
+          action_server_recovery_ptr_->setAborted(result, result.server_msg);
           break;
 
         case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::CANCELED:
           // Recovery behavior supports cancel and it worked
           active_recovery_ = false; // stopping the action
-          result.status = move_base_flex_msgs::MoveBaseResult::CANCELED;
-          action_server_recovery_ptr_->setPreempted(result, "Recovering preempted");
-          ROS_INFO_STREAM("Recovering \"" << behavior << "\" preempted");
+          result.server_code = move_base_flex_msgs::RecoveryResult::CANCELED;
+          result.server_msg = "Recovering \"" + behavior + "\" preempted!";
+          action_server_recovery_ptr_->setPreempted(result, result.server_msg);
+          ROS_INFO_STREAM(result.server_msg);
           break;
 
         case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RECOVERY_DONE:
           active_recovery_ = false; // stopping the action
-          result.status = move_base_flex_msgs::MoveBaseResult::SUCCESS;
-          action_server_recovery_ptr_->setSucceeded(result, "Recovery done!");
+          result.server_code = move_base_flex_msgs::RecoveryResult::RECOVERY_DONE;
+          result.server_msg = "Recovery \"" + behavior + "\" done!";
+          action_server_recovery_ptr_->setSucceeded(result, result.server_msg);
           break;
       }
 
@@ -786,11 +769,10 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       std::stringstream ss;
       ss << "The recovery behaviors for the names " << names << " has not been loaded!";
       ROS_ERROR_STREAM(ss.str());
-      move_base_result.status = move_base_flex_msgs::MoveBaseResult::FAILURE;
-      move_base_result.error_code = move_base_flex_msgs::GetPathResult::INTERNAL_ERROR; // TODO is that right?
+      move_base_result.server_code = move_base_flex_msgs::MoveBaseResult::WRONG_CONFIG;
+      move_base_result.server_msg = ss.str();
       move_base_result.angle_to_goal = 0;
       move_base_result.dist_to_goal = 0;
-      move_base_result.error_msg = ss.str();
       move_base_result.final_pose = geometry_msgs::PoseStamped();
       action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
       return;
@@ -803,13 +785,12 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     if (!getRobotPose(robot_pose))
     {
       ROS_ERROR_STREAM("Could not get the current robot pose!");
-      move_base_result.status = move_base_flex_msgs::MoveBaseResult::FAILURE;
-      move_base_result.error_code = move_base_flex_msgs::GetPathResult::INTERNAL_ERROR; // TODO is that right?
+      move_base_result.server_msg = "Could not get the current robot pose!";
+      move_base_result.server_code = move_base_flex_msgs::MoveBaseResult::INTERNAL_ERROR;
       move_base_result.angle_to_goal = 0;
       move_base_result.dist_to_goal = 0;
-      move_base_result.error_msg = "Could not get the current robot pose!";
       move_base_result.final_pose = geometry_msgs::PoseStamped();
-      action_server_move_base_ptr_->setAborted(move_base_result, "Could not get the current robot pose!");
+      action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.server_msg);
       return;
     }
 
@@ -831,9 +812,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                        << "\", " << "\"" << name_action_recovery << "\"!");
       move_base_result.dist_to_goal = NAN;
       move_base_result.angle_to_goal = NAN;
-      move_base_result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-      move_base_result.status = move_base_flex_msgs::MoveBaseResult::FAILURE;
-      action_server_move_base_ptr_->setAborted(move_base_result, "Could not connect to the move_base_flex actions!");
+      move_base_result.server_code = move_base_flex_msgs::MoveBaseResult::INTERNAL_ERROR;
+      move_base_result.server_msg = "Could not connect to the move_base_flex actions!";
+      action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.server_msg);
       return;
     }
 
@@ -896,10 +877,11 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 // copy result from get_path action
                 move_base_result.dist_to_goal = (float)move_base_flex::distance(robot_pose, target_pose);
                 move_base_result.angle_to_goal = (float)move_base_flex::angle(robot_pose, target_pose);
-                move_base_result.status = get_path_result.status;
-                move_base_result.error_code = get_path_result.error_code;
+                move_base_result.server_code = get_path_result.server_code;
+                move_base_result.server_msg = get_path_result.server_msg;
+                move_base_result.plugin_code = get_path_result.plugin_code;
+                move_base_result.plugin_msg = get_path_result.plugin_msg;
                 move_base_result.final_pose = robot_pose;
-                move_base_result.error_msg = get_path_result.error_msg;
                 run = false;
                 action_server_move_base_ptr_->setAborted(move_base_result, get_path_state.getText());
                 break;
@@ -954,34 +936,36 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 move_base_result.angle_to_goal = exe_path_result.angle_to_goal;
                 move_base_result.dist_to_goal = exe_path_result.dist_to_goal;
                 move_base_result.final_pose = exe_path_result.pose;
-                move_base_result.status = move_base_flex_msgs::MoveBaseResult::SUCCESS;
-                move_base_result.error_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
-                action_server_move_base_ptr_->setSucceeded(move_base_result, "Action succeeded!");
+                move_base_result.server_msg = "MoveBase action succeeded!";
+                move_base_result.plugin_code = move_base_flex_msgs::MoveBaseResult::DO_NOT_APPLY;
+                move_base_result.server_code = move_base_flex_msgs::MoveBaseResult::SUCCESS;
+                action_server_move_base_ptr_->setSucceeded(move_base_result, move_base_result.server_msg);
                 run = false;
-
                 break;
               case actionlib::SimpleClientGoalState::ABORTED:
                 // copy result from get_path action
                 move_base_result.dist_to_goal = exe_path_result.dist_to_goal;
                 move_base_result.angle_to_goal = exe_path_result.angle_to_goal;
-                move_base_result.status = exe_path_result.status;
-                move_base_result.error_code = exe_path_result.error_code;
+                move_base_result.server_code = exe_path_result.server_code;
+                move_base_result.server_msg = exe_path_result.server_msg;
+                move_base_result.plugin_code = exe_path_result.plugin_code;
+                move_base_result.plugin_msg = exe_path_result.plugin_msg;
                 move_base_result.final_pose = exe_path_result.pose;
-                move_base_result.error_msg = exe_path_result.error_msg;
-
                 exe_path_result = *action_client_exe_path.getResult();
-
-                switch (exe_path_result.status)
+                switch (exe_path_result.server_code)
                 {
-                  case move_base_flex_msgs::MoveBaseResult::OSCILLATION:
+                  case move_base_flex_msgs::ExePathResult::OSCILLATION:
                     current_recovery_behavior = mbf_behaviors.begin();
-                  case move_base_flex_msgs::MoveBaseResult::CTRL_FAILURE:
+
+                  case move_base_flex_msgs::ExePathResult::PAT_EXCEEDED:
+                  case move_base_flex_msgs::ExePathResult::MAX_RETRIES:
+                  case move_base_flex_msgs::ExePathResult::INVALID_PATH:
                     if (!clearing_rotation_allowed_)
                     {
                       recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
                       if (type.find("RotateRecovery") != std::string::npos)
                       {
-                        ROS_INFO_STREAM("Clearing_rotation_allowed is disabled: The current recovery behavior "
+                        ROS_INFO_STREAM("clearing_rotation_allowed is disabled: The current recovery behavior "
                                         << *current_recovery_behavior << "will be skipped!");
                         current_recovery_behavior++;
                       }
@@ -990,7 +974,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                     break;
                   default:
                     try_recovery = false;
-                    ROS_INFO_STREAM("Abort the execution of the exe_path!" << exe_path_result.error_msg);
+                    ROS_INFO_STREAM("Abort the execution of the exe_path!" << exe_path_result.server_msg);
                     run = false;
                     action_server_move_base_ptr_->setAborted(move_base_result, exe_path_state.getText());
                     break;
@@ -1000,7 +984,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                   if (!recovery_behavior_enabled_)
                   {
                     ROS_WARN_STREAM("Recovery behaviors are disabled!");
-                    ROS_INFO_STREAM("Abort the execution of the controller: " << exe_path_result.error_msg);
+                    ROS_INFO_STREAM("Abort the execution of the controller: " << exe_path_result.server_msg);
                     run = false;
                     action_server_move_base_ptr_->setAborted(move_base_result, exe_path_state.getText());
                     break;
@@ -1009,12 +993,12 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                   {
                     if (mbf_behaviors.empty())
                     {
-                      ROS_WARN_STREAM("No Recovery Behaviors loaded! Abort controlling: " << exe_path_result.error_msg);
+                      ROS_WARN_STREAM("No Recovery Behaviors loaded! Abort controlling: " << exe_path_result.server_msg);
                     }
                     else
                     {
                       ROS_WARN_STREAM("Executed all available recovery behaviors! Abort controlling: "
-                                      << exe_path_result.error_msg);
+                                      << exe_path_result.server_msg);
                     }
                     run = false;
                     action_server_move_base_ptr_->setAborted(move_base_result, exe_path_state.getText());
