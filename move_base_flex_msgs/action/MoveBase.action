@@ -1,0 +1,31 @@
+geometry_msgs/PoseStamped target_pose
+---
+
+# Possible termination status, fitting in two categories
+#  - general navigation failures; error_code do not apply:
+uint8 SUCCESS       = 0
+uint8 FAILURE       = 1
+uint8 CANCELED      = 2
+uint8 COLLISION     = 3
+uint8 OSCILLATION   = 4
+uint8 GOAL_BLOCKED  = 5
+uint8 START_BLOCKED = 6
+#  - planning/controlling failure; error_code provides the specific error:
+uint8 PLAN_FAILURE  = 7
+uint8 CTRL_FAILURE  = 8
+
+# Default value for error_code when no specific failure code is available or pertinent
+uint8 DO_NOT_APPLY  = 255
+
+uint8  status       # Termination status, determined by move_base_flex
+uint8  error_code   # Subsystem error code, if status is one of FAILUREs
+string error_msg
+
+float32 dist_to_goal
+float32 angle_to_goal
+geometry_msgs/PoseStamped final_pose
+---
+float32 dist_to_goal
+float32 angle_to_goal
+geometry_msgs/PoseStamped current_pose
+geometry_msgs/TwistStamped current_twist

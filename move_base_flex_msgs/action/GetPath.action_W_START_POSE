@@ -1,0 +1,14 @@
+bool start_from_current_pose
+geometry_msgs/PoseStamped start_pose
+geometry_msgs/PoseStamped goal_pose
+---
+uint8 SUCCESS=0
+uint8 NO_PLAN=1
+uint8 EMPTY=2
+uint8 FAILURE=3
+
+uint8                     code
+nav_msgs/Path             path
+---
+geometry_msgs/PoseStamped final_pose
+geometry_msgs/PoseStamped goal_pose

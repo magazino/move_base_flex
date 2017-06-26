@@ -1,0 +1,35 @@
+# Get a plan from start_pose or current position to the target pose
+
+# Use start_pose or current position as the beginning of the plan
+bool use_start_pose
+
+# The start pose for the plan; optional, used if use_start_pose is true
+geometry_msgs/PoseStamped start_pose
+
+# The pose to achieve with the plan
+geometry_msgs/PoseStamped target_pose
+
+# Intermediate poses the plan should pass by
+geometry_msgs/PoseStamped[] waypoints
+
+# If the goal or a waypoint is obstructed, how many meters the
+# planner can relax the constraint in x and y before failing
+float32 tolerance
+
+---
+# Possible error codes:
+uint8 NO_ERROR       = 0
+uint8 PLAN_TIMEOUT   = 21
+uint8 EMPTY_PATH     = 22
+uint8 INVALID_PATH   = 23
+uint8 NO_PATH_FOUND  = 24
+uint8 PAT_EXCEEDED   = 25
+uint8 MAX_RETRIES    = 26
+uint8 INTERNAL_ERROR = 29
+
+uint8  status        # Termination status, defined on MoveBase action
+uint8  error_code    # Error codes, provided by the plugin when status is PLAN_FAILURE
+string error_msg
+
+nav_msgs/Path path
+---

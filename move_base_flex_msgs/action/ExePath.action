@@ -1,0 +1,26 @@
+nav_msgs/Path path
+---
+
+# Possible error codes:
+uint8 CMD_TIMEOUT    = 11
+uint8 NO_VALID_CMD   = 12
+uint8 INVALID_PATH   = 13
+uint8 COLLISION      = 14
+uint8 MISSED_GOAL    = 15
+uint8 MISSED_PATH    = 16
+uint8 BLOCKED_PATH   = 17
+uint8 INTERNAL_ERROR = 19
+
+uint8  status        # Termination status, defined on MoveBase action
+uint8  error_code    # Error codes, provided by the plugin when status is CTRL_FAILURE
+string error_msg
+
+geometry_msgs/PoseStamped  pose
+float32 dist_to_goal
+float32 angle_to_goal
+---
+
+float32 dist_to_goal
+float32 angle_to_goal
+geometry_msgs/PoseStamped  pose
+geometry_msgs/TwistStamped twist
