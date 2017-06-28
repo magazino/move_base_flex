@@ -54,6 +54,13 @@
 
 namespace move_base_flex
 {
+/**
+ * @brief The AbstractPlannerExecution class loads and binds the local planner plugin. It contains a thread running
+ *   the plugin in a cycle to move the robot. An internal state is saved and will be pulled by server, which controls
+ *   the local planner execution. Due to a state change it wakes up all threads connected to the ondition variable.
+ * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class,
+ *   which determines the plugin class
+ */
 
 template<typename LOCAL_PLANNER_BASE>
   class AbstractControllerExecution
@@ -62,18 +69,42 @@ template<typename LOCAL_PLANNER_BASE>
 
     typedef boost::shared_ptr<AbstractControllerExecution<LOCAL_PLANNER_BASE> > Ptr;
 
+    /**
+     * @brief Constructor
+     * @param condition Thread sleep condition variable, to wake up connected threads
+     * @param tf_listener_ptr A common tf listener
+     * @param package Package name, which contains the plugin
+     * @param class_name Class name of the plugin
+     */
     AbstractControllerExecution(boost::condition_variable &condition,
                                 const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                                 std::string package, std::string class_name);
 
+    /**
+     * @brief Destructor
+     */
     virtual ~AbstractControllerExecution();
 
+    /**
+     * @brief Starts the controller, a valid plan should be given in advance.
+     * @return false if the thread is already running, true if starting the controller succeeded!
+     */
     bool startMoving();
 
+    /**
+     * @brief Stopping the thread, by interrupting it
+     */
     void stopMoving();
 
+    /**
+     * @brief Sets a new plan to the controller execution
+     * @param plan A vector of stamped poses.
+     */
     void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan);
 
+    /**
+     * @brief Internal states
+     */
     enum ControllerState
     {
       INITIALIZED,
@@ -89,20 +120,52 @@ template<typename LOCAL_PLANNER_BASE>
       STOPPED,
     };
 
+    /**
+     * Return the current state of the controller execution. Thread communication safe.
+     * @return current state, enum value of ControllerState
+     */
     ControllerState getState();
 
+    /**
+     * @brief pulls the current plugin information, plugin code and plugin message!
+     * @param plugin_code Returns the last read code provided py the plugin
+     * @param plugin_msg Returns the last read message provided by the plugin
+     */
     void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
 
+    /**
+     * @brief Returns the time of the last cycle start
+     * @return Time of the last cycle start
+     */
     ros::Time getLastCycleStartTime();
 
+    /**
+     * @brief Returns the time, the last time a valid velocity command has been received
+     * @return Time, the last time a valid cmd_vel has been received.
+     */
     ros::Time getLastValidCmdVelTime();
 
+    /**
+     * @brief Checks whether the patience duration time has been exceeded, ot not
+     * @return true, if the patience has been exceeded.
+     */
     bool isPatienceExceeded();
 
+    /**
+     * @brief Reads the current velocity command
+     * @param vel_cmd_stamped Returns the current velocity command.
+     */
     void getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd_stamped);
 
+    /**
+     * Loads the plugin given by the parameter name "local_planner"
+     */
     void initialize();
 
+    /**
+     * Is called by the server thread to reconfigure the controller execution.
+     * @param config MoveBaseFlexConfig object
+     */
     void reconfigure(move_base_flex::MoveBaseFlexConfig &config);
 
   protected:
