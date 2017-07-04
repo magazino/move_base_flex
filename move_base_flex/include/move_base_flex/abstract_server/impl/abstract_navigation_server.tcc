@@ -112,7 +112,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
   }
 
 template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<LOCAL_PLANNER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::initializeControllerComponents()
+  void AbstractNavigationServer<LOCAL_PLANNER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::initializeServerComponents()
   {
     planning_ptr_->initialize();
     moving_ptr_->initialize();
@@ -261,7 +261,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       }
     }
 
-    typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PlanningState state_planning_input_;
+    typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PlanningState state_planning_input;
 
     std::vector<geometry_msgs::PoseStamped> plan, global_plan;
     double costs;
@@ -271,9 +271,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     while (active_planning_ && ros::ok())
     {
       // get the current state of the planning thread
-      state_planning_input_ = planning_ptr_->getState();
+      state_planning_input = planning_ptr_->getState();
 
-      switch (state_planning_input_)
+      switch (state_planning_input)
       {
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::INITIALIZED:
           ROS_INFO("robot_navigation state: initialized");
@@ -399,13 +399,13 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           break;
 
         default:
-          ROS_FATAL_STREAM("Unknown state in move base flex controller with the number:" << state_planning_input_);
+          ROS_FATAL_STREAM("Unknown state in move base flex controller with the number:" << state_planning_input);
           active_planning_ = false;
       }
 
       // if preempt requested while we are planning
       if (action_server_get_path_ptr_->isPreemptRequested()
-          && state_planning_input_ == AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PLANNING)
+          && state_planning_input == AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PLANNING)
       {
         if (!planning_ptr_->cancel())
         {
@@ -443,7 +443,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     move_base_flex_msgs::ExePathResult result;
     move_base_flex_msgs::ExePathFeedback feedback;
 
-    typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::ControllerState state_moving_input_;
+    typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::ControllerState state_moving_input;
 
     ros::Time last_oscillation_reset = ros::Time::now();
 
@@ -503,9 +503,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         moving_ptr_->stopMoving();
       }
 
-      state_moving_input_ = moving_ptr_->getState();
+      state_moving_input = moving_ptr_->getState();
 
-      switch (state_moving_input_)
+      switch (state_moving_input)
       {
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STOPPED:
           ROS_WARN_STREAM("The moving has been stopped!");
@@ -642,10 +642,12 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     recovery_ptr_->startRecovery(behavior);
     active_recovery_ = true;
 
+    typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState state_recovery_input;
+
     while (active_recovery_ && ros::ok())
     {
-      state_recovery_input_ = recovery_ptr_->getState();
-      switch (state_recovery_input_)
+      state_recovery_input = recovery_ptr_->getState();
+      switch (state_recovery_input)
       {
         case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::STOPPED:
           ROS_WARN_STREAM("Recovering \"" << behavior << "\" has been stopped!");

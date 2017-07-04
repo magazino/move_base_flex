@@ -74,39 +74,45 @@ namespace move_base_flex
  */
 
 
-// Get Path Action
+//! GetPath action server
 typedef actionlib::SimpleActionServer<move_base_flex_msgs::GetPathAction> ActionServerGetPath;
 typedef boost::shared_ptr<ActionServerGetPath> ActionServerGetPathPtr;
 
-// Exe Path Action
+//! ExePath action server
 typedef actionlib::SimpleActionServer<move_base_flex_msgs::ExePathAction> ActionServerExePath;
 typedef boost::shared_ptr<ActionServerExePath> ActionServerExePathPtr;
 
-// Recovery Action Server
+//! Recovery action server
 typedef actionlib::SimpleActionServer<move_base_flex_msgs::RecoveryAction> ActionServerRecovery;
 typedef boost::shared_ptr<ActionServerRecovery> ActionServerRecoveryPtr;
 
-// MoveBase Action Server
+//! MoveBase action server
 typedef actionlib::SimpleActionServer<move_base_flex_msgs::MoveBaseAction> ActionServerMoveBase;
 typedef boost::shared_ptr<ActionServerMoveBase> ActionServerMoveBasePtr;
 
-// Action Clients
+//! Action clients for the MoveBase action
 typedef actionlib::SimpleActionClient<move_base_flex_msgs::GetPathAction> ActionClientGetPath;
 typedef actionlib::SimpleActionClient<move_base_flex_msgs::ExePathAction> ActionClientExePath;
 typedef actionlib::SimpleActionClient<move_base_flex_msgs::RecoveryAction> ActionClientRecovery;
 
-// Action Names
+//! ExePath action topic name
 const std::string name_action_exe_path = "exe_path";
+//! GetPath action topic name
 const std::string name_action_get_path = "get_path";
+//! Recovery action topic name
 const std::string name_action_recovery = "recovery";
+//! MoveBase action topic name
 const std::string name_action_move_base = "move_base";
+
+
+typedef boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFlexConfig> > DynamicReconfigureServer;
 
 /**
  * @brief The AbstractNavigationServer is the abstract base class for all navigation servers in move_base_flex
  *        and bundles the @ref controller_execution "controller execution classes",the @ref planner_execution
  *        "planner execution classes" and the @ref recovery_execution "recovery execution classes". It provides
- *        the following action servers ActionServerGetPath (callActionGetPath), ActionServerExePath (callActionExePath),
- *        ActionServerRecovery (callActionRecovery) and ActionServerMoveBase (callActionMoveBase).
+ *        the following action servers ActionServerGetPath -> callActionGetPath(), ActionServerExePath -> callActionExePath(),
+ *        ActionServerRecovery -> callActionRecovery() and ActionServerMoveBase -> callActionMoveBase().
  *
  * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
  *         has to implement that interface base class to be compatible with move_base_flex.
@@ -124,83 +130,180 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
   {
   public:
 
+    /**
+     * @brief Constructor, reads all parameters and initializes all action servers and creates the plugin instances.
+     *        Parameters are the concrete implementations of the abstract classes.
+     * @param tf_listener_ptr shared pointer to the common TransformListener buffering transformations
+     * @param planning_ptr shared pointer to an object of the concrete derived implementation of the AbstractPlannerExecution
+     * @param moving_ptr shared pointer to an object of the concrete derived implementation of the AbstractControllerExecution
+     * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
+     */
     AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                              typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr,
                              typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::Ptr moving_ptr,
                              typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr);
 
+    /**
+     * @brief Destructor
+     */
     virtual ~AbstractNavigationServer();
 
+    /**
+     * @brief GetPath action execution method. This method will be called if the action server receives a goal
+     * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
+     *        definitions in move_base_flex_msgs.
+     */
     virtual void callActionGetPath(const move_base_flex_msgs::GetPathGoalConstPtr &goal);
 
+    /**
+     * @brief ExePath action execution method. This method will be called if the action server receives a goal
+     * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
+     *        definitions in move_base_flex_msgs.
+     */
     virtual void callActionExePath(const move_base_flex_msgs::ExePathGoalConstPtr &goal);
 
+    /**
+     * @brief Recovery action execution method. This method will be called if the action server receives a goal
+     * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
+     *        definitions in move_base_flex_msgs.
+     */
     virtual void callActionRecovery(const move_base_flex_msgs::RecoveryGoalConstPtr &goal);
 
+    /**
+     * @brief MoveBase action execution method. This method will be called if the action server receives a goal
+     * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
+     *        definitions in move_base_flex_msgs.
+     */
     virtual void callActionMoveBase(const move_base_flex_msgs::MoveBaseGoalConstPtr &goal);
 
+    /**
+     * @brief Callback function of the MoveBase action, while is executes the GetPath action part to compute a path
+     * @param feedback SimpleActionServer feedback containing all feedback information for the MoveBase action. See the
+     *        action definitions in move_base_flex_msgs.
+     */
     virtual void actionMoveBaseExePathFeedback(const move_base_flex_msgs::ExePathFeedbackConstPtr &feedback);
 
+    /**
+     * @brief starts all action server.
+     */
     virtual void startActionServers();
 
-    virtual void initializeControllerComponents();
+    /**
+     * @brief initializes all server components. Initializing the plugins of the @ref planner_execution "Planner", the
+     *        @ref controller_execution "Controller", and the @ref recovery_execution "Recovery Behavior".
+     */
+    virtual void initializeServerComponents();
 
+    /**
+     * @brief Computes the current robot pose (robot_frame_) in the global frame (global_frame_).
+     * @param robot_pose Reference to the robot_pose message object to be filled.
+     * @return true, if the current robot pose could be computed, false otherwise.
+     */
     bool getRobotPose(geometry_msgs::PoseStamped &robot_pose);
 
   protected:
 
-    ActionServerRecoveryPtr action_server_recovery_ptr_;
-    ActionServerExePathPtr action_server_exe_path_ptr_;
-    ActionServerGetPathPtr action_server_get_path_ptr_;
-    ActionServerMoveBasePtr action_server_move_base_ptr_;
-
-    ros::Publisher current_goal_pub_;
-
+    /**
+     * @brief Publishes the given path / plan
+     * @param plan The plan, a list of stamped poses, to be published
+     */
     void publishPath(std::vector<geometry_msgs::PoseStamped> &plan);
 
+    /**
+     * @brief Transforms a plan to the global frame (global_frame_) coord system.
+     * @param plan Input plan to be transformed.
+     * @param global_plan Output plan, which is then transformed to the global frame.
+     * @return true, if the transformation succeeded, false otherwise
+     */
     bool transformPlanToGlobalFrame(std::vector<geometry_msgs::PoseStamped> &plan,
                                     std::vector<geometry_msgs::PoseStamped> &global_plan);
 
+    /**
+     * @brief Reconfiguration method called by dynamic reconfigure
+     * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
+     * @param level bit mask, which parameters are set.
+     */
     virtual void reconfigure(move_base_flex::MoveBaseFlexConfig &config, uint32_t level);
 
-    // dynamic reconfigure attributes and methods
-    boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFlexConfig> > dsrv_;
+    //! shared pointer to the Recovery action server
+    ActionServerRecoveryPtr action_server_recovery_ptr_;
+
+    //! shared pointer to the ExePath action server
+    ActionServerExePathPtr action_server_exe_path_ptr_;
+
+    //! shared pointer to the GetPath action server
+    ActionServerGetPathPtr action_server_get_path_ptr_;
+
+    //! shared pointer to the MoveBase action server
+    ActionServerMoveBasePtr action_server_move_base_ptr_;
+
+    //! Publisher to publish the current goal pose, which is used for path planning
+    ros::Publisher current_goal_pub_;
+
+    //! dynamic reconfigure server
+    DynamicReconfigureServer dsrv_;
+
+    //! configuration mutex for derived classes and other threads.
     boost::recursive_mutex configuration_mutex_;
+
+    //! last configuration save
     move_base_flex::MoveBaseFlexConfig last_config_;
+
+    //! the default parameter configuration save
     move_base_flex::MoveBaseFlexConfig default_config_;
+
+    //! true, if the dynamic reconfigure has been setup.
     bool setup_reconfigure_;
 
-    // condition to wake up control thread
+    //! condition variable to wake up control thread
     boost::condition_variable condition_;
 
-    // frames to get the current global robot pose
+    //! the robot frame, to get the current robot pose in the global_frame_
     std::string robot_frame_;
+
+    //! the global frame, in which the robot is moving
     std::string global_frame_;
 
+    //! the tolerance for planning
     double goal_tolerance_;
+
+    //! timeout after tf returns without a result
     double tf_timeout_;
 
+    //! shared pointer to the common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
 
+    //! shared pointer to the @ref planner_execution "PlannerExecution"
     typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr_;
+
+    //! shared pointer to the @ref controller_execution "ControllerExecution"
     typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::Ptr moving_ptr_;
+
+    //! shared pointer to the @ref recovery_execution "RecoveryExecution"
     typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr_;
 
+    //! loop variable for the controller action
     bool active_moving_;
+
+    //! loop variable for the planner action
     bool active_planning_;
+
+    //! loop variable for the recovery action
     bool active_recovery_;
 
+    //! timeout after a oscillation is detected
     ros::Duration oscillation_timeout_;
+
+    //! minimal move distance to not detect an oscillation
     double oscillation_distance_;
 
+    //! true, if recovery behavior for the MoveBase action is enabled.
     bool recovery_behavior_enabled_;
+
+    //! true, if clearing rotate is allowed.
     bool clearing_rotation_allowed_;
 
-  private:
-    typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PlanningState state_planning_input_;
-    typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::ControllerState state_moving_input_;
-    typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState state_recovery_input_;
-
+    //! Publisher to publish the current computed path
     ros::Publisher path_pub_;
   };
 

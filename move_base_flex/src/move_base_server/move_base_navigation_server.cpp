@@ -73,7 +73,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   costmap_local_planner_ptr_->pause();
 
   // initialize all plugins
-  initializeControllerComponents();
+  initializeServerComponents();
 
   // start all action servers
   startActionServers();
