@@ -70,6 +70,13 @@ template<typename RECOVERY_BEHAVIOR_BASE>
 
     typedef boost::shared_ptr<AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE> > Ptr;
 
+    /**
+     * @brief Constructor
+     * @param condition Thread sleep condition variable, to wake up connected threads
+     * @param tf_listener_ptr Shared pointer to a common tf listener
+     * @param package Package name, which contains the base class interface of the plugin
+     * @param class_name Class name of the base class interface of the plugin
+     */
     AbstractRecoveryExecution(boost::condition_variable &condition,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                               std::string package,

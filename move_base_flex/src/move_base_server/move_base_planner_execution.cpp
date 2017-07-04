@@ -54,7 +54,7 @@ MoveBasePlannerExecution::~MoveBasePlannerExecution()
 
 void MoveBasePlannerExecution::initPlannerPlugin()
 {
-  std::string name = class_loader_global_planner_.getName(planner_name_);
+  std::string name = class_loader_global_planner_.getName(plugin_name_);
   ROS_INFO_STREAM("Initialize global planner with the name \"" << name << "\".");
 
   if (!costmap_ptr_)

@@ -82,9 +82,9 @@ template<typename LOCAL_PLANNER_BASE>
     /**
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
-     * @param tf_listener_ptr A common tf listener
-     * @param package Package name, which contains the plugin
-     * @param class_name Class name of the plugin
+     * @param tf_listener_ptr Shared pointer to a common tf listener
+     * @param package Package name, which contains the base class interface of the plugin
+     * @param class_name Class name of the base class interface of the plugin
      */
     AbstractControllerExecution(boost::condition_variable &condition,
                                 const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
@@ -117,17 +117,17 @@ template<typename LOCAL_PLANNER_BASE>
      */
     enum ControllerState
     {
-      INITIALIZED,
-      STARTED,
-      PLANNING,
-      NO_PLAN,
-      MAX_RETRIES,
-      PAT_EXCEEDED,
-      EMPTY_PLAN,
-      NO_LOCAL_CMD,
-      GOT_LOCAL_CMD,
-      ARRIVED_GOAL,
-      STOPPED,
+      INITIALIZED,  ///< Controller has been initialized successfully.
+      STARTED,      ///< Controller has been started.
+      PLANNING,     ///< Executing the plugin.
+      NO_PLAN,      ///< The controller has been started without a plan.
+      MAX_RETRIES,  ///< Exceeded the maximum number of retries without a valid command.
+      PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
+      EMPTY_PLAN,   ///< Received an empty plan.
+      NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
+      GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
+      ARRIVED_GOAL, ///< The robot arrived the goal.
+      STOPPED,      ///< The controller has been stopped!
     };
 
     /**
@@ -218,7 +218,7 @@ template<typename LOCAL_PLANNER_BASE>
   private:
 
     /**
-     * @brief The main run method, a thread will execute this method. It contains the main controller loop.
+     * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
     virtual void run();
 

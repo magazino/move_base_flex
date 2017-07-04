@@ -64,11 +64,11 @@ template<class GLOBAL_PLANNER_BASE>
     ROS_INFO("Load global planner plugin.");
     try
     {
-      global_planner_ = class_loader_global_planner_.createInstance(planner_name_);
+      global_planner_ = class_loader_global_planner_.createInstance(plugin_name_);
     }
     catch (const pluginlib::PluginlibException &ex)
     {
-      ROS_FATAL_STREAM("Failed to load the " << planner_name_ << " global planner, are you sure it is properly registered"
+      ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " global planner, are you sure it is properly registered"
                        << " and that the containing library is built? Exception: " << ex.what());
       exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
     }
@@ -83,9 +83,9 @@ template<class GLOBAL_PLANNER_BASE>
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-    if (config.global_planner != planner_name_)
+    if (config.global_planner != plugin_name_)
     {
-      planner_name_ = config.global_planner;
+      plugin_name_ = config.global_planner;
       initialize();
     }
 
@@ -110,7 +110,7 @@ template<class GLOBAL_PLANNER_BASE>
 
     double patience, frequency;
 
-    private_nh.param("global_planner", planner_name_, std::string("navfn/NavfnROS"));
+    private_nh.param("global_planner", plugin_name_, std::string("navfn/NavfnROS"));
     private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
     private_nh.param("global_planner_max_retries", max_retries_, 10);
