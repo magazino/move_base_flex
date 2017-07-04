@@ -49,7 +49,7 @@ SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &
 {
 }
 
-void SimpleControllerExecution::initMovingPlugin()
+void SimpleControllerExecution::initLocalPlannerPlugin()
 {
 }
 

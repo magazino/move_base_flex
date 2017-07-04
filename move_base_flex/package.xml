@@ -52,4 +52,7 @@
     <run_depend>move_base_msgs</run_depend>
     <run_depend>move_base</run_depend>
 
+    <export>
+      <rosdoc config="rosdoc.yaml" />
+    </export>
 </package>

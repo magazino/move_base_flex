@@ -51,7 +51,18 @@
 
 namespace move_base_flex
 {
+/**
+ * @defgroup recovery_execution Recovery Execution Classes
+ *           The recovery execution classes are derived from the RecoveryPlannerExecution and extends the functionality.
+ *           The base recovery execution code is located in the AbstractRecoveryExecution.
+ */
 
+/**
+ *
+ * @tparam RECOVERY_BEHAVIOR_BASE
+ *
+ * @ingroup abstract_server recovery_execution
+ */
 template<typename RECOVERY_BEHAVIOR_BASE>
   class AbstractRecoveryExecution
   {

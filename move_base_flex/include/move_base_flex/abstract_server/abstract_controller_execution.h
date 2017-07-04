@@ -55,14 +55,23 @@
 namespace move_base_flex
 {
 /**
- * @brief The AbstractPlannerExecution class loads and binds the local planner plugin. It contains a thread running
+ * @defgroup controller_execution Controller Execution Classes
+ *           The controller execution classes are derived from the AbstractControllerExecution and extends the
+ *           functionality. The base controller execution code is located in the AbstractControllerExecution.
+ */
+
+
+/**
+ * @brief The AbstractControllerExecution class loads and binds the local planner plugin. It contains a thread running
  *        the plugin in a cycle to move the robot. An internal state is saved and will be pulled by server, which
  *        controls the local planner execution. Due to a state change it wakes up all threads connected to the ondition
  *        variable.
- * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class,
- *         which determines the plugin class
+ *
+ * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
+ *         needs to implement that interface base class to be compatible with move_base_flex
+ *
+ * @ingroup abstract_server controller_execution
  */
-
 template<typename LOCAL_PLANNER_BASE>
   class AbstractControllerExecution
   {
@@ -135,10 +144,10 @@ template<typename LOCAL_PLANNER_BASE>
     void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
 
     /**
-     * @brief Returns the time of the last cycle start
-     * @return Time of the last cycle start
+     * @brief Returns the time of the last plugin call
+     * @return Time of the last plugin call
      */
-    ros::Time getLastCycleStartTime();
+    ros::Time getLastPluginCallTime();
 
     /**
      * @brief Returns the time, the last time a valid velocity command has been received
@@ -159,7 +168,7 @@ template<typename LOCAL_PLANNER_BASE>
     void getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd_stamped);
 
     /**
-     * Loads the plugin given by the parameter name "local_planner"
+     * @brief Loads the plugin given by the parameter "local_planner"
      */
     void initialize();
 
@@ -171,18 +180,6 @@ template<typename LOCAL_PLANNER_BASE>
     void reconfigure(move_base_flex::MoveBaseFlexConfig &config);
 
   protected:
-
-    //! the name of the loaded plugin
-    std::string plugin_name_;
-
-    //! class loader, to load the local planner plugin
-    pluginlib::ClassLoader<LOCAL_PLANNER_BASE> class_loader_local_planner_;
-
-    //! the local planer to calculate the velocity command
-    boost::shared_ptr<LOCAL_PLANNER_BASE> local_planner_;
-
-    //! shared pointer to the shared tf listener
-    const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
 
     /**
      * @brief Sets the velocity command, to make it available for another thread
@@ -197,13 +194,20 @@ template<typename LOCAL_PLANNER_BASE>
      */
     void setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg);
 
-    /**
-     * @brief The main run method, a thread will execute this method. It contains the main controller loop.
-     */
-    virtual void run();
+    //! the name of the loaded plugin
+    std::string plugin_name_;
+
+    //! class loader, to load the local planner plugin
+    pluginlib::ClassLoader<LOCAL_PLANNER_BASE> class_loader_local_planner_;
+
+    //! the local planer to calculate the velocity command
+    boost::shared_ptr<LOCAL_PLANNER_BASE> local_planner_;
+
+    //! shared pointer to the shared tf listener
+    const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
 
     //! The current cycle start time of the last cycle run. Will by updated each cycle.
-    ros::Time cycle_start_time;
+    ros::Time last_call_time_;
 
     //! The maximum number of retries
     int max_retries_;
@@ -214,10 +218,15 @@ template<typename LOCAL_PLANNER_BASE>
   private:
 
     /**
-     * @brief Pure virtual method, the derived class need to implement. Depending on the plugin base class,
+     * @brief The main run method, a thread will execute this method. It contains the main controller loop.
+     */
+    virtual void run();
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
      */
-    virtual void initMovingPlugin() = 0;
+    virtual void initLocalPlannerPlugin() = 0;
 
     /**
      * publishes a velocity command with zero values to stop the robot.
@@ -240,7 +249,7 @@ template<typename LOCAL_PLANNER_BASE>
     //! mutex to handle safe thread communication for the current velocity command
     boost::mutex vel_cmd_mtx_;
 
-    //! mutex to handle safe thread communication for the
+    //! mutex to handle safe thread communication for the last plugin call time
     boost::mutex lct_mtx_;
 
     //! mutex to handle safe thread communication for the current plugin code

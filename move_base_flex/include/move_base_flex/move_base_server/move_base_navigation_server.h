@@ -53,7 +53,14 @@
 
 namespace move_base_flex
 {
+/**
+ * @defgroup move_base_server Move Base Server
+ *           Classes belonging to the Move Base Server level.
+ */
 
+/**
+ * @ingroup navigation_server move_base_server
+ */
 class MoveBaseNavigationServer : public AbstractNavigationServer<nav_core::BaseLocalPlanner,
                                                                 nav_core::BaseGlobalPlanner,
                                                                 nav_core::RecoveryBehavior>

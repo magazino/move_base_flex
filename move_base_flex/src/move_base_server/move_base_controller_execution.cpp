@@ -51,7 +51,7 @@ MoveBaseControllerExecution::MoveBaseControllerExecution(
 {
 }
 
-void MoveBaseControllerExecution::initMovingPlugin()
+void MoveBaseControllerExecution::initLocalPlannerPlugin()
 {
   std::string name = class_loader_local_planner_.getName(plugin_name_);
 

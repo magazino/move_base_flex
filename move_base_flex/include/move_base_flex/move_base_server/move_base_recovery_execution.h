@@ -48,7 +48,9 @@
 
 namespace move_base_flex
 {
-
+/**
+ * @ingroup recovery_execution move_base_server
+ */
 class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<nav_core::RecoveryBehavior>
 {
 

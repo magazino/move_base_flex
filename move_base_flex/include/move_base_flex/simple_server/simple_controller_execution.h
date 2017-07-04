@@ -46,7 +46,9 @@
 
 namespace move_base_flex
 {
-
+/**
+ * @ingroup controller_execution simple_server
+ */
 class SimpleControllerExecution : public AbstractControllerExecution<nav_core::AbstractLocalPlanner>
 {
 public:
@@ -58,7 +60,7 @@ public:
 
 private:
 
-  virtual void initMovingPlugin();
+  virtual void initLocalPlannerPlugin();
 
 };
 

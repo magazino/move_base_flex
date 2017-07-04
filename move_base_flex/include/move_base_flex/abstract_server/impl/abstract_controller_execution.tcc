@@ -101,7 +101,7 @@ template<class LOCAL_PLANNER_BASE>
     }
     ROS_INFO("Local planner plugin loaded.");
 
-    initMovingPlugin();
+    initLocalPlannerPlugin();
     setState(INITIALIZED);
   }
 
@@ -225,10 +225,10 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  ros::Time AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastCycleStartTime()
+  ros::Time AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastPluginCallTime()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return cycle_start_time;
+    return last_call_time_;
   }
 
 template<class LOCAL_PLANNER_BASE>
@@ -242,7 +242,7 @@ template<class LOCAL_PLANNER_BASE>
   bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return (patience_ > ros::Duration(0)) && (ros::Time::now() - cycle_start_time > patience_);
+    return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_call_time_ > patience_);
   }
 
 template<class LOCAL_PLANNER_BASE>
@@ -304,16 +304,17 @@ template<class LOCAL_PLANNER_BASE>
         {
           geometry_msgs::Twist cmd_vel;
 
-          // save the local planner start time
-          lct_mtx_.lock();
-          cycle_start_time = ros::Time::now();
-          lct_mtx_.unlock();
-
-          setState(PLANNING);
-
           uint8_t plugin_code;
           std::string plugin_msg;
 
+          setState(PLANNING);
+
+          // save time and call the plugin
+          lct_mtx_.lock();
+          last_call_time_ = ros::Time::now();
+          lct_mtx_.unlock();
+
+          // call plugin to compute the next velocity command
           bool success = local_planner_->computeVelocityCommands(cmd_vel, plugin_code, plugin_msg);
           setPluginInfo(plugin_code, plugin_msg);
 

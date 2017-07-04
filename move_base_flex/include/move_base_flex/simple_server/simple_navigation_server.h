@@ -49,7 +49,14 @@
 
 namespace move_base_flex
 {
+/**
+ * @defgroup simple_server Simple Server
+ *           Classes belonging to the Simple Server level.
+ */
 
+/**
+ * @ingroup navigation_server simple_server
+ */
 class SimpleNavigationServer : public AbstractNavigationServer<nav_core::AbstractLocalPlanner,
                                                                nav_core::AbstractGlobalPlanner,
                                                                nav_core::AbstractRecoveryBehavior>

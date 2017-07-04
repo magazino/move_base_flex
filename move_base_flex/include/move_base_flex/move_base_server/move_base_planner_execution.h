@@ -47,7 +47,9 @@
 
 namespace move_base_flex
 {
-
+/**
+ * @ingroup planner_execution move_base_server
+ */
 class MoveBasePlannerExecution : public AbstractPlannerExecution<nav_core::BaseGlobalPlanner>
 {
 public:

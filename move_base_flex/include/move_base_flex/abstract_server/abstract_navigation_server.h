@@ -64,6 +64,15 @@
 
 namespace move_base_flex
 {
+/**
+ * @defgroup abstract_server Abstract Server
+ *           Classes belonging to the Abstract Server level.
+ */
+
+/**
+ * @defgroup navigation_server Navigation Server Classes
+ */
+
 
 // Get Path Action
 typedef actionlib::SimpleActionServer<move_base_flex_msgs::GetPathAction> ActionServerGetPath;
@@ -92,6 +101,24 @@ const std::string name_action_get_path = "get_path";
 const std::string name_action_recovery = "recovery";
 const std::string name_action_move_base = "move_base";
 
+/**
+ * @brief The AbstractNavigationServer is the abstract base class for all navigation servers in move_base_flex
+ *        and bundles the @ref controller_execution "controller execution classes",the @ref planner_execution
+ *        "planner execution classes" and the @ref recovery_execution "recovery execution classes". It provides
+ *        the following action servers ActionServerGetPath (callActionGetPath), ActionServerExePath (callActionExePath),
+ *        ActionServerRecovery (callActionRecovery) and ActionServerMoveBase (callActionMoveBase).
+ *
+ * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
+ *         has to implement that interface base class to be compatible with move_base_flex.
+ *
+ * @tparam GLOBAL_PLANNER_BASE The base class derived from the AbstractGlobalPlanner class. The global planner plugin
+ *         has to implement that interface base class to be compatible with move_base_flex.
+ *
+ * @tparam RECOVERY_BEHAVIOR_BASE The base class derived from the AbstractRecoveryBehavior class. the recovery behavior
+ *         plugin has to implement that interface base class to be compatible with move_base_flex.
+ *
+ * @ingroup abstract_server navigation_server
+ */
 template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVERY_BEHAVIOR_BASE>
   class AbstractNavigationServer
   {

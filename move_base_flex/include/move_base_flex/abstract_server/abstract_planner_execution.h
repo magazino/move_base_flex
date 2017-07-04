@@ -54,6 +54,18 @@
 namespace move_base_flex
 {
 
+/**
+ * @defgroup planner_execution Planner Execution Classes
+ *           The planner execution classes are derived from the AbstractPlannerExecution and extends the functionality.
+ *           The base planner execution code is located in the AbstractPlannerExecution.
+ */
+
+/**
+ *
+ * @tparam GLOBAL_PLANNER_BASE
+ *
+ * @ingroup abstract_server planner_execution
+ */
 template<typename GLOBAL_PLANNER_BASE>
   class AbstractPlannerExecution
   {
