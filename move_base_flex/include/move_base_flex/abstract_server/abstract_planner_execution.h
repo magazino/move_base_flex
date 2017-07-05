@@ -303,7 +303,7 @@ template<typename GLOBAL_PLANNER_BASE>
     geometry_msgs::PoseStamped start_;
 
     //! the current goal pose used for planning
-    geomerty_msgs::PoseStamoed goal_;
+    geometry_msgs::PoseStamped goal_;
 
     //! the current tolerance used for planning
     double tolerance_;

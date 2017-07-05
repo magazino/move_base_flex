@@ -58,8 +58,13 @@ namespace move_base_flex
  */
 
 /**
+ * @brief The AbstractiRecoveryExecution class loads and binds the recovery behavior plugin. It contains a thread
+ *        running the plugin, executing the recovery behavior. An internal state is saved and will be pulled by the
+ *        server, which controls the recovery behavior execution. Due to a state change it wakes up all threads
+ *        connected to the condition variable.
  *
- * @tparam RECOVERY_BEHAVIOR_BASE
+ * @tparam RECOVERY_BEHAVIOR_BASE The base class derived from the AbstractRecoveryBehavior class. The recovery behavior
+ *         plugin has to implement that interface base class to be compatible with move_base_flex
  *
  * @ingroup abstract_server recovery_execution
  */
@@ -82,75 +87,136 @@ template<typename RECOVERY_BEHAVIOR_BASE>
                               std::string package,
                               std::string class_name);
 
+    /**
+     * @brief Destructor
+     */
     virtual ~AbstractRecoveryExecution();
 
+    /**
+     * @brief starts the recovery behavior thread, which calls the recovery behavior plugin.
+     * @param name The name of the recovery behavior loaded.
+     */
     void startRecovery(const std::string name);
 
+    /**
+     * @brief Tries to stop the recovery behavior thread by an interrupt
+     */
     void stopRecovery();
 
+    /**
+     * @brief internal state.
+     */
     enum RecoveryState
     {
-      INITIALIZED,
-      STARTED,
-      RECOVERING,
-      WRONG_NAME,
-      RECOVERY_DONE,
-      CANCELED,
-      STOPPED,
+      INITIALIZED,   ///< The recovery execution has been initialized
+      STARTED,       ///< The recovery execution thread has been started
+      RECOVERING,    ///< The recovery behavior plugin is running
+      WRONG_NAME,    ///< The given name could not be associated with a load behavior
+      RECOVERY_DONE, ///< The recovery behavior execution is done
+      CANCELED,      ///< The execution was canceled.
+      STOPPED,       ///< The recovery execution has been stopped
     };
 
-    void setState(RecoveryState state);
-
+    /**
+     * @brief Returns the current state, Thread safe communication
+     * @return current internal state
+     */
     AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState getState();
 
+    /**
+     * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
+     */
     void initialize();
 
+    /**
+     * @brief Reconfigures the current configuration and reloads all parameters. This method is called from a dynamic
+     *        reconfigure tool.
+     * @param config Current MoveBaseFlexConfig object. See the MoveBaseFlex.cfg definition.
+     */
     void reconfigure(move_base_flex::MoveBaseFlexConfig &config);
 
+    /**
+     * @brief Tries to cancel the execution of the recovery behavior plugin.
+     * @return true, if the plugin tries or canceled the behavior, false otherwise.
+     */
     bool cancel();
 
+    /**
+     * @brief Returns true is the given name has been loaded as recovery behaviour.
+     * @param name The name of the recovery behaviour.
+     * @return true, if the recovery behavior exists, false otherwise.
+     */
     bool hasRecoveryBehavior(const std::string &name);
 
+    /**
+     * @brief Returns the type for the corresponding name
+     * @param name Name of the plugin
+     * @param type Type of the plugin, returned
+     * @return true, if the name exists and a type could be written.
+     */
     bool getTypeOfBehavior(const std::string &name, std::string &type);
 
   protected:
 
+    /**
+     * @brief Main execution meathod which will be executed by the recovery execution thread_.
+     */
+    virtual void run();
+
+    //! class loader, to load the recovery plugins
     pluginlib::ClassLoader<RECOVERY_BEHAVIOR_BASE> class_loader_recovery_behaviors_;
 
+    //! map to store the recovery behaviors. Each behavior can be accessed by its corresponding name
     std::map<std::string, boost::shared_ptr<RECOVERY_BEHAVIOR_BASE> > recovery_behaviors_;
 
+    //! map to store the type of the behavior as string
     std::map<std::string, std::string> recovery_behaviors_type_;
 
+    //! the current loaded recovery behavior
     nav_core::AbstractRecoveryBehavior::Ptr current_behavior_;
 
+    //! shared pointer to common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
-
-    virtual void run();
 
   private:
 
-    // virtual abstract method -> load the specific plugin classes
+    /**
+     * @brief Sets the current internal state. This method is thread communication safe
+     * @param state The state to set.
+     */
+    void setState(RecoveryState state);
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+     *        some plugins need to be initialized!
+     */
     virtual void initRecoveryPlugins() = 0;
 
+    /**
+     * loads the plugins defined in the parameter server
+     * @return true, if all recovery behaviour could be read successfully.
+     */
     bool loadRecoveryPlugins();
 
+    //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
 
+    //! the last requested recovery behavior to start
     std::string requested_behavior_name_;
 
-    // condition to wake up control thread
+    //! condition variable to wake up control thread
     boost::condition_variable &condition_;
 
-    // thread for running recovery behavior
+    //! thread for running recovery behaviors
     boost::thread thread_;
 
-    // current internal state
+    //! current internal state
     RecoveryState state_;
 
-    // current canceled state
+    //! current canceled state
     bool canceled_;
 
-    // dynamic reconfigure attributes and methods
+    //! dynamic reconfigure mutex for a thread safe communication
     boost::recursive_mutex configuration_mutex_;
   };
 

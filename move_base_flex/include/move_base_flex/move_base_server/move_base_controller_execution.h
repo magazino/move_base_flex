@@ -56,10 +56,19 @@ public:
 
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
 
+  /**
+   * @brief Constructor
+   * @param condition Thread sleep condition variable, to wake up connected threads
+   * @param tf_listener_ptr Shared pointer to a common tf listener
+   * @param costmap_ptr Shared pointer to the costmap.
+   */
   MoveBaseControllerExecution(boost::condition_variable &condition,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                               CostmapPtr &costmap_ptr);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~MoveBaseControllerExecution();
 
 protected:
