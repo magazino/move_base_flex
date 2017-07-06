@@ -49,6 +49,9 @@
 namespace move_base_flex
 {
 /**
+ * @brief The MoveBaseRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
+ *        nav_core/RecoveryBehavior class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *
  * @ingroup recovery_execution move_base_server
  */
 class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<nav_core::RecoveryBehavior>
@@ -58,22 +61,36 @@ public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
   typedef boost::shared_ptr<MoveBaseRecoveryExecution> Ptr;
 
+  /**
+   * @brief Constructor
+   * @param condition Thread sleep condition variable, to wake up connected threads
+   * @param tf_listener_ptr Shared pointer to a common tf listener
+   * @param global_costmap Shared pointer to the global costmap.
+   * @param local_costmap Shared pointer to the local costmap.
+   */
   MoveBaseRecoveryExecution(boost::condition_variable &condition,
                             const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                             CostmapPtr &global_costmap,
                             CostmapPtr &local_costmap);
 
+  /**
+   * Destructor
+   */
   virtual ~MoveBaseRecoveryExecution();
 
 protected:
 
-  virtual void run();
-
+  //! Shared pointer to the global costmap
   CostmapPtr &global_costmap_;
+  
+  //! Shared pointer to thr local costmap
   CostmapPtr &local_costmap_;
 
 private:
 
+  /**
+   * @brief Initializes a recovery behavior plugin with its name and pointers to the global and local costmaps
+   */
   virtual void initRecoveryPlugins();
 
 };

@@ -337,12 +337,12 @@ template<class GLOBAL_PLANNER_BASE>
         {
           ROS_INFO_STREAM("Start planning");
 
-          // TODO use error_code and msg
-          uint8_t error_code;
-          std::string error_msg;
-
+          uint8_t plugin_code = 255;
+          std::string plugin_msg;
           success = global_planner_->makePlan(current_start, current_goal, current_tolerance, plan, cost,
-                                              error_code, error_msg);
+                                              plugin_code, plugin_msg);
+
+          setPluginInfo(plugin_code, plugin_msg);
 
           if (cancel_ && !isPatienceExceeded())
           {

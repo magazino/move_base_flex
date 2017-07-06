@@ -48,6 +48,9 @@
 namespace move_base_flex
 {
 /**
+ * @brief The MoveBasePlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
+ *        nav_core/BaseGlobalPlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *
  * @ingroup planner_execution move_base_server
  */
 class MoveBasePlannerExecution : public AbstractPlannerExecution<nav_core::BaseGlobalPlanner>
@@ -55,18 +58,34 @@ class MoveBasePlannerExecution : public AbstractPlannerExecution<nav_core::BaseG
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
 
+  /**
+   * @brief Constructor
+   * @param condition Thread sleep condition variable, to wake up connected threads
+   * @param costmap Shared pointer to the costmap.
+   */
   MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~MoveBasePlannerExecution();
 
 protected:
 
+  /**
+   * @brief The main run method, a thread will execute this method. It contains the main planner execution loop. This
+   *        method overwrites (and extends) the base class method.
+   */
   virtual void run();
 
 private:
 
+  /**
+   * @brief Initializes the global planner plugin with its name and pointer to the costmap
+   */
   virtual void initPlannerPlugin();
 
+  //! Shared pointer to the global planner costmap
   CostmapPtr &costmap_ptr_;
 };
 

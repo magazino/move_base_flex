@@ -66,19 +66,6 @@ public:
   SimpleNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
   virtual ~SimpleNavigationServer();
-
-protected:
-  // overwrites the base class action methods
-  virtual void callActionGetPath(const move_base_flex_msgs::GetPathGoalConstPtr &goal);
-
-  virtual void callActionExePath(const move_base_flex_msgs::ExePathGoalConstPtr &goal);
-
-  virtual void callActionRecovery(const move_base_flex_msgs::RecoveryGoalConstPtr &goal);
-
-  virtual void callActionMoveBase(const move_base_flex_msgs::MoveBaseGoalConstPtr &goal);
-
-  // overwrites the base class reconfigure method
-  virtual void reconfigure(move_base_flex::MoveBaseFlexConfig &config, uint32_t level);
 };
 
 } /* namespace move_base_flex */

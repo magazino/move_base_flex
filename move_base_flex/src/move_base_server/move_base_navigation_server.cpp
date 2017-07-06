@@ -419,10 +419,4 @@ void MoveBaseNavigationServer::callActionRecovery(const move_base_flex_msgs::Rec
   AbstractNavigationServer::callActionRecovery(goal);
   checkDeactivateCostmaps();
 }
-
-void MoveBaseNavigationServer::callActionMoveBase(const move_base_flex_msgs::MoveBaseGoalConstPtr &goal)
-{
-  AbstractNavigationServer::callActionMoveBase(goal);
-}
-
 } /* namespace move_base_flex */

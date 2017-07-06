@@ -48,6 +48,9 @@
 namespace move_base_flex
 {
 /**
+ * @brief The MoveBaseControllerExecution binds a local costmap to the AbstractControllerExecution and uses the
+ *        nav_core/BaseLocalPlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *
  * @ingroup controller_execution move_base_server
  */
 class MoveBaseControllerExecution : public AbstractControllerExecution<nav_core::BaseLocalPlanner>
@@ -73,10 +76,15 @@ public:
 
 protected:
 
+  //! costmap for 2d navigation planning
   CostmapPtr &costmap_ptr_;
 
 private:
 
+  /**
+   * @brief Initializes the local planner plugin with its name, a pointer to the TransformListener
+   *        and pointer to the costmap
+   */
   virtual void initLocalPlannerPlugin();
 
 };

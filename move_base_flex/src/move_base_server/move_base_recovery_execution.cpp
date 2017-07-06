@@ -67,9 +67,4 @@ void MoveBaseRecoveryExecution::initRecoveryPlugins()
   }
 }
 
-void MoveBaseRecoveryExecution::run()
-{
-  AbstractRecoveryExecution::run();
-}
-
 } /* namespace move_base_flex */

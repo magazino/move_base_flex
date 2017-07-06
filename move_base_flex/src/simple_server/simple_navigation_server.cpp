@@ -49,7 +49,7 @@ SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::Trans
                              SimpleRecoveryExecution::Ptr(new SimpleRecoveryExecution(condition_, tf_listener_ptr)))
 {
   // initalize all plugins
-  initializeControllerComponents();
+  initializeServerComponents();
 
   // start all action servers
   startActionServers();
@@ -57,32 +57,6 @@ SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::Trans
 
 SimpleNavigationServer::~SimpleNavigationServer()
 {
-}
-
-void SimpleNavigationServer::reconfigure(move_base_flex::MoveBaseFlexConfig &config, uint32_t level)
-{
-  boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-  AbstractNavigationServer::reconfigure(config, level);
-}
-
-void SimpleNavigationServer::callActionGetPath(const move_base_flex_msgs::GetPathGoalConstPtr &goal)
-{
-  AbstractNavigationServer::callActionGetPath(goal);
-}
-
-void SimpleNavigationServer::callActionExePath(const move_base_flex_msgs::ExePathGoalConstPtr &goal)
-{
-  AbstractNavigationServer::callActionExePath(goal);
-}
-
-void SimpleNavigationServer::callActionRecovery(const move_base_flex_msgs::RecoveryGoalConstPtr &goal)
-{
-  AbstractNavigationServer::callActionRecovery(goal);
-}
-
-void SimpleNavigationServer::callActionMoveBase(const move_base_flex_msgs::MoveBaseGoalConstPtr &goal)
-{
-  AbstractNavigationServer::callActionMoveBase(goal);
 }
 
 } /* namespace move_base_flex */
