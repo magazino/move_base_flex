@@ -59,7 +59,7 @@ namespace move_base_flex
  */
 
 /**
- * @brief The MoveBaseNavigationServer make Move Base Flex backwards compatible to the cold move_base. It combines the
+ * @brief The MoveBaseNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
  *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseGlobalPlanner and the 
  *        nav_core/RecoveryBehavior base classes as plugin interfaces. These plugin interface are the same for the 
  *        old move_base

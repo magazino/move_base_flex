@@ -47,6 +47,10 @@
 namespace move_base_flex
 {
 /**
+ * @brief The SimpleRecoveryExecution basically uses the AbstractRecoveryExecution and loads recovery behavior plugins,
+ *        which implements the base class interface AbstractRecoveryBehavior. This implementation allows recovery
+ *        behaviors, which do not initialize map representations via Move Base Flex.
+ *
  * @ingroup recovery_execution simple_server
  */
 class SimpleRecoveryExecution : public AbstractRecoveryExecution<nav_core::AbstractRecoveryBehavior>
@@ -55,13 +59,24 @@ class SimpleRecoveryExecution : public AbstractRecoveryExecution<nav_core::Abstr
 public:
   typedef boost::shared_ptr<SimpleRecoveryExecution> Ptr;
 
+  /**
+   * @brief Constructor
+   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
+   * @param tf_listener_ptr Shared pointer to a common TransformListener
+   */
   SimpleRecoveryExecution(boost::condition_variable &condition,
                           const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~SimpleRecoveryExecution();
 
 private:
 
+  /**
+   * @brief Empty init method. Nothing to initialize.
+   */
   virtual void initRecoveryPlugins();
 
 };

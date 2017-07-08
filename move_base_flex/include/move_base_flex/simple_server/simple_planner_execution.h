@@ -47,17 +47,31 @@
 namespace move_base_flex
 {
 /**
+ * @brief The SimplePlannerExecution basically uses the AbstractPlannerExecution and loads global planner plugins,
+ *        which implements the base class interface AbstractGlobalPlanner. This implementation allows planners, which
+ *        do not initialize map representations via Move Base Flex.
+ *
  * @ingroup planner_execution simple_server
  */
 class SimplePlannerExecution : public AbstractPlannerExecution<nav_core::AbstractGlobalPlanner>
 {
 public:
+  /**
+   * @brief Constructor
+   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
+   */
   SimplePlannerExecution(boost::condition_variable &condition);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~SimplePlannerExecution();
 
 private:
 
+  /**
+   * @brief Empty init method. Nothing to initialize.
+   */
   virtual void initPlannerPlugin();
 };
 

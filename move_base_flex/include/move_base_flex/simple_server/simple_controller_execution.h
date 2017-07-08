@@ -47,19 +47,34 @@
 namespace move_base_flex
 {
 /**
+ * @brief The SimpleControllerExecution basically uses the AbstractControllerExecution and loads local planner plugins,
+ *        which implements the base class interface AbstractLocalPlanner. This implementation allows planners, which
+ *        do not initialize map representations via Move Base Flex.
+ *
  * @ingroup controller_execution simple_server
  */
 class SimpleControllerExecution : public AbstractControllerExecution<nav_core::AbstractLocalPlanner>
 {
 public:
 
+  /**
+   * @brief Constructor
+   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
+   * @param tf_listener_ptr Shared pointer to a common TransformListener
+   */
   SimpleControllerExecution(boost::condition_variable &condition,
                             const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~SimpleControllerExecution();
 
 private:
 
+  /**
+   * @brief Empty init method. Nothing to initialize.
+   */
   virtual void initLocalPlannerPlugin();
 
 };

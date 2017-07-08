@@ -55,6 +55,11 @@ namespace move_base_flex
  */
 
 /**
+ * @brief The SimpleNavigationServer provides a simple navigation server, which does not bind a map representation to
+ *        Move Base Flex. It combines the execution classes which use the move_base_flex_msgs/AbstractLocalPlanner,
+ *        move_base_flex_msgs/AbstractGlobalPlanner and the move_base_flex_msgs/AbstractRecoveryBehavior base classes
+ *        as plugin interfaces.
+ *
  * @ingroup navigation_server simple_server
  */
 class SimpleNavigationServer : public AbstractNavigationServer<nav_core::AbstractLocalPlanner,
@@ -63,8 +68,15 @@ class SimpleNavigationServer : public AbstractNavigationServer<nav_core::Abstrac
 {
 public:
 
+  /**
+   * @brief Constructor
+   * @param tf_listener_ptr Shared pointer to a common TransformListener
+   */
   SimpleNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
+  /**
+   * @brief Destructor
+   */
   virtual ~SimpleNavigationServer();
 };
 
