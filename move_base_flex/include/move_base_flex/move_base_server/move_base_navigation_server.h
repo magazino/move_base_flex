@@ -55,7 +55,7 @@ namespace move_base_flex
 {
 /**
  * @defgroup move_base_server Move Base Server
- *           Classes belonging to the Move Base Server level.
+ * @brief Classes belonging to the Move Base Server level.
  */
 
 /**

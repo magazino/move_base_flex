@@ -47,12 +47,12 @@ namespace move_base_flex
 {
 
 /**
- * @brief Transforms a pose from one frame into another
- * @param tf_listener TransformListener
- * @param target_frame Target frame for the pose
- * @param target_time Time, in that the frames should be used
- * @param timeout Timeout for looking up the transformation
- * @param in Pose to transform
+ * @brief Transforms a pose from one frame into another.
+ * @param tf_listener TransformListener.
+ * @param target_frame Target frame for the pose.
+ * @param target_time Time, in that the frames should be used.
+ * @param timeout Timeout for looking up the transformation.
+ * @param in Pose to transform.
  * @param fixed_frame Fixed frame of the source and target frame.
  * @param out Transformed pose.
  * @return true, if the transformation succeeded.
@@ -65,14 +65,34 @@ bool transformPose(const tf::TransformListener &tf_listener,
                    const std::string &fixed_frame,
                    geometry_msgs::PoseStamped &out);
 
+/**
+ * @brief Computes the robot pose.
+ * @param tf_listener TransformListener.
+ * @param robot_frame frame of the robot.
+ * @param global_frame global frame in which the robot is located.
+ * @param timeout Timeout for looking up the transformation.
+ * @param robot_pose the computed rebot pose in the global frame.
+ * @return true, if succeeded, false otherwise.
+ */
 bool getRobotPose(const tf::TransformListener &tf_listener,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
                   geometry_msgs::PoseStamped &robot_pose);
-
+/**
+ * @brief Computes the Euclidean-distance between two poses.
+ * @param pose1 pose 1
+ * @param pose2 pose 2
+ * @return Euclidean distance between pose 1 and pose 2.
+ */
 double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
 
+/**
+ * @brief computes the smallest angle between two poses.
+ * @param pose1 pose 1
+ * @param pose2 pose 2
+ * @return smallest angle between pose 1 and pose 2.
+ */
 double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
 
 } /* namespace move_base_flex */

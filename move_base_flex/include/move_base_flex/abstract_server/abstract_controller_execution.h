@@ -56,10 +56,9 @@ namespace move_base_flex
 {
 /**
  * @defgroup controller_execution Controller Execution Classes
- *           The controller execution classes are derived from the AbstractControllerExecution and extends the
- *           functionality. The base controller execution code is located in the AbstractControllerExecution.
+ * @brief The controller execution classes are derived from the AbstractControllerExecution and extends the
+ *        functionality. The base controller execution code is located in the AbstractControllerExecution.
  */
-
 
 /**
  * @brief The AbstractControllerExecution class loads and binds the local planner plugin. It contains a thread running

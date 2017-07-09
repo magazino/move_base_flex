@@ -66,11 +66,12 @@ namespace move_base_flex
 {
 /**
  * @defgroup abstract_server Abstract Server
- *           Classes belonging to the Abstract Server level.
+ * @brief Classes belonging to the Abstract Server level.
  */
 
 /**
- * @defgroup navigation_server Navigation Server Classes
+ * @defgroup navigation_server Navigation Server Classes.
+ * @brief Classes combining the core logic and providing concrete implementations.
  */
 
 

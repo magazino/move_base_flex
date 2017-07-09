@@ -51,7 +51,7 @@ namespace move_base_flex
 {
 /**
  * @defgroup simple_server Simple Server
- *           Classes belonging to the Simple Server level.
+ * @brief Classes belonging to the Simple Server level.
  */
 
 /**

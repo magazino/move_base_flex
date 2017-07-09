@@ -53,8 +53,8 @@ namespace move_base_flex
 {
 /**
  * @defgroup recovery_execution Recovery Execution Classes
- *           The recovery execution classes are derived from the RecoveryPlannerExecution and extends the functionality.
- *           The base recovery execution code is located in the AbstractRecoveryExecution.
+ * @brief The recovery execution classes are derived from the RecoveryPlannerExecution and extends the functionality.
+ *        The base recovery execution code is located in the AbstractRecoveryExecution.
  */
 
 /**
