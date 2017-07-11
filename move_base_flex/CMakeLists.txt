@@ -51,6 +51,27 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+set(MOVE_BASE_FLEX move_base_flex)
+add_library(${MOVE_BASE_FLEX}
+  src/navigation_utility.cpp
+  src/move_base_server_node.cpp
+  src/move_base_server/move_base_navigation_server.cpp
+  src/move_base_server/move_base_planner_execution.cpp
+  src/move_base_server/move_base_controller_execution.cpp
+  src/move_base_server/move_base_recovery_execution.cpp
+  src/simple_server/simple_navigation_server.cpp
+  src/simple_server/simple_planner_execution.cpp
+  src/simple_server/simple_controller_execution.cpp
+  src/simple_server/simple_recovery_execution.cpp
+)
+add_dependencies(${MOVE_BASE_FLEX} ${PROJECT_NAME}_gencfg)
+add_dependencies(${MOVE_BASE_FLEX} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${MOVE_BASE_FLEX}
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+  )
+
+
 set(MBF_MOVE_BASE_SERVER mbf_2d_nav_server)
 add_executable(${MBF_MOVE_BASE_SERVER}
   src/move_base_server_node.cpp
@@ -84,15 +105,16 @@ target_link_libraries(${MBF_SIMPLE_SERVER}
   ${Boost_LIBRARIES}
   )
 
-install(TARGETS ${MBF_MOVE_BASE_SERVER} ${MBF_SIMPLE_SERVER}
+install(TARGETS ${MOVE_BASE_FLEX} ${MBF_MOVE_BASE_SERVER} ${MBF_SIMPLE_SERVER}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  )
+install(DIRECTORY include/
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
 
 install(PROGRAMS scripts/move_base_legacy_relay.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -227,31 +227,52 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       const move_base_flex_msgs::GetPathGoalConstPtr &goal)
   {
     ROS_INFO_STREAM("Starting action \"get_path\"");
+    ROS_INFO_STREAM( goal->target_pose );
+    ROS_INFO_STREAM( goal->tolerance );
 
     move_base_flex_msgs::GetPathResult result;
 
     geometry_msgs::PoseStamped start_pose, goal_pose;
+    bool use_start_pose;
 
     result.path.header.seq = 0; // TODO check for a more meaningful id
     result.path.header.frame_id = global_frame_;
 
     goal_pose = goal->target_pose;
-    current_goal_pub_.publish(goal_pose);
+    use_start_pose = goal->use_start_pose;
 
-    double tolerance = goal_tolerance_; // TODO add tolerance field to action
+    ROS_INFO("GOAL POSE: %f %f %f",goal_pose.pose.position.x, goal_pose.pose.position.y, goal_pose.pose.position.z);
+
+    //current_goal_pub_.publish(goal_pose);
+
+    double tolerance = goal->tolerance ; // TODO add tolerance field to action
 
     active_planning_ = true;
 
     // get the current robot pose
-    if (!getRobotPose(start_pose))
+    if(!use_start_pose)
     {
-      ROS_ERROR_STREAM("Failed to get the current robot pose!");
-      action_server_get_path_ptr_->setAborted(result, "Could not get the current robot pose!");
-      active_planning_ = false;
-    }
-    else
-    {
-      geometry_msgs::Point p = start_pose.pose.position;
+      // dont use given start pose. get current robot pose from tf
+      if (!getRobotPose(start_pose))
+      {
+        ROS_ERROR_STREAM("Failed to get the current robot pose!");
+        action_server_get_path_ptr_->setAborted(result, "Could not get the current robot pose!");
+        active_planning_ = false;
+      }
+      else
+      {
+        geometry_msgs::Point p = start_pose.pose.position;
+        ROS_INFO_STREAM("Got the current robot pose at (" << p.x << ", " << p.y << ", " << p.z << ")");
+        ROS_INFO_STREAM("Starting the planning thread");
+        if (!planning_ptr_->startPlanning(start_pose, goal_pose, tolerance))
+        {
+          ROS_ERROR_STREAM("Another thread is still planning. Canceling the service call.");
+          return;
+        }
+      }
+    }else{
+      // use given start pose
+      geometry_msgs::Point p = goal->start_pose.pose.position;
       ROS_INFO_STREAM("Got the current robot pose at (" << p.x << ", " << p.y << ", " << p.z << ")");
       ROS_INFO_STREAM("Starting the planning thread");
       if (!planning_ptr_->startPlanning(start_pose, goal_pose, tolerance))
@@ -260,6 +281,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         return;
       }
     }
+    
 
     typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PlanningState state_planning_input;
 

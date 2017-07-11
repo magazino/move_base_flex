@@ -333,9 +333,10 @@ template<class GLOBAL_PLANNER_BASE>
         // unlock goal
         goal_start_mtx_.unlock();
         setState(PLANNING);
+        //ROS_INFO_STREAM("Start planning");
         if (make_plan)
         {
-          ROS_INFO_STREAM("Start planning");
+          //ROS_INFO_STREAM("Start planning");
 
           uint8_t plugin_code = 255;
           std::string plugin_msg;
@@ -388,7 +389,7 @@ template<class GLOBAL_PLANNER_BASE>
           else
           {
             exceeded = false;
-            ROS_INFO_STREAM("Planning could not find a plan! Trying again.");
+            //ROS_INFO_STREAM("Planning could not find a plan! Trying again.");
           }
         }
         else if (cancel_)
