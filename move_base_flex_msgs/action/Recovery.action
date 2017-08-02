@@ -1,0 +1,10 @@
+string behavior
+---
+
+uint8  server_code
+string server_msg
+
+uint8 RECOVERY_DONE = 90
+uint8 INVALID_NAME  = 91
+uint8 CANCELED      = 92
+---

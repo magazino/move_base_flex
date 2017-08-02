@@ -1,0 +1,9 @@
+uint8                     LOCAL_COSTMAP  = 1
+uint8                     GLOBAL_COSTMAP = 2
+
+geometry_msgs/PoseStamped pose              # the pose to be checked
+float32                   safety_dist       # minimum distance allowed to the closest obstacle
+uint8                     costmap           # costmap in which to check the pose
+---
+bool                      colliding         # is the pose closer than safety_dist to a costmap obstacle?
+float32                   cost              # total pose cost, including safety_dist (negative if in collistion)

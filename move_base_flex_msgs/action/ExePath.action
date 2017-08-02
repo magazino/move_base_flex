@@ -1,0 +1,42 @@
+nav_msgs/Path path
+---
+
+# Termination code by the server
+uint8  server_code
+string server_msg
+
+# Possible server codes:
+uint8 ARRIVED        = 60
+uint8 STOPPED        = 61
+uint8 INVALID_PATH   = 62
+uint8 TF_ERROR       = 63
+uint8 PAT_EXCEEDED   = 64
+uint8 MAX_RETRIES    = 65
+uint8 INTERNAL_ERROR = 66
+uint8 OSCILLATION    = 67
+
+# Termination code by the plugin, can be useful if no success
+# with controlling; plugin code is defined by the local planner
+uint8  plugin_code
+string plugin_msg
+
+# Possible predefined plugin codes:
+uint8 DO_NOT_APPLY     = 255
+uint8 PLUGIN_ERROR     = 254
+uint8 SUCCESS          = 0
+uint8 COLLISION        = 1
+uint8 MISSED_GOAL      = 2
+uint8 MISSED_PATH      = 3
+uint8 BLOCKED_PATH     = 4
+uint8 DYNAMIC_OBSTACLE = 5
+
+
+geometry_msgs/PoseStamped  pose
+float32 dist_to_goal
+float32 angle_to_goal
+---
+
+float32 dist_to_goal
+float32 angle_to_goal
+geometry_msgs/PoseStamped  pose
+geometry_msgs/TwistStamped twist
