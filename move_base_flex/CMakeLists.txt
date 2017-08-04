@@ -8,9 +8,9 @@ find_package(catkin REQUIRED
   base_local_planner
   dynamic_reconfigure
   geometry_msgs
+  move_base_flex_msgs
   nav_core
   nav_msgs
-  move_base_flex_msgs
   pluginlib
   roscpp
   std_msgs
@@ -41,9 +41,9 @@ catkin_package(
   base_local_planner
   dynamic_reconfigure
   geometry_msgs
+  move_base_flex_msgs
   nav_core
   nav_msgs
-  move_base_flex_msgs
   pluginlib
   roscpp
   std_msgs
@@ -101,7 +101,7 @@ target_link_libraries(${MBF_SIMPLE_SERVER_NODE} ${MBF_SIMPLE_SERVER_LIB})
 
 install(TARGETS
   ${MBF_UTILITY_LIB}
-  ${MBF_MOVE_BASE_SEVER_LIB} ${MBF_MOVE_BASE_SERVER_NODE}
+  ${MBF_MOVE_BASE_SERVER_LIB} ${MBF_MOVE_BASE_SERVER_NODE}
   ${MBF_SIMPLE_SERVER_LIB} ${MBF_SIMPLE_SERVER_NODE}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
