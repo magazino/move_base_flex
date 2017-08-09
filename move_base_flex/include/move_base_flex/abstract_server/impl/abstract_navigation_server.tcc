@@ -525,6 +525,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           moving_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
           action_server_exe_path_ptr_->setPreempted(result, result.server_msg);
           ROS_INFO_STREAM("Action \"ExePath\" preempted");
+          active_moving_ = false;
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STARTED:
