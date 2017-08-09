@@ -13,6 +13,7 @@
        e.g. meshes.
        See <a href="wiki.ros.org/move_base_flex"> move_base_flex ROS wiki page</a>.
     </description>
+    <url>http://wiki.ros.org/move_base_flex</url>
     <author email="spuetz@uos.de">Sebastian Pütz</author>
     <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>
     <maintainer email="santos@magazino.eu">Jorge Santos</maintainer>
