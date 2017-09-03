@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
   dynamic_reconfigure
   geometry_msgs
   move_base_flex_msgs
+  move_base_flex_core
   nav_core
   nav_msgs
   pluginlib
@@ -42,6 +43,7 @@ catkin_package(
   dynamic_reconfigure
   geometry_msgs
   move_base_flex_msgs
+  move_base_flex_core
   nav_core
   nav_msgs
   pluginlib

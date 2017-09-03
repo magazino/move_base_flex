@@ -42,7 +42,7 @@
 #define MOVE_BASE_FLEX__SIMPLE_RECOVERY_EXECUTION_H_
 
 #include "move_base_flex/abstract_server/abstract_recovery_execution.h"
-#include <nav_core/abstract_recovery_behavior.h>
+#include <move_base_flex_core/abstract_recovery_behavior.h>
 
 namespace move_base_flex
 {
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution simple_server
  */
-class SimpleRecoveryExecution : public AbstractRecoveryExecution<nav_core::AbstractRecoveryBehavior>
+class SimpleRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::AbstractRecoveryBehavior>
 {
 
 public:

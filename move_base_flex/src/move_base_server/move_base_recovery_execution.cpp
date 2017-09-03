@@ -46,7 +46,7 @@ namespace move_base_flex
 MoveBaseRecoveryExecution::MoveBaseRecoveryExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                                                      CostmapPtr &global_costmap, CostmapPtr &local_costmap) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr, "nav_core", "nav_core::RecoveryBehavior"),
+    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::RecoveryBehavior"),
     global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }
@@ -57,10 +57,10 @@ MoveBaseRecoveryExecution::~MoveBaseRecoveryExecution()
 
 void MoveBaseRecoveryExecution::initRecoveryPlugins()
 {
-  for (std::map<std::string, nav_core::RecoveryBehavior::Ptr>::iterator iter =
+  for (std::map<std::string, move_base_flex_core::RecoveryBehavior::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
   {
-    nav_core::RecoveryBehavior::Ptr behavior = iter->second;
+    move_base_flex_core::RecoveryBehavior::Ptr behavior = iter->second;
     std::string name = iter->first;
 
     behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());

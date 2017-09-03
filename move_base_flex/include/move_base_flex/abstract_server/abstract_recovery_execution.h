@@ -44,7 +44,7 @@
 #include <pluginlib/class_loader.h>
 #include <boost/chrono/thread_clock.hpp>
 #include <tf/transform_listener.h>
-#include <nav_core/abstract_recovery_behavior.h>
+#include <move_base_flex_core/abstract_recovery_behavior.h>
 
 #include "move_base_flex/navigation_utility.h"
 #include "move_base_flex/MoveBaseFlexConfig.h"
@@ -173,7 +173,7 @@ template<typename RECOVERY_BEHAVIOR_BASE>
     std::map<std::string, std::string> recovery_behaviors_type_;
 
     //! the current loaded recovery behavior
-    nav_core::AbstractRecoveryBehavior::Ptr current_behavior_;
+    move_base_flex_core::AbstractRecoveryBehavior::Ptr current_behavior_;
 
     //! shared pointer to common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;

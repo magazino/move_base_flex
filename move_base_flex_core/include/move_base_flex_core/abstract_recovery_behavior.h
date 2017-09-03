@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
+ *  Copyright 2017, Sebastian Pütz
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,31 +30,45 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  simple_controller_execution.cpp
+ *  abstract_recovery_behavior.h
  *
- *  authors:
- *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
- *    Jorge Santos Simón <santos@magazino.eu>
+ *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
  *
  */
 
-#include "move_base_flex/simple_server/simple_controller_execution.h"
+#ifndef MBF_CORE_ABSTRACT_RECOVERY_BEHAVIOR_H
+#define MBF_CORE_ABSTRACT_RECOVERY_BEHAVIOR_H
 
-namespace move_base_flex
-{
+namespace move_base_flex_core {
+  /**
+   * @class AbstractRecoveryBehavior
+   * @brief Provides an interface for recovery behaviors used in navigation.
+   * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
+   */
+  class AbstractRecoveryBehavior{
+    public:
 
-SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &condition,
-                                                     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractLocalPlanner")
-{
-}
+      typedef boost::shared_ptr< ::move_base_flex_core::AbstractRecoveryBehavior > Ptr;
 
-void SimpleControllerExecution::initLocalPlannerPlugin()
-{
-}
+      /**
+       * @brief Runs the AbstractRecoveryBehavior
+       */
+      virtual void runBehavior() = 0;
 
-SimpleControllerExecution::~SimpleControllerExecution()
-{
-}
+      /**
+       * @brief Virtual destructor for the interface
+       */
+      virtual ~AbstractRecoveryBehavior(){}
 
-} /* namespace move_base_nav_moving */
+      /**
+       * @brief Requests the recovery behavior to cancel, e.g. if it takes to much time.
+       * @return True if a cancel has been successfully requested, false if not implemented.
+       */
+      virtual bool cancel() = 0;
+
+    protected:
+      AbstractRecoveryBehavior(){}
+  };
+};  // namespace move_base_flex_core
+
+#endif  // MBF_CORE_ABSTRACT_RECOVERY_BEHAVIOR_H

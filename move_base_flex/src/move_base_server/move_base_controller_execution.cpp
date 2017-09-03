@@ -46,7 +46,7 @@ namespace move_base_flex
 MoveBaseControllerExecution::MoveBaseControllerExecution(
     boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &costmap_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "nav_core", "nav_core::BaseLocalPlanner"),
+    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::BaseLocalPlanner"),
     costmap_ptr_(costmap_ptr)
 {
 }

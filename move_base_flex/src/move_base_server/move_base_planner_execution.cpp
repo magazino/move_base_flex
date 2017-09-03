@@ -44,7 +44,7 @@ namespace move_base_flex
 {
 
 MoveBasePlannerExecution::MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
-    AbstractPlannerExecution(condition, "nav_core", "nav_core::BaseGlobalPlanner"), costmap_ptr_(costmap_ptr)
+    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::BaseGlobalPlanner"), costmap_ptr_(costmap_ptr)
 {
 }
 

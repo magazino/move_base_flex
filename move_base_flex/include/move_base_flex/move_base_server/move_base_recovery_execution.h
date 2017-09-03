@@ -41,10 +41,10 @@
 #ifndef MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
 #define MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
 
+#include <costmap_2d/costmap_2d_ros.h>
+#include <move_base_flex_core/recovery_behavior.h>
 #include "move_base_flex/abstract_server/abstract_recovery_execution.h"
 
-#include <costmap_2d/costmap_2d_ros.h>
-#include <nav_core/recovery_behavior.h>
 
 namespace move_base_flex
 {
@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution move_base_server
  */
-class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<nav_core::RecoveryBehavior>
+class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::RecoveryBehavior>
 {
 
 public:
