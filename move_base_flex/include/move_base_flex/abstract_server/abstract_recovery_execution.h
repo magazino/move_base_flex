@@ -190,13 +190,13 @@ template<typename RECOVERY_BEHAVIOR_BASE>
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
      */
-    virtual void initRecoveryPlugins() = 0;
+    virtual void initPlugins() = 0;
 
     /**
      * loads the plugins defined in the parameter server
      * @return true, if all recovery behaviour could be read successfully.
      */
-    bool loadRecoveryPlugins();
+    virtual bool loadPlugins();
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;

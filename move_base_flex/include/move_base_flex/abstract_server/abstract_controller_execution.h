@@ -222,10 +222,16 @@ template<typename LOCAL_PLANNER_BASE>
     virtual void run();
 
     /**
+     * @brief Loads the plugin defined in the parameter server
+     * @return true, if the local planner plugin was successfully loaded.
+     */
+    virtual bool loadPlugin();
+
+    /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
      */
-    virtual void initLocalPlannerPlugin() = 0;
+    virtual void initPlugin() = 0;
 
     /**
      * publishes a velocity command with zero values to stop the robot.

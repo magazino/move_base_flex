@@ -242,10 +242,16 @@ template<typename GLOBAL_PLANNER_BASE>
     void setLastCycleStartTime();
 
     /**
+     * @brief Loads the plugin defined in the parameter server
+     * @return true, if the local planner plugin was successfully loaded.
+     */
+    virtual bool loadPlugin();
+
+    /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
      */
-    virtual void initPlannerPlugin() = 0;
+    virtual void initPlugin() = 0;
 
     /**
      * @brief Sets the internal state, thread communication safe

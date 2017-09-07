@@ -39,12 +39,15 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <costmap_2d/costmap_2d_ros.h>
+#include <nav_core/base_global_planner.h>
 #include "move_base_flex_core/abstract_global_planner.h"
 
 namespace move_base_flex_core {
   /**
    * @class BaseGlobalPlanner
-   * @brief Provides an interface for global planners used in navigation. All global planners written as plugins for the navigation stack must adhere to this interface.
+   * @brief Provides an interface for global planners used in navigation.
+   * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
+   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
   class BaseGlobalPlanner : public AbstractGlobalPlanner{
     public:
@@ -54,37 +57,7 @@ namespace move_base_flex_core {
 
       /**
        * @brief Given a goal pose in the world, compute a plan
-       * @param start The start pose
-       * @param goal The goal pose
-       * @param plan The plan... filled by the planner
-       * @return True if a valid plan was found, false otherwise
-       *
-       * @deprecated This method is deprecated in move_base_flex in favor of the one providing detailed result.
-       */
-      virtual bool makePlan(const geometry_msgs::PoseStamped& start,
-          const geometry_msgs::PoseStamped& goal, std::vector<geometry_msgs::PoseStamped>& plan) = 0;
-
-
-      /**
-       * @brief Given a goal pose in the world, compute a plan
-       * @param start The start pose
-       * @param goal The goal pose
-       * @param plan The plan... filled by the planner
-       * @param cost The plans calculated cost
-       * @return True if a valid plan was found, false otherwise
-       *
-       * @deprecated This method is deprecated in move_base_flex in favor of the one providing detailed result.
-       */
-      virtual bool makePlan(const geometry_msgs::PoseStamped& start,
-                            const geometry_msgs::PoseStamped& goal, std::vector<geometry_msgs::PoseStamped>& plan,
-                            double& cost)
-      {
-        cost = 0;
-        return makePlan(start, goal, plan);
-      }
-
-      /**
-       * @brief Given a goal pose in the world, compute a plan
+       * @remark New on MBF API; replaces version without output code and message
        * @param start The start pose
        * @param goal The goal pose
        * @param tolerance The tolerance to the goal pose
@@ -99,12 +72,16 @@ namespace move_base_flex_core {
                             double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                             uint8_t& plugin_code, std::string& plugin_msg)
       {
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("MBF API makePlan method not overridden nor backward compatible plugin provided");
+
         plugin_code = 255;  // DO_NOT_APPLY
-        return makePlan(start, goal, plan, cost);
+        return backward_compatible_plugin->makePlan(start, goal, plan, cost);
       }
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
+       * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
       virtual bool cancel()
@@ -117,7 +94,25 @@ namespace move_base_flex_core {
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
-      virtual void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros) = 0;
+      virtual void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
+      {
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("MBF API initialize method not overridden nor backward compatible plugin provided");
+
+        backward_compatible_plugin->initialize(name, costmap_ros);
+      }
+
+      /**
+       * @brief Public constructor used for handling a nav_core-based plugin
+       * @param plugin Backward compatible plugin
+       */
+      BaseGlobalPlanner(boost::shared_ptr< nav_core::BaseGlobalPlanner > plugin)
+      {
+        backward_compatible_plugin = plugin;
+
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("Invalid backward compatible plugin provided");
+      }
 
       /**
        * @brief  Virtual destructor for the interface
@@ -126,6 +121,9 @@ namespace move_base_flex_core {
 
     protected:
       BaseGlobalPlanner(){}
+
+    private:
+      boost::shared_ptr< nav_core::BaseGlobalPlanner > backward_compatible_plugin;
   };
 };  // namespace move_base_flex_core
 

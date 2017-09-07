@@ -37,6 +37,7 @@
  *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
+#include <nav_core/recovery_behavior.h>
 
 #include "move_base_flex/move_base_server/move_base_recovery_execution.h"
 
@@ -55,7 +56,80 @@ MoveBaseRecoveryExecution::~MoveBaseRecoveryExecution()
 {
 }
 
-void MoveBaseRecoveryExecution::initRecoveryPlugins()
+bool MoveBaseRecoveryExecution::loadPlugins()
+{
+  ros::NodeHandle private_nh("~");
+
+  XmlRpc::XmlRpcValue recovery_behaviors_param_list;
+  if(!private_nh.getParam("recovery_behaviors", recovery_behaviors_param_list)){
+    ROS_WARN_STREAM("No recovery behaviors configured! - Use the param \"recovery_behaviors\", which must be a list of tuples with a name and a type.");
+    return true;
+  }
+
+  try
+  {
+    for (int i = 0; i < recovery_behaviors_param_list.size(); i++)
+    {
+      XmlRpc::XmlRpcValue elem = recovery_behaviors_param_list[i];
+
+      std::string name = elem["name"];
+      std::string type = elem["type"];
+
+      if (recovery_behaviors_.find(name) != recovery_behaviors_.end())
+      {
+        ROS_ERROR_STREAM("The recovery behavior \"" << name << "\" has already been loaded! Names must be unique!");
+        return false;
+      }
+      try
+      {
+        recovery_behaviors_.insert(
+            std::pair<std::string, boost::shared_ptr<move_base_flex_core::RecoveryBehavior> >(
+                name, class_loader_recovery_behaviors_.createInstance(type)));
+
+        recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
+
+        ROS_INFO_STREAM("MBF_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
+                        << name << "\".");
+      }
+      catch (pluginlib::PluginlibException &ex)
+      {
+        ROS_DEBUG_STREAM("Failed to load the " << name << " recovery behavior as a mbf_core-based plugin;"
+                         << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
+        try
+        {
+          // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
+          static pluginlib::ClassLoader<nav_core::RecoveryBehavior> class_loader("nav_core", "nav_core::RecoveryBehavior");
+          boost::shared_ptr<nav_core::RecoveryBehavior> plugin = class_loader.createInstance(type);
+
+          recovery_behaviors_.insert(
+              std::pair<std::string, boost::shared_ptr<move_base_flex_core::RecoveryBehavior> >(
+                  name, boost::make_shared<move_base_flex_core::RecoveryBehavior>(plugin)));
+
+          recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
+
+          ROS_INFO_STREAM("Nav_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
+                          << name << "\".");
+        }
+        catch (const pluginlib::PluginlibException &ex)
+        {
+          ROS_FATAL_STREAM("Failed to load the " << name << " recovery behavior, are you sure it's properly registered"
+                           << " and that the containing library is built? Exception: " << ex.what());
+          return false;
+        }
+      }
+    }
+  }
+  catch (XmlRpc::XmlRpcException &ex)
+  {
+    ROS_ERROR_STREAM("Invalid parameter structure. The recovery_behaviors parameter has to be a list of structs "
+                     << "with fields \"name\" and \"type\" of the recovery behavior!");
+    ROS_ERROR_STREAM(ex.getMessage());
+    return false;
+  }
+  return true;
+}
+
+void MoveBaseRecoveryExecution::initPlugins()
 {
   for (std::map<std::string, move_base_flex_core::RecoveryBehavior::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)

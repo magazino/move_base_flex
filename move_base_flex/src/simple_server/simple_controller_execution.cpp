@@ -49,7 +49,7 @@ SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &
 {
 }
 
-void SimpleControllerExecution::initLocalPlannerPlugin()
+void SimpleControllerExecution::initPlugin()
 {
 }
 

@@ -66,7 +66,7 @@ template<class RECOVERY_BEHAVIOR_BASE>
 template<class RECOVERY_BEHAVIOR_BASE>
   void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::initialize()
   {
-    if (!loadRecoveryPlugins())
+    if (!loadPlugins())
     {
       ROS_ERROR_STREAM("Could not load the recovery behaviors!");
       // TODO load default recovery behavior plugins
@@ -79,7 +79,7 @@ template<class RECOVERY_BEHAVIOR_BASE>
       }
     }
 
-    initRecoveryPlugins();
+    initPlugins();
     setState(INITIALIZED);
   }
 
@@ -93,7 +93,7 @@ template<class RECOVERY_BEHAVIOR_BASE>
   }
 
 template<class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::loadRecoveryPlugins()
+  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::loadPlugins()
   {
     ros::NodeHandle private_nh("~");
 

@@ -52,7 +52,7 @@ SimplePlannerExecution::~SimplePlannerExecution()
 {
 }
 
-void SimplePlannerExecution::initPlannerPlugin()
+void SimplePlannerExecution::initPlugin()
 {
 }
 

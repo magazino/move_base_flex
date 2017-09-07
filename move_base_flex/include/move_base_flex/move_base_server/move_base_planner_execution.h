@@ -81,9 +81,16 @@ protected:
 private:
 
   /**
+   * @brief Loads the plugin defined in the parameter server
+   * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
+   * @return true, if the local planner plugin was successfully loaded.
+   */
+  virtual bool loadPlugin();
+
+  /**
    * @brief Initializes the global planner plugin with its name and pointer to the costmap
    */
-  virtual void initPlannerPlugin();
+  virtual void initPlugin();
 
   //! Shared pointer to the global planner costmap
   CostmapPtr &costmap_ptr_;

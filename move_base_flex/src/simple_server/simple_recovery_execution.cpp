@@ -53,7 +53,7 @@ SimpleRecoveryExecution::~SimpleRecoveryExecution()
 {
 }
 
-void SimpleRecoveryExecution::initRecoveryPlugins()
+void SimpleRecoveryExecution::initPlugins()
 {
 }
 

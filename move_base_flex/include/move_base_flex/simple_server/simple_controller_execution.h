@@ -75,7 +75,7 @@ private:
   /**
    * @brief Empty init method. Nothing to initialize.
    */
-  virtual void initLocalPlannerPlugin();
+  virtual void initPlugin();
 
 };
 

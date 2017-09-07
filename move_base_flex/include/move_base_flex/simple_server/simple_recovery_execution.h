@@ -77,7 +77,7 @@ private:
   /**
    * @brief Empty init method. Nothing to initialize.
    */
-  virtual void initRecoveryPlugins();
+  virtual void initPlugins();
 
 };
 

@@ -93,6 +93,18 @@ template<class LOCAL_PLANNER_BASE>
 template<class LOCAL_PLANNER_BASE>
   void AbstractControllerExecution<LOCAL_PLANNER_BASE>::initialize()
   {
+    if (!loadPlugin())
+    {
+      exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
+    }
+
+    initPlugin();
+    setState(INITIALIZED);
+  }
+
+template<class LOCAL_PLANNER_BASE>
+  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::loadPlugin()
+  {
     // try to load and init local planner
     ROS_INFO("Load local planner plugin.");
     try
@@ -103,12 +115,11 @@ template<class LOCAL_PLANNER_BASE>
     {
       ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " local planner, are you sure it's properly registered"
                        << " and that the containing library is built? Exception: " << ex.what());
-      exit(1);
+      return false;
     }
     ROS_INFO("Local planner plugin loaded.");
 
-    initLocalPlannerPlugin();
-    setState(INITIALIZED);
+    return true;
   }
 
 template<class LOCAL_PLANNER_BASE>

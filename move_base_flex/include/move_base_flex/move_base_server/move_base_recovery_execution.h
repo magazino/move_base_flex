@@ -91,8 +91,14 @@ private:
   /**
    * @brief Initializes a recovery behavior plugin with its name and pointers to the global and local costmaps
    */
-  virtual void initRecoveryPlugins();
+  virtual void initPlugins();
 
+  /**
+   * loads the plugins defined in the parameter server
+   * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
+   * @return true, if all recovery behaviour could be read successfully.
+   */
+  virtual bool loadPlugins();
 };
 
 } /* namespace move_base_flex */

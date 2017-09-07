@@ -61,6 +61,18 @@ template<class GLOBAL_PLANNER_BASE>
 template<class GLOBAL_PLANNER_BASE>
   void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::initialize()
   {
+    if (!loadPlugin())
+    {
+      exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
+    }
+
+    initPlugin();
+    setState(INITIALIZED);
+  }
+
+template<class GLOBAL_PLANNER_BASE>
+  bool AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::loadPlugin()
+  {
     ROS_INFO("Load global planner plugin.");
     try
     {
@@ -70,12 +82,11 @@ template<class GLOBAL_PLANNER_BASE>
     {
       ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " global planner, are you sure it is properly registered"
                        << " and that the containing library is built? Exception: " << ex.what());
-      exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
+      return false;
     }
     ROS_INFO("Global planner plugin loaded.");
 
-    initPlannerPlugin();
-    setState(INITIALIZED);
+    return true;
   }
 
 template<class GLOBAL_PLANNER_BASE>

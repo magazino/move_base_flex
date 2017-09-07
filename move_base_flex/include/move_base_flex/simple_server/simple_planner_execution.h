@@ -72,7 +72,7 @@ private:
   /**
    * @brief Empty init method. Nothing to initialize.
    */
-  virtual void initPlannerPlugin();
+  virtual void initPlugin();
 };
 
 } /* namespace move_base_flex */

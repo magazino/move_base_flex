@@ -39,13 +39,15 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
+#include <nav_core/recovery_behavior.h>
 #include "move_base_flex_core/abstract_recovery_behavior.h"
 
 namespace move_base_flex_core {
   /**
    * @class RecoveryBehavior
    * @brief Provides an interface for recovery behaviors used in navigation.
-   * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
+   * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
+   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
   class RecoveryBehavior : public AbstractRecoveryBehavior{
     public:
@@ -60,20 +62,45 @@ namespace move_base_flex_core {
        */
       virtual void initialize(std::string name, tf::TransformListener* tf,
                               costmap_2d::Costmap2DROS* global_costmap,
-                              costmap_2d::Costmap2DROS* local_costmap) = 0;
+                              costmap_2d::Costmap2DROS* local_costmap)
+      {
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("MBF API initialize method not overridden nor backward compatible plugin provided");
+
+        return backward_compatible_plugin->initialize(name, tf, global_costmap, local_costmap);
+      };
 
       /**
        * @brief Runs the RecoveryBehavior
        */
-      virtual void runBehavior() = 0;
+      virtual void runBehavior()
+      {
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("MBF API runBehavior method not overridden nor backward compatible plugin provided");
+
+        return backward_compatible_plugin->runBehavior();
+      }
 
       /**
-       * @brief Requests the planner to cancel, e.g. if it takes to much time.
+       * @brief Requests the planner to cancel, e.g. if it takes to much time
+       * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
       virtual bool cancel()
       {
         return false;
+      }
+
+      /**
+       * @brief Public constructor used for handling a nav_core-based plugin
+       * @param plugin Backward compatible plugin
+       */
+      RecoveryBehavior(boost::shared_ptr< nav_core::RecoveryBehavior > plugin)
+      {
+        backward_compatible_plugin = plugin;
+
+        if (!backward_compatible_plugin)
+          throw std::runtime_error("Invalid backward compatible plugin provided");
       }
 
       /**
@@ -83,6 +110,9 @@ namespace move_base_flex_core {
 
     protected:
       RecoveryBehavior(){}
+
+    private:
+      boost::shared_ptr< nav_core::RecoveryBehavior > backward_compatible_plugin;
   };
 };  // namespace move_base_flex_core
 
