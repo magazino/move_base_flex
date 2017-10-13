@@ -1,27 +1,43 @@
 geometry_msgs/PoseStamped target_pose
+
+string[] usable_local_planner_plugins
+string[] usable_global_planner_plugins
+string[] usable_recovery_plugins
+
 ---
 
-# Termination status, determined by move_base_flex
-# For possible termination codes see the specific action
-uint8  server_code
-string server_msg
-
+# Predefined success codes:
 uint8 SUCCESS        = 0
-uint8 INTERNAL_ERROR = 1
-uint8 WRONG_CONFIG   = 2
 
-# Termination codes, might be provided by the plugins
-# For possible predefined plugin codes see the specific action
-uint8  plugin_code
-string plugin_msg
+# Predefined general error codes:
+uint8 FAILURE        = 10
+uint8 CANCELED       = 11
+uint8 PAT_EXCEEDED   = 12
+uint8 COLLISION      = 13
+uint8 OSCILLATION    = 14
+uint8 ROBOT_STUCK    = 15
+uint8 START_BLOCKED  = 16
+uint8 GOAL_BLOCKED   = 17
+uint8 INTERNAL_ERROR = 18
+# 21..39 are reserved for future general error codes
 
-# Possible predefined plugin codes
-uint8 DO_NOT_APPLY     = 255
+# Planning/controlling failures:
+uint8 PLAN_FAILURE   = 40
+# 41..59 are reserved as global planner specific errors
 
+uint8 CTRL_FAILURE   = 60
+# 61..79 are reserved as local planner specific errors
+
+uint16 return_value
+
+# Configuration upon action completion
+string running_plugin    # in case of not success
 float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped final_pose
+
 ---
+
 float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped current_pose

@@ -1,51 +1,46 @@
-# Get a plan from start_pose or current position to the target pose
+# Get a path from start_pose or current position to the target pose
 
-# Use start_pose or current position as the beginning of the plan
+# Use start_pose or current position as the beginning of the path
 bool use_start_pose
 
-# The start pose for the plan; optional, used if use_start_pose is true
+# The start pose for the path; optional, used if use_start_pose is true
 geometry_msgs/PoseStamped start_pose
 
-# The pose to achieve with the plan
+# The pose to achieve with the path
 geometry_msgs/PoseStamped target_pose
 
-# Intermediate poses the plan should pass by
+# Intermediate poses the path should pass by
 geometry_msgs/PoseStamped[] waypoints
 
-# If the goal or a waypoint is obstructed, how many meters the
-# planner can relax the constraint in x and y before failing
-float32 tolerance
+# If a waypoint is obstructed, how many meters the plath can pass away of it before failing
+# Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
+float32[] waypoints_tolerance
+
+# If the goal is obstructed, how many meters the planner can relax the constraint in x and y before failing
+float32 goal_tolerance
+
+# Applicable global planner plugins. MBF will try them in sequence until one succeeds
+# Defaults to global_planners parameter
+string[] usable_plugins
 
 ---
-# Termination code by the server
-uint8  server_code
-string server_msg
+
+# Predefined success codes:
+uint8 SUCCESS        = 0
+# 1..9 are reserved as plugin specific non-error results
 
 # Possible server codes:
-uint8 FOUND_PATH     = 30
-uint8 EMPTY_PATH     = 31
-uint8 NO_PATH_FOUND  = 32
-uint8 CANCELED       = 33
-uint8 STOPPED        = 34
-uint8 PAT_EXCEEDED   = 35
-uint8 MAX_RETRIES    = 36
-uint8 TF_ERROR       = 37
-uint8 INTERNAL_ERROR = 38
+uint8 NO_PATH_FOUND  = 40
+uint8 CANCELED       = 41
+uint8 PAT_EXCEEDED   = 42
+uint8 EMPTY_PATH     = 43
+uint8 INTERNAL_ERROR = 44
+# 51..59 are reserved as plugin specific errors
 
-# Termination code by the plugin, can be useful if no success
-# with planning; plugin code is defined by the global planner
-uint8  plugin_code
-string plugin_msg
 
-# Possible predefined plugin codes
-uint8 DO_NOT_APPLY     = 255
-uint8 PLUGIN_ERROR   = 254
-uint8 SUCCESS          = 0
-uint8 START_BLOCKED    = 1
-uint8 GOAL_BLOCKED     = 2
-uint8 WAYPOINT_BLOCKED = 3
-uint8 DOOR_CLOSED      = 4
-uint8 DYNAMIC_OBSTACLE = 5
+uint16 return_value
+string used_plugin
 
 nav_msgs/Path path
+
 ---

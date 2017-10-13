@@ -1,10 +1,20 @@
 string behavior
+
 ---
 
-uint8  server_code
-string server_msg
+# Predefined success codes:
+uint8 SUCCESS        = 0
+# 1..9 are reserved as plugin specific non-error results
 
-uint8 RECOVERY_DONE = 90
-uint8 INVALID_NAME  = 91
-uint8 CANCELED      = 92
+# Possible server codes:
+uint8 FAILED         = 80
+uint8 CANCELED       = 81
+uint8 PAT_EXCEEDED   = 82
+uint8 INVALID_NAME   = 83
+uint8 INTERNAL_ERROR = 84
+# 91..99 are reserved as plugin specific errors
+
+
+uint16 return_value
+
 ---
