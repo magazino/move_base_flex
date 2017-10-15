@@ -38,7 +38,7 @@
 #define MBF_CORE_BASE_LOCAL_PLANNER_H
 
 #include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
 #include <nav_core/base_local_planner.h>
@@ -61,19 +61,30 @@ namespace move_base_flex_core {
        * compute velocity commands to send to the base
        * @remark New on MBF API; replaces version without output code and message
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
-       * @param plugin_code More detailed outcome; will be defaulted to DO_NOT_APPLY on planners
-       * implementing the old move_base API
-       * @param plugin_msg More detailed outcome as a string message
-       * @return True if a valid velocity command was found, false otherwise
+       * @param message Optional more detailed outcome as a string
+       * @return Result code as described on ExePath action result:
+       *         SUCCESS        = 0
+       *         1..9 are reserved as plugin specific non-error results
+       *         NO_VALID_CMD   = 60
+       *         CANCELED       = 61
+       *         PAT_EXCEEDED   = 62
+       *         COLLISION      = 63
+       *         OSCILLATION    = 64
+       *         ROBOT_STUCK    = 65
+       *         MISSED_GOAL    = 66
+       *         MISSED_PATH    = 67
+       *         BLOCKED_PATH   = 68
+       *         INVALID_PATH   = 69
+       *         INTERNAL_ERROR = 70
+       *         71..79 are reserved as plugin specific errors
        */
-      virtual bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel,
-                                           uint8_t& plugin_code, std::string& plugin_msg)
+      virtual uint8_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API computeVelocityCommands method not overridden nor backward compatible plugin provided");
+          throw std::runtime_error("MBF API computeVelocityCommands method not overridden \
+                                   nor backward compatible plugin provided");
 
-        plugin_code = 255;  // DO_NOT_APPLY
-        return backward_compatible_plugin->computeVelocityCommands(cmd_vel);
+        return  backward_compatible_plugin->computeVelocityCommands(cmd_vel.twist) ? 0 : 60;  // SUCCESS | NO_VALID_CMD
       }
 
       /**
@@ -83,7 +94,8 @@ namespace move_base_flex_core {
       virtual bool isGoalReached()
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API isGoalReached method not overridden nor backward compatible plugin provided");
+          throw std::runtime_error("MBF API isGoalReached method not overridden \
+                                   nor backward compatible plugin provided");
 
         return backward_compatible_plugin->isGoalReached();
       }
@@ -108,7 +120,8 @@ namespace move_base_flex_core {
       virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped>& plan)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API setPlan method not overridden nor backward compatible plugin provided");
+          throw std::runtime_error("MBF API setPlan method not overridden \
+                                   nor backward compatible plugin provided");
 
         return backward_compatible_plugin->setPlan(plan);
       }
@@ -132,7 +145,8 @@ namespace move_base_flex_core {
       virtual void initialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API initialize method not overridden nor backward compatible plugin provided");
+          throw std::runtime_error("MBF API initialize method not overridden \
+                                   nor backward compatible plugin provided");
 
         backward_compatible_plugin->initialize(name, tf, costmap_ros);
       }

@@ -40,7 +40,7 @@
 #define MBF_CORE_ABSTRACT_LOCAL_PLANNER_H_
 
 #include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_listener.h>
 #include <boost/shared_ptr.hpp>
@@ -62,15 +62,24 @@ namespace move_base_flex_core{
        * @brief Given the current position, orientation, and velocity of the robot,
        * compute velocity commands to send to the base.
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
-       * @param plugin_code More detailed outcome in case of failure, so the high level executive
-       * can take better decisions. move_base_flex_msgs developers suggest to use one of the error
-       * codes defined in move_base_flex_msgs/ExePath action.
-       * Will be defaulted to DO_NOT_APPLY on planners not implementing the new move_base_flex API
-       * @param plugin_msg More detailed outcome as a string message
-       * @return True if a valid velocity command was found, false otherwise
+       * @param message Optional more detailed outcome as a string
+       * @return Result code as described on ExePath action result:
+       *         SUCCESS        = 0
+       *         1..9 are reserved as plugin specific non-error results
+       *         NO_VALID_CMD   = 60
+       *         CANCELED       = 61
+       *         PAT_EXCEEDED   = 62
+       *         COLLISION      = 63
+       *         OSCILLATION    = 64
+       *         ROBOT_STUCK    = 65
+       *         MISSED_GOAL    = 66
+       *         MISSED_PATH    = 67
+       *         BLOCKED_PATH   = 68
+       *         INVALID_PATH   = 69
+       *         INTERNAL_ERROR = 70
+       *         71..79 are reserved as plugin specific errors
        */
-      virtual bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel,
-                                           uint8_t& plugin_code, std::string& plugin_msg) = 0;
+      virtual uint8_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message) = 0;
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner

@@ -60,19 +60,29 @@ namespace move_base_flex_core
        * @brief Given a goal pose in the world, compute a plan
        * @param start The start pose
        * @param goal The goal pose
-       * @param tolerance The tolerance to the goal pose
+       * @param waypoints Intermediate poses the plan should pass by
+       * @param waypoints_tolerance If a waypoint is obstructed, how many meters the plan can pass away of it
+       *        Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
+       * @param goal_tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+       *        in x and y before failing
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
-       * @param plugin_code More detailed outcome in case of failure, so the high level executive
-       * can take better decisions. move_base_flex_msgs developers suggest to use one of the error
-       * codes defined in move_base_flex_msgs/GetPath action.
-       * Will be defaulted to DO_NOT_APPLY on planners not implementing the new move_base_flex API
-       * @param plugin_msg More detailed outcome as a string message
-       * @return True if a valid plan was found, false otherwise
+       * @param message Optional more detailed outcome as a string
+       * @return Result code as described on GetPath action result:
+       *         SUCCESS        = 0
+       *         1..9 are reserved as plugin specific non-error results
+       *         NO_PATH_FOUND  = 40
+       *         CANCELED       = 41
+       *         PAT_EXCEEDED   = 42
+       *         EMPTY_PATH     = 43
+       *         INTERNAL_ERROR = 44
+       *         51..59 are reserved as plugin specific errors
        */
-      virtual bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                            double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
-                            uint8_t& plugin_code, std::string& plugin_msg) = 0;
+      virtual uint8_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                               const std::vector<geometry_msgs::PoseStamped>& waypoints,
+                               const std::vector<double> waypoints_tolerance, double goal_tolerance,
+                               std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
+                               std::string& message) = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.

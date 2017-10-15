@@ -25,7 +25,7 @@ uint8 INTERNAL_ERROR = 70
 # 71..79 are reserved as plugin specific errors
 
 
-uint16 return_value
+uint8 return_value
 string used_plugin
 
 geometry_msgs/PoseStamped  final_pose

@@ -38,7 +38,7 @@ uint8 INTERNAL_ERROR = 44
 # 51..59 are reserved as plugin specific errors
 
 
-uint16 return_value
+uint8 return_value
 string used_plugin
 
 nav_msgs/Path path

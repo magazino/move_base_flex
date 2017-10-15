@@ -4,7 +4,6 @@ string behavior
 
 # Predefined success codes:
 uint8 SUCCESS        = 0
-# 1..9 are reserved as plugin specific non-error results
 
 # Possible server codes:
 uint8 FAILED         = 80
@@ -15,6 +14,6 @@ uint8 INTERNAL_ERROR = 84
 # 91..99 are reserved as plugin specific errors
 
 
-uint16 return_value
+uint8 return_value
 
 ---

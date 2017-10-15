@@ -28,7 +28,7 @@ uint8 PLAN_FAILURE   = 40
 uint8 CTRL_FAILURE   = 60
 # 61..79 are reserved as local planner specific errors
 
-uint16 return_value
+uint8 return_value
 
 # Configuration upon action completion
 string running_plugin    # in case of not success
