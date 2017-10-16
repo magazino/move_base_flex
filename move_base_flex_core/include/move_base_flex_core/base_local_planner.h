@@ -65,20 +65,20 @@ namespace move_base_flex_core {
        * @return Result code as described on ExePath action result:
        *         SUCCESS        = 0
        *         1..9 are reserved as plugin specific non-error results
-       *         NO_VALID_CMD   = 60
-       *         CANCELED       = 61
-       *         PAT_EXCEEDED   = 62
-       *         COLLISION      = 63
-       *         OSCILLATION    = 64
-       *         ROBOT_STUCK    = 65
-       *         MISSED_GOAL    = 66
-       *         MISSED_PATH    = 67
-       *         BLOCKED_PATH   = 68
-       *         INVALID_PATH   = 69
-       *         INTERNAL_ERROR = 70
-       *         71..79 are reserved as plugin specific errors
+       *         NO_VALID_CMD   = 100
+       *         CANCELED       = 101
+       *         PAT_EXCEEDED   = 102
+       *         COLLISION      = 103
+       *         OSCILLATION    = 104
+       *         ROBOT_STUCK    = 105
+       *         MISSED_GOAL    = 106
+       *         MISSED_PATH    = 107
+       *         BLOCKED_PATH   = 108
+       *         INVALID_PATH   = 109
+       *         INTERNAL_ERROR = 110
+       *         111..149 are reserved as plugin specific errors
        */
-      virtual uint8_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message)
+      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message)
       {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API computeVelocityCommands method not overridden \

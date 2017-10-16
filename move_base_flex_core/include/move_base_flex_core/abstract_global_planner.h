@@ -71,18 +71,18 @@ namespace move_base_flex_core
        * @return Result code as described on GetPath action result:
        *         SUCCESS        = 0
        *         1..9 are reserved as plugin specific non-error results
-       *         NO_PATH_FOUND  = 40
-       *         CANCELED       = 41
-       *         PAT_EXCEEDED   = 42
-       *         EMPTY_PATH     = 43
-       *         INTERNAL_ERROR = 44
-       *         51..59 are reserved as plugin specific errors
+       *         NO_PATH_FOUND  = 50
+       *         CANCELED       = 51
+       *         PAT_EXCEEDED   = 52
+       *         EMPTY_PATH     = 53
+       *         INTERNAL_ERROR = 54
+       *         71..99 are reserved as plugin specific errors
        */
-      virtual uint8_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                               const std::vector<geometry_msgs::PoseStamped>& waypoints,
-                               const std::vector<double> waypoints_tolerance, double goal_tolerance,
-                               std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
-                               std::string& message) = 0;
+      virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                                const std::vector<geometry_msgs::PoseStamped>& waypoints,
+                                const std::vector<double> waypoints_tolerance, double goal_tolerance,
+                                std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
+                                std::string& message) = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.

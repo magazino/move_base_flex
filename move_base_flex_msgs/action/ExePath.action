@@ -11,21 +11,22 @@ uint8 SUCCESS        = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Predefined error codes:
-uint8 NO_VALID_CMD   = 60
-uint8 CANCELED       = 61
-uint8 PAT_EXCEEDED   = 62
-uint8 COLLISION      = 63
-uint8 OSCILLATION    = 64
-uint8 ROBOT_STUCK    = 65
-uint8 MISSED_GOAL    = 66
-uint8 MISSED_PATH    = 67
-uint8 BLOCKED_PATH   = 68
-uint8 INVALID_PATH   = 69
-uint8 INTERNAL_ERROR = 70
-# 71..79 are reserved as plugin specific errors
+uint8 NO_VALID_CMD   = 100
+uint8 CANCELED       = 101
+uint8 PAT_EXCEEDED   = 102
+uint8 COLLISION      = 103
+uint8 OSCILLATION    = 104
+uint8 ROBOT_STUCK    = 105
+uint8 MISSED_GOAL    = 106
+uint8 MISSED_PATH    = 107
+uint8 BLOCKED_PATH   = 108
+uint8 INVALID_PATH   = 109
+uint8 INTERNAL_ERROR = 110
+# 121..149 are reserved as plugin specific errors
 
 
-uint8 return_value
+uint32 outcome
+string message
 string used_plugin
 
 geometry_msgs/PoseStamped  final_pose

@@ -30,15 +30,16 @@ uint8 SUCCESS        = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Possible server codes:
-uint8 NO_PATH_FOUND  = 40
-uint8 CANCELED       = 41
-uint8 PAT_EXCEEDED   = 42
-uint8 EMPTY_PATH     = 43
-uint8 INTERNAL_ERROR = 44
-# 51..59 are reserved as plugin specific errors
+uint8 NO_PATH_FOUND  = 50
+uint8 CANCELED       = 51
+uint8 PAT_EXCEEDED   = 52
+uint8 EMPTY_PATH     = 53
+uint8 INTERNAL_ERROR = 54
+# 71..99 are reserved as plugin specific errors
 
 
-uint8 return_value
+uint32 outcome
+string message
 string used_plugin
 
 nav_msgs/Path path
