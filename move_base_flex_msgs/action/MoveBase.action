@@ -5,7 +5,7 @@ geometry_msgs/PoseStamped target_pose
 
 string[] usable_local_planner_plugins
 string[] usable_global_planner_plugins
-string[] usable_recovery_plugins
+string[] usable_recovery_behaviors
 
 ---
 
@@ -21,7 +21,9 @@ uint8 OSCILLATION    = 14
 uint8 ROBOT_STUCK    = 15
 uint8 START_BLOCKED  = 16
 uint8 GOAL_BLOCKED   = 17
-uint8 INTERNAL_ERROR = 18
+uint8 TF_ERROR       = 18
+uint8 INVALID_PLUGIN = 19
+uint8 INTERNAL_ERROR = 20
 # 21..49 are reserved for future general error codes
 
 # Planning/controlling failures:

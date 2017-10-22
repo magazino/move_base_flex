@@ -14,10 +14,10 @@ geometry_msgs/PoseStamped[] waypoints
 
 # If a waypoint is obstructed, how many meters the plath can pass away of it before failing
 # Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
-float32[] waypoints_tolerance
+float64[] waypoints_tolerance
 
 # If the goal is obstructed, how many meters the planner can relax the constraint in x and y before failing
-float32 goal_tolerance
+float64 goal_tolerance
 
 # Applicable global planner plugins. MBF will try them in sequence until one succeeds
 # Defaults to global_planners parameter
@@ -35,7 +35,9 @@ uint8 CANCELED       = 51
 uint8 NO_PATH_FOUND  = 52
 uint8 PAT_EXCEEDED   = 53
 uint8 EMPTY_PATH     = 54
-uint8 INTERNAL_ERROR = 55
+uint8 TF_ERROR       = 55
+uint8 INVALID_PLUGIN = 56
+uint8 INTERNAL_ERROR = 57
 # 71..99 are reserved as plugin specific errors
 
 uint32 outcome

@@ -61,10 +61,10 @@ namespace move_base_flex_core
        * @param start The start pose
        * @param goal The goal pose
        * @param waypoints Intermediate poses the plan should pass by
-       * @param waypoints_tolerance If a waypoint is obstructed, how many meters the plan can pass away of it
-       *        Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
        * @param goal_tolerance If the goal is obstructed, how many meters the planner can relax the constraint
        *        in x and y before failing
+       * @param waypoints_tolerance If a waypoint is obstructed, how many meters the plan can pass away of it
+       *        Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string
@@ -80,7 +80,7 @@ namespace move_base_flex_core
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                 const std::vector<geometry_msgs::PoseStamped>& waypoints,
-                                const std::vector<double>& waypoints_tolerance, double goal_tolerance,
+                                double goal_tolerance, const std::vector<double>& waypoints_tolerance,
                                 std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                                 std::string& message) = 0;
 

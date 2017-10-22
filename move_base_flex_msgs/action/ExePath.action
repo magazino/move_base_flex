@@ -24,7 +24,9 @@ uint8 MISSED_GOAL    = 107
 uint8 MISSED_PATH    = 108
 uint8 BLOCKED_PATH   = 109
 uint8 INVALID_PATH   = 110
-uint8 INTERNAL_ERROR = 111
+uint8 TF_ERROR       = 111
+uint8 INVALID_PLUGIN = 112
+uint8 INTERNAL_ERROR = 113
 # 121..149 are reserved as plugin specific errors
 
 uint32 outcome

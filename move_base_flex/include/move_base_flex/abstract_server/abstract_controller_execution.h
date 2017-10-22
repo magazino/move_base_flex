@@ -140,7 +140,7 @@ template<typename LOCAL_PLANNER_BASE>
      * @param plugin_code Returns the last read code provided py the plugin
      * @param plugin_msg Returns the last read message provided by the plugin
      */
-    void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
+    void getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg);
 
     /**
      * @brief Returns the time of the last plugin call
@@ -191,7 +191,7 @@ template<typename LOCAL_PLANNER_BASE>
      * @param plugin_code
      * @param plugin_msg
      */
-    void setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg);
+    void setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg);
 
     //! the name of the loaded plugin
     std::string plugin_name_;
@@ -303,7 +303,7 @@ template<typename LOCAL_PLANNER_BASE>
     AbstractControllerExecution::ControllerState state_;
 
     //! the last received plugin code
-    uint8_t plugin_code_;
+    uint32_t plugin_code_;
 
     //! the last received plugin message
     std::string plugin_msg_;

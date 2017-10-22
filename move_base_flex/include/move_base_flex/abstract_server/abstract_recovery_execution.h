@@ -108,17 +108,17 @@ template<typename RECOVERY_BEHAVIOR_BASE>
      */
     enum RecoveryState
     {
-      INITIALIZED,   ///< The recovery execution has been initialized
-      STARTED,       ///< The recovery execution thread has been started
-      RECOVERING,    ///< The recovery behavior plugin is running
-      WRONG_NAME,    ///< The given name could not be associated with a load behavior
-      RECOVERY_DONE, ///< The recovery behavior execution is done
-      CANCELED,      ///< The execution was canceled.
-      STOPPED,       ///< The recovery execution has been stopped
+      INITIALIZED,   ///< The recovery execution has been initialized.
+      STARTED,       ///< The recovery execution thread has been started.
+      RECOVERING,    ///< The recovery behavior plugin is running.
+      WRONG_NAME,    ///< The given name could not be associated with a load behavior.
+      RECOVERY_DONE, ///< The recovery behavior execution is done.
+      CANCELED,      ///< The recovery execution was canceled.
+      STOPPED,       ///< The recovery execution has been stopped.
     };
 
     /**
-     * @brief Returns the current state, Thread safe communication
+     * @brief Returns the current state, thread-safe communication
      * @return current internal state
      */
     AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState getState();
@@ -142,8 +142,8 @@ template<typename RECOVERY_BEHAVIOR_BASE>
     bool cancel();
 
     /**
-     * @brief Returns true is the given name has been loaded as recovery behaviour.
-     * @param name The name of the recovery behaviour.
+     * @brief Returns true is the given name has been loaded as recovery behavior.
+     * @param name The name of the recovery behavior.
      * @return true, if the recovery behavior exists, false otherwise.
      */
     bool hasRecoveryBehavior(const std::string &name);
@@ -194,7 +194,7 @@ template<typename RECOVERY_BEHAVIOR_BASE>
 
     /**
      * loads the plugins defined in the parameter server
-     * @return true, if all recovery behaviour could be read successfully.
+     * @return true, if all recovery behavior could be read successfully.
      */
     virtual bool loadPlugins();
 

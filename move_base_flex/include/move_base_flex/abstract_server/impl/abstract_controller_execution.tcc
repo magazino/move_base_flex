@@ -183,7 +183,7 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg)
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
   {
     boost::lock_guard<boost::mutex> guard(pcode_mtx_);
     plugin_code_ =  plugin_code;
@@ -191,7 +191,7 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg)
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
   {
     boost::lock_guard<boost::mutex> guard(pcode_mtx_);
     plugin_code = plugin_code_;
@@ -319,11 +319,6 @@ template<class LOCAL_PLANNER_BASE>
         }
         else
         {
-          geometry_msgs::Twist cmd_vel;
-
-          uint8_t plugin_code;
-          std::string plugin_msg;
-
           setState(PLANNING);
 
           // save time and call the plugin
@@ -332,19 +327,17 @@ template<class LOCAL_PLANNER_BASE>
           lct_mtx_.unlock();
 
           // call plugin to compute the next velocity command
-          bool success = local_planner_->computeVelocityCommands(cmd_vel, plugin_code, plugin_msg);
-          setPluginInfo(plugin_code, plugin_msg);
+          std::string message;
+          uint32_t outcome = local_planner_->computeVelocityCommands(cmd_vel_stamped, message);
+          setPluginInfo(outcome, message);
 
-          if(success)
+          if (outcome < 10)
           {
             // set stamped values: frame id, time stamp and sequence number
-            cmd_vel_stamped.twist = cmd_vel;
-            cmd_vel_stamped.header.stamp = ros::Time::now();
-            cmd_vel_stamped.header.frame_id = robot_frame_;
             cmd_vel_stamped.header.seq = seq++;
             setVelocityCmd(cmd_vel_stamped);
             setState(GOT_LOCAL_CMD);
-            vel_pub_.publish(cmd_vel);
+            vel_pub_.publish(cmd_vel_stamped.twist);
             condition_.notify_all();
             retries = 0;
           }
@@ -389,10 +382,11 @@ template<class LOCAL_PLANNER_BASE>
         }
       }
     }
-    catch (boost::thread_interrupted &ex)
+    catch (const boost::thread_interrupted &ex)
     {
+      ROS_WARN_STREAM("Controller thread interrupted!        >>>>>>>>>>>>>   investigate why this happened!!!");
       publishZeroVelocity();
-      setState(STOPPED);
+      setState(STOPPED);  // TODO _SP_ when can this happen?
       condition_.notify_all();
       moving_ = false;
     }

@@ -149,9 +149,9 @@ template<typename GLOBAL_PLANNER_BASE>
     /**
      * @brief Sets a new goal pose for the planner execution
      * @param goal the new goal pose
-     * @param tolerance tolerance to the goal for the planning
+     * @param goal_tolerance tolerance to the goal for the planning
      */
-    void setNewGoal(const geometry_msgs::PoseStamped &goal, const double &tolerance);
+    void setNewGoal(const geometry_msgs::PoseStamped &goal, double goal_tolerance);
 
     /**
      * @brief Sets a new start pose for the planner execution
@@ -163,27 +163,35 @@ template<typename GLOBAL_PLANNER_BASE>
      * @brief Sets a new star and goal pose for the planner execution
      * @param start new start pose
      * @param goal new goal pose
-     * @param tolerance tolerance to the new goal for the planning
+     * @param goal_tolerance tolerance to the new goal for the planning
      */
     void setNewStartAndGoal(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                            const double &tolerance);
+                            double goal_tolerance);
+
+    /**
+     * @brief Sets waypoints and allowed tolerances
+     * @param waypoints Intermediate poses the plan should pass by
+     * @param waypoints_tolerance If a waypoint is obstructed, how many meters the plan can pass away of it
+     */
+    void setWaypoints(const std::vector<geometry_msgs::PoseStamped> &waypoints,
+                      const std::vector<double> &waypoints_tolerance);
 
     /**
      * @brief Starts the planner execution thread with the given parameters.
      * @param start start pose for the planning
      * @param goal goal pose for the planning
-     * @param tolerance tolerance to the goal pose for the planning
+     * @param goal_tolerance tolerance to the goal pose for the planning
      * @return true, if the planner thread has been started, false if the thread is already running.
      */
     bool startPlanning(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                       const double &tolerance);
+                       double goal_tolerance);
 
     /**
      * @brief Copys the plugin info to the references.
      * @param plugin_code Reference to a variable, to which the code will be copied.
      * @param plugin_msg Reference to a variable, to which the plugin message will be copied.
      */
-    void getPluginInfo(uint8_t& plugin_code, std::string& plugin_msg);
+    void getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg);
 
     /**
      * @brief Tries to stop the current planner execution by an thread interrupt.
@@ -231,7 +239,7 @@ template<typename GLOBAL_PLANNER_BASE>
     * @param plugin_code plugin code received from the plugin
     * @param plugin_msg plugin message received from the plugin
     */
-    void setPluginInfo(const uint8_t& plugin_code, const std::string& plugin_msg);
+    void setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg);
 
 
   private:
@@ -264,7 +272,7 @@ template<typename GLOBAL_PLANNER_BASE>
      * @param plan The computed plan to be transferred.
      * @param cost The computed costs to be transfered.
      */
-    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, const double &cost);
+    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, double cost);
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
@@ -287,6 +295,9 @@ template<typename GLOBAL_PLANNER_BASE>
     //! true, if a new start pose has been set, until it is used.
     bool has_new_start_;
 
+    //! true, if new waypoints have been set, until they are used.
+    bool has_new_waypoints_;
+
     //! the last cycle start time, updated each cycle.
     ros::Time last_cycle_start_time_;
 
@@ -300,7 +311,7 @@ template<typename GLOBAL_PLANNER_BASE>
     double cost_;
 
     //! the current plugin code
-    uint8_t plugin_code_;
+    uint32_t plugin_code_;
 
     //! the current plugin message
     std::string plugin_msg_;
@@ -311,8 +322,14 @@ template<typename GLOBAL_PLANNER_BASE>
     //! the current goal pose used for planning
     geometry_msgs::PoseStamped goal_;
 
-    //! the current tolerance used for planning
-    double tolerance_;
+    //! optional intermediate poses the plan should pass by
+    std::vector<geometry_msgs::PoseStamped> waypoints_;
+
+    //! optional goal tolerance, in meters
+    double goal_tolerance_;
+
+    //! optional waypoints tolerance, in meters
+    std::vector<double> waypoints_tolerance_;
 
     //! planning cycle frequency
     double frequency_;

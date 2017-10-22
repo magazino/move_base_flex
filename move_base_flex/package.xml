@@ -1,6 +1,6 @@
 <package>
     <name>move_base_flex</name>
-    <version>0.10.0</version>
+    <version>0.1.0</version>
     <description>
        Move Base Flex (MBF) is a backwards-compatible replacement for move_base.
        MBF can use existing plugins for move_base, and provides an enhanced version

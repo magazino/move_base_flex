@@ -96,7 +96,7 @@ private:
   /**
    * loads the plugins defined in the parameter server
    * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
-   * @return true, if all recovery behaviour could be read successfully.
+   * @return true, if all recovery behavior could be read successfully.
    */
   virtual bool loadPlugins();
 };
