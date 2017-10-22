@@ -774,6 +774,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
     ros::NodeHandle private_nh("~");
 
+    // TODO we should do this once on initialization!
     ActionClientExePath action_client_exe_path(private_nh, name_action_exe_path);
     ActionClientGetPath action_client_get_path(private_nh, name_action_get_path);
     ActionClientRecovery action_client_recovery(private_nh, name_action_recovery);
@@ -792,12 +793,11 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     move_base_flex_msgs::ExePathResult exe_path_result;
     move_base_flex_msgs::RecoveryResult recovery_result;
 
-    std::vector<std::string> mbf_behaviors;
-    if (private_nh.getParam("mbf_action_recovery_behaviors", mbf_behaviors))
-    {
-      ROS_WARN_STREAM("No recovery behaviors given for the action \"" << name_action_move_base << "\"!");
-    }
 // _SP_  TODO why to check here?  is not done on loading?
+//    if (private_nh.getParam("mbf_action_recovery_behaviors", mbf_behaviors))
+//    {
+//      ROS_WARN_STREAM("No recovery behaviors given for the action \"" << name_action_move_base << "\"!");
+//    }
 //    bool all_rb_loaded = true;
 //    std::string names = "";
 //
@@ -828,7 +828,8 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 //    }
 
     // start recovering with the first behavior
-    std::vector<std::string>::iterator current_recovery_behavior = mbf_behaviors.begin();
+    std::vector<std::string> recovery_behaviors = recovery_ptr_->listRecoveryBehaviors();
+    std::vector<std::string>::iterator current_recovery_behavior = recovery_behaviors.begin();
 
     // get the current robot pose
     if (!getRobotPose(robot_pose))
@@ -1003,7 +1004,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 switch (move_base_result.outcome)
                 {
                   case move_base_flex_msgs::ExePathResult::OSCILLATION:
-                    current_recovery_behavior = mbf_behaviors.begin();
+                    current_recovery_behavior = recovery_behaviors.begin();  // why?  _SP_
 
 //                  case move_base_flex_msgs::ExePathResult::PAT_EXCEEDED:
 //                  case move_base_flex_msgs::ExePathResult::NO_VALID_CMD:
@@ -1039,9 +1040,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                     action_server_move_base_ptr_->setAborted(move_base_result, exe_path_state.getText());
                     break;
                   }
-                  else if (current_recovery_behavior == mbf_behaviors.end())
+                  else if (current_recovery_behavior == recovery_behaviors.end())
                   {
-                    if (mbf_behaviors.empty())
+                    if (recovery_behaviors.empty())
                     {
                       ROS_WARN_STREAM("No Recovery Behaviors loaded! Abort controlling: " << exe_path_result.message);
                     }

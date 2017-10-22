@@ -206,6 +206,18 @@ template<class RECOVERY_BEHAVIOR_BASE>
   }
 
 template<class RECOVERY_BEHAVIOR_BASE>
+  std::vector<std::string> AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::listRecoveryBehaviors()
+  {
+    std::vector<std::string> recovery_behaviors;
+    std::map<std::string, std::string>::iterator it = recovery_behaviors_type_.begin();
+    for (; it != recovery_behaviors_type_.end(); ++it)
+    {
+      recovery_behaviors.push_back(it->first);
+    }
+    return recovery_behaviors;
+  }
+
+template<class RECOVERY_BEHAVIOR_BASE>
   bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::getTypeOfBehavior(const std::string &name, std::string &type)
   {
     std::map<std::string, std::string>::iterator finder = recovery_behaviors_type_.find(name);

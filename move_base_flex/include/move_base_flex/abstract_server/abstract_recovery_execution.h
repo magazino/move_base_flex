@@ -149,6 +149,12 @@ template<typename RECOVERY_BEHAVIOR_BASE>
     bool hasRecoveryBehavior(const std::string &name);
 
     /**
+     * @brief Returns a list of all loaded recovery behavior.
+     * @return list of all loaded recovery behavior names.
+     */
+    std::vector<std::string> listRecoveryBehaviors();
+
+    /**
      * @brief Returns the type for the corresponding name
      * @param name Name of the plugin
      * @param type Type of the plugin, returned
