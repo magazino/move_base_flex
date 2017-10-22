@@ -67,7 +67,7 @@ namespace move_base_flex_core {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API initialize method not overridden nor backward compatible plugin provided");
 
-        return backward_compatible_plugin->initialize(name, tf, global_costmap, local_costmap);
+        backward_compatible_plugin->initialize(name, tf, global_costmap, local_costmap);
       };
 
       /**
@@ -78,7 +78,7 @@ namespace move_base_flex_core {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API runBehavior method not overridden nor backward compatible plugin provided");
 
-        return backward_compatible_plugin->runBehavior();
+        backward_compatible_plugin->runBehavior();
       }
 
       /**

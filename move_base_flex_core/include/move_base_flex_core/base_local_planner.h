@@ -84,7 +84,9 @@ namespace move_base_flex_core {
           throw std::runtime_error("MBF API computeVelocityCommands method not overridden \
                                    nor backward compatible plugin provided");
 
-        return  backward_compatible_plugin->computeVelocityCommands(cmd_vel.twist) ? 0 : 60;  // SUCCESS | NO_VALID_CMD
+        bool success = backward_compatible_plugin->computeVelocityCommands(cmd_vel.twist);
+        message = success ? "Goal reached" : "Controller failed";
+        return success ? 0 : 60;  // SUCCESS | NO_VALID_CMD
       }
 
       /**

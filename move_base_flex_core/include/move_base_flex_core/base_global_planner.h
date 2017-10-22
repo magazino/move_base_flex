@@ -85,7 +85,9 @@ namespace move_base_flex_core {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API makePlan method not overridden nor backward compatible plugin provided");
 
-        return backward_compatible_plugin->makePlan(start, goal, plan, cost) ? 0 : 40;  // SUCCESS | NO_PATH_FOUND
+        bool success = backward_compatible_plugin->makePlan(start, goal, plan, cost);
+        message = success ? "Plan found" : "Planner failed";
+        return success ? 0 : 40;  // SUCCESS | NO_PATH_FOUND
       }
 
       /**
