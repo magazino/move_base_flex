@@ -1,3 +1,5 @@
+# Follow the given path until completion or failure
+
 nav_msgs/Path path
 
 # Applicable local planner plugins. MBF will try them in sequence until one succeeds
@@ -11,19 +13,19 @@ uint8 SUCCESS        = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Predefined error codes:
-uint8 NO_VALID_CMD   = 100
+uint8 FAILURE        = 100  # Unspecified failure, only used for old, non-mfb_core based plugins
 uint8 CANCELED       = 101
-uint8 PAT_EXCEEDED   = 102
-uint8 COLLISION      = 103
-uint8 OSCILLATION    = 104
-uint8 ROBOT_STUCK    = 105
-uint8 MISSED_GOAL    = 106
-uint8 MISSED_PATH    = 107
-uint8 BLOCKED_PATH   = 108
-uint8 INVALID_PATH   = 109
-uint8 INTERNAL_ERROR = 110
+uint8 NO_VALID_CMD   = 102
+uint8 PAT_EXCEEDED   = 103
+uint8 COLLISION      = 104
+uint8 OSCILLATION    = 105
+uint8 ROBOT_STUCK    = 106
+uint8 MISSED_GOAL    = 107
+uint8 MISSED_PATH    = 108
+uint8 BLOCKED_PATH   = 109
+uint8 INVALID_PATH   = 110
+uint8 INTERNAL_ERROR = 111
 # 121..149 are reserved as plugin specific errors
-
 
 uint32 outcome
 string message

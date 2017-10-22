@@ -30,13 +30,13 @@ uint8 SUCCESS        = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Possible server codes:
-uint8 NO_PATH_FOUND  = 50
+uint8 FAILURE        = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
 uint8 CANCELED       = 51
-uint8 PAT_EXCEEDED   = 52
-uint8 EMPTY_PATH     = 53
-uint8 INTERNAL_ERROR = 54
+uint8 NO_PATH_FOUND  = 52
+uint8 PAT_EXCEEDED   = 53
+uint8 EMPTY_PATH     = 54
+uint8 INTERNAL_ERROR = 55
 # 71..99 are reserved as plugin specific errors
-
 
 uint32 outcome
 string message

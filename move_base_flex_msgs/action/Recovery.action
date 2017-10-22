@@ -1,3 +1,5 @@
+# Run one of the recovery behavior listed on recovery_behaviors parameter
+
 string behavior
 
 ---
@@ -6,14 +8,15 @@ string behavior
 uint8 SUCCESS        = 0
 
 # Possible server codes:
-uint8 FAILED         = 150
+uint8 FAILURE        = 150
 uint8 CANCELED       = 151
 uint8 PAT_EXCEEDED   = 152
-uint8 INVALID_NAME   = 153
+uint8 INVALID_NAME   = 153  # behavior name not recognized
 uint8 INTERNAL_ERROR = 154
 # 171..199 are reserved as plugin specific errors
 
-
-uint8 return_value
+uint32 outcome
+string message
+string used_plugin
 
 ---

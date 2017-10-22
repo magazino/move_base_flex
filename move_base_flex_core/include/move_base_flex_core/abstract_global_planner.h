@@ -80,7 +80,7 @@ namespace move_base_flex_core
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                 const std::vector<geometry_msgs::PoseStamped>& waypoints,
-                                const std::vector<double> waypoints_tolerance, double goal_tolerance,
+                                const std::vector<double>& waypoints_tolerance, double goal_tolerance,
                                 std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                                 std::string& message) = 0;
 
