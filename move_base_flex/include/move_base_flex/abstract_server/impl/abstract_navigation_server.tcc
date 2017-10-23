@@ -482,7 +482,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
   void AbstractNavigationServer<LOCAL_PLANNER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::callActionExePath(
       const move_base_flex_msgs::ExePathGoalConstPtr &goal)
   {
-
     move_base_flex_msgs::ExePathResult result;
     move_base_flex_msgs::ExePathFeedback feedback;
 

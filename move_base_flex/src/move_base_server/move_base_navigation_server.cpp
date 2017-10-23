@@ -135,10 +135,12 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(move_base_flex_msgs::Che
 {
   // selecting the requested costmap
   CostmapPtr costmap;
+  std::string costmap_name;
   switch (request.costmap)
   {
     case move_base_flex_msgs::CheckPose::Request::LOCAL_COSTMAP:
       costmap = costmap_local_planner_ptr_;
+      costmap_name = "local costmap";
       if (shutdown_costmaps_ && !local_costmap_active_)
       {
         ROS_WARN_STREAM("Calling check_pose_cost on local costmap while costmap not active;"
@@ -148,6 +150,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(move_base_flex_msgs::Che
       break;
     case move_base_flex_msgs::CheckPose::Request::GLOBAL_COSTMAP:
       costmap = costmap_global_planner_ptr_;
+      costmap_name = "global costmap";
       if (shutdown_costmaps_ && !global_costmap_active_)
       {
         ROS_WARN_STREAM("Calling check_pose_cost on global costmap while costmap not active;"
@@ -155,11 +158,37 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(move_base_flex_msgs::Che
         costmap->updateMap();
       }
       break;
+    default:
+      ROS_ERROR_STREAM("No valid costmap provided; options are "
+                       << move_base_flex_msgs::CheckPose::Request::LOCAL_COSTMAP << ": local costmap, "
+                       << move_base_flex_msgs::CheckPose::Request::GLOBAL_COSTMAP << ": global costmap");
+      return false;
   }
 
-  double x = request.pose.pose.position.x;
-  double y = request.pose.pose.position.y;
-  double yaw = tf::getYaw(request.pose.pose.orientation);
+  std::string costmap_frame = costmap->getGlobalFrameID();
+
+  geometry_msgs::PoseStamped pose;
+  if (request.current_pose)
+  {
+    if (! move_base_flex::getRobotPose(*tf_listener_ptr_, robot_frame_, costmap_frame, ros::Duration(0.5), pose))
+    {
+      ROS_ERROR_STREAM("Get robot pose on " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+  else
+  {
+    if (! transformPose(*tf_listener_ptr_, costmap_frame, request.pose.header.stamp,
+                        ros::Duration(0.5), request.pose, global_frame_, pose))
+    {
+      ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+
+  double x = pose.pose.position.x;
+  double y = pose.pose.position.y;
+  double yaw = tf::getYaw(pose.pose.orientation);
 
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getCostmap()->getMutex()));
 
