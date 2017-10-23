@@ -69,11 +69,14 @@ namespace move_base_flex_core {
        * @return Result code as described on GetPath action result:
        *         SUCCESS        = 0
        *         1..9 are reserved as plugin specific non-error results
-       *         NO_PATH_FOUND  = 50
+       *         FAILURE        = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
        *         CANCELED       = 51
-       *         PAT_EXCEEDED   = 52
-       *         EMPTY_PATH     = 53
-       *         INTERNAL_ERROR = 54
+       *         NO_PATH_FOUND  = 52
+       *         PAT_EXCEEDED   = 53
+       *         EMPTY_PATH     = 54
+       *         TF_ERROR       = 55
+       *         INVALID_PLUGIN = 56
+       *         INTERNAL_ERROR = 57
        *         71..99 are reserved as plugin specific errors
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
@@ -87,7 +90,7 @@ namespace move_base_flex_core {
 
         bool success = backward_compatible_plugin->makePlan(start, goal, plan, cost);
         message = success ? "Plan found" : "Planner failed";
-        return success ? 0 : 40;  // SUCCESS | NO_PATH_FOUND
+        return success ? 0 : 50;  // SUCCESS | FAILURE
       }
 
       /**
