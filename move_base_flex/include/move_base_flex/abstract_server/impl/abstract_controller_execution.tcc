@@ -349,7 +349,7 @@ template<class LOCAL_PLANNER_BASE>
               moving_ = false;
               condition_.notify_all();
             }
-            else if (ros::Time::now() - getLastValidCmdVelTime() > patience_)
+            else if (ros::Time::now() - getLastValidCmdVelTime() > patience_)  // why not isPatienceExceeded() ?
             {
               setState(PAT_EXCEEDED);
               moving_ = false;
@@ -384,9 +384,10 @@ template<class LOCAL_PLANNER_BASE>
     }
     catch (const boost::thread_interrupted &ex)
     {
-      ROS_WARN_STREAM("Controller thread interrupted!        >>>>>>>>>>>>>   investigate why this happened!!!");
+      // Controller thread interrupted; probably robot is oscillating or we have exceeded planner patience
+      ROS_WARN_STREAM("Controller thread interrupted!");
       publishZeroVelocity();
-      setState(STOPPED);  // TODO _SP_ when can this happen?
+      setState(STOPPED);
       condition_.notify_all();
       moving_ = false;
     }

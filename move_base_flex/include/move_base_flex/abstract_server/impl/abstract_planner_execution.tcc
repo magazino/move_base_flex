@@ -408,7 +408,11 @@ template<class GLOBAL_PLANNER_BASE>
           }
           else if (isPatienceExceeded())
           {
-            ROS_INFO_STREAM("Planning patience has been exceeded" << (cancel_ ? "; planner canceled!" : "!"));
+            // Patience exceeded is handled on the navigation server, who has tried to cancel planning (possibly
+            // without success, as old nav_core-based planners do not support canceling); here we just state the
+            // fact and cleanup the mess either after a succesfull canceling or after planner finally gived up
+            ROS_INFO_STREAM("Planning patience has been exceeded" << cancel_ ? "; planner canceled!"
+                                                                             : " but we failed to cancel it!");
             setState(PAT_EXCEEDED);
             exceeded = true;
             planning_ = false;
@@ -450,6 +454,7 @@ template<class GLOBAL_PLANNER_BASE>
           }
           else
           {
+            // Warn every 100 seconds?  i don't understand this part  _SP_ please help!
             ROS_WARN_THROTTLE(100, "Planning needs to much time to stay in the planning frequency!");
           }
         }
@@ -457,8 +462,9 @@ template<class GLOBAL_PLANNER_BASE>
     }
     catch (const boost::thread_interrupted &ex)
     {
-      ROS_WARN_STREAM("Planner thread interrupted!        >>>>>>>>>>>>>   investigate why this happened!!!");
-      setState(STOPPED);  // TODO _SP_ when can this happen?
+      // Planner thread interrupted; probably we have exceeded planner patience
+      ROS_WARN_STREAM("Planner thread interrupted!");
+      setState(STOPPED);
       condition_.notify_all(); // notify observer
       planning_ = false;
     }

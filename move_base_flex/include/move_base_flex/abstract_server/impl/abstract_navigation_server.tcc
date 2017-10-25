@@ -322,23 +322,23 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           break;
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::STOPPED:
-//          ROS_DEBUG("robot navigation state: stopped");
-//          ROS_INFO("Planning has been aborted!");
-//          result.path.header.stamp = ros::Time::now();
-//          result.server_code = move_base_flex_msgs::GetPathResult::STOPPED;
-//          result.server_msg = "Global planner has been stopped!";
-//          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
-//          action_server_get_path_ptr_->setAborted(result, result.server_msg);
-//          active_planning_ = false;
-//          break;
-// TODO XXX  _SP_ diff between STOPPED and CANCELED?
+          // this happens if we call planning_ptr_->stopPlanning(), what is commented cause makes SBPL crash!!!
+          // as it can be either due to patiece exceeded or action preempted, both already handled, not sure
+          // what's the point of this state  XXX  _SP_  help needed here
+          ROS_DEBUG("robot navigation state: stopped");
+          ROS_INFO("Planning has been aborted!");
+          result.outcome = move_base_flex_msgs::GetPathResult::CANCELED;  // XXX or PAT_EXCEEDED?
+          result.message = "Global planner has been stopped!";
+          action_server_get_path_ptr_->setAborted(result, result.message);
+          active_planning_ = false;
+          break;
+
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::CANCELED:
           ROS_DEBUG("robot navigation state: canceled");
           ROS_INFO("Global planner has been canceled successfully");
           result.path.header.stamp = ros::Time::now();
           result.outcome = move_base_flex_msgs::GetPathResult::CANCELED;
           result.message = "Global planner has been preempted!";
-//          planning_ptr_->getPluginInfo(result.plugin_code, result.plugin_msg);
           action_server_get_path_ptr_->setPreempted(result, result.message);
           active_planning_ = false;
           break;
@@ -367,7 +367,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           ROS_DEBUG("robot navigation state: found plan");
 
           planning_ptr_->getNewPlan(plan, costs);
-          planning_ptr_->stopPlanning();
+          planning_ptr_->stopPlanning();  // probably useless... I suppose the thread is already stopped _SP_ ?
           planning_ptr_->getPluginInfo(result.outcome, result.message);
 
           publishPath(plan);
@@ -399,8 +399,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           }
 
           result.path.poses = global_plan;
-//          result.server_msg = move_base_flex_msgs::GetPathResult::FOUND_PATH;
-//          result.server_msg = "Succeeded: Found a valid plan!";
           planning_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_get_path_ptr_->setSucceeded(result, result.message);
 
@@ -410,9 +408,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           // no plan found
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::NO_PLAN_FOUND:
           ROS_INFO("robot navigation state: no plan found");
-//          result.path.header.stamp = ros::Time::now();
-//          result.server_code = move_base_flex_msgs::GetPathResult::NO_PATH_FOUND;
-//          result.server_msg = "No path found";
           planning_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
@@ -420,9 +415,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::MAX_RETRIES:
           ROS_INFO("Global planner reached the maximum number of retries");
-//          result.path.header.stamp = ros::Time::now();
-//          result.server_code = move_base_flex_msgs::GetPathResult::MAX_RETRIES;
-//          result.server_msg = "Global planner reached the maximum number of retries";
           planning_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
@@ -430,13 +422,8 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PAT_EXCEEDED:
           ROS_INFO("Global planner exceeded the patience time");
-//          result.path.header.stamp = ros::Time::now();
-//          result.server_code = move_base_flex_msgs::GetPathResult::PAT_EXCEEDED;
-//          result.server_msg = "Global planner exceeded the patience time";
-        ROS_WARN("################################################################################");
-        ROS_WARN("I THOUGTH THIS COULD NEVER HAPPEN!!!  PAT_EXCEEDED must be handled by mbf server");
-        ROS_WARN("################################################################################");
-          planning_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = move_base_flex_msgs::GetPathResult::PAT_EXCEEDED;
+          result.message = "Global planner exceeded the patience time";
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
           break;
@@ -505,7 +492,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       result.outcome = move_base_flex_msgs::ExePathResult::INTERNAL_ERROR;
       result.message = "Could not start moving, because another moving thread is already / still running!";
       action_server_exe_path_ptr_->setAborted(result, result.message);
-      ROS_ERROR_STREAM(result.outcome << " Canceling the action call.");
+      ROS_ERROR_STREAM(result.message << " Canceling the action call.");
       return;
     }
 
@@ -519,7 +506,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     {
       if (!getRobotPose(robot_pose))
       {
-//        result.pose = robot_pose;
         result.outcome = move_base_flex_msgs::ExePathResult::TF_ERROR;
         result.message = "Could not get the robot pose";
         action_server_exe_path_ptr_->setAborted(result, result.message);
@@ -548,11 +534,10 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
       switch (state_moving_input)
       {
-        case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STOPPED: // STOPPED == CANCELED   choose one for all local, global & rec. beh  TODO XXX
+        case AbstractControllerExecution<LOCAL_PLANNER_BASE>::STOPPED:
           ROS_WARN_STREAM("The moving has been stopped!");
           result.outcome = move_base_flex_msgs::ExePathResult::CANCELED;
           result.message = "Local planner preempted";
-//          moving_ptr_->getPluginInfo(result.outcome, result.plugin_msg);
           action_server_exe_path_ptr_->setPreempted(result, result.message);
           ROS_INFO_STREAM("Action \"ExePath\" preempted");
           active_moving_ = false;
@@ -566,16 +551,16 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::PLANNING:
           if (moving_ptr_->isPatienceExceeded())
           {
-            ROS_INFO_STREAM("Local planner patience has been exceeded!");
+            ROS_INFO_STREAM("Local planner patience has been exceeded! Stopping controller...");
             // TODO planner is stuck, but we don't have currently any way to cancel it!
+            // We will try to stop the thread, but does nothing with DWA or TR controllers
+            moving_ptr_->stopMoving();
           }
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::MAX_RETRIES:
           ROS_WARN_STREAM("The local planner has been aborted after it exceeded the maximum number of retries!");
           active_moving_ = false;
-//          result.server_msg = "The local planner has been aborted after it exceeded the maxinum number if retries!";
-//          result.server_code = move_base_flex_msgs::ExePathResult::MAX_RETRIES;
           moving_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
@@ -583,21 +568,18 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::PAT_EXCEEDED:
           ROS_WARN_STREAM("The local planner has been aborted after it exceeded the patience time ");
         ROS_WARN("################################################################################");
-        ROS_WARN("I THOUGTH THIS COULD NEVER HAPPEN!!!  PAT_EXCEEDED must be handled by mbf server");
+        ROS_WARN(" PAT_EXCEEDED!  how I manage to provoke this?");
         ROS_WARN("################################################################################");
 
           active_moving_ = false;
           result.outcome = move_base_flex_msgs::ExePathResult::PAT_EXCEEDED;
           result.message = "Local planner exceeded allocated time";
-//          moving_ptr_->getPluginInfo(result.outcome, result.plugin_msg);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::NO_PLAN:
           ROS_WARN_STREAM("The local planner has been started without any plan!");
           active_moving_ = false;
-//          result.server_code = move_base_flex_msgs::ExePathResult::INVALID_PATH;
-//          result.server_msg = "No plan provided to local planner";
           moving_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
@@ -639,9 +621,8 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                             << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
             moving_ptr_->stopMoving();
             active_moving_ = false;
-//            result.outcome = move_base_flex_msgs::ExePathResult::OSCILLATION;
-//            result.message = "Oscillation detected!";
-            moving_ptr_->getPluginInfo(result.outcome, result.message);
+            result.outcome = move_base_flex_msgs::ExePathResult::OSCILLATION;
+            result.message = "Oscillation detected!";
             action_server_exe_path_ptr_->setAborted(result, result.message);
           }
           break;
@@ -649,9 +630,8 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::ARRIVED_GOAL:
           ROS_INFO_STREAM("Local planner succeeded; arrived to goal");
           active_moving_ = false;
-//          result.server_code = move_base_flex_msgs::ExePathResult::ARRIVED;
-//          result.server_msg = "Local planner succeeded; arrived to goal!";
-          moving_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = move_base_flex_msgs::ExePathResult::SUCCESS;
+          result.message = "Local planner succeeded; arrived to goal!";
           action_server_exe_path_ptr_->setSucceeded(result, result.message);
           break;
       }
