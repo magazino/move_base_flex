@@ -47,7 +47,7 @@ namespace move_base_flex
 MoveBaseControllerExecution::MoveBaseControllerExecution(
     boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &costmap_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::BaseLocalPlanner"),
+    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::LocalPlanner"),
     costmap_ptr_(costmap_ptr)
 {
 }
@@ -70,7 +70,7 @@ bool MoveBaseControllerExecution::loadPlugin()
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       static pluginlib::ClassLoader<nav_core::BaseLocalPlanner> class_loader("nav_core", "nav_core::BaseLocalPlanner");
       boost::shared_ptr<nav_core::BaseLocalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      local_planner_ = boost::make_shared<move_base_flex_core::BaseLocalPlanner>(plugin);
+      local_planner_ = boost::make_shared<move_base_flex_core::LocalPlanner>(plugin);
       ROS_INFO_STREAM("Nav_core-based local planner plugin " << plugin_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)

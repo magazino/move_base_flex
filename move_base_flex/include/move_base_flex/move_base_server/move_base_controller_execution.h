@@ -42,7 +42,7 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <move_base_flex_core/base_local_planner.h>
+#include <move_base_flex_core/local_planner.h>
 #include "move_base_flex/abstract_server/abstract_controller_execution.h"
 
 namespace move_base_flex
@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution move_base_server
  */
-class MoveBaseControllerExecution : public AbstractControllerExecution<move_base_flex_core::BaseLocalPlanner>
+class MoveBaseControllerExecution : public AbstractControllerExecution<move_base_flex_core::LocalPlanner>
 {
 public:
 

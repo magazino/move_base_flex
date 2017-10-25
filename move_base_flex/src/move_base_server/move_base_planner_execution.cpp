@@ -45,7 +45,7 @@ namespace move_base_flex
 {
 
 MoveBasePlannerExecution::MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
-    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::BaseGlobalPlanner"), costmap_ptr_(costmap_ptr)
+    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::GlobalPlanner"), costmap_ptr_(costmap_ptr)
 {
 }
 
@@ -71,7 +71,7 @@ bool MoveBasePlannerExecution::loadPlugin()
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner> class_loader("nav_core", "nav_core::BaseGlobalPlanner");
       boost::shared_ptr<nav_core::BaseGlobalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      global_planner_ = boost::make_shared<move_base_flex_core::BaseGlobalPlanner>(plugin);
+      global_planner_ = boost::make_shared<move_base_flex_core::GlobalPlanner>(plugin);
       ROS_INFO_STREAM("Nav_core-based global planner plugin " << plugin_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)

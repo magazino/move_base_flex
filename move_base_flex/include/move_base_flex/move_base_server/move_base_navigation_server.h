@@ -66,8 +66,8 @@ namespace move_base_flex
  *
  * @ingroup navigation_server move_base_server
  */
-class MoveBaseNavigationServer : public AbstractNavigationServer<move_base_flex_core::BaseLocalPlanner,
-                                                                 move_base_flex_core::BaseGlobalPlanner,
+class MoveBaseNavigationServer : public AbstractNavigationServer<move_base_flex_core::LocalPlanner,
+                                                                 move_base_flex_core::GlobalPlanner,
                                                                  move_base_flex_core::RecoveryBehavior>
 {
 public:

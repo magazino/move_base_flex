@@ -42,7 +42,7 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <move_base_flex_core/base_global_planner.h>
+#include <move_base_flex_core/global_planner.h>
 #include "move_base_flex/abstract_server/abstract_planner_execution.h"
 
 namespace move_base_flex
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup planner_execution move_base_server
  */
-class MoveBasePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::BaseGlobalPlanner>
+class MoveBasePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::GlobalPlanner>
 {
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
