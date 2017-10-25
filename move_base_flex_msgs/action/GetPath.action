@@ -26,18 +26,21 @@ string[] usable_plugins
 ---
 
 # Predefined success codes:
-uint8 SUCCESS        = 0
+uint8 SUCCESS         = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Possible server codes:
-uint8 FAILURE        = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
-uint8 CANCELED       = 51
-uint8 NO_PATH_FOUND  = 52
-uint8 PAT_EXCEEDED   = 53
-uint8 EMPTY_PATH     = 54
-uint8 TF_ERROR       = 55
-uint8 INVALID_PLUGIN = 56
-uint8 INTERNAL_ERROR = 57
+uint8 FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
+uint8 CANCELED        = 51
+uint8 INVALID_START   = 52
+uint8 INVALID_GOAL    = 53
+uint8 NO_PATH_FOUND   = 54
+uint8 PAT_EXCEEDED    = 55
+uint8 EMPTY_PATH      = 56
+uint8 TF_ERROR        = 57
+uint8 NOT_INITIALIZED = 58
+uint8 INVALID_PLUGIN  = 59
+uint8 INTERNAL_ERROR  = 60
 # 71..99 are reserved as plugin specific errors
 
 uint32 outcome

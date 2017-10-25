@@ -64,20 +64,24 @@ namespace move_base_flex_core{
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
        * @param message Optional more detailed outcome as a string
        * @return Result code as described on ExePath action result:
-       *         SUCCESS        = 0
+       *         SUCCESS         = 0
        *         1..9 are reserved as plugin specific non-error results
-       *         NO_VALID_CMD   = 100
-       *         CANCELED       = 101
-       *         PAT_EXCEEDED   = 102
-       *         COLLISION      = 103
-       *         OSCILLATION    = 104
-       *         ROBOT_STUCK    = 105
-       *         MISSED_GOAL    = 106
-       *         MISSED_PATH    = 107
-       *         BLOCKED_PATH   = 108
-       *         INVALID_PATH   = 109
-       *         INTERNAL_ERROR = 110
-       *         111..149 are reserved as plugin specific errors
+       *         FAILURE         = 100   Unspecified failure, only used for old, non-mfb_core based plugins
+       *         CANCELED        = 101
+       *         NO_VALID_CMD    = 102
+       *         PAT_EXCEEDED    = 103
+       *         COLLISION       = 104
+       *         OSCILLATION     = 105
+       *         ROBOT_STUCK     = 106
+       *         MISSED_GOAL     = 107
+       *         MISSED_PATH     = 108
+       *         BLOCKED_PATH    = 109
+       *         INVALID_PATH    = 110
+       *         TF_ERROR        = 111
+       *         NOT_INITIALIZED = 112
+       *         INVALID_PLUGIN  = 113
+       *         INTERNAL_ERROR  = 114
+       *         121..149 are reserved as plugin specific errors
        */
       virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message) = 0;
 

@@ -9,24 +9,25 @@ string[] usable_plugins
 ---
 
 # Predefined success codes:
-uint8 SUCCESS        = 0
+uint8 SUCCESS         = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Predefined error codes:
-uint8 FAILURE        = 100  # Unspecified failure, only used for old, non-mfb_core based plugins
-uint8 CANCELED       = 101
-uint8 NO_VALID_CMD   = 102
-uint8 PAT_EXCEEDED   = 103
-uint8 COLLISION      = 104
-uint8 OSCILLATION    = 105
-uint8 ROBOT_STUCK    = 106
-uint8 MISSED_GOAL    = 107
-uint8 MISSED_PATH    = 108
-uint8 BLOCKED_PATH   = 109
-uint8 INVALID_PATH   = 110
-uint8 TF_ERROR       = 111
-uint8 INVALID_PLUGIN = 112
-uint8 INTERNAL_ERROR = 113
+uint8 FAILURE         = 100  # Unspecified failure, only used for old, non-mfb_core based plugins
+uint8 CANCELED        = 101
+uint8 NO_VALID_CMD    = 102
+uint8 PAT_EXCEEDED    = 103
+uint8 COLLISION       = 104
+uint8 OSCILLATION     = 105
+uint8 ROBOT_STUCK     = 106
+uint8 MISSED_GOAL     = 107
+uint8 MISSED_PATH     = 108
+uint8 BLOCKED_PATH    = 109
+uint8 INVALID_PATH    = 110
+uint8 TF_ERROR        = 111
+uint8 NOT_INITIALIZED = 112
+uint8 INVALID_PLUGIN  = 113
+uint8 INTERNAL_ERROR  = 114
 # 121..149 are reserved as plugin specific errors
 
 uint32 outcome

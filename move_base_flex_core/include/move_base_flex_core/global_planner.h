@@ -67,16 +67,19 @@ namespace move_base_flex_core {
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string
        * @return Result code as described on GetPath action result:
-       *         SUCCESS        = 0
+       *         SUCCESS         = 0
        *         1..9 are reserved as plugin specific non-error results
-       *         FAILURE        = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
-       *         CANCELED       = 51
-       *         NO_PATH_FOUND  = 52
-       *         PAT_EXCEEDED   = 53
-       *         EMPTY_PATH     = 54
-       *         TF_ERROR       = 55
-       *         INVALID_PLUGIN = 56
-       *         INTERNAL_ERROR = 57
+       *         FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
+       *         CANCELED        = 51
+       *         INVALID_START   = 52
+       *         INVALID_GOAL    = 53
+       *         NO_PATH_FOUND   = 54
+       *         PAT_EXCEEDED    = 55
+       *         EMPTY_PATH      = 56
+       *         TF_ERROR        = 57
+       *         NOT_INITIALIZED = 58
+       *         INVALID_PLUGIN  = 59
+       *         INTERNAL_ERROR  = 60
        *         71..99 are reserved as plugin specific errors
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
