@@ -29,7 +29,7 @@ string[] usable_plugins
 uint8 SUCCESS         = 0
 # 1..9 are reserved as plugin specific non-error results
 
-# Possible server codes:
+# Possible error codes:
 uint8 FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
 uint8 CANCELED        = 51
 uint8 INVALID_START   = 52
