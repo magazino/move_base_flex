@@ -60,7 +60,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
     private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
     private_nh.param("global_frame", global_frame_, std::string("map"));
-    private_nh.param("goal_tolerance", goal_tolerance_, 0.2);
+    private_nh.param("tolerance", tolerance_, 0.0);
     private_nh.param("tf_timeout", tf_timeout_, 3.0);
 
     path_pub_ = nh.advertise<nav_msgs::Path>("global_path", 1);
@@ -238,7 +238,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     goal_pose = goal->target_pose;
     current_goal_pub_.publish(goal_pose);
 
-    double goal_tolerance = goal->goal_tolerance;
+    double tolerance = goal->tolerance;
     bool use_start_pose = goal->use_start_pose;
 
     active_planning_ = true;
@@ -266,31 +266,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         ROS_INFO_STREAM("Got the current robot pose at (" << p.x << ", " << p.y << ", " << p.z << ").");
       }
     }
-
-    if (!goal->waypoints.empty())
-    {
-      if (goal->waypoints.size() == goal->waypoints_tolerance.size())
-      {
-        planning_ptr_->setWaypoints(goal->waypoints, goal->waypoints_tolerance);
-      }
-      else
-      {
-        if (goal->waypoints_tolerance.size() > 1)
-        {
-          ROS_WARN_STREAM("Wrong waypoints tolerance array size; must contain 0, 1 or " << goal->waypoints.size()
-                          << " (waypoints number) values, though it contains " << goal->waypoints_tolerance.size());
-          ROS_WARN_STREAM("First tolerance will be used for all the waypoints, and the rest will be ignored");
-        }
-        // As described on action comments, waypoints_tolerance defaults to goal_tolerance; but if a single value is
-        // provided, it will be used for all the waypoints (subsequent values are ignored, as the WARN explains)
-        double all_wp_tol = goal->waypoints_tolerance.empty() ? goal_tolerance : goal->waypoints_tolerance.front();
-        std::vector<double> waypoints_tolerance(goal->waypoints.size(), all_wp_tol);
-        planning_ptr_->setWaypoints(goal->waypoints, waypoints_tolerance);
-      }
-    }
     
     ROS_INFO_STREAM("Starting the planning thread.");
-    if (!planning_ptr_->startPlanning(start_pose, goal_pose, goal_tolerance))
+    if (!planning_ptr_->startPlanning(start_pose, goal_pose, tolerance))
     {
       result.outcome = move_base_flex_msgs::GetPathResult::INTERNAL_ERROR;
       result.message = "Another thread is still planning!";
@@ -906,7 +884,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 // copy result from get_path action
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
-                move_base_result.running_plugin = get_path_result.used_plugin;
                 move_base_result.dist_to_goal = (float)move_base_flex::distance(robot_pose, target_pose);
                 move_base_result.angle_to_goal = (float)move_base_flex::angle(robot_pose, target_pose);
                 move_base_result.final_pose = robot_pose;
@@ -975,7 +952,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 // copy result from get_path action
                 move_base_result.outcome = exe_path_result.outcome;
                 move_base_result.message = exe_path_result.message;
-                move_base_result.running_plugin = exe_path_result.used_plugin;
                 move_base_result.dist_to_goal = exe_path_result.dist_to_goal;
                 move_base_result.angle_to_goal = exe_path_result.angle_to_goal;
                 move_base_result.final_pose = exe_path_result.final_pose;

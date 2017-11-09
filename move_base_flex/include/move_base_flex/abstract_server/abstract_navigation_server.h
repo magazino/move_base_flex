@@ -266,7 +266,7 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
     std::string global_frame_;
 
     //! the tolerance for planning
-    double goal_tolerance_;
+    double tolerance_;
 
     //! timeout after tf returns without a result
     double tf_timeout_;

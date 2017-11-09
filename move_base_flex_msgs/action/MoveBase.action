@@ -3,9 +3,14 @@
 
 geometry_msgs/PoseStamped target_pose
 
-string[] usable_local_planner_plugins
-string[] usable_global_planner_plugins
-string[] usable_recovery_behaviors
+# Local planner plugin to use; defaults to the first one specified on local_planners parameter
+string local_planner_plugin
+
+# Global planner plugin to use; defaults to the first one specified on global_planners parameter
+string global_planner_plugin
+
+# Recovery behaviors to try on case of failure; defaults to the recovery_behaviors parameter value
+string[] recovery_behaviors
 
 ---
 
@@ -37,7 +42,6 @@ uint32 outcome
 string message
 
 # Configuration upon action completion
-string running_plugin    # in case of not success
 float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped final_pose

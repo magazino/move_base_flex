@@ -60,11 +60,8 @@ namespace move_base_flex_core
        * @brief Given a goal pose in the world, compute a plan
        * @param start The start pose
        * @param goal The goal pose
-       * @param waypoints Intermediate poses the plan should pass by
-       * @param goal_tolerance If the goal is obstructed, how many meters the planner can relax the constraint
+       * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
        *        in x and y before failing
-       * @param waypoints_tolerance If a waypoint is obstructed, how many meters the plan can pass away of it
-       *        Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string
@@ -85,9 +82,7 @@ namespace move_base_flex_core
        *         71..99 are reserved as plugin specific errors
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                                const std::vector<geometry_msgs::PoseStamped>& waypoints,
-                                double goal_tolerance, const std::vector<double>& waypoints_tolerance,
-                                std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
+                                double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                                 std::string& message) = 0;
 
       /**

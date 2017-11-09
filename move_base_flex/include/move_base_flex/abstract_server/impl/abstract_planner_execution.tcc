@@ -48,7 +48,7 @@ template<class GLOBAL_PLANNER_BASE>
   AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::AbstractPlannerExecution(boost::condition_variable &condition,
                                                                           std::string package, std::string class_name) :
       condition_(condition), state_(STOPPED), planning_(false),
-      has_new_start_(false), has_new_goal_(false), has_new_waypoints_(false),
+      has_new_start_(false), has_new_goal_(false),
       class_loader_global_planner_(package, class_name), plugin_code_(255)
   {
     loadParams();
@@ -225,11 +225,11 @@ template<class GLOBAL_PLANNER_BASE>
 
 template<class GLOBAL_PLANNER_BASE>
   void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::setNewGoal(const geometry_msgs::PoseStamped &goal,
-                                                                 double goal_tolerance)
+                                                                 double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
     goal_ = goal;
-    goal_tolerance_ = goal_tolerance;
+    tolerance_ = tolerance;
     has_new_goal_ = true;
   }
 
@@ -244,30 +244,20 @@ template<class GLOBAL_PLANNER_BASE>
 template<class GLOBAL_PLANNER_BASE>
   void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::setNewStartAndGoal(const geometry_msgs::PoseStamped &start,
                                                                          const geometry_msgs::PoseStamped &goal,
-                                                                         double goal_tolerance)
+                                                                         double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
     start_ = start;
     goal_ = goal;
-    goal_tolerance_ = goal_tolerance;
+    tolerance_ = tolerance;
     has_new_start_ = true;
     has_new_goal_ = true;
   }
 
 template<class GLOBAL_PLANNER_BASE>
-  void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::setWaypoints(const std::vector<geometry_msgs::PoseStamped> &waypoints,
-                                                                   const std::vector<double> &waypoints_tolerance)
-  {
-    boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
-    waypoints_ = waypoints;
-    waypoints_tolerance_ = waypoints_tolerance;
-    has_new_waypoints_ = true;
-  }
-
-template<class GLOBAL_PLANNER_BASE>
   bool AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::startPlanning(const geometry_msgs::PoseStamped &start,
                                                                     const geometry_msgs::PoseStamped &goal,
-                                                                    double goal_tolerance)
+                                                                    double tolerance)
   {
     if (planning_)
     {
@@ -277,7 +267,7 @@ template<class GLOBAL_PLANNER_BASE>
     cancel_ = false;
     start_ = start;
     goal_ = goal;
-    goal_tolerance_ = goal_tolerance;
+    tolerance_ = tolerance;
 
     geometry_msgs::Point s = start.pose.position;
     geometry_msgs::Point g = goal.pose.position;
@@ -311,9 +301,7 @@ template<class GLOBAL_PLANNER_BASE>
     int retries = 0;
     geometry_msgs::PoseStamped current_start = start_;
     geometry_msgs::PoseStamped current_goal = goal_;
-    double current_goal_tolerance = goal_tolerance_;
-    std::vector<geometry_msgs::PoseStamped> current_waypoints = waypoints_;
-    std::vector<double> current_waypoints_tolerance = waypoints_tolerance_;
+    double current_tolerance = tolerance_;
 
     bool success = false;
     bool make_plan = false;
@@ -349,23 +337,15 @@ template<class GLOBAL_PLANNER_BASE>
         {
           has_new_goal_ = false;
           current_goal = goal_;
-          current_goal_tolerance = goal_tolerance_;
+          current_tolerance = tolerance_;
           ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and the tolerance: "
-                          << current_goal_tolerance);
+                          << current_tolerance);
           exceeded = false;
           geometry_msgs::Point g = goal_.pose.position;
           ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
         }
-        if (has_new_waypoints_)
-        {
-          has_new_waypoints_ = false;
-          current_waypoints = waypoints_;
-          current_waypoints_tolerance = waypoints_tolerance_;
-          ROS_INFO_STREAM("New waypoints available.");  // TODO print waypoints nicelly
-          exceeded = false;
-        }
 
-        make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_ || has_new_waypoints_;
+        make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
 
         // unlock goal
         goal_start_mtx_.unlock();
@@ -375,8 +355,7 @@ template<class GLOBAL_PLANNER_BASE>
           ROS_INFO_STREAM("Start planning");
 
           std::string message;
-          uint32_t outcome = global_planner_->makePlan(current_start, current_goal, current_waypoints,
-                                                       current_goal_tolerance, current_waypoints_tolerance,
+          uint32_t outcome = global_planner_->makePlan(current_start, current_goal, current_tolerance,
                                                        plan, cost, message);
           success = outcome < 10;
           setPluginInfo(outcome, message);

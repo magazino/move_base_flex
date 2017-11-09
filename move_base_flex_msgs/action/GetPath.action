@@ -9,19 +9,11 @@ geometry_msgs/PoseStamped start_pose
 # The pose to achieve with the path
 geometry_msgs/PoseStamped target_pose
 
-# Intermediate poses the path should pass by
-geometry_msgs/PoseStamped[] waypoints
-
-# If a waypoint is obstructed, how many meters the plath can pass away of it before failing
-# Defaults to goal_tolerance. If only one value is provided, it is used for all the waypoints
-float64[] waypoints_tolerance
-
 # If the goal is obstructed, how many meters the planner can relax the constraint in x and y before failing
-float64 goal_tolerance
+float64 tolerance
 
-# Applicable global planner plugins. MBF will try them in sequence until one succeeds
-# Defaults to global_planners parameter
-string[] usable_plugins
+# Plugin to use; defaults to the first one specified on global_planners parameter
+string plugin
 
 ---
 
@@ -45,7 +37,6 @@ uint8 INTERNAL_ERROR  = 60
 
 uint32 outcome
 string message
-string used_plugin
 
 nav_msgs/Path path
 

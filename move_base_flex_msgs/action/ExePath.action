@@ -2,9 +2,8 @@
 
 nav_msgs/Path path
 
-# Applicable local planner plugins. MBF will try them in sequence until one succeeds
-# Defaults to local_planners parameter
-string[] usable_plugins
+# Plugin to use; defaults to the first one specified on local_planners parameter
+string plugin
 
 ---
 
@@ -32,7 +31,6 @@ uint8 INTERNAL_ERROR  = 114
 
 uint32 outcome
 string message
-string used_plugin
 
 geometry_msgs/PoseStamped  final_pose
 float32 dist_to_goal
