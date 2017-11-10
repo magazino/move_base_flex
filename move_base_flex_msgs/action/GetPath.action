@@ -31,8 +31,8 @@ uint8 SUCCESS         = 0
 
 # Possible error codes:
 uint8 FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
-uint8 CANCELED        = 51
-uint8 INVALID_START   = 52
+uint8 CANCELED        = 51  # The action has been canceled by a action client
+uint8 INVALID_START   = 52  #
 uint8 INVALID_GOAL    = 53
 uint8 NO_PATH_FOUND   = 54
 uint8 PAT_EXCEEDED    = 55
@@ -41,6 +41,7 @@ uint8 TF_ERROR        = 57
 uint8 NOT_INITIALIZED = 58
 uint8 INVALID_PLUGIN  = 59
 uint8 INTERNAL_ERROR  = 60
+uint8 STOPPED         = 61  # The planner execution hsa been stopped rigorously, e.g. Move Base Flex has been shut down.
 # 71..99 are reserved as plugin specific errors
 
 uint32 outcome

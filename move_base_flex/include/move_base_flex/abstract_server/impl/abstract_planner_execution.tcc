@@ -294,6 +294,7 @@ template<class GLOBAL_PLANNER_BASE>
   void AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::stopPlanning()
   {
     // only useful if there are any interruption points in the global planner
+    ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
     thread_.interrupt();
   }
 

@@ -233,7 +233,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
     geometry_msgs::PoseStamped start_pose, goal_pose;
 
-    result.path.header.seq = 0; // TODO check for a more meaningful id
+    result.path.header.seq = 0; // TODO check for a more meaningful sequence
     result.path.header.frame_id = global_frame_;
     goal_pose = goal->target_pose;
     current_goal_pub_.publish(goal_pose);
@@ -322,12 +322,9 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           break;
 
         case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::STOPPED:
-          // this happens if we call planning_ptr_->stopPlanning(), what is commented cause makes SBPL crash!!!
-          // as it can be either due to patiece exceeded or action preempted, both already handled, not sure
-          // what's the point of this state  XXX  _SP_  help needed here
           ROS_DEBUG("robot navigation state: stopped");
-          ROS_INFO("Planning has been aborted!");
-          result.outcome = move_base_flex_msgs::GetPathResult::CANCELED;  // XXX or PAT_EXCEEDED?
+          ROS_INFO("Planning has been stopped rigorously!");
+          result.outcome = move_base_flex_msgs::GetPathResult::STOPPED;
           result.message = "Global planner has been stopped!";
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
@@ -367,7 +364,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           ROS_DEBUG("robot navigation state: found plan");
 
           planning_ptr_->getNewPlan(plan, costs);
-          planning_ptr_->stopPlanning();  // probably useless... I suppose the thread is already stopped _SP_ ?
           planning_ptr_->getPluginInfo(result.outcome, result.message);
 
           publishPath(plan);
@@ -441,13 +437,12 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         {
           ROS_WARN_THROTTLE(2.0, "Cancel planning failed or is not supported; Wait until the current plan finished");
         }
-        /// XXX  this crash with SBPL planner      planning_ptr_->stopPlanning();
       }
 
       if (active_planning_)
       {
         // try to sleep a bit
-        // normally the thread should be woken up from the moving unit
+        // normally this thread should be woken up from the planner execution thread
         // in order to transfer the results to the controller.
         boost::mutex mutex;
         boost::unique_lock<boost::mutex> lock(mutex);
@@ -639,7 +634,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       if (active_moving_)
       {
         // try to sleep a bit
-        // normally the thread should be woken up from the moving unit
+        // normally this thread should be woken up from the controller execution thread
         // in order to transfer the results to the controller
         boost::mutex mutex;
         boost::unique_lock<boost::mutex> lock(mutex);
@@ -689,7 +684,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
           // give time to the executing thread to finish, set the CANCELED state and notify condition
           if (action_server_recovery_ptr_->isPreemptRequested() && recovery_ptr_->cancel())
           {
-            ROS_INFO_STREAM("Recovering \"" << behavior << "\" canceled");
+            ROS_INFO_STREAM("Recovering \"" << behavior << "\" canceled!");
           }
           else
           {
@@ -772,40 +767,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
     move_base_flex_msgs::ExePathResult exe_path_result;
     move_base_flex_msgs::RecoveryResult recovery_result;
 
-// _SP_  TODO why to check here?  is not done on loading?
-//    if (private_nh.getParam("mbf_action_recovery_behaviors", mbf_behaviors))
-//    {
-//      ROS_WARN_STREAM("No recovery behaviors given for the action \"" << name_action_move_base << "\"!");
-//    }
-//    bool all_rb_loaded = true;
-//    std::string names = "";
-//
-//    std::vector<std::string>::iterator iter;
-//
-//    for (iter = mbf_behaviors.begin(); iter != mbf_behaviors.end(); ++iter)
-//    {
-//      if (!recovery_ptr_->hasRecoveryBehavior(*iter))
-//      {
-//        ROS_ERROR_STREAM("The recovery behavior for the given name \"" << *iter << "\" has not been loaded!");
-//        all_rb_loaded = false;
-//        names += names == "" ? *iter : ", " + *iter;
-//      }
-//    }
-//
-//    if (!all_rb_loaded)
-//    {
-//      std::stringstream ss;
-//      ss << "The recovery behaviors for the names " << names << " has not been loaded!";
-//      ROS_ERROR_STREAM(ss.str());
-//      move_base_result.server_code = move_base_flex_msgs::MoveBaseResult::WRONG_CONFIG;
-//      move_base_result.server_msg = ss.str();
-//      move_base_result.angle_to_goal = 0;
-//      move_base_result.dist_to_goal = 0;
-//      move_base_result.final_pose = geometry_msgs::PoseStamped();
-//      action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
-//      return;
-//    }
-
     // start recovering with the first behavior
     std::vector<std::string> recovery_behaviors = recovery_ptr_->listRecoveryBehaviors();
     std::vector<std::string>::iterator current_recovery_behavior = recovery_behaviors.begin();
@@ -816,9 +777,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
       ROS_ERROR_STREAM("Could not get the current robot pose!");
       move_base_result.message = "Could not get the current robot pose!";
       move_base_result.outcome = move_base_flex_msgs::MoveBaseResult::TF_ERROR;
-//      move_base_result.angle_to_goal = 0;
-//      move_base_result.dist_to_goal = 0;
-//      move_base_result.final_pose = geometry_msgs::PoseStamped();
       action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.message);
       return;
     }
@@ -839,8 +797,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                        << "\"" << name_action_get_path
                        << "\", " << "\"" << name_action_exe_path
                        << "\", " << "\"" << name_action_recovery << "\"!");
-//      move_base_result.dist_to_goal = NAN;
-//      move_base_result.angle_to_goal = NAN;
       move_base_result.outcome = move_base_flex_msgs::MoveBaseResult::INTERNAL_ERROR;
       move_base_result.message = "Could not connect to the move_base_flex actions!";
       action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.message);
@@ -907,16 +863,25 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
                 move_base_result.running_plugin = get_path_result.used_plugin;
-                move_base_result.dist_to_goal = (float)move_base_flex::distance(robot_pose, target_pose);
-                move_base_result.angle_to_goal = (float)move_base_flex::angle(robot_pose, target_pose);
+                move_base_result.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, target_pose));
                 move_base_result.final_pose = robot_pose;
                 run = false;
                 action_server_move_base_ptr_->setAborted(move_base_result, get_path_state.getText());
                 break;
               case actionlib::SimpleClientGoalState::PREEMPTED:
                 // the get_path action has been preempted.
+                get_path_result = *action_client_get_path.getResult();
+
+                // copy result from get_path action
+                move_base_result.outcome = get_path_result.outcome;
+                move_base_result.message = get_path_result.message;
+                move_base_result.running_plugin = get_path_result.used_plugin;
+                move_base_result.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, target_pose));
+                move_base_result.final_pose = robot_pose;
                 run = false;
-                action_server_move_base_ptr_->setPreempted();
+                action_server_move_base_ptr_->setPreempted(move_base_result, get_path_state.getText());
                 break;
               case actionlib::SimpleClientGoalState::RECALLED:
               case actionlib::SimpleClientGoalState::REJECTED:
@@ -982,6 +947,8 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
                 ///  exe_path_result = *action_client_exe_path.getResult();  XXX TODO
                 switch (move_base_result.outcome)
                 {
+                  case move_base_flex_msgs::ExePathResult::TF_ERROR:
+                  case move_base_flex_msgs::ExePathResult::BLOCKED_PATH:
                   case move_base_flex_msgs::ExePathResult::OSCILLATION:
                     current_recovery_behavior = recovery_behaviors.begin();  // why?  _SP_
 
