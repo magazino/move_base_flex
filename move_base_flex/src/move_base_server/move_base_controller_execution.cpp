@@ -52,6 +52,10 @@ MoveBaseControllerExecution::MoveBaseControllerExecution(
 {
 }
 
+MoveBaseControllerExecution::~MoveBaseControllerExecution()
+{
+}
+
 bool MoveBaseControllerExecution::loadPlugin()
 {
   // try to load and init local planner
@@ -102,12 +106,22 @@ void MoveBaseControllerExecution::initPlugin()
     exit(1);
   }
 
+  ros::NodeHandle private_nh("~");
+  private_nh.param("local_planner_lock_costmap", lock_costmap_, true);
+
   local_planner_->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Local planner plugin initialized.");
 }
 
-MoveBaseControllerExecution::~MoveBaseControllerExecution()
+uint32_t MoveBaseControllerExecution::getVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message)
 {
+  // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
+  if (lock_costmap_)
+  {
+    boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
+    return local_planner_->computeVelocityCommands(vel_cmd, message);
+  }
+  return local_planner_->computeVelocityCommands(vel_cmd, message);
 }
 
 } /* namespace move_base_nav_moving */

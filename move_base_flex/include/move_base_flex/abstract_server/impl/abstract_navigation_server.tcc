@@ -580,7 +580,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::NO_LOCAL_CMD:
           ROS_WARN_STREAM_THROTTLE(3, "Have not received a velocity command from the local planner!");
-          moving_ptr_->getVelocityCmd(feedback.current_twist);
+          moving_ptr_->getLastValidCmdVel(feedback.current_twist);
           feedback.dist_to_goal = (float)move_base_flex::distance(robot_pose, goal_pose);
           feedback.angle_to_goal = (float)move_base_flex::angle(robot_pose, goal_pose);
           action_server_exe_path_ptr_->publishFeedback(feedback);
@@ -593,7 +593,7 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
             oscillation_pose = robot_pose;
           }
 
-          moving_ptr_->getVelocityCmd(feedback.current_twist);
+          moving_ptr_->getLastValidCmdVel(feedback.current_twist);
           feedback.dist_to_goal = (float)move_base_flex::distance(robot_pose, goal_pose);
           feedback.angle_to_goal = (float)move_base_flex::angle(robot_pose, goal_pose);
           action_server_exe_path_ptr_->publishFeedback(feedback);

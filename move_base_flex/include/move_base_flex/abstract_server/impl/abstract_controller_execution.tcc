@@ -228,6 +228,13 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
+  uint32_t AbstractControllerExecution<LOCAL_PLANNER_BASE>::getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
+                                                                           std::string& message)
+  {
+    return local_planner_->computeVelocityCommands(vel_cmd, message);
+  }
+
+template<class LOCAL_PLANNER_BASE>
   void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
@@ -235,7 +242,7 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd)
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     vel_cmd = vel_cmd_stamped_;
@@ -328,7 +335,7 @@ template<class LOCAL_PLANNER_BASE>
 
           // call plugin to compute the next velocity command
           std::string message;
-          uint32_t outcome = local_planner_->computeVelocityCommands(cmd_vel_stamped, message);
+          uint32_t outcome = getVelocityCmd(cmd_vel_stamped, message);
           setPluginInfo(outcome, message);
 
           if (outcome < 10)
