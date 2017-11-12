@@ -123,6 +123,7 @@ template<typename LOCAL_PLANNER_BASE>
       MAX_RETRIES,  ///< Exceeded the maximum number of retries without a valid command.
       PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
       EMPTY_PLAN,   ///< Received an empty plan.
+      INVALID_PLAN, ///< Received an invalid plan that the local planner rejected.
       NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.

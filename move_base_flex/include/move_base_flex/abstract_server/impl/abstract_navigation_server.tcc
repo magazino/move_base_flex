@@ -346,7 +346,6 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
 
           planning_ptr_->getNewPlan(plan, costs);
           planning_ptr_->stopPlanning();  // probably useless... I suppose the thread is already stopped _SP_ ?
-          planning_ptr_->getPluginInfo(result.outcome, result.message);
 
           publishPath(plan);
           if (costs > 0)
@@ -558,16 +557,24 @@ template<class LOCAL_PLANNER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEH
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::NO_PLAN:
           ROS_WARN_STREAM("The local planner has been started without any plan!");
           active_moving_ = false;
-          moving_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = move_base_flex_msgs::ExePathResult::INVALID_PATH;
+          result.message = "Local planner started without a path to follow";
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution<LOCAL_PLANNER_BASE>::EMPTY_PLAN:
           ROS_WARN_STREAM("The local planner has received an empty plan");
           active_moving_ = false;
-//          result.server_code = move_base_flex_msgs::ExePathResult::INVALID_PATH;
-//          result.server_msg = "Empty plan provided to local planner";
-          moving_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = move_base_flex_msgs::ExePathResult::INVALID_PATH;
+          result.message = "Local planner started with an empty plan";
+          action_server_exe_path_ptr_->setAborted(result, result.message);
+          break;
+
+        case AbstractControllerExecution<LOCAL_PLANNER_BASE>::INVALID_PLAN:
+          ROS_WARN_STREAM("The local planner has received an invalid plan");
+          active_moving_ = false;
+          result.outcome = move_base_flex_msgs::ExePathResult::INVALID_PATH;
+          result.message = "Local planner started with an invalid plan";
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 

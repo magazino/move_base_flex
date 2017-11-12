@@ -295,9 +295,9 @@ template<class LOCAL_PLANNER_BASE>
         if (hasNewPlan())
         {
           getNewPlan(plan);
-          if (plan.empty())
+          if (plan.empty() || !local_planner_->setPlan(plan))
           {
-            setState(EMPTY_PLAN);
+            setState(plan.empty() ? EMPTY_PLAN : INVALID_PLAN);
             condition_.notify_all();
             moving_ = false;
             return;
