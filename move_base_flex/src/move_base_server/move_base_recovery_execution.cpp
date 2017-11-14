@@ -88,13 +88,13 @@ bool MoveBaseRecoveryExecution::loadPlugins()
 
         recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
-        ROS_INFO_STREAM("MBF_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
+        ROS_INFO_STREAM("move_base_flex_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
                         << name << "\".");
       }
       catch (pluginlib::PluginlibException &ex)
       {
         ROS_DEBUG_STREAM("Failed to load the " << name << " recovery behavior as a mbf_core-based plugin;"
-                         << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
+                         << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
         try
         {
           // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
@@ -107,7 +107,7 @@ bool MoveBaseRecoveryExecution::loadPlugins()
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
-          ROS_INFO_STREAM("Nav_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
+          ROS_INFO_STREAM("nav_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
                           << name << "\".");
         }
         catch (const pluginlib::PluginlibException &ex)

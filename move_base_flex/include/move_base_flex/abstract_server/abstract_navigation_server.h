@@ -266,7 +266,7 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
     std::string global_frame_;
 
     //! the tolerance for planning
-    double goal_tolerance_;
+    double tolerance_;
 
     //! timeout after tf returns without a result
     double tf_timeout_;
@@ -306,6 +306,19 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
 
     //! Publisher to publish the current computed path
     ros::Publisher path_pub_;
+
+    //! Private node handle
+    ros::NodeHandle private_nh_;
+
+    //! Action client used by the move_base action
+    ActionClientExePath action_client_exe_path_;
+
+    //! Action client used by the move_base action
+    ActionClientGetPath action_client_get_path_;
+
+    //! Action client used by the move_base action
+    ActionClientRecovery action_client_recovery_;
+
   };
 
 } /* namespace move_base_flex */

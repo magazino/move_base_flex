@@ -263,8 +263,17 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
+  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::isMoving()
+  {
+    return moving_ && start_time_ < getLastValidCmdVelTime()
+        && !isPatienceExceeded();
+  }
+
+template<class LOCAL_PLANNER_BASE>
   void AbstractControllerExecution<LOCAL_PLANNER_BASE>::run()
   {
+
+    start_time_ = ros::Time::now();
 
     // init plan
     std::vector<geometry_msgs::PoseStamped> plan;
@@ -278,18 +287,13 @@ template<class LOCAL_PLANNER_BASE>
     int retries = 0;
     int seq = 0;
 
-    // init time here for patience
-    geometry_msgs::TwistStamped cmd_vel_stamped;
-    cmd_vel_stamped.header.stamp = ros::Time::now();
-    setVelocityCmd(cmd_vel_stamped);
-
     try
     {
       while (moving_ && ros::ok())
       {
         boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-        boost::chrono::thread_clock::time_point start_time = boost::chrono::thread_clock::now();
+        boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
 
         // update plan dynamically
         if (hasNewPlan())
@@ -328,6 +332,7 @@ template<class LOCAL_PLANNER_BASE>
 
           // call plugin to compute the next velocity command
           std::string message;
+          geometry_msgs::TwistStamped cmd_vel_stamped;
           uint32_t outcome = local_planner_->computeVelocityCommands(cmd_vel_stamped, message);
           setPluginInfo(outcome, message);
 
@@ -349,7 +354,8 @@ template<class LOCAL_PLANNER_BASE>
               moving_ = false;
               condition_.notify_all();
             }
-            else if (ros::Time::now() - getLastValidCmdVelTime() > patience_)  // why not isPatienceExceeded() ?
+            else if (ros::Time::now() - getLastValidCmdVelTime() > patience_
+                && ros::Time::now() - start_time_ > patience_)  // why not isPatienceExceeded() ?
             {
               setState(PAT_EXCEEDED);
               moving_ = false;
@@ -366,7 +372,7 @@ template<class LOCAL_PLANNER_BASE>
 
         boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
         boost::chrono::microseconds execution_duration =
-            boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - start_time);
+            boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - loop_start_time);
         boost::chrono::microseconds sleep_time = calling_duration_ - execution_duration;
         if (moving_ && ros::ok())
         {

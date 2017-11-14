@@ -178,6 +178,12 @@ template<typename LOCAL_PLANNER_BASE>
      */
     void reconfigure(move_base_flex::MoveBaseFlexConfig &config);
 
+    /**
+     * @brief Returns weather the robot should normally move or not. True if the local planner seems to work properly.
+     * @return true, if the robot should normally move, false otherwise
+     */
+    bool isMoving();
+
   protected:
 
     /**
@@ -207,6 +213,9 @@ template<typename LOCAL_PLANNER_BASE>
 
     //! The current cycle start time of the last cycle run. Will by updated each cycle.
     ros::Time last_call_time_;
+
+    //! The time the controller has been started.
+    ros::Time start_time_;
 
     //! The maximum number of retries
     int max_retries_;
@@ -243,7 +252,6 @@ template<typename LOCAL_PLANNER_BASE>
      * @param state The current controller state.
      */
     void setState(ControllerState state);
-
 
     //! mutex to handle safe thread communication for the current value of the state
     boost::mutex state_mtx_;
