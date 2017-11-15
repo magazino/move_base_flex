@@ -13,7 +13,7 @@ geometry_msgs/PoseStamped target_pose
 float64 tolerance
 
 # Plugin to use; defaults to the first one specified on global_planners parameter
-string plugin
+string global_planner
 
 ---
 
