@@ -38,11 +38,11 @@ def mb_execute_cb(msg):
     status = mbf_mb_ac.get_state()
     result = mbf_mb_ac.get_result()
 
-    rospy.logdebug("MBF execution completed with status [%d]: %s", result.status, result.error_msg)
-    if result.server_code == mbf_msgs.MoveBaseResult.SUCCESS:
+    rospy.logdebug("MBF execution completed with result [%d]: %s", result.outcome, result.message)
+    if result.outcome == mbf_msgs.MoveBaseResult.SUCCESS:
         mb_as.set_succeeded(mb_msgs.MoveBaseResult(), "Goal reached.")
     else:
-        mb_as.set_aborted(mb_msgs.MoveBaseResult(), result.server_msg)
+        mb_as.set_aborted(mb_msgs.MoveBaseResult(), result.message)
 
 
 def make_plan_cb(request):
@@ -55,8 +55,8 @@ def make_plan_cb(request):
     status = mbf_gp_ac.get_state()
     result = mbf_gp_ac.get_result()
 
-    rospy.logdebug("MBF get_path execution completed with status [%d]: %s", result.status, result.error_msg)
-    if result.status == mbf_msgs.MoveBaseResult.SUCCESS:
+    rospy.logdebug("MBF get_path execution completed with result [%d]: %s", result.outcome, result.message)
+    if result.outcome == mbf_msgs.GetPathResult.SUCCESS:
         return nav_srvs.GetPlanResponse(plan=result.path)
 
 
