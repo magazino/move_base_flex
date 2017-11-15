@@ -96,6 +96,9 @@ void MoveBasePlannerExecution::initPlugin()
     exit(1);
   }
 
+  ros::NodeHandle private_nh("~");
+  private_nh.param("global_planner_lock_costmap", lock_costmap_, true);
+
   global_planner_->initialize(name, costmap_ptr_.get());
 
   ROS_INFO("Global planner plugin initialized.");
@@ -103,8 +106,13 @@ void MoveBasePlannerExecution::initPlugin()
 
 void MoveBasePlannerExecution::run()
 {
-  // lock the costmap while planning...
-  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
+  // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
+  if (lock_costmap_)
+  {
+    boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
+    AbstractPlannerExecution::run();
+    return;
+  }
   AbstractPlannerExecution::run();
 }
 

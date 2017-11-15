@@ -228,6 +228,13 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
+  uint32_t AbstractControllerExecution<LOCAL_PLANNER_BASE>::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
+                                                                           std::string& message)
+  {
+    return local_planner_->computeVelocityCommands(vel_cmd, message);
+  }
+
+template<class LOCAL_PLANNER_BASE>
   void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
@@ -235,7 +242,7 @@ template<class LOCAL_PLANNER_BASE>
   }
 
 template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd)
+  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     vel_cmd = vel_cmd_stamped_;
@@ -299,9 +306,9 @@ template<class LOCAL_PLANNER_BASE>
         if (hasNewPlan())
         {
           getNewPlan(plan);
-          if (plan.empty())
+          if (plan.empty() || !local_planner_->setPlan(plan))
           {
-            setState(EMPTY_PLAN);
+            setState(plan.empty() ? EMPTY_PLAN : INVALID_PLAN);
             condition_.notify_all();
             moving_ = false;
             return;
@@ -333,7 +340,7 @@ template<class LOCAL_PLANNER_BASE>
           // call plugin to compute the next velocity command
           std::string message;
           geometry_msgs::TwistStamped cmd_vel_stamped;
-          uint32_t outcome = local_planner_->computeVelocityCommands(cmd_vel_stamped, message);
+          uint32_t outcome = computeVelocityCmd(cmd_vel_stamped, message);
           setPluginInfo(outcome, message);
 
           if (outcome < 10)
@@ -363,9 +370,10 @@ template<class LOCAL_PLANNER_BASE>
             }
             else
             {
-              setState(NO_LOCAL_CMD);
+              setState(NO_LOCAL_CMD); // useful for server feedback
               condition_.notify_all();
             }
+            // could not compute a valid velocity command -> stop moving the robot
             publishZeroVelocity(); // command the robot to stop
           }
         }

@@ -61,10 +61,10 @@ namespace move_base_flex
  */
 
 /**
- * @brief The AbstractControllerExecution class loads and binds the local planner plugin. It contains a thread running
- *        the plugin in a cycle to move the robot. An internal state is saved and will be pulled by server, which
- *        controls the local planner execution. Due to a state change it wakes up all threads connected to the ondition
- *        variable.
+ * @brief The AbstractControllerExecution class loads and binds the local planner plugin. It contains a thread
+ *        running the plugin in a cycle to move the robot. An internal state is saved and will be pulled by server,
+ *        which controls the local planner execution. Due to a state change it wakes up all threads connected to the
+ *        condition variable.
  *
  * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
  *         needs to implement that interface base class to be compatible with move_base_flex
@@ -123,6 +123,7 @@ template<typename LOCAL_PLANNER_BASE>
       MAX_RETRIES,  ///< Exceeded the maximum number of retries without a valid command.
       PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
       EMPTY_PLAN,   ///< Received an empty plan.
+      INVALID_PLAN, ///< Received an invalid plan that the local planner rejected.
       NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.
@@ -155,16 +156,16 @@ template<typename LOCAL_PLANNER_BASE>
     ros::Time getLastValidCmdVelTime();
 
     /**
+     * @brief Returns the last valid velocity command set by setVelocityCmd method
+     * @param vel_cmd_stamped Returns the last valid velocity command.
+     */
+    void getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd_stamped);
+
+    /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
      * @return true, if the patience has been exceeded.
      */
     bool isPatienceExceeded();
-
-    /**
-     * @brief Reads the current velocity command
-     * @param vel_cmd_stamped Returns the current velocity command.
-     */
-    void getVelocityCmd(geometry_msgs::TwistStamped &vel_cmd_stamped);
 
     /**
      * @brief Loads the plugin given by the parameter "local_planner"
@@ -172,8 +173,8 @@ template<typename LOCAL_PLANNER_BASE>
     void initialize();
 
     /**
-     * @brief Is called by the server thread to reconfigure the controller execution, if a user uses dynamic reconfigure
-     *        to reconfigure the current state.
+     * @brief Is called by the server thread to reconfigure the controller execution,
+     *        if a user uses dynamic reconfigure to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
     void reconfigure(move_base_flex::MoveBaseFlexConfig &config);
@@ -185,6 +186,13 @@ template<typename LOCAL_PLANNER_BASE>
     bool isMoving();
 
   protected:
+
+    /**
+     * @brief Request plugin for a new velocity command. We use this virtual method to give concrete implementations
+     *        as move_base the chance to override it and do additional stuff, for example locking the costmap.
+     * @param vel_cmd_stamped current velocity command
+     */
+    virtual uint32_t computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd_stamped, std::string& message);
 
     /**
      * @brief Sets the velocity command, to make it available for another thread

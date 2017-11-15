@@ -77,8 +77,12 @@ public:
 
 protected:
 
-  //! costmap for 2d navigation planning
-  CostmapPtr &costmap_ptr_;
+  /**
+   * @brief Request plugin for a new velocity command. We override this method so we can lock the local costmap
+   *        before calling the planner.
+   * @param vel_cmd_stamped current velocity command
+   */
+  virtual uint32_t computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message);
 
 private:
 
@@ -94,6 +98,12 @@ private:
    *        and pointer to the costmap
    */
   virtual void initPlugin();
+
+  //! costmap for 2d navigation planning
+  CostmapPtr &costmap_ptr_;
+
+  //! Whether to lock costmap before calling the controller (see issue #4 for details)
+  bool lock_costmap_;
 };
 
 } /* namespace move_base_flex */

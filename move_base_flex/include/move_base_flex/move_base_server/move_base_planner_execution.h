@@ -94,6 +94,9 @@ private:
 
   //! Shared pointer to the global planner costmap
   CostmapPtr &costmap_ptr_;
+
+  //! Whether to lock costmap before calling the planner (see issue #4 for details)
+  bool lock_costmap_;
 };
 
 } /* namespace move_base_flex */
