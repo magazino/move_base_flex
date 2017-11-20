@@ -45,6 +45,7 @@
 #include <std_srvs/Empty.h>
 
 #include <move_base_flex_msgs/CheckPose.h>
+namespace mbf_msgs = move_base_flex_msgs;
 
 #include "move_base_flex/abstract_server/abstract_navigation_server.h"
 #include "move_base_planner_execution.h"
@@ -103,8 +104,8 @@ protected:
    * @param response Response object, see the move_base_flex_msgs/CheckPose service definition file.
    * @return true, if the service completed successfully, false otherwise
    */
-  bool callServiceCheckPoseCost(move_base_flex_msgs::CheckPose::Request &request,
-                                move_base_flex_msgs::CheckPose::Response &response);
+  bool callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
+                                mbf_msgs::CheckPose::Response &response);
 
   /**
    * @brief Callback method for the make_plan service
