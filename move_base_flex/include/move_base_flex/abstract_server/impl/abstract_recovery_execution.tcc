@@ -187,16 +187,13 @@ template<class RECOVERY_BEHAVIOR_BASE>
 template<class RECOVERY_BEHAVIOR_BASE>
   bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::cancel()
   {
-    if (canceled_)
-    {
-      ROS_WARN_STREAM("The current recovery has already been canceled!");
-    }
+    canceled_ = true;
     if (current_behavior_)
     {
-      // returns false if cancel is not implemented or not desired by the planner
-      canceled_ = current_behavior_->cancel();
+      // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
+      return current_behavior_->cancel();
     }
-    return canceled_;
+    return false;
   }
 
 template<class RECOVERY_BEHAVIOR_BASE>

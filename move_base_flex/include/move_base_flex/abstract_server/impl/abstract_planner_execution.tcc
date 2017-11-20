@@ -292,8 +292,9 @@ template<class GLOBAL_PLANNER_BASE>
   bool AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::cancel()
   {
     cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
-    cancel_ = global_planner_->cancel();
-    return cancel_;
+
+    // returns false if cancel is not implemented or rejected by the planner (will run until completion)
+    return global_planner_->cancel();
   }
 
 template<class GLOBAL_PLANNER_BASE>
