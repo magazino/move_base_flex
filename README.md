@@ -20,6 +20,8 @@ MBF is an ongoing project; some of the improvements we we have planned for the n
 * Replace costmap_2d by grid_map in the MoveBase implementation.
 * Allow multiple planners and controllers, selectable at runtime
 * Add pause/resume interface for the controller, for example to recover from a bumper, or an emergency stop button hit
-* Plans with waypoints
 
-But of course your are welcome to propose new fancy features and help make them a reality!
+But of course your are welcome to propose new fancy features and help make them a reality! Some possibilites:
+
+* Concurrently running recovery behaviors
+* Constraints-based goal (see issue #8)
