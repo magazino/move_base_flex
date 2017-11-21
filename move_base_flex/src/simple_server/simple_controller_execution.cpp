@@ -45,7 +45,7 @@ namespace move_base_flex
 
 SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractLocalPlanner")
+    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractController")
 {
 }
 

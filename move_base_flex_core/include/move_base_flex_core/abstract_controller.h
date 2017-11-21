@@ -47,16 +47,16 @@
 
 namespace move_base_flex_core{
 
-  class AbstractLocalPlanner{
+  class AbstractController{
 
     public:
 
-      typedef boost::shared_ptr< ::move_base_flex_core::AbstractLocalPlanner > Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::AbstractController > Ptr;
 
       /**
        * @brief Destructor
        */
-      virtual ~AbstractLocalPlanner(){};
+      virtual ~AbstractController(){};
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
@@ -110,7 +110,7 @@ namespace move_base_flex_core{
       /**
        * @brief Constructor
        */
-      AbstractLocalPlanner(){};
+      AbstractController(){};
   };
 } /* namespace move_base_flex_core */
 

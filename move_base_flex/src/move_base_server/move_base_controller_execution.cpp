@@ -62,7 +62,7 @@ bool MoveBaseControllerExecution::loadPlugin()
   ROS_DEBUG("Load local planner plugin.");
   try
   {
-    local_planner_ = class_loader_local_planner_.createInstance(plugin_name_);
+    controller_ = class_loader_controller_.createInstance(plugin_name_);
     ROS_INFO_STREAM("MBF_core-based local planner plugin " << plugin_name_ << " loaded");
   }
   catch (const pluginlib::PluginlibException &ex)
@@ -74,7 +74,7 @@ bool MoveBaseControllerExecution::loadPlugin()
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       static pluginlib::ClassLoader<nav_core::BaseLocalPlanner> class_loader("nav_core", "nav_core::BaseLocalPlanner");
       boost::shared_ptr<nav_core::BaseLocalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      local_planner_ = boost::make_shared<move_base_flex_core::LocalPlanner>(plugin);
+      controller_ = boost::make_shared<move_base_flex_core::MoveBaseController>(plugin);
       ROS_INFO_STREAM("Nav_core-based local planner plugin " << plugin_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)
@@ -90,7 +90,7 @@ bool MoveBaseControllerExecution::loadPlugin()
 
 void MoveBaseControllerExecution::initPlugin()
 {
-  std::string name = class_loader_local_planner_.getName(plugin_name_);
+  std::string name = class_loader_controller_.getName(plugin_name_);
 
   ROS_INFO_STREAM("Initialize local planner with the name \"" << name << "\".");
 
@@ -107,9 +107,9 @@ void MoveBaseControllerExecution::initPlugin()
   }
 
   ros::NodeHandle private_nh("~");
-  private_nh.param("local_planner_lock_costmap", lock_costmap_, true);
+  private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  local_planner_->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
+  controller_->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Local planner plugin initialized.");
 }
 
@@ -119,9 +119,9 @@ uint32_t MoveBaseControllerExecution::computeVelocityCmd(geometry_msgs::TwistSta
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return local_planner_->computeVelocityCommands(vel_cmd, message);
+    return controller_->computeVelocityCommands(vel_cmd, message);
   }
-  return local_planner_->computeVelocityCommands(vel_cmd, message);
+  return controller_->computeVelocityCommands(vel_cmd, message);
 }
 
 } /* namespace move_base_nav_moving */

@@ -115,7 +115,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFl
  *        the following action servers ActionServerGetPath -> callActionGetPath(), ActionServerExePath -> callActionExePath(),
  *        ActionServerRecovery -> callActionRecovery() and ActionServerMoveBase -> callActionMoveBase().
  *
- * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
+ * @tparam CONTROLLER_BASE The base class derived from the AbstractController class. The local planner plugin
  *         has to implement that interface base class to be compatible with move_base_flex.
  *
  * @tparam GLOBAL_PLANNER_BASE The base class derived from the AbstractGlobalPlanner class. The global planner plugin
@@ -126,7 +126,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFl
  *
  * @ingroup abstract_server navigation_server
  */
-template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVERY_BEHAVIOR_BASE>
+template<typename CONTROLLER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVERY_BEHAVIOR_BASE>
   class AbstractNavigationServer
   {
   public:
@@ -141,7 +141,7 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
      */
     AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                              typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr,
-                             typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::Ptr moving_ptr,
+                             typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr,
                              typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr);
 
     /**
@@ -278,7 +278,7 @@ template<typename LOCAL_PLANNER_BASE, typename GLOBAL_PLANNER_BASE, typename REC
     typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr_;
 
     //! shared pointer to the @ref controller_execution "ControllerExecution"
-    typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::Ptr moving_ptr_;
+    typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr_;
 
     //! shared pointer to the @ref recovery_execution "RecoveryExecution"
     typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr_;

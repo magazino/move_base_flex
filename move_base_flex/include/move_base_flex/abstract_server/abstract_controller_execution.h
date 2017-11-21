@@ -66,17 +66,17 @@ namespace move_base_flex
  *        which controls the local planner execution. Due to a state change it wakes up all threads connected to the
  *        condition variable.
  *
- * @tparam LOCAL_PLANNER_BASE The base class derived from the AbstractLocalPlanner class. The local planner plugin
+ * @tparam CONTROLLER_BASE The base class derived from the AbstractController class. The local planner plugin
  *         needs to implement that interface base class to be compatible with move_base_flex
  *
  * @ingroup abstract_server controller_execution
  */
-template<typename LOCAL_PLANNER_BASE>
+template<typename CONTROLLER_BASE>
   class AbstractControllerExecution
   {
   public:
 
-    typedef boost::shared_ptr<AbstractControllerExecution<LOCAL_PLANNER_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractControllerExecution<CONTROLLER_BASE> > Ptr;
 
     /**
      * @brief Constructor
@@ -211,10 +211,10 @@ template<typename LOCAL_PLANNER_BASE>
     std::string plugin_name_;
 
     //! class loader, to load the local planner plugin
-    pluginlib::ClassLoader<LOCAL_PLANNER_BASE> class_loader_local_planner_;
+    pluginlib::ClassLoader<CONTROLLER_BASE> class_loader_controller_;
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<LOCAL_PLANNER_BASE> local_planner_;
+    boost::shared_ptr<CONTROLLER_BASE> controller_;
 
     //! shared pointer to the shared tf listener
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;

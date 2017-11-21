@@ -44,12 +44,12 @@
 namespace move_base_flex
 {
 
-template<class LOCAL_PLANNER_BASE>
-  AbstractControllerExecution<LOCAL_PLANNER_BASE>::AbstractControllerExecution(
+template<class CONTROLLER_BASE>
+  AbstractControllerExecution<CONTROLLER_BASE>::AbstractControllerExecution(
       boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       std::string package, std::string class_name) :
       condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED),
-      class_loader_local_planner_(package, class_name), moving_(false), plugin_code_(255)
+      class_loader_controller_(package, class_name), moving_(false), plugin_code_(255)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -63,9 +63,9 @@ template<class LOCAL_PLANNER_BASE>
     }
     private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
-    private_nh.param("local_planner_max_retries", max_retries_, 10);
-    private_nh.param("local_planner_patience", patience, 1.0);
-    private_nh.param("local_planner_frequency", frequency, 10.0);
+    private_nh.param("controller_max_retries", max_retries_, 10);
+    private_nh.param("controller_patience", patience, 1.0);
+    private_nh.param("controller_frequency", frequency, 10.0);
     private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
 
@@ -85,13 +85,13 @@ template<class LOCAL_PLANNER_BASE>
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   }
 
-template<class LOCAL_PLANNER_BASE>
-  AbstractControllerExecution<LOCAL_PLANNER_BASE>::~AbstractControllerExecution()
+template<class CONTROLLER_BASE>
+  AbstractControllerExecution<CONTROLLER_BASE>::~AbstractControllerExecution()
   {
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::initialize()
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::initialize()
   {
     if (!loadPlugin())
     {
@@ -102,14 +102,14 @@ template<class LOCAL_PLANNER_BASE>
     setState(INITIALIZED);
   }
 
-template<class LOCAL_PLANNER_BASE>
-  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::loadPlugin()
+template<class CONTROLLER_BASE>
+  bool AbstractControllerExecution<CONTROLLER_BASE>::loadPlugin()
   {
     // try to load and init local planner
     ROS_INFO("Load local planner plugin.");
     try
     {
-      local_planner_ = class_loader_local_planner_.createInstance(plugin_name_);
+      controller_ = class_loader_controller_.createInstance(plugin_name_);
     }
     catch (const pluginlib::PluginlibException &ex)
     {
@@ -122,8 +122,8 @@ template<class LOCAL_PLANNER_BASE>
     return true;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
@@ -134,20 +134,20 @@ template<class LOCAL_PLANNER_BASE>
       new_plan_ = true;  // ensure we reset the current plan (if any) to the new controller
     }
 
-    patience_ = ros::Duration(config.local_planner_patience);
+    patience_ = ros::Duration(config.controller_patience);
 
-    if (config.local_planner_frequency > 0.0)
+    if (config.controller_frequency > 0.0)
     {
-      calling_duration_ = boost::chrono::microseconds((int)(1e6 / config.local_planner_frequency));
+      calling_duration_ = boost::chrono::microseconds((int)(1e6 / config.controller_frequency));
     }
     else
       ROS_ERROR("Movement frequency must be greater than 0.0!");
 
-    max_retries_ = config.local_planner_max_retries;
+    max_retries_ = config.controller_max_retries;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::startMoving()
+template<class CONTROLLER_BASE>
+  bool AbstractControllerExecution<CONTROLLER_BASE>::startMoving()
   {
     setState(STARTED);
     if (moving_)
@@ -161,45 +161,45 @@ template<class LOCAL_PLANNER_BASE>
     return true;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::stopMoving()
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::stopMoving()
   {
     thread_.interrupt();
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setState(ControllerState state)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::setState(ControllerState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     state_ = state;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  typename AbstractControllerExecution<LOCAL_PLANNER_BASE>::ControllerState
-  AbstractControllerExecution<LOCAL_PLANNER_BASE>::getState()
+template<class CONTROLLER_BASE>
+  typename AbstractControllerExecution<CONTROLLER_BASE>::ControllerState
+  AbstractControllerExecution<CONTROLLER_BASE>::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
   {
     boost::lock_guard<boost::mutex> guard(pcode_mtx_);
     plugin_code_ =  plugin_code;
     plugin_msg_ = plugin_msg;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
   {
     boost::lock_guard<boost::mutex> guard(pcode_mtx_);
     plugin_code = plugin_code_;
     plugin_msg = plugin_msg_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
   {
     // TODO make a better warning here!
     if (getState() == GOT_LOCAL_CMD)
@@ -212,72 +212,72 @@ template<class LOCAL_PLANNER_BASE>
     plan_ = plan;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::hasNewPlan()
+template<class CONTROLLER_BASE>
+  bool AbstractControllerExecution<CONTROLLER_BASE>::hasNewPlan()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     return new_plan_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan)
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     new_plan_ = false;
     plan = plan_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  uint32_t AbstractControllerExecution<LOCAL_PLANNER_BASE>::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
+template<class CONTROLLER_BASE>
+  uint32_t AbstractControllerExecution<CONTROLLER_BASE>::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
                                                                            std::string& message)
   {
-    return local_planner_->computeVelocityCommands(vel_cmd, message);
+    return controller_->computeVelocityCommands(vel_cmd, message);
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     vel_cmd_stamped_ = vel_cmd;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd)
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd)
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     vel_cmd = vel_cmd_stamped_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  ros::Time AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastPluginCallTime()
+template<class CONTROLLER_BASE>
+  ros::Time AbstractControllerExecution<CONTROLLER_BASE>::getLastPluginCallTime()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
     return last_call_time_;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  ros::Time AbstractControllerExecution<LOCAL_PLANNER_BASE>::getLastValidCmdVelTime()
+template<class CONTROLLER_BASE>
+  ros::Time AbstractControllerExecution<CONTROLLER_BASE>::getLastValidCmdVelTime()
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     return vel_cmd_stamped_.header.stamp;
   }
 
-template<class LOCAL_PLANNER_BASE>
-  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::isPatienceExceeded()
+template<class CONTROLLER_BASE>
+  bool AbstractControllerExecution<CONTROLLER_BASE>::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
     return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_call_time_ > patience_);
   }
 
-template<class LOCAL_PLANNER_BASE>
-  bool AbstractControllerExecution<LOCAL_PLANNER_BASE>::isMoving()
+template<class CONTROLLER_BASE>
+  bool AbstractControllerExecution<CONTROLLER_BASE>::isMoving()
   {
     return moving_ && start_time_ < getLastValidCmdVelTime()
         && !isPatienceExceeded();
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::run()
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::run()
   {
 
     start_time_ = ros::Time::now();
@@ -306,7 +306,7 @@ template<class LOCAL_PLANNER_BASE>
         if (hasNewPlan())
         {
           getNewPlan(plan);
-          if (plan.empty() || !local_planner_->setPlan(plan))
+          if (plan.empty() || !controller_->setPlan(plan))
           {
             setState(plan.empty() ? EMPTY_PLAN : INVALID_PLAN);
             condition_.notify_all();
@@ -315,12 +315,12 @@ template<class LOCAL_PLANNER_BASE>
           }
           else
           {
-            local_planner_->setPlan(plan);
+            controller_->setPlan(plan);
           }
         }
 
         // ask planner if the goal is reached
-        if (local_planner_->isGoalReached(dist_tolerance_, angle_tolerance_))
+        if (controller_->isGoalReached(dist_tolerance_, angle_tolerance_))
         {
           setState(ARRIVED_GOAL);
           // goal reached, tell it the controller
@@ -407,8 +407,8 @@ template<class LOCAL_PLANNER_BASE>
     }
   }
 
-template<class LOCAL_PLANNER_BASE>
-  void AbstractControllerExecution<LOCAL_PLANNER_BASE>::publishZeroVelocity()
+template<class CONTROLLER_BASE>
+  void AbstractControllerExecution<CONTROLLER_BASE>::publishZeroVelocity()
   {
     geometry_msgs::Twist cmd_vel;
     cmd_vel.linear.x = 0;

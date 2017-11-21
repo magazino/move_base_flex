@@ -48,7 +48,7 @@ namespace nav_core {
    * @class BaseLocalPlanner
    * @brief Provides an interface for local planners used in navigation. All local planners written as plugins for the navigation stack must adhere to this interface.
    */
-  class BaseLocalPlanner : public AbstractLocalPlanner{
+  class BaseLocalPlanner : public AbstractController{
     public:
 
       typedef boost::shared_ptr< ::nav_core::BaseLocalPlanner > Ptr;

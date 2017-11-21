@@ -51,10 +51,10 @@ namespace move_base_flex_core {
    * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class LocalPlanner : public AbstractLocalPlanner{
+  class MoveBaseController : public AbstractController{
     public:
 
-      typedef boost::shared_ptr< ::move_base_flex_core::LocalPlanner > Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::MoveBaseController > Ptr;
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
@@ -161,7 +161,7 @@ namespace move_base_flex_core {
        * @brief Public constructor used for handling a nav_core-based plugin
        * @param plugin Backward compatible plugin
        */
-      LocalPlanner(boost::shared_ptr< nav_core::BaseLocalPlanner > plugin)
+      MoveBaseController(boost::shared_ptr< nav_core::BaseLocalPlanner > plugin)
       {
         backward_compatible_plugin = plugin;
 
@@ -172,10 +172,10 @@ namespace move_base_flex_core {
       /**
        * @brief  Virtual destructor for the interface
        */
-      virtual ~LocalPlanner(){}
+      virtual ~MoveBaseController(){}
 
     protected:
-      LocalPlanner(){}
+      MoveBaseController(){}
 
     private:
       boost::shared_ptr< nav_core::BaseLocalPlanner > backward_compatible_plugin;

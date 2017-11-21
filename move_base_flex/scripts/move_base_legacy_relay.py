@@ -79,11 +79,11 @@ def mb_reconf_cb(config, level):
     if 'base_local_planner' in mbf_config:
         mbf_config['local_planner'] = mbf_config.pop('base_local_planner')
     if 'controller_frequency' in mbf_config:
-        mbf_config['local_planner_frequency'] = mbf_config.pop('controller_frequency')
+        mbf_config['controller_frequency'] = mbf_config.pop('controller_frequency')
     if 'controller_patience' in mbf_config:
-        mbf_config['local_planner_patience'] = mbf_config.pop('controller_patience')
+        mbf_config['controller_patience'] = mbf_config.pop('controller_patience')
     if 'max_controller_retries' in mbf_config:
-        mbf_config['local_planner_max_retries'] = mbf_config.pop('max_controller_retries')
+        mbf_config['controller_max_retries'] = mbf_config.pop('max_controller_retries')
     if 'base_global_planner' in mbf_config:
         mbf_config['global_planner'] = mbf_config.pop('base_global_planner')
     if 'planner_frequency' in mbf_config:

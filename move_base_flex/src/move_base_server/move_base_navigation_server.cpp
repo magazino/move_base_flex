@@ -56,13 +56,13 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
                                 new MoveBasePlannerExecution(condition_, costmap_global_planner_ptr_)),
                            MoveBaseControllerExecution::Ptr(
                                 new MoveBaseControllerExecution(condition_, tf_listener_ptr,
-                                                                costmap_local_planner_ptr_)),
+                                                                costmap_controller_ptr_)),
                            MoveBaseRecoveryExecution::Ptr(
                                 new MoveBaseRecoveryExecution(condition_, tf_listener_ptr,
                                                               costmap_global_planner_ptr_,
-                                                              costmap_local_planner_ptr_))),
+                                                              costmap_controller_ptr_))),
     costmap_global_planner_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
-    costmap_local_planner_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_))
+    costmap_controller_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_))
 {
   ros::NodeHandle private_nh("~");
 
@@ -70,7 +70,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   private_nh.param("shutdown_costmaps", shutdown_costmaps_, false);
 
   costmap_global_planner_ptr_->pause();
-  costmap_local_planner_ptr_->pause();
+  costmap_controller_ptr_->pause();
 
   // initialize all plugins
   initializeServerComponents();
@@ -80,7 +80,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
 
   // start costmaps
   costmap_global_planner_ptr_->start();
-  costmap_local_planner_ptr_->start();
+  costmap_controller_ptr_->start();
 
   local_costmap_active_ = true;
   global_costmap_active_ = true;
@@ -88,7 +88,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   // stop updating costmaps when not planning, moving, or recovering
   if (shutdown_costmaps_)
   {
-    costmap_local_planner_ptr_->stop();
+    costmap_controller_ptr_->stop();
     costmap_global_planner_ptr_->stop();
     local_costmap_active_ = false;
     global_costmap_active_ = false;
@@ -106,7 +106,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
 
 MoveBaseNavigationServer::~MoveBaseNavigationServer()
 {
-  costmap_local_planner_ptr_->stop();
+  costmap_controller_ptr_->stop();
   costmap_global_planner_ptr_->stop();
 }
 
@@ -139,7 +139,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(move_base_flex_msgs::Che
   switch (request.costmap)
   {
     case move_base_flex_msgs::CheckPose::Request::LOCAL_COSTMAP:
-      costmap = costmap_local_planner_ptr_;
+      costmap = costmap_controller_ptr_;
       costmap_name = "local costmap";
       if (shutdown_costmaps_ && !local_costmap_active_)
       {
@@ -238,7 +238,7 @@ bool MoveBaseNavigationServer::callServiceMakePlan(nav_msgs::GetPlan::Request &r
   // TODO improve the shutdown costmaps...
   if (shutdown_costmaps_)
   {
-    costmap_local_planner_ptr_->start();
+    costmap_controller_ptr_->start();
     costmap_global_planner_ptr_->start();
   }
 
@@ -387,7 +387,7 @@ bool MoveBaseNavigationServer::callServiceMakePlan(nav_msgs::GetPlan::Request &r
 bool MoveBaseNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
                                                         std_srvs::Empty::Response &response)
 {
-  costmap_local_planner_ptr_->resetLayers();
+  costmap_controller_ptr_->resetLayers();
   costmap_global_planner_ptr_->resetLayers();
   return true;
 }
@@ -396,7 +396,7 @@ void MoveBaseNavigationServer::checkActivateCostmaps()
 {
   if (shutdown_costmaps_ && !local_costmap_active_)
   {
-    costmap_local_planner_ptr_->start();
+    costmap_controller_ptr_->start();
     ROS_DEBUG_STREAM("Activating local costmap.");
     local_costmap_active_ = true;
   }
@@ -414,7 +414,7 @@ void MoveBaseNavigationServer::checkDeactivateCostmaps()
   if (!ros::ok() ||
       (shutdown_costmaps_ && local_costmap_active_ && !(active_planning_ || active_moving_ || active_recovery_)))
   {
-    costmap_local_planner_ptr_->stop();
+    costmap_controller_ptr_->stop();
     ROS_DEBUG_STREAM("Deactivating local costmap.");
     local_costmap_active_ = false;
   }

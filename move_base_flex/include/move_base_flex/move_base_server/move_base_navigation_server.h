@@ -66,7 +66,7 @@ namespace move_base_flex
  *
  * @ingroup navigation_server move_base_server
  */
-class MoveBaseNavigationServer : public AbstractNavigationServer<move_base_flex_core::LocalPlanner,
+class MoveBaseNavigationServer : public AbstractNavigationServer<move_base_flex_core::MoveBaseController,
                                                                  move_base_flex_core::GlobalPlanner,
                                                                  move_base_flex_core::RecoveryBehavior>
 {
@@ -156,7 +156,7 @@ protected:
   virtual void reconfigure(move_base_flex::MoveBaseFlexConfig &config, uint32_t level);
 
   //! Shared pointer to the common local costmap
-  CostmapPtr costmap_local_planner_ptr_;
+  CostmapPtr costmap_controller_ptr_;
 
   //! Shared pointer to the common global costmap
   CostmapPtr costmap_global_planner_ptr_;

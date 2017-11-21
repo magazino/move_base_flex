@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution move_base_server
  */
-class MoveBaseControllerExecution : public AbstractControllerExecution<move_base_flex_core::LocalPlanner>
+class MoveBaseControllerExecution : public AbstractControllerExecution<move_base_flex_core::MoveBaseController>
 {
 public:
 

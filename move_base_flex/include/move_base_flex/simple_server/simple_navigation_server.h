@@ -56,13 +56,13 @@ namespace move_base_flex
 
 /**
  * @brief The SimpleNavigationServer provides a simple navigation server, which does not bind a map representation to
- *        Move Base Flex. It combines the execution classes which use the move_base_flex_msgs/AbstractLocalPlanner,
+ *        Move Base Flex. It combines the execution classes which use the move_base_flex_msgs/AbstractController,
  *        move_base_flex_msgs/AbstractGlobalPlanner and the move_base_flex_msgs/AbstractRecoveryBehavior base classes
  *        as plugin interfaces.
  *
  * @ingroup navigation_server simple_server
  */
-class SimpleNavigationServer : public AbstractNavigationServer<move_base_flex_core::AbstractLocalPlanner,
+class SimpleNavigationServer : public AbstractNavigationServer<move_base_flex_core::AbstractController,
                                                                move_base_flex_core::AbstractGlobalPlanner,
                                                                move_base_flex_core::AbstractRecoveryBehavior>
 {

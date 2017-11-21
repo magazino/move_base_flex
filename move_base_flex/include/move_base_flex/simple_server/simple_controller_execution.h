@@ -48,12 +48,12 @@ namespace move_base_flex
 {
 /**
  * @brief The SimpleControllerExecution basically uses the AbstractControllerExecution and loads local planner plugins,
- *        which implements the base class interface AbstractLocalPlanner. This implementation allows planners, which
+ *        which implements the base class interface AbstractController. This implementation allows planners, which
  *        do not initialize map representations via Move Base Flex.
  *
  * @ingroup controller_execution simple_server
  */
-class SimpleControllerExecution : public AbstractControllerExecution<move_base_flex_core::AbstractLocalPlanner>
+class SimpleControllerExecution : public AbstractControllerExecution<move_base_flex_core::AbstractController>
 {
 public:
 

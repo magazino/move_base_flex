@@ -47,16 +47,16 @@
 
 namespace nav_core{
 
-  class AbstractLocalPlanner{
+  class AbstractController{
 
     public:
 
-      typedef boost::shared_ptr< ::nav_core::AbstractLocalPlanner > Ptr;
+      typedef boost::shared_ptr< ::nav_core::AbstractController > Ptr;
 
       /**
        * @brief Destructor
        */
-      virtual ~AbstractLocalPlanner(){};
+      virtual ~AbstractController(){};
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
@@ -97,7 +97,7 @@ namespace nav_core{
       /**
        * @brief Constructor
        */
-      AbstractLocalPlanner(){};
+      AbstractController(){};
   };
 } /* namespace nav_core */
 
