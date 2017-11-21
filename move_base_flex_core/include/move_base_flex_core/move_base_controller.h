@@ -42,7 +42,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
 #include <nav_core/base_local_planner.h>
-#include "move_base_flex_core/abstract_local_planner.h"
+#include "move_base_flex_core/abstract_controller.h"
 
 namespace move_base_flex_core {
   /**

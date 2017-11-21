@@ -44,7 +44,7 @@
 #include <pluginlib/class_loader.h>
 #include <boost/chrono/thread_clock.hpp>
 #include <tf/transform_listener.h>
-#include <move_base_flex_core/abstract_recovery_behavior.h>
+#include <move_base_flex_core/abstract_recovery.h>
 
 #include "move_base_flex/navigation_utility.h"
 #include "move_base_flex/MoveBaseFlexConfig.h"

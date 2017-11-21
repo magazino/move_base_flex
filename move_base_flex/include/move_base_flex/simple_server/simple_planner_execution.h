@@ -41,7 +41,7 @@
 #ifndef MOVE_BASE_FLEX__SIMPLE_PLANNER_EXECUTION_H_
 #define MOVE_BASE_FLEX__SIMPLE_PLANNER_EXECUTION_H_
 
-#include "move_base_flex_core/abstract_global_planner.h"
+#include "move_base_flex_core/abstract_planner.h"
 #include "move_base_flex/abstract_server/abstract_planner_execution.h"
 
 namespace move_base_flex

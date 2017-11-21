@@ -42,7 +42,7 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <move_base_flex_core/global_planner.h>
+#include <move_base_flex_core/move_base_planner.h>
 #include "move_base_flex/abstract_server/abstract_planner_execution.h"
 
 namespace move_base_flex

@@ -40,7 +40,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <nav_core/base_global_planner.h>
-#include "move_base_flex_core/abstract_global_planner.h"
+#include "move_base_flex_core/abstract_planner.h"
 
 namespace move_base_flex_core {
   /**

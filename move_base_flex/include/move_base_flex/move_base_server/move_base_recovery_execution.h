@@ -42,7 +42,7 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <move_base_flex_core/recovery_behavior.h>
+#include <move_base_flex_core/move_base_recovery.h>
 #include "move_base_flex/abstract_server/abstract_recovery_execution.h"
 
 

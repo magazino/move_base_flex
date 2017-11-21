@@ -47,7 +47,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <move_base_flex_core/abstract_local_planner.h>
+#include <move_base_flex_core/abstract_controller.h>
 
 #include "move_base_flex/navigation_utility.h"
 #include "move_base_flex/MoveBaseFlexConfig.h"

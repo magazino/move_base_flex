@@ -41,7 +41,7 @@
 #ifndef MOVE_BASE_FLEX__SIMPLE_CONTROLLER_EXECUTION_H_
 #define MOVE_BASE_FLEX__SIMPLE_CONTROLLER_EXECUTION_H_
 
-#include "move_base_flex_core/abstract_local_planner.h"
+#include "move_base_flex_core/abstract_controller.h"
 #include "move_base_flex/abstract_server/abstract_controller_execution.h"
 
 namespace move_base_flex
