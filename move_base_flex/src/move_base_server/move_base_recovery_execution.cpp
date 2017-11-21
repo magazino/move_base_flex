@@ -47,7 +47,7 @@ namespace move_base_flex
 MoveBaseRecoveryExecution::MoveBaseRecoveryExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                                                      CostmapPtr &global_costmap, CostmapPtr &local_costmap) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::RecoveryBehavior"),
+    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::MoveBaseRecovery"),
     global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }
@@ -83,7 +83,7 @@ bool MoveBaseRecoveryExecution::loadPlugins()
       try
       {
         recovery_behaviors_.insert(
-            std::pair<std::string, boost::shared_ptr<move_base_flex_core::RecoveryBehavior> >(
+            std::pair<std::string, boost::shared_ptr<move_base_flex_core::MoveBaseRecovery> >(
                 name, class_loader_recovery_behaviors_.createInstance(type)));
 
         recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
@@ -102,8 +102,8 @@ bool MoveBaseRecoveryExecution::loadPlugins()
           boost::shared_ptr<nav_core::RecoveryBehavior> plugin = class_loader.createInstance(type);
 
           recovery_behaviors_.insert(
-              std::pair<std::string, boost::shared_ptr<move_base_flex_core::RecoveryBehavior> >(
-                  name, boost::make_shared<move_base_flex_core::RecoveryBehavior>(plugin)));
+              std::pair<std::string, boost::shared_ptr<move_base_flex_core::MoveBaseRecovery> >(
+                  name, boost::make_shared<move_base_flex_core::MoveBaseRecovery>(plugin)));
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
@@ -131,10 +131,10 @@ bool MoveBaseRecoveryExecution::loadPlugins()
 
 void MoveBaseRecoveryExecution::initPlugins()
 {
-  for (std::map<std::string, move_base_flex_core::RecoveryBehavior::Ptr>::iterator iter =
+  for (std::map<std::string, move_base_flex_core::MoveBaseRecovery::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
   {
-    move_base_flex_core::RecoveryBehavior::Ptr behavior = iter->second;
+    move_base_flex_core::MoveBaseRecovery::Ptr behavior = iter->second;
     std::string name = iter->first;
 
     behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());

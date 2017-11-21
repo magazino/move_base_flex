@@ -44,15 +44,15 @@
 
 namespace move_base_flex_core {
   /**
-   * @class GlobalPlanner
+   * @class MoveBasePlanner
    * @brief Provides an interface for global planners used in navigation.
    * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class GlobalPlanner : public AbstractGlobalPlanner{
+  class MoveBasePlanner : public AbstractPlanner{
     public:
 
-      typedef boost::shared_ptr< ::move_base_flex_core::GlobalPlanner > Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::MoveBasePlanner > Ptr;
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -102,7 +102,7 @@ namespace move_base_flex_core {
       }
 
       /**
-       * @brief Initialization function for the GlobalPlanner
+       * @brief Initialization function for the MoveBasePlanner
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
@@ -118,7 +118,7 @@ namespace move_base_flex_core {
        * @brief Public constructor used for handling a nav_core-based plugin
        * @param plugin Backward compatible plugin
        */
-      GlobalPlanner(boost::shared_ptr< nav_core::BaseGlobalPlanner > plugin)
+      MoveBasePlanner(boost::shared_ptr< nav_core::BaseGlobalPlanner > plugin)
       {
         backward_compatible_plugin = plugin;
 
@@ -129,10 +129,10 @@ namespace move_base_flex_core {
       /**
        * @brief  Virtual destructor for the interface
        */
-      virtual ~GlobalPlanner(){}
+      virtual ~MoveBasePlanner(){}
 
     protected:
-      GlobalPlanner(){}
+      MoveBasePlanner(){}
 
     private:
       boost::shared_ptr< nav_core::BaseGlobalPlanner > backward_compatible_plugin;

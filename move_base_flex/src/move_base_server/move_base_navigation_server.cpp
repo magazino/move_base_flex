@@ -53,15 +53,15 @@ namespace move_base_flex
 MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
   AbstractNavigationServer(tf_listener_ptr,
                            MoveBasePlannerExecution::Ptr(
-                                new MoveBasePlannerExecution(condition_, costmap_global_planner_ptr_)),
+                                new MoveBasePlannerExecution(condition_, costmap_planner_ptr_)),
                            MoveBaseControllerExecution::Ptr(
                                 new MoveBaseControllerExecution(condition_, tf_listener_ptr,
                                                                 costmap_controller_ptr_)),
                            MoveBaseRecoveryExecution::Ptr(
                                 new MoveBaseRecoveryExecution(condition_, tf_listener_ptr,
-                                                              costmap_global_planner_ptr_,
+                                                              costmap_planner_ptr_,
                                                               costmap_controller_ptr_))),
-    costmap_global_planner_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
+    costmap_planner_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
     costmap_controller_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_))
 {
   ros::NodeHandle private_nh("~");
@@ -69,7 +69,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   // shutdown costmaps
   private_nh.param("shutdown_costmaps", shutdown_costmaps_, false);
 
-  costmap_global_planner_ptr_->pause();
+  costmap_planner_ptr_->pause();
   costmap_controller_ptr_->pause();
 
   // initialize all plugins
@@ -79,7 +79,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   startActionServers();
 
   // start costmaps
-  costmap_global_planner_ptr_->start();
+  costmap_planner_ptr_->start();
   costmap_controller_ptr_->start();
 
   local_costmap_active_ = true;
@@ -89,7 +89,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
   if (shutdown_costmaps_)
   {
     costmap_controller_ptr_->stop();
-    costmap_global_planner_ptr_->stop();
+    costmap_planner_ptr_->stop();
     local_costmap_active_ = false;
     global_costmap_active_ = false;
   }
@@ -107,7 +107,7 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
 MoveBaseNavigationServer::~MoveBaseNavigationServer()
 {
   costmap_controller_ptr_->stop();
-  costmap_global_planner_ptr_->stop();
+  costmap_planner_ptr_->stop();
 }
 
 void MoveBaseNavigationServer::reconfigure(move_base_flex::MoveBaseFlexConfig &config, uint32_t level)
@@ -149,7 +149,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(move_base_flex_msgs::Che
       }
       break;
     case move_base_flex_msgs::CheckPose::Request::GLOBAL_COSTMAP:
-      costmap = costmap_global_planner_ptr_;
+      costmap = costmap_planner_ptr_;
       costmap_name = "global costmap";
       if (shutdown_costmaps_ && !global_costmap_active_)
       {
@@ -229,7 +229,7 @@ bool MoveBaseNavigationServer::callServiceMakePlan(nav_msgs::GetPlan::Request &r
   geometry_msgs::PoseStamped global_start_pose;
   geometry_msgs::PoseStamped global_goal_pose;
 
-  if (!costmap_global_planner_ptr_)
+  if (!costmap_planner_ptr_)
   {
     ROS_ERROR_STREAM("The global costmap is not initialized! Canceling service call.");
     return false;
@@ -239,7 +239,7 @@ bool MoveBaseNavigationServer::callServiceMakePlan(nav_msgs::GetPlan::Request &r
   if (shutdown_costmaps_)
   {
     costmap_controller_ptr_->start();
-    costmap_global_planner_ptr_->start();
+    costmap_planner_ptr_->start();
   }
 
   ros::Duration tf_timeout(0.3);
@@ -388,7 +388,7 @@ bool MoveBaseNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request
                                                         std_srvs::Empty::Response &response)
 {
   costmap_controller_ptr_->resetLayers();
-  costmap_global_planner_ptr_->resetLayers();
+  costmap_planner_ptr_->resetLayers();
   return true;
 }
 
@@ -403,7 +403,7 @@ void MoveBaseNavigationServer::checkActivateCostmaps()
 
   if (shutdown_costmaps_ && !global_costmap_active_)
   {
-    costmap_global_planner_ptr_->start();
+    costmap_planner_ptr_->start();
     ROS_DEBUG_STREAM("Activating global costmap.");
     global_costmap_active_ = true;
   }
@@ -422,7 +422,7 @@ void MoveBaseNavigationServer::checkDeactivateCostmaps()
   if (!ros::ok() ||
       (shutdown_costmaps_ && global_costmap_active_ && !(active_planning_ || active_moving_ || active_recovery_)))
   {
-    costmap_global_planner_ptr_->stop();
+    costmap_planner_ptr_->stop();
     ROS_DEBUG_STREAM("Deactivating global costmap.");
     global_costmap_active_ = false;
   }

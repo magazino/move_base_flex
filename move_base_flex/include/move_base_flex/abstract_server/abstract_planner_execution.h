@@ -66,18 +66,18 @@ namespace move_base_flex
  *        controls the global planner execution. Due to a state change it wakes up all threads connected to the
  *        condition variable.
  *
- * @tparam GLOBAL_PLANNER_BASE The base class derived from the AbstractGlobalPlanner class. The local planner plugin
+ * @tparam PLANNER_BASE The base class derived from the AbstractPlanner class. The local planner plugin
  *         has to implement that interface base class to be compatible with move_base_flex
  *
  * @ingroup abstract_server planner_execution
  */
-template<typename GLOBAL_PLANNER_BASE>
+template<typename PLANNER_BASE>
   class AbstractPlannerExecution
   {
   public:
 
     //! shared pointer type to the @ref planner_execution "planner execution".
-    typedef boost::shared_ptr<AbstractPlannerExecution<GLOBAL_PLANNER_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractPlannerExecution<PLANNER_BASE> > Ptr;
 
     /**
      * @brief Constructor
@@ -205,10 +205,10 @@ template<typename GLOBAL_PLANNER_BASE>
   protected:
 
     //! class loader, to load the global planner plugin
-    pluginlib::ClassLoader<GLOBAL_PLANNER_BASE> class_loader_global_planner_;
+    pluginlib::ClassLoader<PLANNER_BASE> class_loader_planner_;
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<GLOBAL_PLANNER_BASE> global_planner_;
+    boost::shared_ptr<PLANNER_BASE> planner_;
 
     //! the name of the loaded planner plugin
     std::string plugin_name_;

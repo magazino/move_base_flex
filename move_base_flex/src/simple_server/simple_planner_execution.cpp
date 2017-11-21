@@ -44,7 +44,7 @@ namespace move_base_flex
 {
 
 SimplePlannerExecution::SimplePlannerExecution(boost::condition_variable &condition) :
-    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::AbstractGlobalPlanner")
+    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::AbstractPlanner")
 {
 }
 

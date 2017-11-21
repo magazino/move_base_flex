@@ -48,8 +48,8 @@
 namespace move_base_flex
 {
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::AbstractRecoveryExecution(
+template<class RECOVERY_BASE>
+  AbstractRecoveryExecution<RECOVERY_BASE>::AbstractRecoveryExecution(
       boost::condition_variable &condition,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       std::string package, std::string class_name) :
@@ -58,13 +58,13 @@ template<class RECOVERY_BEHAVIOR_BASE>
   {
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::~AbstractRecoveryExecution()
+template<class RECOVERY_BASE>
+  AbstractRecoveryExecution<RECOVERY_BASE>::~AbstractRecoveryExecution()
   {
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::initialize()
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::initialize()
   {
     if (!loadPlugins())
     {
@@ -83,8 +83,8 @@ template<class RECOVERY_BEHAVIOR_BASE>
     setState(INITIALIZED);
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
@@ -92,8 +92,8 @@ template<class RECOVERY_BEHAVIOR_BASE>
     // config.recovery_behaviors;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::loadPlugins()
+template<class RECOVERY_BASE>
+  bool AbstractRecoveryExecution<RECOVERY_BASE>::loadPlugins()
   {
     ros::NodeHandle private_nh("~");
 
@@ -120,7 +120,7 @@ template<class RECOVERY_BEHAVIOR_BASE>
         try
         {
           recovery_behaviors_.insert(
-              std::pair<std::string, boost::shared_ptr<RECOVERY_BEHAVIOR_BASE> >(
+              std::pair<std::string, boost::shared_ptr<RECOVERY_BASE> >(
                   name, class_loader_recovery_behaviors_.createInstance(type)));
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
@@ -154,38 +154,38 @@ template<class RECOVERY_BEHAVIOR_BASE>
     return true;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::setState(RecoveryState state)
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::setState(RecoveryState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     state_ = state;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState AbstractRecoveryExecution<
-      RECOVERY_BEHAVIOR_BASE>::getState()
+template<class RECOVERY_BASE>
+  typename AbstractRecoveryExecution<RECOVERY_BASE>::RecoveryState AbstractRecoveryExecution<
+      RECOVERY_BASE>::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::startRecovery(const std::string name)
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::startRecovery(const std::string name)
   {
     requested_behavior_name_ = name;
     setState(STARTED);
     thread_ = boost::thread(&AbstractRecoveryExecution::run, this);
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::stopRecovery()
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::stopRecovery()
   {
     thread_.interrupt();
     setState(STOPPED);
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::cancel()
+template<class RECOVERY_BASE>
+  bool AbstractRecoveryExecution<RECOVERY_BASE>::cancel()
   {
     if (canceled_)
     {
@@ -199,14 +199,14 @@ template<class RECOVERY_BEHAVIOR_BASE>
     return canceled_;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::hasRecoveryBehavior(const std::string &name)
+template<class RECOVERY_BASE>
+  bool AbstractRecoveryExecution<RECOVERY_BASE>::hasRecoveryBehavior(const std::string &name)
   {
     return recovery_behaviors_.find(name) != recovery_behaviors_.end();
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  std::vector<std::string> AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::listRecoveryBehaviors()
+template<class RECOVERY_BASE>
+  std::vector<std::string> AbstractRecoveryExecution<RECOVERY_BASE>::listRecoveryBehaviors()
   {
     std::vector<std::string> recovery_behaviors;
     std::map<std::string, std::string>::iterator it = recovery_behaviors_type_.begin();
@@ -217,8 +217,8 @@ template<class RECOVERY_BEHAVIOR_BASE>
     return recovery_behaviors;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::getTypeOfBehavior(const std::string &name, std::string &type)
+template<class RECOVERY_BASE>
+  bool AbstractRecoveryExecution<RECOVERY_BASE>::getTypeOfBehavior(const std::string &name, std::string &type)
   {
     std::map<std::string, std::string>::iterator finder = recovery_behaviors_type_.find(name);
     if (finder != recovery_behaviors_type_.end())
@@ -229,13 +229,13 @@ template<class RECOVERY_BEHAVIOR_BASE>
     return false;
   }
 
-template<class RECOVERY_BEHAVIOR_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::run()
+template<class RECOVERY_BASE>
+  void AbstractRecoveryExecution<RECOVERY_BASE>::run()
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
     canceled_ = false; // (re)set the canceled state
 
-    typename std::map<std::string, boost::shared_ptr<RECOVERY_BEHAVIOR_BASE> >::iterator find_iter;
+    typename std::map<std::string, boost::shared_ptr<RECOVERY_BASE> >::iterator find_iter;
     find_iter = recovery_behaviors_.find(requested_behavior_name_);
 
     if (find_iter == recovery_behaviors_.end())

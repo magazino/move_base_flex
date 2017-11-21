@@ -50,11 +50,11 @@ namespace move_base_flex
 {
 /**
  * @brief The MoveBaseRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
- *        nav_core/RecoveryBehavior class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *        nav_core/MoveBaseRecovery class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup recovery_execution move_base_server
  */
-class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::RecoveryBehavior>
+class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::MoveBaseRecovery>
 {
 
 public:

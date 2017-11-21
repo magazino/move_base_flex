@@ -44,18 +44,18 @@
 
 namespace move_base_flex_core {
   /**
-   * @class RecoveryBehavior
+   * @class MoveBaseRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class RecoveryBehavior : public AbstractRecoveryBehavior{
+  class MoveBaseRecovery : public AbstractRecovery{
     public:
 
-      typedef boost::shared_ptr< ::move_base_flex_core::RecoveryBehavior> Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::MoveBaseRecovery> Ptr;
 
       /**
-       * @brief Initialization function for the RecoveryBehavior
+       * @brief Initialization function for the MoveBaseRecovery
        * @param tf A pointer to a transform listener
        * @param global_costmap A pointer to the global_costmap used by the navigation stack
        * @param local_costmap A pointer to the local_costmap used by the navigation stack
@@ -71,7 +71,7 @@ namespace move_base_flex_core {
       };
 
       /**
-       * @brief Runs the RecoveryBehavior
+       * @brief Runs the MoveBaseRecovery
        */
       virtual void runBehavior()
       {
@@ -95,7 +95,7 @@ namespace move_base_flex_core {
        * @brief Public constructor used for handling a nav_core-based plugin
        * @param plugin Backward compatible plugin
        */
-      RecoveryBehavior(boost::shared_ptr< nav_core::RecoveryBehavior > plugin)
+      MoveBaseRecovery(boost::shared_ptr< nav_core::RecoveryBehavior > plugin)
       {
         backward_compatible_plugin = plugin;
 
@@ -106,10 +106,10 @@ namespace move_base_flex_core {
       /**
        * @brief Virtual destructor for the interface
        */
-      virtual ~RecoveryBehavior(){}
+      virtual ~MoveBaseRecovery(){}
 
     protected:
-      RecoveryBehavior(){}
+      MoveBaseRecovery(){}
 
     private:
       boost::shared_ptr< nav_core::RecoveryBehavior > backward_compatible_plugin;

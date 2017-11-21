@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE_ABSTRACT_GLOBAL_PLANNER_H_
-#define MBF_CORE_ABSTRACT_GLOBAL_PLANNER_H_
+#ifndef MBF_CORE_ABSTRACT_PLANNER_H_
+#define MBF_CORE_ABSTRACT_PLANNER_H_
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -46,15 +46,15 @@
 namespace move_base_flex_core
 {
 
-  class AbstractGlobalPlanner{
+  class AbstractPlanner{
 
     public:
-      typedef boost::shared_ptr< ::move_base_flex_core::AbstractGlobalPlanner > Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::AbstractPlanner > Ptr;
 
       /**
        * @brief Destructor
        */
-      virtual ~AbstractGlobalPlanner(){};
+      virtual ~AbstractPlanner(){};
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -95,8 +95,8 @@ namespace move_base_flex_core
       /**
        * @brief Constructor
        */
-      AbstractGlobalPlanner(){};
+      AbstractPlanner(){};
   };
 } /* namespace move_base_flex_core */
 
-#endif /* abstract_global_planner.h */
+#endif /* abstract_planner.h */

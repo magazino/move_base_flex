@@ -48,7 +48,7 @@ SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::Trans
                              SimpleControllerExecution::Ptr(new SimpleControllerExecution(condition_, tf_listener_ptr)),
                              SimpleRecoveryExecution::Ptr(new SimpleRecoveryExecution(condition_, tf_listener_ptr)))
 {
-  // initalize all plugins
+  // initialize all plugins
   initializeServerComponents();
 
   // start all action servers

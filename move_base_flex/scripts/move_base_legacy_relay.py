@@ -87,11 +87,11 @@ def mb_reconf_cb(config, level):
     if 'base_global_planner' in mbf_config:
         mbf_config['global_planner'] = mbf_config.pop('base_global_planner')
     if 'planner_frequency' in mbf_config:
-        mbf_config['global_planner_frequency'] = mbf_config.pop('planner_frequency')
+        mbf_config['planner_frequency'] = mbf_config.pop('planner_frequency')
     if 'planner_patience' in mbf_config:
-        mbf_config['global_planner_patience'] = mbf_config.pop('planner_patience')
+        mbf_config['planner_patience'] = mbf_config.pop('planner_patience')
     if 'max_planning_retries' in mbf_config:
-        mbf_config['global_planner_max_retries'] = mbf_config.pop('max_planning_retries')
+        mbf_config['planner_max_retries'] = mbf_config.pop('max_planning_retries')
     if 'conservative_reset_dist' in mbf_config:
         mbf_config.pop('conservative_reset_dist')  # no mbf equivalent for this!
 

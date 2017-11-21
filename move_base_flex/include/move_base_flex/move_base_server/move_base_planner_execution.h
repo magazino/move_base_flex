@@ -49,11 +49,11 @@ namespace move_base_flex
 {
 /**
  * @brief The MoveBasePlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
- *        nav_core/BaseGlobalPlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *        nav_core/BaseMoveBasePlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup planner_execution move_base_server
  */
-class MoveBasePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::GlobalPlanner>
+class MoveBasePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::MoveBasePlanner>
 {
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;

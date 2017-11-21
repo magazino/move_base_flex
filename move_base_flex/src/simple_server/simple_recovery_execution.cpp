@@ -45,7 +45,7 @@ namespace move_base_flex
 
 SimpleRecoveryExecution::SimpleRecoveryExecution(boost::condition_variable &condition,
                                                  const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractRecoveryBehavior")
+    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractRecovery")
 {
 }
 

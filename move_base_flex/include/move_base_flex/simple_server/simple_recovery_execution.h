@@ -48,12 +48,12 @@ namespace move_base_flex
 {
 /**
  * @brief The SimpleRecoveryExecution basically uses the AbstractRecoveryExecution and loads recovery behavior plugins,
- *        which implements the base class interface AbstractRecoveryBehavior. This implementation allows recovery
+ *        which implements the base class interface AbstractRecovery. This implementation allows recovery
  *        behaviors, which do not initialize map representations via Move Base Flex.
  *
  * @ingroup recovery_execution simple_server
  */
-class SimpleRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::AbstractRecoveryBehavior>
+class SimpleRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::AbstractRecovery>
 {
 
 public:

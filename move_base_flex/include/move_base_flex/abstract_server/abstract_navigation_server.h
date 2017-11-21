@@ -118,15 +118,15 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFl
  * @tparam CONTROLLER_BASE The base class derived from the AbstractController class. The local planner plugin
  *         has to implement that interface base class to be compatible with move_base_flex.
  *
- * @tparam GLOBAL_PLANNER_BASE The base class derived from the AbstractGlobalPlanner class. The global planner plugin
+ * @tparam PLANNER_BASE The base class derived from the AbstractPlanner class. The global planner plugin
  *         has to implement that interface base class to be compatible with move_base_flex.
  *
- * @tparam RECOVERY_BEHAVIOR_BASE The base class derived from the AbstractRecoveryBehavior class. the recovery behavior
+ * @tparam RECOVERY_BASE The base class derived from the AbstractRecovery class. the recovery behavior
  *         plugin has to implement that interface base class to be compatible with move_base_flex.
  *
  * @ingroup abstract_server navigation_server
  */
-template<typename CONTROLLER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVERY_BEHAVIOR_BASE>
+template<typename CONTROLLER_BASE, typename PLANNER_BASE, typename RECOVERY_BASE>
   class AbstractNavigationServer
   {
   public:
@@ -140,9 +140,9 @@ template<typename CONTROLLER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVE
      * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
     AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                             typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr,
+                             typename AbstractPlannerExecution<PLANNER_BASE>::Ptr planning_ptr,
                              typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr,
-                             typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr);
+                             typename AbstractRecoveryExecution<RECOVERY_BASE>::Ptr recovery_ptr);
 
     /**
      * @brief Destructor
@@ -275,13 +275,13 @@ template<typename CONTROLLER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVE
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
 
     //! shared pointer to the @ref planner_execution "PlannerExecution"
-    typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr_;
+    typename AbstractPlannerExecution<PLANNER_BASE>::Ptr planning_ptr_;
 
     //! shared pointer to the @ref controller_execution "ControllerExecution"
     typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr_;
 
     //! shared pointer to the @ref recovery_execution "RecoveryExecution"
-    typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr_;
+    typename AbstractRecoveryExecution<RECOVERY_BASE>::Ptr recovery_ptr_;
 
     //! loop variable for the controller action
     bool active_moving_;
@@ -299,7 +299,7 @@ template<typename CONTROLLER_BASE, typename GLOBAL_PLANNER_BASE, typename RECOVE
     double oscillation_distance_;
 
     //! true, if recovery behavior for the MoveBase action is enabled.
-    bool recovery_behavior_enabled_;
+    bool recovery_enabled_;
 
     //! true, if clearing rotate is allowed.
     bool clearing_rotation_allowed_;

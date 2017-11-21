@@ -60,15 +60,15 @@ namespace move_base_flex
 
 /**
  * @brief The MoveBaseNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
- *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseGlobalPlanner and the 
+ *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseMoveBasePlanner and the
  *        nav_core/RecoveryBehavior base classes as plugin interfaces. These plugin interface are the same for the 
  *        old move_base
  *
  * @ingroup navigation_server move_base_server
  */
 class MoveBaseNavigationServer : public AbstractNavigationServer<move_base_flex_core::MoveBaseController,
-                                                                 move_base_flex_core::GlobalPlanner,
-                                                                 move_base_flex_core::RecoveryBehavior>
+                                                                 move_base_flex_core::MoveBasePlanner,
+                                                                 move_base_flex_core::MoveBaseRecovery>
 {
 public:
 
@@ -159,7 +159,7 @@ protected:
   CostmapPtr costmap_controller_ptr_;
 
   //! Shared pointer to the common global costmap
-  CostmapPtr costmap_global_planner_ptr_;
+  CostmapPtr costmap_planner_ptr_;
 
   //! true, if the local costmap is active
   bool local_costmap_active_;

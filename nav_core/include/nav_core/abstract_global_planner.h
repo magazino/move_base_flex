@@ -46,15 +46,15 @@
 namespace nav_core
 {
 
-  class AbstractGlobalPlanner{
+  class AbstractPlanner{
 
     public:
-      typedef boost::shared_ptr< ::nav_core::AbstractGlobalPlanner > Ptr;
+      typedef boost::shared_ptr< ::nav_core::AbstractPlanner > Ptr;
 
       /**
        * @brief Destructor
        */
-      virtual ~AbstractGlobalPlanner(){};
+      virtual ~AbstractPlanner(){};
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -84,7 +84,7 @@ namespace nav_core
       /**
        * @brief Constructor
        */
-      AbstractGlobalPlanner(){};
+      AbstractPlanner(){};
   };
 } /* namespace nav_core */
 

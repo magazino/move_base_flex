@@ -63,17 +63,17 @@ namespace move_base_flex
  *        server, which controls the recovery behavior execution. Due to a state change it wakes up all threads
  *        connected to the condition variable.
  *
- * @tparam RECOVERY_BEHAVIOR_BASE The base class derived from the AbstractRecoveryBehavior class. The recovery behavior
+ * @tparam RECOVERY_BASE The base class derived from the AbstractRecovery class. The recovery behavior
  *         plugin has to implement that interface base class to be compatible with move_base_flex
  *
  * @ingroup abstract_server recovery_execution
  */
-template<typename RECOVERY_BEHAVIOR_BASE>
+template<typename RECOVERY_BASE>
   class AbstractRecoveryExecution
   {
   public:
 
-    typedef boost::shared_ptr<AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractRecoveryExecution<RECOVERY_BASE> > Ptr;
 
     /**
      * @brief Constructor
@@ -121,7 +121,7 @@ template<typename RECOVERY_BEHAVIOR_BASE>
      * @brief Returns the current state, thread-safe communication
      * @return current internal state
      */
-    AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState getState();
+    AbstractRecoveryExecution<RECOVERY_BASE>::RecoveryState getState();
 
     /**
      * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
@@ -170,16 +170,16 @@ template<typename RECOVERY_BEHAVIOR_BASE>
     virtual void run();
 
     //! class loader, to load the recovery plugins
-    pluginlib::ClassLoader<RECOVERY_BEHAVIOR_BASE> class_loader_recovery_behaviors_;
+    pluginlib::ClassLoader<RECOVERY_BASE> class_loader_recovery_behaviors_;
 
     //! map to store the recovery behaviors. Each behavior can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<RECOVERY_BEHAVIOR_BASE> > recovery_behaviors_;
+    std::map<std::string, boost::shared_ptr<RECOVERY_BASE> > recovery_behaviors_;
 
     //! map to store the type of the behavior as string
     std::map<std::string, std::string> recovery_behaviors_type_;
 
     //! the current loaded recovery behavior
-    move_base_flex_core::AbstractRecoveryBehavior::Ptr current_behavior_;
+    move_base_flex_core::AbstractRecovery::Ptr current_behavior_;
 
     //! shared pointer to common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;

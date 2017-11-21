@@ -41,7 +41,7 @@
 
 namespace nav_core {
   /**
-   * @class AbstractRecoveryBehavior
+   * @class AbstractRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
    */

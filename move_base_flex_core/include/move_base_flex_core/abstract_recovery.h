@@ -41,24 +41,24 @@
 
 namespace move_base_flex_core {
   /**
-   * @class AbstractRecoveryBehavior
+   * @class AbstractRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
    */
-  class AbstractRecoveryBehavior{
+  class AbstractRecovery{
     public:
 
-      typedef boost::shared_ptr< ::move_base_flex_core::AbstractRecoveryBehavior > Ptr;
+      typedef boost::shared_ptr< ::move_base_flex_core::AbstractRecovery > Ptr;
 
       /**
-       * @brief Runs the AbstractRecoveryBehavior
+       * @brief Runs the AbstractRecovery
        */
       virtual void runBehavior() = 0;
 
       /**
        * @brief Virtual destructor for the interface
        */
-      virtual ~AbstractRecoveryBehavior(){}
+      virtual ~AbstractRecovery(){}
 
       /**
        * @brief Requests the recovery behavior to cancel, e.g. if it takes to much time.
@@ -67,7 +67,7 @@ namespace move_base_flex_core {
       virtual bool cancel() = 0;
 
     protected:
-      AbstractRecoveryBehavior(){}
+      AbstractRecovery(){}
   };
 };  // namespace move_base_flex_core
 

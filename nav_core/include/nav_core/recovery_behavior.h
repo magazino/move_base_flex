@@ -47,7 +47,7 @@ namespace nav_core {
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
    */
-  class RecoveryBehavior : public AbstractRecoveryBehavior{
+  class RecoveryBehavior : public AbstractRecovery{
     public:
 
       typedef boost::shared_ptr< ::nav_core::RecoveryBehavior> Ptr;

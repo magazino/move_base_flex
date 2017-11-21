@@ -47,12 +47,12 @@
 namespace move_base_flex
 {
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::AbstractNavigationServer(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::AbstractNavigationServer(
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-      typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::Ptr planning_ptr,
+      typename AbstractPlannerExecution<PLANNER_BASE>::Ptr planning_ptr,
       typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr,
-      typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::Ptr recovery_ptr) :
+      typename AbstractRecoveryExecution<RECOVERY_BASE>::Ptr recovery_ptr) :
       tf_listener_ptr_(tf_listener_ptr),
       planning_ptr_(planning_ptr),
       moving_ptr_(moving_ptr),
@@ -68,7 +68,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     private_nh_.param("global_frame", global_frame_, std::string("map"));
     private_nh_.param("tolerance", tolerance_, 0.0);
     private_nh_.param("tf_timeout", tf_timeout_, 3.0);
-    private_nh_.param("recovery_behavior_enabled", recovery_behavior_enabled_, true);
+    private_nh_.param("recovery_enabled", recovery_enabled_, true);
 
     path_pub_ = nh.advertise<nav_msgs::Path>("global_path", 1);
     current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
@@ -83,60 +83,60 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
         new ActionServerGetPath(
             private_nh_,
             name_action_get_path,
-            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE,
-                        RECOVERY_BEHAVIOR_BASE>::callActionGetPath, this, _1),
+            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE,
+                        RECOVERY_BASE>::callActionGetPath, this, _1),
             false));
 
     action_server_exe_path_ptr_ = ActionServerExePathPtr(
         new ActionServerExePath(
             private_nh_,
             name_action_exe_path,
-            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE,
-                        RECOVERY_BEHAVIOR_BASE>::callActionExePath, this, _1),
+            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE,
+                        RECOVERY_BASE>::callActionExePath, this, _1),
             false));
 
     action_server_recovery_ptr_ = ActionServerRecoveryPtr(
         new ActionServerRecovery(
             private_nh_,
             name_action_recovery,
-            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE,
-                        RECOVERY_BEHAVIOR_BASE>::callActionRecovery, this, _1),
+            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE,
+                        RECOVERY_BASE>::callActionRecovery, this, _1),
             false));
 
     action_server_move_base_ptr_ = ActionServerMoveBasePtr(
         new ActionServerMoveBase(
             private_nh_,
             name_action_move_base,
-            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE,
-                        RECOVERY_BEHAVIOR_BASE>::callActionMoveBase, this, _1),
+            boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE,
+                        RECOVERY_BASE>::callActionMoveBase, this, _1),
             false));
 
     // dynamic reconfigure server
     dsrv_ = boost::make_shared<dynamic_reconfigure::Server<move_base_flex::MoveBaseFlexConfig> >(private_nh_);
     dynamic_reconfigure::Server<move_base_flex::MoveBaseFlexConfig>::CallbackType cb =
-        boost::bind(&AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::reconfigure,
+        boost::bind(&AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::reconfigure,
                     this, _1, _2);
     dsrv_->setCallback(cb);
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::initializeServerComponents()
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::initializeServerComponents()
   {
     planning_ptr_->initialize();
     moving_ptr_->initialize();
     recovery_ptr_->initialize();
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::~AbstractNavigationServer()
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::~AbstractNavigationServer()
   {
     moving_ptr_->stopMoving();
     planning_ptr_->stopPlanning();
     recovery_ptr_->stopRecovery();
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::startActionServers()
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::startActionServers()
   {
     action_server_get_path_ptr_->start();
     action_server_exe_path_ptr_->start();
@@ -144,8 +144,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     action_server_move_base_ptr_->start();
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::reconfigure(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::reconfigure(
       move_base_flex::MoveBaseFlexConfig &config, uint32_t level)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
@@ -170,14 +170,14 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     recovery_ptr_->reconfigure(config);
     oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
     oscillation_distance_ = config.oscillation_distance;
-    recovery_behavior_enabled_ = config.recovery_behavior_enabled;
+    recovery_enabled_ = config.recovery_enabled;
     clearing_rotation_allowed_ = config.clearing_rotation_allowed;
 
     last_config_ = config;
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::publishPath(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::publishPath(
       std::vector<geometry_msgs::PoseStamped> &plan)
   {
     if (plan.empty())
@@ -191,8 +191,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     path_pub_.publish(path);
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::transformPlanToGlobalFrame(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  bool AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::transformPlanToGlobalFrame(
       std::vector<geometry_msgs::PoseStamped> &plan, std::vector<geometry_msgs::PoseStamped> &global_plan)
   {
     global_plan.clear();
@@ -214,8 +214,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     return true;
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  bool AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::getRobotPose(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  bool AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::getRobotPose(
       geometry_msgs::PoseStamped &robot_pose)
   {
     bool tf_success = move_base_flex::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
@@ -230,8 +230,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     return true;
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::callActionGetPath(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::callActionGetPath(
       const move_base_flex_msgs::GetPathGoalConstPtr &goal)
   {
     ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Start action "  << name_action_get_path);
@@ -285,7 +285,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
       return;
     }
 
-    typename AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PlanningState state_planning_input;
+    typename AbstractPlannerExecution<PLANNER_BASE>::PlanningState state_planning_input;
 
     std::vector<geometry_msgs::PoseStamped> plan, global_plan;
     double costs;
@@ -299,15 +299,15 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
 
       switch (state_planning_input)
       {
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::INITIALIZED:
+        case AbstractPlannerExecution<PLANNER_BASE>::INITIALIZED:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot_navigation state: initialized");
           break;
 
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::STARTED:
+        case AbstractPlannerExecution<PLANNER_BASE>::STARTED:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot_navigation state: started");
           break;
 
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::STOPPED:
+        case AbstractPlannerExecution<PLANNER_BASE>::STOPPED:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: stopped");
           ROS_WARN_STREAM_NAMED(name_action_get_path, "Planning has been stopped rigorously!");
           result.outcome = move_base_flex_msgs::GetPathResult::STOPPED;
@@ -316,7 +316,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           active_planning_ = false;
           break;
 
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::CANCELED:
+        case AbstractPlannerExecution<PLANNER_BASE>::CANCELED:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: canceled");
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Global planner has been canceled successfully");
           result.path.header.stamp = ros::Time::now();
@@ -327,7 +327,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           break;
 
           // in progress
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PLANNING:
+        case AbstractPlannerExecution<PLANNER_BASE>::PLANNING:
           if (planning_ptr_->isPatienceExceeded())
           {
             ROS_INFO_STREAM_NAMED(name_action_get_path, "Global planner patience has been exceeded! "
@@ -345,7 +345,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           break;
 
           // found a new plan
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::FOUND_PLAN:
+        case AbstractPlannerExecution<PLANNER_BASE>::FOUND_PLAN:
           // set time stamp to now
           result.path.header.stamp = ros::Time::now();
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan");
@@ -387,21 +387,21 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           break;
 
           // no plan found
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::NO_PLAN_FOUND:
+        case AbstractPlannerExecution<PLANNER_BASE>::NO_PLAN_FOUND:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: no plan found");
           planning_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
           break;
 
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::MAX_RETRIES:
+        case AbstractPlannerExecution<PLANNER_BASE>::MAX_RETRIES:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Global planner reached the maximum number of retries");
           planning_ptr_->getPluginInfo(result.outcome, result.message);
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
           break;
 
-        case AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PAT_EXCEEDED:
+        case AbstractPlannerExecution<PLANNER_BASE>::PAT_EXCEEDED:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Global planner exceeded the patience time");
           result.outcome = move_base_flex_msgs::GetPathResult::PAT_EXCEEDED;
           result.message = "Global planner exceeded the patience time";
@@ -417,7 +417,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
 
       // if preempt requested while we are planning
       if (action_server_get_path_ptr_->isPreemptRequested()
-          && state_planning_input == AbstractPlannerExecution<GLOBAL_PLANNER_BASE>::PLANNING)
+          && state_planning_input == AbstractPlannerExecution<PLANNER_BASE>::PLANNING)
       {
         if (!planning_ptr_->cancel())
         {
@@ -447,8 +447,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     }
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::callActionExePath(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::callActionExePath(
       const move_base_flex_msgs::ExePathGoalConstPtr &goal)
   {
     ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Start action "  << name_action_exe_path);
@@ -654,8 +654,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     }
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::callActionRecovery(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::callActionRecovery(
       const move_base_flex_msgs::RecoveryGoalConstPtr &goal)
   {
     ROS_DEBUG_STREAM_NAMED(name_action_recovery, "Start action "  << name_action_recovery);
@@ -665,23 +665,23 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     recovery_ptr_->startRecovery(behavior);
     active_recovery_ = true;
 
-    typename AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RecoveryState state_recovery_input;
+    typename AbstractRecoveryExecution<RECOVERY_BASE>::RecoveryState state_recovery_input;
 
     while (active_recovery_ && ros::ok())
     {
       state_recovery_input = recovery_ptr_->getState();
       switch (state_recovery_input)
       {
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::STOPPED:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::STOPPED:
           ROS_WARN_STREAM_NAMED(name_action_recovery, "Recovering \"" << behavior << "\" has been stopped!");
           active_recovery_ = false; // stopping the action
           break;
 
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::STARTED:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::STARTED:
           ROS_DEBUG_STREAM_NAMED(name_action_recovery, "Recovering \"" << behavior << "\" was started");
           break;
 
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RECOVERING:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::RECOVERING:
           // check preempt requested; we let for the next iteration to set the action as preempted to
           // give time to the executing thread to finish, set the CANCELED state and notify condition
           if (action_server_recovery_ptr_->isPreemptRequested() && recovery_ptr_->cancel())
@@ -695,7 +695,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           }
           break;
 
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::WRONG_NAME:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::WRONG_NAME:
           active_recovery_ = false; // stopping the action
           result.outcome = move_base_flex_msgs::RecoveryResult::INVALID_NAME;
           result.message = "No recovery plugin loaded with the given name\"" + behavior + "\"!";
@@ -703,7 +703,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           ROS_ERROR_STREAM_NAMED(name_action_recovery, result.message);
           break;
 
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::CANCELED:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::CANCELED:
           // Recovery behavior supports cancel and it worked
           active_recovery_ = false; // stopping the action
           result.outcome = move_base_flex_msgs::RecoveryResult::CANCELED;
@@ -712,7 +712,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
           ROS_DEBUG_STREAM_NAMED(name_action_recovery, result.message);
           break;
 
-        case AbstractRecoveryExecution<RECOVERY_BEHAVIOR_BASE>::RECOVERY_DONE:
+        case AbstractRecoveryExecution<RECOVERY_BASE>::RECOVERY_DONE:
           active_recovery_ = false; // stopping the action
           result.outcome = move_base_flex_msgs::RecoveryResult::SUCCESS;
           result.message = "Recovery \"" + behavior + "\" done!";
@@ -742,8 +742,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     }
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::callActionMoveBase(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::callActionMoveBase(
       const move_base_flex_msgs::MoveBaseGoalConstPtr &goal)
   {
     ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Start action "  << name_action_move_base);
@@ -878,8 +878,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
                     exe_path_goal,
                     ActionClientExePath::SimpleDoneCallback(),
                     ActionClientExePath::SimpleActiveCallback(),
-                    boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE,
-                                RECOVERY_BEHAVIOR_BASE>::actionMoveBaseExePathFeedback,this, _1));
+                    boost::bind(&move_base_flex::AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE,
+                                RECOVERY_BASE>::actionMoveBaseExePathFeedback,this, _1));
                 state = EXE_PATH;
                 last_state = GET_PATH;
                 break;
@@ -893,7 +893,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
                 move_base_result.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, target_pose));
                 move_base_result.final_pose = robot_pose;
 
-                if (!recovery_behavior_enabled_)
+                if (!recovery_enabled_)
                 {
                   ROS_WARN_STREAM_NAMED(name_action_move_base, "Recovery behaviors are disabled!");
                   ROS_WARN_STREAM_NAMED(name_action_move_base, "Abort the execution of the planner: "
@@ -1044,7 +1044,7 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
 
                 if (try_recovery)
                 {
-                  if (!recovery_behavior_enabled_)
+                  if (!recovery_enabled_)
                   {
                     ROS_WARN_STREAM_NAMED(name_action_move_base, "Recovery behaviors are disabled!");
                     ROS_WARN_STREAM_NAMED(name_action_move_base, "Abort the execution of the controller: "
@@ -1194,8 +1194,8 @@ template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVI
     }
   }
 
-template<class CONTROLLER_BASE, class GLOBAL_PLANNER_BASE, class RECOVERY_BEHAVIOR_BASE>
-  void AbstractNavigationServer<CONTROLLER_BASE, GLOBAL_PLANNER_BASE, RECOVERY_BEHAVIOR_BASE>::actionMoveBaseExePathFeedback(
+template<class CONTROLLER_BASE, class PLANNER_BASE, class RECOVERY_BASE>
+  void AbstractNavigationServer<CONTROLLER_BASE, PLANNER_BASE, RECOVERY_BASE>::actionMoveBaseExePathFeedback(
       const move_base_flex_msgs::ExePathFeedbackConstPtr &feedback)
   {
     move_base_flex_msgs::MoveBaseFeedback feedback_out;
