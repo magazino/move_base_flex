@@ -79,12 +79,12 @@ namespace move_base_flex_core {
        *         INTERNAL_ERROR  = 60
        *         71..99 are reserved as plugin specific errors
        */
-      virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+      virtual uint32_t mbfComputePath(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                 double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                                 std::string& message)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API makePlan method not overridden nor backward compatible plugin provided");
+          throw std::runtime_error("MBF API mbfComputePath() method not overridden nor backward compatible plugin provided");
 
         bool success = backward_compatible_plugin->makePlan(start, goal, plan, cost);
         message = success ? "Plan found" : "Planner failed";
@@ -96,7 +96,7 @@ namespace move_base_flex_core {
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool cancel()
+      virtual bool mbfCancel()
       {
         return false;
       }
@@ -106,7 +106,7 @@ namespace move_base_flex_core {
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
-      virtual void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
+      virtual void mbfInitialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
       {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API initialize method not overridden nor backward compatible plugin provided");

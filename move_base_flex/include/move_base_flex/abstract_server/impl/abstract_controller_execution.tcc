@@ -231,7 +231,7 @@ template<class CONTROLLER_BASE>
   uint32_t AbstractControllerExecution<CONTROLLER_BASE>::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
                                                                            std::string& message)
   {
-    return controller_->computeVelocityCommands(vel_cmd, message);
+    return controller_->mbfComputeVelocity(vel_cmd, message);
   }
 
 template<class CONTROLLER_BASE>
@@ -306,7 +306,7 @@ template<class CONTROLLER_BASE>
         if (hasNewPlan())
         {
           getNewPlan(plan);
-          if (plan.empty() || !controller_->setPlan(plan))
+          if (plan.empty() || !controller_->mbfSetPath(plan))
           {
             setState(plan.empty() ? EMPTY_PLAN : INVALID_PLAN);
             condition_.notify_all();
@@ -315,12 +315,12 @@ template<class CONTROLLER_BASE>
           }
           else
           {
-            controller_->setPlan(plan);
+            controller_->mbfSetPath(plan);
           }
         }
 
         // ask planner if the goal is reached
-        if (controller_->isGoalReached(dist_tolerance_, angle_tolerance_))
+        if (controller_->mbfIsGoalReached(dist_tolerance_, angle_tolerance_))
         {
           setState(ARRIVED_GOAL);
           // goal reached, tell it the controller

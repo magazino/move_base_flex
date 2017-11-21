@@ -81,7 +81,7 @@ namespace move_base_flex_core
        *         INTERNAL_ERROR  = 60
        *         71..99 are reserved as plugin specific errors
        */
-      virtual uint32_t makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+      virtual uint32_t mbfComputePath(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                 double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
                                 std::string& message) = 0;
 
@@ -89,7 +89,7 @@ namespace move_base_flex_core
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool cancel() = 0;
+      virtual bool mbfCancel() = 0;
 
     protected:
       /**

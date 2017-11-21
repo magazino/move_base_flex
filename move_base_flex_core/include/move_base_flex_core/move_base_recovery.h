@@ -60,7 +60,7 @@ namespace move_base_flex_core {
        * @param global_costmap A pointer to the global_costmap used by the navigation stack
        * @param local_costmap A pointer to the local_costmap used by the navigation stack
        */
-      virtual void initialize(std::string name, tf::TransformListener* tf,
+      virtual void mbfInitialize(std::string name, tf::TransformListener* tf,
                               costmap_2d::Costmap2DROS* global_costmap,
                               costmap_2d::Costmap2DROS* local_costmap)
       {
@@ -73,7 +73,7 @@ namespace move_base_flex_core {
       /**
        * @brief Runs the MoveBaseRecovery
        */
-      virtual void runBehavior()
+      virtual uint32_t mbfRecover()
       {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API runBehavior method not overridden nor backward compatible plugin provided");
@@ -86,7 +86,7 @@ namespace move_base_flex_core {
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool cancel()
+      virtual bool mbfCancel()
       {
         return false;
       }

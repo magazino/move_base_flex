@@ -194,7 +194,7 @@ template<class RECOVERY_BASE>
     if (current_behavior_)
     {
       // returns false if cancel is not implemented or not desired by the planner
-      canceled_ = current_behavior_->cancel();
+      canceled_ = current_behavior_->mbfCancel();
     }
     return canceled_;
   }
@@ -251,7 +251,7 @@ template<class RECOVERY_BASE>
     setState(RECOVERING);
     try
     {
-      current_behavior_->runBehavior();
+      current_behavior_->mbfRecover();
       if (canceled_)
       {
         setState(CANCELED);

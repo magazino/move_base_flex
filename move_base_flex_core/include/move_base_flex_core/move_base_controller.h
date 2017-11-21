@@ -82,10 +82,10 @@ namespace move_base_flex_core {
        *         INTERNAL_ERROR  = 114
        *         121..149 are reserved as plugin specific errors
        */
-      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped& cmd_vel, std::string& message)
+      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API computeVelocityCommands method not overridden \
+          throw std::runtime_error("MBF API mbfComputeVelocity method not overridden \
                                    nor backward compatible plugin provided");
 
         bool success = backward_compatible_plugin->computeVelocityCommands(cmd_vel.twist);
@@ -97,10 +97,10 @@ namespace move_base_flex_core {
        * @brief Check if the goal pose has been achieved by the local planner
        * @return True if achieved, false otherwise
        */
-      virtual bool isGoalReached()
+      virtual bool mbfIsGoalReached()
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API isGoalReached method not overridden \
+          throw std::runtime_error("MBF API mbfIsGoalReached method not overridden \
                                    nor backward compatible plugin provided");
 
         return backward_compatible_plugin->isGoalReached();
@@ -113,9 +113,9 @@ namespace move_base_flex_core {
        * @param yaw_tolerance Heading tolerance in radians
        * @return True if achieved, false otherwise
        */
-      virtual bool isGoalReached(double xy_tolerance, double yaw_tolerance)
+      virtual bool mbfIsGoalReached(double xy_tolerance, double yaw_tolerance)
       {
-        return isGoalReached();
+        return mbfIsGoalReached();
       }
 
       /**
@@ -123,10 +123,10 @@ namespace move_base_flex_core {
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
-      virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped>& plan)
+      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan)
       {
         if (!backward_compatible_plugin)
-          throw std::runtime_error("MBF API setPlan method not overridden \
+          throw std::runtime_error("MBF API mbfSetPath method not overridden \
                                    nor backward compatible plugin provided");
 
         return backward_compatible_plugin->setPlan(plan);
@@ -137,7 +137,7 @@ namespace move_base_flex_core {
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool cancel()
+      virtual bool mbfCancel()
       {
         return false;
       }
@@ -148,7 +148,7 @@ namespace move_base_flex_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void initialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros)
+      virtual void mbfInitialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros)
       {
         if (!backward_compatible_plugin)
           throw std::runtime_error("MBF API initialize method not overridden \

@@ -99,7 +99,7 @@ void MoveBasePlannerExecution::initPlugin()
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
 
-  planner_->initialize(name, costmap_ptr_.get());
+  planner_->mbfInitialize(name, costmap_ptr_.get());
 
   ROS_INFO("Global planner plugin initialized.");
 }

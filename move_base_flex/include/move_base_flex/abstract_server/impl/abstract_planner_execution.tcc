@@ -292,7 +292,7 @@ template<class PLANNER_BASE>
   bool AbstractPlannerExecution<PLANNER_BASE>::cancel()
   {
     cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
-    cancel_ = planner_->cancel();
+    cancel_ = planner_->mbfCancel();
     return cancel_;
   }
 
@@ -356,7 +356,7 @@ template<class PLANNER_BASE>
           ROS_INFO_STREAM("Start planning");
 
           std::string message;
-          uint32_t outcome = planner_->makePlan(current_start, current_goal, current_tolerance,
+          uint32_t outcome = planner_->mbfComputePath(current_start, current_goal, current_tolerance,
                                                        plan, cost, message);
           success = outcome < 10;
           setPluginInfo(outcome, message);

@@ -137,7 +137,7 @@ void MoveBaseRecoveryExecution::initPlugins()
     move_base_flex_core::MoveBaseRecovery::Ptr behavior = iter->second;
     std::string name = iter->first;
 
-    behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());
+    behavior->mbfInitialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());
   }
 }
 
