@@ -41,7 +41,6 @@
 #ifndef MOVE_BASE_FLEX__MOVE_BASE_NAVIGATION_SERVER_H_
 #define MOVE_BASE_FLEX__MOVE_BASE_NAVIGATION_SERVER_H_
 
-#include <nav_msgs/GetPlan.h>
 #include <std_srvs/Empty.h>
 
 #include <move_base_flex_msgs/CheckPose.h>
@@ -109,14 +108,6 @@ protected:
 
   /**
    * @brief Callback method for the make_plan service
-   * @param request Request object, see the nav_msgs/GetPlan service definition file.
-   * @param response Response object, see the nav_msgs/GetPlan service definition file.
-   * @return true, if the service completed successfully, false otherwise
-   */
-  bool callServiceMakePlan(nav_msgs::GetPlan::Request &request, nav_msgs::GetPlan::Response &response);
-
-  /**
-   * @brief Callback method for the make_plan service
    * @param request Empty request object.
    * @param response Empty response object.
    * @return true, if the service completed successfully, false otherwise
@@ -173,9 +164,6 @@ protected:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
-
-  //! Service Server for the make_plan service
-  ros::ServiceServer make_plan_srv_;
 
   //! stop updating costmaps when not planning or controlling, if true
   bool shutdown_costmaps_;

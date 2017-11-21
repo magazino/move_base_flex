@@ -392,8 +392,8 @@ template<class GLOBAL_PLANNER_BASE>
             // Patience exceeded is handled on the navigation server, who has tried to cancel planning (possibly
             // without success, as old nav_core-based planners do not support canceling); here we just state the
             // fact and cleanup the mess either after a succesfull canceling or after planner finally gived up
-            ROS_INFO_STREAM("Planning patience has been exceeded" << cancel_ ? "; planner canceled!"
-                                                                             : " but we failed to cancel it!");
+            ROS_INFO_STREAM("Planning patience has been exceeded" << (cancel_ ? "; planner canceled!"
+                                                                              : " but we failed to cancel it!"));
             setState(PAT_EXCEEDED);
             exceeded = true;
             planning_ = false;
