@@ -38,6 +38,7 @@
  *
  */
 #include <nav_core/recovery_behavior.h>
+#include <move_base_flex/nav_core_wrapper/wrapper_recovery_behavior.h>
 
 #include "move_base_flex/move_base_server/move_base_recovery_execution.h"
 
@@ -102,8 +103,8 @@ bool MoveBaseRecoveryExecution::loadPlugins()
           boost::shared_ptr<nav_core::RecoveryBehavior> plugin = class_loader.createInstance(type);
 
           recovery_behaviors_.insert(
-              std::pair<std::string, boost::shared_ptr<move_base_flex_core::MoveBaseRecovery> >(
-                  name, boost::make_shared<move_base_flex_core::MoveBaseRecovery>(plugin)));
+              std::pair<std::string, boost::shared_ptr<move_base_flex_core::WrapperRecoveryBehavior> >(
+                  name, boost::make_shared<move_base_flex_core::WrapperRecoveryBehavior>(plugin)));
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 

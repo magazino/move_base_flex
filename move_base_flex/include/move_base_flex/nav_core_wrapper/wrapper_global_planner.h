@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Sebastian Pütz
+ *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,31 +30,29 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_global_planner.h
+ *  wrapper_global_planner.cpp
  *
- *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *  authors:
+ *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
 
-#ifndef MOVE_BASE_FLEX_CORE__ABSTRACT_PLANNER_H_
-#define MOVE_BASE_FLEX_CORE__ABSTRACT_PLANNER_H_
+#ifndef MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_
+#define MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_
 
-#include <ros/ros.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <boost/shared_ptr.hpp>
+#include <nav_core/base_global_planner.h>
+#include "move_base_flex_core/move_base_planner.h"
 
-namespace move_base_flex_core
-{
-
-  class AbstractPlanner{
-
+namespace move_base_flex_core {
+  /**
+   * @class MoveBasePlanner
+   * @brief Provides an interface for global planners used in navigation.
+   * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
+   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
+   */
+  class WrapperGlobalPlanner : public MoveBasePlanner{
     public:
-      typedef boost::shared_ptr< ::move_base_flex_core::AbstractPlanner > Ptr;
-
-      /**
-       * @brief Destructor
-       */
-      virtual ~AbstractPlanner(){};
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -65,38 +63,41 @@ namespace move_base_flex_core
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string
-       * @return Result code as described on GetPath action result:
-       *         SUCCESS         = 0
-       *         1..9 are reserved as plugin specific non-error results
-       *         FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
-       *         CANCELED        = 51
-       *         INVALID_START   = 52
-       *         INVALID_GOAL    = 53
-       *         NO_PATH_FOUND   = 54
-       *         PAT_EXCEEDED    = 55
-       *         EMPTY_PATH      = 56
-       *         TF_ERROR        = 57
-       *         NOT_INITIALIZED = 58
-       *         INVALID_PLUGIN  = 59
-       *         INTERNAL_ERROR  = 60
-       *         71..99 are reserved as plugin specific errors
+       * @return Result code as described on GetPath action result, As this is a wrapper to the nav_core,
+       *         only 0 (SUCCESS) and 50 (FAILURE) are supported
        */
       virtual uint32_t mbfComputePath(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                                 double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
-                                std::string& message) = 0;
+                                std::string& message);
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
+       * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool mbfCancel();
 
-    protected:
       /**
-       * @brief Constructor
+       * @brief Initialization function for the MoveBasePlanner
+       * @param name The name of this planner
+       * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
-      AbstractPlanner(){};
-  };
-} /* namespace move_base_flex_core */
+      virtual void mbfInitialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
 
-#endif /* MOVE_BASE_FLEX_CORE__ABSTRACT_PLANNER_H_ */
+      /**
+       * @brief Public constructor used for handling a nav_core-based plugin
+       * @param plugin Backward compatible plugin
+       */
+      WrapperGlobalPlanner(boost::shared_ptr< nav_core::BaseGlobalPlanner > plugin);
+
+      /**
+       * @brief  Virtual destructor for the interface
+       */
+      virtual ~WrapperGlobalPlanner();
+
+    private:
+      boost::shared_ptr< nav_core::BaseGlobalPlanner > nav_core_plugin_;
+  };
+}  /* namespace move_base_flex_core */
+
+#endif  /* MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_ */

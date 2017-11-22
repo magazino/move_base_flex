@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Sebastian Pütz
+ *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,45 +30,46 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_recovery_behavior.h
+ *  wrapper_global_planner.cpp
  *
- *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *  authors:
+ *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
 
-#ifndef MOVE_BASE_FLEX_CORE__ABSTRACT_RECOVERY_H_
-#define MOVE_BASE_FLEX_CORE__ABSTRACT_RECOVERY_H_
+#include "move_base_flex/nav_core_wrapper/wrapper_global_planner.h"
 
-namespace move_base_flex_core {
-  /**
-   * @class AbstractRecovery
-   * @brief Provides an interface for recovery behaviors used in navigation.
-   * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
-   */
-  class AbstractRecovery{
-    public:
+namespace move_base_flex_core
+{
 
-      typedef boost::shared_ptr< ::move_base_flex_core::AbstractRecovery > Ptr;
+uint32_t WrapperGlobalPlanner::mbfComputePath(const geometry_msgs::PoseStamped &start,
+                                              const geometry_msgs::PoseStamped &goal,
+                                              double tolerance,
+                                              std::vector<geometry_msgs::PoseStamped> &plan,
+                                              double &cost,
+                                              std::string &message)
+{
+  bool success = nav_core_plugin_->makePlan(start, goal, plan, cost);
+  message = success ? "Plan found" : "Planner failed";
+  return success ? 0 : 50;  // SUCCESS | FAILURE
+}
 
-      /**
-       * @brief Runs the AbstractRecovery
-       */
-      virtual uint32_t mbfRecover() = 0;
+bool WrapperGlobalPlanner::mbfCancel()
+{
+  return false;
+}
 
-      /**
-       * @brief Virtual destructor for the interface
-       */
-      virtual ~AbstractRecovery(){}
+void WrapperGlobalPlanner::mbfInitialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
+{
+  nav_core_plugin_->initialize(name, costmap_ros);
+}
 
-      /**
-       * @brief Requests the recovery behavior to cancel, e.g. if it takes to much time.
-       * @return True if a cancel has been successfully requested, false if not implemented.
-       */
-      virtual bool mbfCancel() = 0;
+WrapperGlobalPlanner::WrapperGlobalPlanner(boost::shared_ptr<nav_core::BaseGlobalPlanner> plugin)
+    : nav_core_plugin_(plugin)
+{}
 
-    protected:
-      AbstractRecovery(){}
-  };
+WrapperGlobalPlanner::~WrapperGlobalPlanner()
+{}
+
 };  /* namespace move_base_flex_core */
-
-#endif  /* MOVE_BASE_FLEX_CORE__ABSTRACT_RECOVERY_H_ */

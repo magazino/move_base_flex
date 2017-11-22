@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Sebastian Pütz
+ *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,17 +30,19 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_global_planner.h
+ *  wrapper_recovery_behavior.cpp
  *
- *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *  authors:
+ *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_H_
-#include <costmap_2d/costmap_2d_ros.h>
-#include <tf/transform_listener.h>
-#include "move_base_flex_core/abstract_recovery.h"
+#ifndef MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_
+#define MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_
+
+#include <nav_core/recovery_behavior.h>
+#include "move_base_flex_core/move_base_recovery.h"
 
 namespace move_base_flex_core {
   /**
@@ -49,10 +51,8 @@ namespace move_base_flex_core {
    * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class MoveBaseRecovery : public AbstractRecovery{
+  class WrapperRecoveryBehavior : public MoveBaseRecovery{
     public:
-
-      typedef boost::shared_ptr< ::move_base_flex_core::MoveBaseRecovery> Ptr;
 
       /**
        * @brief Initialization function for the MoveBaseRecovery
@@ -61,30 +61,35 @@ namespace move_base_flex_core {
        * @param local_costmap A pointer to the local_costmap used by the navigation stack
        */
       virtual void mbfInitialize(std::string name, tf::TransformListener* tf,
-                              costmap_2d::Costmap2DROS* global_costmap,
-                              costmap_2d::Costmap2DROS* local_costmap) = 0;
+                                 costmap_2d::Costmap2DROS* global_costmap,
+                                 costmap_2d::Costmap2DROS* local_costmap);
 
       /**
        * @brief Runs the MoveBaseRecovery
        */
-      virtual uint32_t mbfRecover() = 0;
+      virtual uint32_t mbfRecover();
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool mbfCancel();
+
+      /**
+       * @brief Public constructor used for handling a nav_core-based plugin
+       * @param plugin Backward compatible plugin
+       */
+      WrapperRecoveryBehavior(boost::shared_ptr< nav_core::RecoveryBehavior > plugin);
 
       /**
        * @brief Virtual destructor for the interface
        */
-      virtual ~MoveBaseRecovery(){}
+      virtual ~WrapperRecoveryBehavior();
 
-    protected:
-      MoveBaseRecovery(){}
-
+    private:
+      boost::shared_ptr< nav_core::RecoveryBehavior > nav_core_plugin_;
   };
 };  /* namespace move_base_flex_core */
 
-#endif /* MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_H_ */
+#endif  /* MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_ */

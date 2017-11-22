@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Sebastian Pütz
+ *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,20 +30,19 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_global_planner.h
+ *  wrapper_local_planner.cpp
  *
- *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *  authors:
+ *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_H_
+#ifndef MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_
+#define MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <costmap_2d/costmap_2d_ros.h>
-#include <tf/transform_listener.h>
-#include "move_base_flex_core/abstract_controller.h"
+#include <nav_core/base_local_planner.h>
+#include "move_base_flex_core/move_base_controller.h"
 
 namespace move_base_flex_core {
   /**
@@ -52,10 +51,8 @@ namespace move_base_flex_core {
    * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class MoveBaseController : public AbstractController{
+  class WrapperLocalPlanner : public MoveBaseController{
     public:
-
-      typedef boost::shared_ptr< ::move_base_flex_core::MoveBaseController > Ptr;
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
@@ -63,27 +60,16 @@ namespace move_base_flex_core {
        * @remark New on MBF API; replaces version without output code and message
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
        * @param message Optional more detailed outcome as a string
-       * @return Result code as described on ExePath action result:
-       *         SUCCESS         = 0
-       *         1..9 are reserved as plugin specific non-error results
-       *         FAILURE         = 100   Unspecified failure, only used for old, non-mfb_core based plugins
-       *         CANCELED        = 101
-       *         NO_VALID_CMD    = 102
-       *         PAT_EXCEEDED    = 103
-       *         COLLISION       = 104
-       *         OSCILLATION     = 105
-       *         ROBOT_STUCK     = 106
-       *         MISSED_GOAL     = 107
-       *         MISSED_PATH     = 108
-       *         BLOCKED_PATH    = 109
-       *         INVALID_PATH    = 110
-       *         TF_ERROR        = 111
-       *         NOT_INITIALIZED = 112
-       *         INVALID_PLUGIN  = 113
-       *         INTERNAL_ERROR  = 114
-       *         121..149 are reserved as plugin specific errors
+       * @return Result code as described on ExePath action result, as this is a wrapper to the nav_core,
+       *         only 0 (SUCCESS) and 100 (FAILURE) are supported.
        */
-      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message) = 0;
+      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message);
+
+      /**
+       * @brief Check if the goal pose has been achieved by the local planner
+       * @return True if achieved, false otherwise
+       */
+      virtual bool mbfIsGoalReached();
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner within tolerance limits
@@ -92,21 +78,21 @@ namespace move_base_flex_core {
        * @param yaw_tolerance Heading tolerance in radians
        * @return True if achieved, false otherwise
        */
-      virtual bool mbfIsGoalReached(double xy_tolerance, double yaw_tolerance) = 0;
+      virtual bool mbfIsGoalReached(double xy_tolerance, double yaw_tolerance);
 
       /**
        * @brief  Set the plan that the local planner is following
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
-      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan) = 0;
+      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan);
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool mbfCancel();
 
       /**
        * @brief Constructs the local planner
@@ -114,17 +100,22 @@ namespace move_base_flex_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void mbfInitialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros) = 0;
+      virtual void mbfInitialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+
+      /**
+       * @brief Public constructor used for handling a nav_core-based plugin
+       * @param plugin Backward compatible plugin
+       */
+      WrapperLocalPlanner(boost::shared_ptr< nav_core::BaseLocalPlanner >plugin);
 
       /**
        * @brief  Virtual destructor for the interface
        */
-      virtual ~MoveBaseController(){}
+      virtual ~WrapperLocalPlanner();
 
-    protected:
-      MoveBaseController(){}
-
+    private:
+      boost::shared_ptr< nav_core::BaseLocalPlanner > nav_core_plugin_;
   };
-};  /* namespace move_base_flex_core */
+}  /* namespace move_base_flex_core */
 
-#endif  /* MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_H_ */
+#endif  /* MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_ */

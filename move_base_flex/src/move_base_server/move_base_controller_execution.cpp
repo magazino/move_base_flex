@@ -37,8 +37,7 @@
  *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
-#include <nav_core/base_local_planner.h>
-
+#include <move_base_flex/nav_core_wrapper/wrapper_local_planner.h>
 #include "move_base_flex/move_base_server/move_base_controller_execution.h"
 
 namespace move_base_flex
@@ -74,7 +73,7 @@ bool MoveBaseControllerExecution::loadPlugin()
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       static pluginlib::ClassLoader<nav_core::BaseLocalPlanner> class_loader("nav_core", "nav_core::BaseLocalPlanner");
       boost::shared_ptr<nav_core::BaseLocalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      controller_ = boost::make_shared<move_base_flex_core::MoveBaseController>(plugin);
+      controller_ = boost::make_shared<move_base_flex_core::WrapperLocalPlanner>(plugin);
       ROS_INFO_STREAM("Nav_core-based local planner plugin " << plugin_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)

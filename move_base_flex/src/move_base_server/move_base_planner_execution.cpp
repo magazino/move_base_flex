@@ -38,6 +38,7 @@
  *
  */
 #include <nav_core/base_global_planner.h>
+#include <move_base_flex/nav_core_wrapper/wrapper_global_planner.h>
 
 #include "move_base_flex/move_base_server/move_base_planner_execution.h"
 
@@ -71,7 +72,7 @@ bool MoveBasePlannerExecution::loadPlugin()
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner> class_loader("nav_core", "nav_core::BaseGlobalPlanner");
       boost::shared_ptr<nav_core::BaseGlobalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      planner_ = boost::make_shared<move_base_flex_core::MoveBasePlanner>(plugin);
+      planner_ = boost::make_shared<move_base_flex_core::WrapperGlobalPlanner>(plugin);
       ROS_INFO_STREAM("Nav_core-based global planner plugin " << plugin_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)

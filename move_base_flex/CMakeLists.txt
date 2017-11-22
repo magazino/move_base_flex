@@ -67,6 +67,9 @@ add_library(${MBF_MOVE_BASE_SERVER_LIB}
   src/move_base_server/move_base_planner_execution.cpp
   src/move_base_server/move_base_controller_execution.cpp
   src/move_base_server/move_base_recovery_execution.cpp
+  src/nav_core_wrapper/wrapper_global_planner.cpp
+  src/nav_core_wrapper/wrapper_local_planner.cpp
+  src/nav_core_wrapper/wrapper_recovery_behavior.cpp
   )
 add_dependencies(${MBF_MOVE_BASE_SERVER_LIB} ${MBF_UTILITY_LIB})
 add_dependencies(${MBF_MOVE_BASE_SERVER_LIB} ${PROJECT_NAME}_gencfg)

@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE_ABSTRACT_LOCAL_PLANNER_H_
-#define MBF_CORE_ABSTRACT_LOCAL_PLANNER_H_
+#ifndef MOVE_BASE_FLEX_CORE__ABSTRACT_CONTROLLER_H_
+#define MOVE_BASE_FLEX_CORE__ABSTRACT_CONTROLLER_H_
 
 #include <ros/ros.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -114,4 +114,4 @@ namespace move_base_flex_core{
   };
 } /* namespace move_base_flex_core */
 
-#endif /* abstract_local_planner.h */
+#endif /* MOVE_BASE_FLEX_CORE__ABSTRACT_CONTROLLER_H_ */
