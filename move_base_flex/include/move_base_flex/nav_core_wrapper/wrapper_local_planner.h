@@ -63,13 +63,13 @@ namespace move_base_flex_core {
        * @return Result code as described on ExePath action result, as this is a wrapper to the nav_core,
        *         only 0 (SUCCESS) and 100 (FAILURE) are supported.
        */
-      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message);
+      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message);
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner
        * @return True if achieved, false otherwise
        */
-      virtual bool mbfIsGoalReached();
+      virtual bool isGoalReached();
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner within tolerance limits
@@ -78,21 +78,21 @@ namespace move_base_flex_core {
        * @param yaw_tolerance Heading tolerance in radians
        * @return True if achieved, false otherwise
        */
-      virtual bool mbfIsGoalReached(double xy_tolerance, double yaw_tolerance);
+      virtual bool isGoalReached(double xy_tolerance, double yaw_tolerance);
 
       /**
        * @brief  Set the plan that the local planner is following
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
-      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan);
+      virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped> &plan);
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel();
+      virtual bool cancel();
 
       /**
        * @brief Constructs the local planner
@@ -100,7 +100,7 @@ namespace move_base_flex_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void mbfInitialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros);
+      virtual void initialize(std::string name, tf::TransformListener *tf, costmap_2d::Costmap2DROS *costmap_ros);
 
       /**
        * @brief Public constructor used for handling a nav_core-based plugin

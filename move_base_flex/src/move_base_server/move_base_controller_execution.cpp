@@ -108,7 +108,7 @@ void MoveBaseControllerExecution::initPlugin()
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  controller_->mbfInitialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
+  controller_->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Local planner plugin initialized.");
 }
 
@@ -118,9 +118,9 @@ uint32_t MoveBaseControllerExecution::computeVelocityCmd(geometry_msgs::TwistSta
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return controller_->mbfComputeVelocity(vel_cmd, message);
+    return controller_->computeVelocityCommands(vel_cmd, message);
   }
-  return controller_->mbfComputeVelocity(vel_cmd, message);
+  return controller_->computeVelocityCommands(vel_cmd, message);
 }
 
 } /* namespace move_base_nav_moving */

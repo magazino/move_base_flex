@@ -83,7 +83,7 @@ namespace move_base_flex_core {
        *         INTERNAL_ERROR  = 114
        *         121..149 are reserved as plugin specific errors
        */
-      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message) = 0;
+      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message) = 0;
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner within tolerance limits
@@ -92,21 +92,21 @@ namespace move_base_flex_core {
        * @param yaw_tolerance Heading tolerance in radians
        * @return True if achieved, false otherwise
        */
-      virtual bool mbfIsGoalReached(double xy_tolerance, double yaw_tolerance) = 0;
+      virtual bool isGoalReached(double xy_tolerance, double yaw_tolerance) = 0;
 
       /**
        * @brief  Set the plan that the local planner is following
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
-      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan) = 0;
+      virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped> &plan) = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool cancel() = 0;
 
       /**
        * @brief Constructs the local planner
@@ -114,7 +114,7 @@ namespace move_base_flex_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void mbfInitialize(std::string name, tf::TransformListener* tf, costmap_2d::Costmap2DROS* costmap_ros) = 0;
+      virtual void initialize(std::string name, tf::TransformListener *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
 
       /**
        * @brief  Virtual destructor for the interface

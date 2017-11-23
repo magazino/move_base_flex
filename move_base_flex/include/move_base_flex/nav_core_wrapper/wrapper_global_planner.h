@@ -66,23 +66,23 @@ namespace move_base_flex_core {
        * @return Result code as described on GetPath action result, As this is a wrapper to the nav_core,
        *         only 0 (SUCCESS) and 50 (FAILURE) are supported
        */
-      virtual uint32_t mbfComputePath(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                                double tolerance, std::vector<geometry_msgs::PoseStamped>& plan, double& cost,
-                                std::string& message);
+      virtual uint32_t makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
+                                double tolerance, std::vector<geometry_msgs::PoseStamped> &plan, double &cost,
+                                std::string &message);
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel();
+      virtual bool cancel();
 
       /**
        * @brief Initialization function for the MoveBasePlanner
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
-      virtual void mbfInitialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
+      virtual void initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros);
 
       /**
        * @brief Public constructor used for handling a nav_core-based plugin

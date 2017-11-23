@@ -43,24 +43,24 @@
 namespace move_base_flex_core
 {
 
-uint32_t WrapperGlobalPlanner::mbfComputePath(const geometry_msgs::PoseStamped &start,
-                                              const geometry_msgs::PoseStamped &goal,
-                                              double tolerance,
-                                              std::vector<geometry_msgs::PoseStamped> &plan,
-                                              double &cost,
-                                              std::string &message)
+uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
+                                        const geometry_msgs::PoseStamped &goal,
+                                        double tolerance,
+                                        std::vector<geometry_msgs::PoseStamped> &plan,
+                                        double &cost,
+                                        std::string &message)
 {
   bool success = nav_core_plugin_->makePlan(start, goal, plan, cost);
   message = success ? "Plan found" : "Planner failed";
   return success ? 0 : 50;  // SUCCESS | FAILURE
 }
 
-bool WrapperGlobalPlanner::mbfCancel()
+bool WrapperGlobalPlanner::cancel()
 {
   return false;
 }
 
-void WrapperGlobalPlanner::mbfInitialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
+void WrapperGlobalPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
 {
   nav_core_plugin_->initialize(name, costmap_ros);
 }

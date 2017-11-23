@@ -83,7 +83,7 @@ namespace move_base_flex_core{
        *         INTERNAL_ERROR  = 114
        *         121..149 are reserved as plugin specific errors
        */
-      virtual uint32_t mbfComputeVelocity(geometry_msgs::TwistStamped& cmd_vel, std::string& message) = 0;
+      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message) = 0;
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner
@@ -91,20 +91,20 @@ namespace move_base_flex_core{
        * @param dist_tolerance The distance tolerance in which the current pose will be partly accepted as reached goal
        * @return True if achieved, false otherwise
        */
-      virtual bool mbfIsGoalReached(double dist_tolerance, double angle_tolerance) = 0;
+      virtual bool isGoalReached(double dist_tolerance, double angle_tolerance) = 0;
 
       /**
        * @brief Set the plan that the local planner is following
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
-      virtual bool mbfSetPath(const std::vector<geometry_msgs::PoseStamped>& plan) = 0;
+      virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped> &plan) = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool cancel() = 0;
 
     protected:
       /**

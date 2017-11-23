@@ -43,36 +43,36 @@
 namespace move_base_flex_core
 {
 
-uint32_t WrapperLocalPlanner::mbfComputeVelocity(geometry_msgs::TwistStamped &cmd_vel, std::string &message)
+uint32_t WrapperLocalPlanner::computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message)
 {
   bool success = nav_core_plugin_->computeVelocityCommands(cmd_vel.twist);
   message = success ? "Goal reached" : "Controller failed";
   return success ? 0 : 100;  // SUCCESS | FAILURE
 }
 
-bool WrapperLocalPlanner::mbfIsGoalReached()
+bool WrapperLocalPlanner::isGoalReached()
 {
   return nav_core_plugin_->isGoalReached();
 }
 
-bool WrapperLocalPlanner::mbfIsGoalReached(double xy_tolerance, double yaw_tolerance)
+bool WrapperLocalPlanner::isGoalReached(double xy_tolerance, double yaw_tolerance)
 {
-  return mbfIsGoalReached();
+  return isGoalReached();
 }
 
-bool WrapperLocalPlanner::mbfSetPath(const std::vector<geometry_msgs::PoseStamped> &plan)
+bool WrapperLocalPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
 {
   return nav_core_plugin_->setPlan(plan);
 }
 
-bool WrapperLocalPlanner::mbfCancel()
+bool WrapperLocalPlanner::cancel()
 {
   return false;
 }
 
-void WrapperLocalPlanner::mbfInitialize(std::string name,
-                                        tf::TransformListener *tf,
-                                        costmap_2d::Costmap2DROS *costmap_ros)
+void WrapperLocalPlanner::initialize(std::string name,
+                                     tf::TransformListener *tf,
+                                     costmap_2d::Costmap2DROS *costmap_ros)
 {
   nav_core_plugin_->initialize(name, tf, costmap_ros);
 }
