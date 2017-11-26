@@ -66,28 +66,21 @@ namespace move_base_flex
  *        which controls the local planner execution. Due to a state change it wakes up all threads connected to the
  *        condition variable.
  *
- * @tparam CONTROLLER_BASE The base class derived from the AbstractController class. The local planner plugin
- *         needs to implement that interface base class to be compatible with move_base_flex
- *
  * @ingroup abstract_server controller_execution
  */
-template<typename CONTROLLER_BASE>
   class AbstractControllerExecution
   {
   public:
 
-    typedef boost::shared_ptr<AbstractControllerExecution<CONTROLLER_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractControllerExecution > Ptr;
 
     /**
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      * @param tf_listener_ptr Shared pointer to a common tf listener
-     * @param package Package name, which contains the base class interface of the plugin
-     * @param class_name Class name of the base class interface of the plugin
      */
     AbstractControllerExecution(boost::condition_variable &condition,
-                                const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                                std::string package, std::string class_name);
+                                const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
     /**
      * @brief Destructor
@@ -210,11 +203,8 @@ template<typename CONTROLLER_BASE>
     //! the name of the loaded plugin
     std::string plugin_name_;
 
-    //! class loader, to load the local planner plugin
-    pluginlib::ClassLoader<CONTROLLER_BASE> class_loader_controller_;
-
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<CONTROLLER_BASE> controller_;
+    boost::shared_ptr<move_base_flex_core::AbstractController> controller_;
 
     //! shared pointer to the shared tf listener
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
@@ -233,16 +223,20 @@ template<typename CONTROLLER_BASE>
 
   private:
 
+
+
     /**
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
     virtual void run();
 
     /**
-     * @brief Loads the plugin defined in the parameter server
-     * @return true, if the local planner plugin was successfully loaded.
+     * @brief Loads the plugin associated with the given controller type parameter
+     * @param controller_type The type of the controller plugin
+     * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+     *         an empty pointer otherwise.
      */
-    virtual bool loadPlugin();
+    virtual move_base_flex_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
 
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
@@ -341,7 +335,5 @@ template<typename CONTROLLER_BASE>
   };
 
 } /* namespace move_base_flex */
-
-#include "move_base_flex/abstract_server/impl/abstract_controller_execution.tcc"
 
 #endif /* MOVE_BASE_FLEX__ABSTRACT_CONTROLLER_EXECUTION_H_ */

@@ -38,31 +38,29 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__IMPL__ABSTRACT_PLANNER_EXECUTION_TCC_
-#define MOVE_BASE_FLEX__IMPL__ABSTRACT_PLANNER_EXECUTION_TCC_
+#include "move_base_flex/abstract_server/abstract_planner_execution.h"
 
 namespace move_base_flex
 {
 
-template<class PLANNER_BASE>
-  AbstractPlannerExecution<PLANNER_BASE>::AbstractPlannerExecution(boost::condition_variable &condition,
-                                                                          std::string package, std::string class_name) :
+
+  AbstractPlannerExecution::AbstractPlannerExecution(boost::condition_variable &condition) :
       condition_(condition), state_(STOPPED), planning_(false),
-      has_new_start_(false), has_new_goal_(false),
-      class_loader_planner_(package, class_name), plugin_code_(255)
+      has_new_start_(false), has_new_goal_(false), plugin_code_(255)
   {
     loadParams();
   }
 
-template<class PLANNER_BASE>
-  AbstractPlannerExecution<PLANNER_BASE>::~AbstractPlannerExecution()
+
+  AbstractPlannerExecution::~AbstractPlannerExecution()
   {
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::initialize()
+
+  void AbstractPlannerExecution::initialize()
   {
-    if (!loadPlugin())
+    planner_ = loadPlannerPlugin(plugin_name_);
+    if (!planner_)
     {
       exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
     }
@@ -71,27 +69,8 @@ template<class PLANNER_BASE>
     setState(INITIALIZED);
   }
 
-template<class PLANNER_BASE>
-  bool AbstractPlannerExecution<PLANNER_BASE>::loadPlugin()
-  {
-    ROS_INFO("Load global planner plugin.");
-    try
-    {
-      planner_ = class_loader_planner_.createInstance(plugin_name_);
-    }
-    catch (const pluginlib::PluginlibException &ex)
-    {
-      ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " global planner, are you sure it is properly registered"
-                       << " and that the containing library is built? Exception: " << ex.what());
-      return false;
-    }
-    ROS_INFO("Global planner plugin loaded.");
 
-    return true;
-  }
-
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
+  void AbstractPlannerExecution::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
@@ -115,8 +94,8 @@ template<class PLANNER_BASE>
     }
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::loadParams()
+
+  void AbstractPlannerExecution::loadParams()
   {
     double patience, frequency;
 
@@ -145,66 +124,66 @@ template<class PLANNER_BASE>
   }
 
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
+
+  void AbstractPlannerExecution::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
 {
   boost::lock_guard<boost::mutex> guard(pcode_mtx_);
   plugin_code_ =  plugin_code;
   plugin_msg_ = plugin_msg;
 }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
+
+  void AbstractPlannerExecution::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
 {
   boost::lock_guard<boost::mutex> guard(pcode_mtx_);
   plugin_code = plugin_code_;
   plugin_msg = plugin_msg_;
 }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setState(PlanningState state)
+
+  void AbstractPlannerExecution::setState(PlanningState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     state_ = state;
   }
 
-template<class PLANNER_BASE>
-  typename AbstractPlannerExecution<PLANNER_BASE>::PlanningState AbstractPlannerExecution<PLANNER_BASE>::getState()
+
+  typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
 
-template<class PLANNER_BASE>
-  ros::Time AbstractPlannerExecution<PLANNER_BASE>::getLastValidPlanTime()
+
+  ros::Time AbstractPlannerExecution::getLastValidPlanTime()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     return last_valid_plan_time_;
   }
 
-template<class PLANNER_BASE>
-  ros::Time AbstractPlannerExecution<PLANNER_BASE>::getLastCycleStartTime()
+
+  ros::Time AbstractPlannerExecution::getLastCycleStartTime()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
     return last_cycle_start_time_;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setLastCycleStartTime()
+
+  void AbstractPlannerExecution::setLastCycleStartTime()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
     last_cycle_start_time_ = ros::Time::now();
   }
 
-template<class PLANNER_BASE>
-  bool AbstractPlannerExecution<PLANNER_BASE>::isPatienceExceeded()
+
+  bool AbstractPlannerExecution::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
     return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_cycle_start_time_ > patience_);
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan,
+
+  void AbstractPlannerExecution::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan,
                                                                  double &cost)
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
@@ -213,8 +192,8 @@ template<class PLANNER_BASE>
     cost = cost_;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan,
+
+  void AbstractPlannerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan,
                                                                  double cost)
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
@@ -223,8 +202,8 @@ template<class PLANNER_BASE>
     last_valid_plan_time_ = ros::Time::now();
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setNewGoal(const geometry_msgs::PoseStamped &goal,
+
+  void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal,
                                                                  double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
@@ -233,16 +212,16 @@ template<class PLANNER_BASE>
     has_new_goal_ = true;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setNewStart(const geometry_msgs::PoseStamped &start)
+
+  void AbstractPlannerExecution::setNewStart(const geometry_msgs::PoseStamped &start)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
     start_ = start;
     has_new_start_ = true;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::setNewStartAndGoal(const geometry_msgs::PoseStamped &start,
+
+  void AbstractPlannerExecution::setNewStartAndGoal(const geometry_msgs::PoseStamped &start,
                                                                          const geometry_msgs::PoseStamped &goal,
                                                                          double tolerance)
   {
@@ -254,8 +233,8 @@ template<class PLANNER_BASE>
     has_new_goal_ = true;
   }
 
-template<class PLANNER_BASE>
-  bool AbstractPlannerExecution<PLANNER_BASE>::startPlanning(const geometry_msgs::PoseStamped &start,
+
+  bool AbstractPlannerExecution::startPlanning(const geometry_msgs::PoseStamped &start,
                                                                     const geometry_msgs::PoseStamped &goal,
                                                                     double tolerance)
   {
@@ -280,24 +259,24 @@ template<class PLANNER_BASE>
     return true;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::stopPlanning()
+
+  void AbstractPlannerExecution::stopPlanning()
   {
     // only useful if there are any interruption points in the global planner
     ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
     thread_.interrupt();
   }
 
-template<class PLANNER_BASE>
-  bool AbstractPlannerExecution<PLANNER_BASE>::cancel()
+
+  bool AbstractPlannerExecution::cancel()
   {
     cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
     cancel_ = planner_->cancel();
     return cancel_;
   }
 
-template<class PLANNER_BASE>
-  void AbstractPlannerExecution<PLANNER_BASE>::run()
+
+  void AbstractPlannerExecution::run()
   {
     int retries = 0;
     geometry_msgs::PoseStamped current_start = start_;
@@ -450,5 +429,3 @@ template<class PLANNER_BASE>
     }
   }
 } /* namespace move_base_flex */
-
-#endif /* MOVE_BASE_FLEX__IMPL__ABSTRACT_PLANNER_EXECUTION_TCC_ */

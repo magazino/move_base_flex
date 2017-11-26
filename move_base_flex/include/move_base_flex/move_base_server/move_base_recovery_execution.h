@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution move_base_server
  */
-class MoveBaseRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::MoveBaseRecovery>
+class MoveBaseRecoveryExecution : public AbstractRecoveryExecution
 {
 
 public:
@@ -94,11 +94,11 @@ private:
   virtual void initPlugins();
 
   /**
-   * loads the plugins defined in the parameter server
-   * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
-   * @return true, if all recovery behavior could be read successfully.
+   * @brief Loads a Recovery plugin associated with given recovery type parameter
+   * @param recovery_name The name of the Recovery plugin
+   * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
    */
-  virtual bool loadPlugins();
+  virtual move_base_flex_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 };
 
 } /* namespace move_base_flex */

@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution move_base_server
  */
-class MoveBaseControllerExecution : public AbstractControllerExecution<move_base_flex_core::MoveBaseController>
+class MoveBaseControllerExecution : public AbstractControllerExecution
 {
 public:
 
@@ -87,11 +87,12 @@ protected:
 private:
 
   /**
-   * @brief Loads the plugin defined in the parameter server
-   * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
-   * @return true, if the local planner plugin was successfully loaded.
+   * @brief Loads the plugin associated with the given controller type parameter
+   * @param controller_type The type of the controller plugin
+   * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+   *         an empty pointer otherwise.
    */
-  virtual bool loadPlugin();
+  virtual move_base_flex_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
 
   /**
    * @brief Initializes the local planner plugin with its name, a pointer to the TransformListener
@@ -104,6 +105,9 @@ private:
 
   //! Whether to lock costmap before calling the controller (see issue #4 for details)
   bool lock_costmap_;
+
+  //! name of the controller plugin assigned by the class loader
+  std::string controller_name_;
 };
 
 } /* namespace move_base_flex */

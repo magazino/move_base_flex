@@ -115,18 +115,8 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<move_base_flex::MoveBaseFl
  *        the following action servers ActionServerGetPath -> callActionGetPath(), ActionServerExePath -> callActionExePath(),
  *        ActionServerRecovery -> callActionRecovery() and ActionServerMoveBase -> callActionMoveBase().
  *
- * @tparam CONTROLLER_BASE The base class derived from the AbstractController class. The local planner plugin
- *         has to implement that interface base class to be compatible with move_base_flex.
- *
- * @tparam PLANNER_BASE The base class derived from the AbstractPlanner class. The global planner plugin
- *         has to implement that interface base class to be compatible with move_base_flex.
- *
- * @tparam RECOVERY_BASE The base class derived from the AbstractRecovery class. the recovery behavior
- *         plugin has to implement that interface base class to be compatible with move_base_flex.
- *
  * @ingroup abstract_server navigation_server
  */
-template<typename CONTROLLER_BASE, typename PLANNER_BASE, typename RECOVERY_BASE>
   class AbstractNavigationServer
   {
   public:
@@ -140,9 +130,9 @@ template<typename CONTROLLER_BASE, typename PLANNER_BASE, typename RECOVERY_BASE
      * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
     AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                             typename AbstractPlannerExecution<PLANNER_BASE>::Ptr planning_ptr,
-                             typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr,
-                             typename AbstractRecoveryExecution<RECOVERY_BASE>::Ptr recovery_ptr);
+                             AbstractPlannerExecution::Ptr planning_ptr,
+                             AbstractControllerExecution::Ptr moving_ptr,
+                             AbstractRecoveryExecution::Ptr recovery_ptr);
 
     /**
      * @brief Destructor
@@ -275,13 +265,13 @@ template<typename CONTROLLER_BASE, typename PLANNER_BASE, typename RECOVERY_BASE
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
 
     //! shared pointer to the @ref planner_execution "PlannerExecution"
-    typename AbstractPlannerExecution<PLANNER_BASE>::Ptr planning_ptr_;
+    AbstractPlannerExecution::Ptr planning_ptr_;
 
     //! shared pointer to the @ref controller_execution "ControllerExecution"
-    typename AbstractControllerExecution<CONTROLLER_BASE>::Ptr moving_ptr_;
+    AbstractControllerExecution::Ptr moving_ptr_;
 
     //! shared pointer to the @ref recovery_execution "RecoveryExecution"
-    typename AbstractRecoveryExecution<RECOVERY_BASE>::Ptr recovery_ptr_;
+    AbstractRecoveryExecution::Ptr recovery_ptr_;
 
     //! loop variable for the controller action
     bool active_moving_;
@@ -322,7 +312,5 @@ template<typename CONTROLLER_BASE, typename PLANNER_BASE, typename RECOVERY_BASE
   };
 
 } /* namespace move_base_flex */
-
-#include "move_base_flex/abstract_server/impl/abstract_navigation_server.tcc"
 
 #endif /* navigation_controller.h */

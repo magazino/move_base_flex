@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution simple_server
  */
-class SimpleRecoveryExecution : public AbstractRecoveryExecution<move_base_flex_core::AbstractRecovery>
+class SimpleRecoveryExecution : public AbstractRecoveryExecution
 {
 
 public:
@@ -73,6 +73,13 @@ public:
   virtual ~SimpleRecoveryExecution();
 
 private:
+
+  /**
+   * @brief Loads a Recovery plugin associated with given recovery type parameter
+   * @param recovery_name The name of the Recovery plugin
+   * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
+   */
+  virtual move_base_flex_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.

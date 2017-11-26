@@ -46,7 +46,7 @@ namespace move_base_flex
 {
 
 MoveBasePlannerExecution::MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
-    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::MoveBasePlanner"), costmap_ptr_(costmap_ptr)
+    AbstractPlannerExecution(condition), costmap_ptr_(costmap_ptr)
 {
 }
 
@@ -54,42 +54,49 @@ MoveBasePlannerExecution::~MoveBasePlannerExecution()
 {
 }
 
-bool MoveBasePlannerExecution::loadPlugin()
+move_base_flex_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
+  static pluginlib::ClassLoader<move_base_flex_core::MoveBasePlanner>
+      class_loader("move_base_flex_core", "move_base_flex_core::MoveBasePlanner");
+  move_base_flex_core::AbstractPlanner::Ptr planner_ptr;
   // try to load and init global planner
   ROS_DEBUG("Load global planner plugin.");
   try
   {
-    planner_ = class_loader_planner_.createInstance(plugin_name_);
-    ROS_INFO_STREAM("MBF_core-based global planner plugin " << plugin_name_ << " loaded");
+    planner_ptr = boost::static_pointer_cast<move_base_flex_core::AbstractPlanner>(
+        class_loader.createInstance(planner_type));
+    planner_name_ = class_loader.getName(planner_type);
+    ROS_INFO_STREAM("MBF_core-based global planner plugin " << planner_name_ << " loaded");
   }
   catch (const pluginlib::PluginlibException &ex)
   {
-    ROS_DEBUG_STREAM("Failed to load the " << plugin_name_ << " global planner as a mbf_core-based plugin;"
-                     << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    ROS_DEBUG_STREAM("Failed to load the " << planner_type << " planner as a mbf_core-based plugin."
+                     << " Try to load as a nav_core-based plugin. Exception: " << ex.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-      static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner> class_loader("nav_core", "nav_core::BaseGlobalPlanner");
-      boost::shared_ptr<nav_core::BaseGlobalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      planner_ = boost::make_shared<move_base_flex_core::WrapperGlobalPlanner>(plugin);
-      ROS_INFO_STREAM("Nav_core-based global planner plugin " << plugin_name_ << " loaded");
+      static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner>
+          nav_core_class_loader("nav_core", "nav_core::BaseGlobalPlanner");
+      boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_class_loader.createInstance(planner_type);
+      planner_ = boost::make_shared<move_base_flex_core::WrapperGlobalPlanner>(nav_core_planner_ptr);
+      planner_name_ = nav_core_class_loader.getName(planner_type);
+      ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)
     {
-      ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " global planner, are you sure it's properly registered"
+      ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it's properly registered"
                        << " and that the containing library is built? Exception: " << ex.what());
-      return false;
     }
   }
 
-  return true;
+  return planner_ptr;
 }
 
 void MoveBasePlannerExecution::initPlugin()
 {
-  std::string name = class_loader_planner_.getName(plugin_name_);
-  ROS_INFO_STREAM("Initialize global planner with the name \"" << name << "\".");
+  move_base_flex_core::MoveBasePlanner::Ptr planner_ptr
+      = boost::static_pointer_cast<move_base_flex_core::MoveBasePlanner>(planner_);
+  ROS_INFO_STREAM("Initialize planner \"" << planner_name_ << "\".");
 
   if (!costmap_ptr_)
   {
@@ -97,15 +104,16 @@ void MoveBasePlannerExecution::initPlugin()
     exit(1);
   }
 
+  // TODO check this
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
 
-  planner_->initialize(name, costmap_ptr_.get());
+  planner_ptr->initialize(planner_name_, costmap_ptr_.get());
 
   ROS_INFO("Global planner plugin initialized.");
 }
 
-void MoveBasePlannerExecution::run()
+void MoveBasePlannerExecution::run() // TODO put lock around makePlan
 {
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)

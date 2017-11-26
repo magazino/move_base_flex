@@ -68,24 +68,19 @@ namespace move_base_flex
  *
  * @ingroup abstract_server recovery_execution
  */
-template<typename RECOVERY_BASE>
   class AbstractRecoveryExecution
   {
   public:
 
-    typedef boost::shared_ptr<AbstractRecoveryExecution<RECOVERY_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractRecoveryExecution > Ptr;
 
     /**
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      * @param tf_listener_ptr Shared pointer to a common tf listener
-     * @param package Package name, which contains the base class interface of the plugin
-     * @param class_name Class name of the base class interface of the plugin
      */
     AbstractRecoveryExecution(boost::condition_variable &condition,
-                              const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                              std::string package,
-                              std::string class_name);
+                              const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
     /**
      * @brief Destructor
@@ -121,7 +116,7 @@ template<typename RECOVERY_BASE>
      * @brief Returns the current state, thread-safe communication
      * @return current internal state
      */
-    AbstractRecoveryExecution<RECOVERY_BASE>::RecoveryState getState();
+    AbstractRecoveryExecution::RecoveryState getState();
 
     /**
      * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
@@ -169,11 +164,8 @@ template<typename RECOVERY_BASE>
      */
     virtual void run();
 
-    //! class loader, to load the recovery plugins
-    pluginlib::ClassLoader<RECOVERY_BASE> class_loader_recovery_behaviors_;
-
     //! map to store the recovery behaviors. Each behavior can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<RECOVERY_BASE> > recovery_behaviors_;
+    std::map<std::string, boost::shared_ptr<move_base_flex_core::AbstractRecovery> > recovery_behaviors_;
 
     //! map to store the type of the behavior as string
     std::map<std::string, std::string> recovery_behaviors_type_;
@@ -199,10 +191,17 @@ template<typename RECOVERY_BASE>
     virtual void initPlugins() = 0;
 
     /**
+     * @brief Loads a Recovery plugin associated with given recovery type parameter
+     * @param recovery_name The name of the Recovery plugin
+     * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
+     */
+    virtual move_base_flex_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
+
+    /**
      * loads the plugins defined in the parameter server
      * @return true, if all recovery behavior could be read successfully.
      */
-    virtual bool loadPlugins();
+    bool loadPlugins();
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
@@ -227,7 +226,5 @@ template<typename RECOVERY_BASE>
   };
 
 } /* namespace move_base_flex */
-
-#include "move_base_flex/abstract_server/impl/abstract_recovery_execution.tcc"
 
 #endif /* MOVE_BASE_FLEX__ABSTRACT_RECOVERY_EXECUTION_H_ */

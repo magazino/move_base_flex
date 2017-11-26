@@ -45,12 +45,33 @@ namespace move_base_flex
 
 SimpleRecoveryExecution::SimpleRecoveryExecution(boost::condition_variable &condition,
                                                  const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractRecovery")
+    AbstractRecoveryExecution(condition, tf_listener_ptr)
 {
 }
 
 SimpleRecoveryExecution::~SimpleRecoveryExecution()
 {
+}
+
+
+move_base_flex_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPlugin(
+    const std::string& recovery_type)
+{
+  static pluginlib::ClassLoader<move_base_flex_core::AbstractRecovery>
+      class_loader("move_base_flex_core", "move_base_flex_core::AbstractRecovery");
+  move_base_flex_core::AbstractRecovery::Ptr recovery_ptr;
+
+  try
+  {
+    recovery_ptr = boost::static_pointer_cast<move_base_flex_core::AbstractRecovery>(
+        class_loader.createInstance(recovery_type));
+  }
+  catch (pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
+        << " and that the containing library is built? Exception: " << ex.what());
+  }
+  return recovery_ptr;
 }
 
 void SimpleRecoveryExecution::initPlugins()

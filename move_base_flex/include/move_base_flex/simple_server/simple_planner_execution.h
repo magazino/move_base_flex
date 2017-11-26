@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup planner_execution simple_server
  */
-class SimplePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::AbstractPlanner>
+class SimplePlannerExecution : public AbstractPlannerExecution
 {
 public:
   /**
@@ -68,6 +68,13 @@ public:
   virtual ~SimplePlannerExecution();
 
 private:
+
+  /**
+   * @brief Loads the plugin associated with the given planner_type parameter.
+   * @param planner_type The type of the planner plugin to load.
+   * @return true, if the local planner plugin was successfully loaded.
+   */
+  virtual move_base_flex_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.

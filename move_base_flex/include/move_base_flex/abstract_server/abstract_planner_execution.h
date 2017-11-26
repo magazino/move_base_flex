@@ -71,21 +71,18 @@ namespace move_base_flex
  *
  * @ingroup abstract_server planner_execution
  */
-template<typename PLANNER_BASE>
   class AbstractPlannerExecution
   {
   public:
 
     //! shared pointer type to the @ref planner_execution "planner execution".
-    typedef boost::shared_ptr<AbstractPlannerExecution<PLANNER_BASE> > Ptr;
+    typedef boost::shared_ptr<AbstractPlannerExecution > Ptr;
 
     /**
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
-     * @param package Package name, which contains the base class interface of the plugin
-     * @param class_name Class name of the base class interface of the plugin
      */
-    AbstractPlannerExecution(boost::condition_variable &condition, std::string package, std::string class_name);
+    AbstractPlannerExecution(boost::condition_variable &condition);
 
     /**
      * @brief Destructor
@@ -204,11 +201,8 @@ template<typename PLANNER_BASE>
 
   protected:
 
-    //! class loader, to load the global planner plugin
-    pluginlib::ClassLoader<PLANNER_BASE> class_loader_planner_;
-
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<PLANNER_BASE> planner_;
+    boost::shared_ptr<move_base_flex_core::AbstractPlanner> planner_;
 
     //! the name of the loaded planner plugin
     std::string plugin_name_;
@@ -222,7 +216,7 @@ template<typename PLANNER_BASE>
     virtual void run();
 
     /**
-     * @brief load a parameters from the ros parameter server
+     * @brief Loads all parameters from the parameter server.
      */
     void loadParams();
 
@@ -242,10 +236,11 @@ template<typename PLANNER_BASE>
     void setLastCycleStartTime();
 
     /**
-     * @brief Loads the plugin defined in the parameter server
+     * @brief Loads the plugin associated with the given planner_type parameter.
+     * @param planner_type The type of the planner plugin to load.
      * @return true, if the local planner plugin was successfully loaded.
      */
-    virtual bool loadPlugin();
+    virtual move_base_flex_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
 
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
@@ -352,7 +347,5 @@ template<typename PLANNER_BASE>
   };
 
 } /* namespace move_base_flex */
-
-#include "move_base_flex/abstract_server/impl/abstract_planner_execution.tcc"
 
 #endif /* MOVE_BASE_FLEX__ABSTRACT_PLANNER_EXECUTION_H_ */

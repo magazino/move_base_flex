@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup planner_execution move_base_server
  */
-class MoveBasePlannerExecution : public AbstractPlannerExecution<move_base_flex_core::MoveBasePlanner>
+class MoveBasePlannerExecution : public AbstractPlannerExecution
 {
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
@@ -81,11 +81,11 @@ protected:
 private:
 
   /**
-   * @brief Loads the plugin defined in the parameter server
-   * @remark Override abstract class method to allow loading nav_core-based plugins, wrapped with the MBF base class
+   * @brief Loads the plugin associated with the given planner_type parameter.
+   * @param planner_type The type of the planner plugin to load.
    * @return true, if the local planner plugin was successfully loaded.
    */
-  virtual bool loadPlugin();
+  virtual move_base_flex_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
   /**
    * @brief Initializes the global planner plugin with its name and pointer to the costmap
@@ -97,6 +97,9 @@ private:
 
   //! Whether to lock costmap before calling the planner (see issue #4 for details)
   bool lock_costmap_;
+
+  //! Name of the planner assigned by the class loader
+  std::string planner_name_;
 };
 
 } /* namespace move_base_flex */

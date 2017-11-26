@@ -41,6 +41,7 @@
 #include <move_base_flex/nav_core_wrapper/wrapper_recovery_behavior.h>
 
 #include "move_base_flex/move_base_server/move_base_recovery_execution.h"
+#include <xmlrpcpp/XmlRpc.h>
 
 namespace move_base_flex
 {
@@ -48,7 +49,7 @@ namespace move_base_flex
 MoveBaseRecoveryExecution::MoveBaseRecoveryExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                                                      CostmapPtr &global_costmap, CostmapPtr &local_costmap) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::MoveBaseRecovery"),
+    AbstractRecoveryExecution(condition, tf_listener_ptr),
     global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }
@@ -57,85 +58,51 @@ MoveBaseRecoveryExecution::~MoveBaseRecoveryExecution()
 {
 }
 
-bool MoveBaseRecoveryExecution::loadPlugins()
+move_base_flex_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
+    const std::string& recovery_type)
 {
-  ros::NodeHandle private_nh("~");
-
-  XmlRpc::XmlRpcValue recovery_behaviors_param_list;
-  if(!private_nh.getParam("recovery_behaviors", recovery_behaviors_param_list)){
-    ROS_WARN_STREAM("No recovery behaviors configured! - Use the param \"recovery_behaviors\", which must be a list of tuples with a name and a type.");
-    return true;
-  }
+  static pluginlib::ClassLoader<move_base_flex_core::AbstractRecovery>
+      class_loader("move_base_flex_core", "move_base_flex_core::AbstractRecovery");
+  move_base_flex_core::AbstractRecovery::Ptr recovery_ptr;
 
   try
   {
-    for (int i = 0; i < recovery_behaviors_param_list.size(); i++)
+    recovery_ptr = boost::static_pointer_cast<move_base_flex_core::AbstractRecovery>(
+        class_loader.createInstance(recovery_type));
+  }
+  catch (pluginlib::PluginlibException &ex)
+  {
+    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_core-based plugin;"
+                                           << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    try
     {
-      XmlRpc::XmlRpcValue elem = recovery_behaviors_param_list[i];
+      // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
+      static pluginlib::ClassLoader<nav_core::RecoveryBehavior> nav_core_class_loader(
+          "nav_core", "nav_core::RecoveryBehavior");
+      boost::shared_ptr<nav_core::RecoveryBehavior> nav_core_recovery_ptr =
+          nav_core_class_loader.createInstance(recovery_type);
 
-      std::string name = elem["name"];
-      std::string type = elem["type"];
+      recovery_ptr = boost::static_pointer_cast<move_base_flex_core::AbstractRecovery>(
+          boost::make_shared<move_base_flex_core::WrapperRecoveryBehavior>(nav_core_recovery_ptr));
 
-      if (recovery_behaviors_.find(name) != recovery_behaviors_.end())
-      {
-        ROS_ERROR_STREAM("The recovery behavior \"" << name << "\" has already been loaded! Names must be unique!");
-        return false;
-      }
-      try
-      {
-        recovery_behaviors_.insert(
-            std::pair<std::string, boost::shared_ptr<move_base_flex_core::MoveBaseRecovery> >(
-                name, class_loader_recovery_behaviors_.createInstance(type)));
-
-        recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
-
-        ROS_INFO_STREAM("move_base_flex_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
-                        << name << "\".");
-      }
-      catch (pluginlib::PluginlibException &ex)
-      {
-        ROS_DEBUG_STREAM("Failed to load the " << name << " recovery behavior as a mbf_core-based plugin;"
-                         << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
-        try
-        {
-          // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-          static pluginlib::ClassLoader<nav_core::RecoveryBehavior> class_loader("nav_core", "nav_core::RecoveryBehavior");
-          boost::shared_ptr<nav_core::RecoveryBehavior> plugin = class_loader.createInstance(type);
-
-          recovery_behaviors_.insert(
-              std::pair<std::string, boost::shared_ptr<move_base_flex_core::WrapperRecoveryBehavior> >(
-                  name, boost::make_shared<move_base_flex_core::WrapperRecoveryBehavior>(plugin)));
-
-          recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
-
-          ROS_INFO_STREAM("nav_core-based recovery behavior \"" << type << "\" successfully loaded with name \""
-                          << name << "\".");
-        }
-        catch (const pluginlib::PluginlibException &ex)
-        {
-          ROS_FATAL_STREAM("Failed to load the " << name << " recovery behavior, are you sure it's properly registered"
-                           << " and that the containing library is built? Exception: " << ex.what());
-          return false;
-        }
-      }
+    }
+    catch (const pluginlib::PluginlibException &ex)
+    {
+      ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
+                                             << " and that the containing library is built? Exception: " << ex.what());
     }
   }
-  catch (XmlRpc::XmlRpcException &ex)
-  {
-    ROS_ERROR_STREAM("Invalid parameter structure. The recovery_behaviors parameter has to be a list of structs "
-                     << "with fields \"name\" and \"type\" of the recovery behavior!");
-    ROS_ERROR_STREAM(ex.getMessage());
-    return false;
-  }
-  return true;
+
+  return recovery_ptr;
 }
 
 void MoveBaseRecoveryExecution::initPlugins()
 {
-  for (std::map<std::string, move_base_flex_core::MoveBaseRecovery::Ptr>::iterator iter =
+  for (std::map<std::string, move_base_flex_core::AbstractRecovery::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
   {
-    move_base_flex_core::MoveBaseRecovery::Ptr behavior = iter->second;
+    move_base_flex_core::MoveBaseRecovery::Ptr behavior =
+        boost::static_pointer_cast<move_base_flex_core::MoveBaseRecovery>(iter->second);
     std::string name = iter->first;
 
     behavior->mbfInitialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());

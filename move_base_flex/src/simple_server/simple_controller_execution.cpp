@@ -45,8 +45,29 @@ namespace move_base_flex
 
 SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::AbstractController")
+    AbstractControllerExecution(condition, tf_listener_ptr)
 {
+}
+
+move_base_flex_core::AbstractController::Ptr SimpleControllerExecution::loadControllerPlugin(
+    const std::string& controller_type)
+{
+  static pluginlib::ClassLoader<move_base_flex_core::AbstractController>
+      class_loader("move_base_flex_core", "move_base_flex_core::MoveBaseController");
+  move_base_flex_core::AbstractController::Ptr controller_ptr;
+  ROS_DEBUG("Load controller plugin.");
+  try
+  {
+    controller_ptr = class_loader.createInstance(controller_type);
+    ROS_INFO_STREAM("MBF_core-based local planner plugin " << controller_type << " loaded");
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << controller_type
+        << " local planner, are you sure it's properly registered"
+        << " and that the containing library is built? Exception: " << ex.what());
+  }
+  return controller_ptr;
 }
 
 void SimpleControllerExecution::initPlugin()

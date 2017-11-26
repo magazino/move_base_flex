@@ -46,7 +46,7 @@ namespace move_base_flex
 MoveBaseControllerExecution::MoveBaseControllerExecution(
     boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &costmap_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr, "move_base_flex_core", "move_base_flex_core::MoveBaseController"),
+    AbstractControllerExecution(condition, tf_listener_ptr),
     costmap_ptr_(costmap_ptr)
 {
 }
@@ -55,43 +55,47 @@ MoveBaseControllerExecution::~MoveBaseControllerExecution()
 {
 }
 
-bool MoveBaseControllerExecution::loadPlugin()
+move_base_flex_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlugin(const std::string& controller_type)
 {
+  static pluginlib::ClassLoader<move_base_flex_core::AbstractController>
+      class_loader("move_base_flex_core", "move_base_flex_core::MoveBaseController");
+  move_base_flex_core::AbstractController::Ptr controller_ptr;
   // try to load and init local planner
   ROS_DEBUG("Load local planner plugin.");
   try
   {
-    controller_ = class_loader_controller_.createInstance(plugin_name_);
-    ROS_INFO_STREAM("MBF_core-based local planner plugin " << plugin_name_ << " loaded");
+    controller_ptr = class_loader.createInstance(controller_type);
+    controller_name_ = class_loader.getName(controller_type);
+    ROS_INFO_STREAM("MBF_core-based local planner plugin " << controller_name_ << " loaded");
   }
   catch (const pluginlib::PluginlibException &ex)
   {
-    ROS_DEBUG_STREAM("Failed to load the " << plugin_name_ << " local planner as a mbf_core-based plugin;"
+    ROS_DEBUG_STREAM("Failed to load the " << controller_type << " local planner as a mbf_core-based plugin;"
                      << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-      static pluginlib::ClassLoader<nav_core::BaseLocalPlanner> class_loader("nav_core", "nav_core::BaseLocalPlanner");
-      boost::shared_ptr<nav_core::BaseLocalPlanner> plugin = class_loader.createInstance(plugin_name_);
-      controller_ = boost::make_shared<move_base_flex_core::WrapperLocalPlanner>(plugin);
-      ROS_INFO_STREAM("Nav_core-based local planner plugin " << plugin_name_ << " loaded");
+      static pluginlib::ClassLoader<nav_core::BaseLocalPlanner>
+          nav_core_class_loader("nav_core", "nav_core::BaseLocalPlanner");
+      boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr
+          = nav_core_class_loader.createInstance(controller_type);
+      controller_ptr = boost::make_shared<move_base_flex_core::WrapperLocalPlanner>(nav_core_controller_ptr);
+      controller_name_ = nav_core_class_loader.getName(controller_type);
+      ROS_INFO_STREAM("Nav_core-based local planner plugin " << controller_name_ << " loaded");
     }
     catch (const pluginlib::PluginlibException &ex)
     {
-      ROS_FATAL_STREAM("Failed to load the " << plugin_name_ << " local planner, are you sure it's properly registered"
-                       << " and that the containing library is built? Exception: " << ex.what());
-      return false;
+      ROS_FATAL_STREAM("Failed to load the " << controller_type
+          << " local planner, are you sure it's properly registered"
+          << " and that the containing library is built? Exception: " << ex.what());
     }
   }
-
-  return true;
+  return controller_ptr;
 }
 
 void MoveBaseControllerExecution::initPlugin()
 {
-  std::string name = class_loader_controller_.getName(plugin_name_);
-
-  ROS_INFO_STREAM("Initialize local planner with the name \"" << name << "\".");
+  ROS_INFO_STREAM("Initialize controller \"" << controller_name_ << "\".");
 
   if (!tf_listener_ptr)
   {
@@ -105,11 +109,14 @@ void MoveBaseControllerExecution::initPlugin()
     exit(1);
   }
 
+  // TODO check this
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  controller_->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
-  ROS_INFO_STREAM("Local planner plugin initialized.");
+  move_base_flex_core::MoveBaseController::Ptr controller_ptr
+      = boost::static_pointer_cast<move_base_flex_core::MoveBaseController>(controller_);
+  controller_ptr->initialize(controller_name_, tf_listener_ptr.get(), costmap_ptr_.get());
+  ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
 }
 
 uint32_t MoveBaseControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message)

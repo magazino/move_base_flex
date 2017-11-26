@@ -44,12 +44,32 @@ namespace move_base_flex
 {
 
 SimplePlannerExecution::SimplePlannerExecution(boost::condition_variable &condition) :
-    AbstractPlannerExecution(condition, "move_base_flex_core", "move_base_flex_core::AbstractPlanner")
+    AbstractPlannerExecution(condition)
 {
 }
 
 SimplePlannerExecution::~SimplePlannerExecution()
 {
+}
+
+move_base_flex_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
+{
+  static pluginlib::ClassLoader<move_base_flex_core::AbstractPlanner>
+      class_loader("move_base_flex_core", "move_base_flex_core::AbstractPlanner");
+  move_base_flex_core::AbstractPlanner::Ptr planner_ptr;
+  ROS_INFO("Load global planner plugin.");
+  try
+  {
+    planner_ptr = class_loader.createInstance(planner_type);
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it is properly registered"
+                                           << " and that the containing library is built? Exception: " << ex.what());
+  }
+  ROS_INFO("Global planner plugin loaded.");
+
+  return planner_ptr;
 }
 
 void SimplePlannerExecution::initPlugin()

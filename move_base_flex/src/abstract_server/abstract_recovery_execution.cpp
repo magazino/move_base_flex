@@ -38,9 +38,6 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__IMPL__ABSTRACT_RECOVERY_EXECUTION_TCC_
-#define MOVE_BASE_FLEX__IMPL__ABSTRACT_RECOVERY_EXECUTION_TCC_
-
 #include <XmlRpcException.h>
 
 #include "move_base_flex/abstract_server/abstract_recovery_execution.h"
@@ -48,23 +45,21 @@
 namespace move_base_flex
 {
 
-template<class RECOVERY_BASE>
-  AbstractRecoveryExecution<RECOVERY_BASE>::AbstractRecoveryExecution(
+
+  AbstractRecoveryExecution::AbstractRecoveryExecution(
       boost::condition_variable &condition,
-      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-      std::string package, std::string class_name) :
-      condition_(condition), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED),
-      class_loader_recovery_behaviors_(package, class_name), canceled_(false)
+      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+      condition_(condition), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED), canceled_(false)
   {
   }
 
-template<class RECOVERY_BASE>
-  AbstractRecoveryExecution<RECOVERY_BASE>::~AbstractRecoveryExecution()
+
+  AbstractRecoveryExecution::~AbstractRecoveryExecution()
   {
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::initialize()
+
+  void AbstractRecoveryExecution::initialize()
   {
     if (!loadPlugins())
     {
@@ -83,8 +78,8 @@ template<class RECOVERY_BASE>
     setState(INITIALIZED);
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
+
+  void AbstractRecoveryExecution::reconfigure(move_base_flex::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
@@ -92,8 +87,8 @@ template<class RECOVERY_BASE>
     // config.recovery_behaviors;
   }
 
-template<class RECOVERY_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BASE>::loadPlugins()
+
+  bool AbstractRecoveryExecution::loadPlugins()
   {
     ros::NodeHandle private_nh("~");
 
@@ -117,30 +112,20 @@ template<class RECOVERY_BASE>
           ROS_ERROR_STREAM("The recovery behavior \"" << name << "\" has already been loaded! Names must be unique!");
           return false;
         }
-        try
+        move_base_flex_core::AbstractRecovery::Ptr recovery_ptr = loadRecoveryPlugin(type);
+        if(recovery_ptr)
         {
           recovery_behaviors_.insert(
-              std::pair<std::string, boost::shared_ptr<RECOVERY_BASE> >(
-                  name, class_loader_recovery_behaviors_.createInstance(type)));
+              std::pair<std::string, move_base_flex_core::AbstractRecovery::Ptr>(name, recovery_ptr));
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
           ROS_INFO_STREAM("The recovery behavior \"" << type << "\" has been loaded successfully under the name \""
                           << name << "\".");
         }
-        catch (pluginlib::LibraryLoadException &e)
+        else
         {
-          ROS_ERROR_STREAM("Could not load the library of the specified behavior \"" << name << "\" - \""
-                           << type << "\"!");
-          ROS_ERROR_STREAM(e.what());
-          return false;
-        }
-        catch (pluginlib::CreateClassException &e)
-        {
-          ROS_ERROR_STREAM("Could not create the class of the specified behavior \"" << name << "\" - \""
-                           << type << "\"!");
-          ROS_ERROR_STREAM(e.what());
-          return false;
+          ROS_ERROR_STREAM("Could not load the plugin with the name \"" << name << "\" and the type \"" << type << "\"!");
         }
       }
     }
@@ -154,38 +139,37 @@ template<class RECOVERY_BASE>
     return true;
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::setState(RecoveryState state)
+
+  void AbstractRecoveryExecution::setState(RecoveryState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     state_ = state;
   }
 
-template<class RECOVERY_BASE>
-  typename AbstractRecoveryExecution<RECOVERY_BASE>::RecoveryState AbstractRecoveryExecution<
-      RECOVERY_BASE>::getState()
+
+  typename AbstractRecoveryExecution::RecoveryState AbstractRecoveryExecution::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::startRecovery(const std::string name)
+
+  void AbstractRecoveryExecution::startRecovery(const std::string name)
   {
     requested_behavior_name_ = name;
     setState(STARTED);
     thread_ = boost::thread(&AbstractRecoveryExecution::run, this);
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::stopRecovery()
+
+  void AbstractRecoveryExecution::stopRecovery()
   {
     thread_.interrupt();
     setState(STOPPED);
   }
 
-template<class RECOVERY_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BASE>::cancel()
+
+  bool AbstractRecoveryExecution::cancel()
   {
     if (canceled_)
     {
@@ -199,14 +183,14 @@ template<class RECOVERY_BASE>
     return canceled_;
   }
 
-template<class RECOVERY_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BASE>::hasRecoveryBehavior(const std::string &name)
+
+  bool AbstractRecoveryExecution::hasRecoveryBehavior(const std::string &name)
   {
     return recovery_behaviors_.find(name) != recovery_behaviors_.end();
   }
 
-template<class RECOVERY_BASE>
-  std::vector<std::string> AbstractRecoveryExecution<RECOVERY_BASE>::listRecoveryBehaviors()
+
+  std::vector<std::string> AbstractRecoveryExecution::listRecoveryBehaviors()
   {
     std::vector<std::string> recovery_behaviors;
     std::map<std::string, std::string>::iterator it = recovery_behaviors_type_.begin();
@@ -217,8 +201,8 @@ template<class RECOVERY_BASE>
     return recovery_behaviors;
   }
 
-template<class RECOVERY_BASE>
-  bool AbstractRecoveryExecution<RECOVERY_BASE>::getTypeOfBehavior(const std::string &name, std::string &type)
+
+  bool AbstractRecoveryExecution::getTypeOfBehavior(const std::string &name, std::string &type)
   {
     std::map<std::string, std::string>::iterator finder = recovery_behaviors_type_.find(name);
     if (finder != recovery_behaviors_type_.end())
@@ -229,13 +213,13 @@ template<class RECOVERY_BASE>
     return false;
   }
 
-template<class RECOVERY_BASE>
-  void AbstractRecoveryExecution<RECOVERY_BASE>::run()
+
+  void AbstractRecoveryExecution::run()
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
     canceled_ = false; // (re)set the canceled state
 
-    typename std::map<std::string, boost::shared_ptr<RECOVERY_BASE> >::iterator find_iter;
+    typename std::map<std::string, boost::shared_ptr<move_base_flex_core::AbstractRecovery> >::iterator find_iter;
     find_iter = recovery_behaviors_.find(requested_behavior_name_);
 
     if (find_iter == recovery_behaviors_.end())
@@ -269,5 +253,3 @@ template<class RECOVERY_BASE>
     current_behavior_.reset();
   }
 } /* namespace move_base_flex */
-
-#endif /* MOVE_BASE_FLEX__IMPL__ABSTRACT_RECOVERY_EXECUTION_TCC_ */

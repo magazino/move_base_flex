@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution simple_server
  */
-class SimpleControllerExecution : public AbstractControllerExecution<move_base_flex_core::AbstractController>
+class SimpleControllerExecution : public AbstractControllerExecution
 {
 public:
 
@@ -71,6 +71,14 @@ public:
   virtual ~SimpleControllerExecution();
 
 private:
+
+  /**
+   * @brief Loads the plugin associated with the given controller type parameter
+   * @param controller_type The type of the controller plugin
+   * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+   *         an empty pointer otherwise.
+   */
+  virtual move_base_flex_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.
