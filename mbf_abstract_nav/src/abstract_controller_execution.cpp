@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/abstract_server/abstract_controller_execution.h"
+#include "mbf_abstract_nav/abstract_controller_execution.h"
 
 namespace move_base_flex
 {

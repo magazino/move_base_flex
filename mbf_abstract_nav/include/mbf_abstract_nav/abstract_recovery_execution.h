@@ -46,7 +46,7 @@
 #include <tf/transform_listener.h>
 #include <mbf_core/abstract_recovery.h>
 
-#include "move_base_flex/navigation_utility.h"
+#include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 
 namespace move_base_flex

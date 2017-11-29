@@ -59,8 +59,8 @@
 #include <mbf_msgs/RecoveryAction.h>
 #include <mbf_msgs/MoveBaseAction.h>
 
-#include "move_base_flex/navigation_utility.h"
-#include "move_base_flex/abstract_server/abstract_navigation_server.h"
+#include "navigation_utility.h"
+#include "abstract_navigation_server.h"
 
 namespace move_base_flex
 {

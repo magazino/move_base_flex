@@ -48,7 +48,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <mbf_core/abstract_planner.h>
 
-#include "move_base_flex/navigation_utility.h"
+#include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 
 namespace move_base_flex

@@ -43,7 +43,7 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_core/move_base_planner.h>
-#include "move_base_flex/abstract_server/abstract_planner_execution.h"
+#include "mbf_abstract_nav/abstract_planner_execution.h"
 
 namespace move_base_flex
 {

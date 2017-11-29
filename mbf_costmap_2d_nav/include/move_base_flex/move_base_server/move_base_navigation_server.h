@@ -47,7 +47,7 @@
 #include <mbf_msgs/CheckPose.h>
 #include <mbf_costmap_2d_nav/MoveBaseFlexConfig.h>
 
-#include "move_base_flex/abstract_server/abstract_navigation_server.h"
+#include "mbf_abstract_nav/abstract_navigation_server.h"
 #include "move_base_planner_execution.h"
 #include "move_base_controller_execution.h"
 #include "move_base_recovery_execution.h"

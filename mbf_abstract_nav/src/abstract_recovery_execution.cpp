@@ -40,7 +40,7 @@
 
 #include <XmlRpcException.h>
 
-#include "move_base_flex/abstract_server/abstract_recovery_execution.h"
+#include "mbf_abstract_nav/abstract_recovery_execution.h"
 
 namespace move_base_flex
 {

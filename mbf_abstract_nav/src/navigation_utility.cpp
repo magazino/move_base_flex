@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/navigation_utility.h"
+#include "mbf_abstract_nav/navigation_utility.h"
 
 namespace move_base_flex
 {

@@ -55,10 +55,10 @@ include_directories(
 add_library(${MBF_UTILITY_LIB} src/navigation_utility.cpp)
 
 add_library(${MBF_ABSTRACT_SERVER_LIB}
-  src/abstract_server/abstract_navigation_server.cpp
-  src/abstract_server/abstract_planner_execution.cpp
-  src/abstract_server/abstract_controller_execution.cpp
-  src/abstract_server/abstract_recovery_execution.cpp
+  src/abstract_navigation_server.cpp
+  src/abstract_planner_execution.cpp
+  src/abstract_controller_execution.cpp
+  src/abstract_recovery_execution.cpp
   )
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${MBF_UTILITY_LIB})
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${PROJECT_NAME}_gencfg)

@@ -43,7 +43,7 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_core/move_base_recovery.h>
-#include "move_base_flex/abstract_server/abstract_recovery_execution.h"
+#include "mbf_abstract_nav/abstract_recovery_execution.h"
 
 
 namespace move_base_flex

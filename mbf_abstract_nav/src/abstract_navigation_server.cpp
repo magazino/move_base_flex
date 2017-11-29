@@ -40,7 +40,7 @@
 
 #include <visualization_msgs/Marker.h>
 #include <nav_msgs/Path.h>
-#include "move_base_flex/abstract_server/abstract_navigation_server.h"
+#include "mbf_abstract_nav/abstract_navigation_server.h"
 
 namespace move_base_flex
 {
