@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  simple_controller_execution.h
+ *  simple_recovery_execution.h
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,55 +38,56 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__SIMPLE_CONTROLLER_EXECUTION_H_
-#define MOVE_BASE_FLEX__SIMPLE_CONTROLLER_EXECUTION_H_
+#ifndef MBF__SIMPLE_RECOVERY_EXECUTION_H_
+#define MBF__SIMPLE_RECOVERY_EXECUTION_H_
 
-#include "mbf_core/abstract_controller.h"
-#include "move_base_flex/abstract_server/abstract_controller_execution.h"
+#include <mbf_abstract_nav/abstract_recovery_execution.h>
+#include <mbf_core/abstract_recovery.h>
 
 namespace move_base_flex
 {
 /**
- * @brief The SimpleControllerExecution basically uses the AbstractControllerExecution and loads local planner plugins,
- *        which implements the base class interface AbstractController. This implementation allows planners, which
- *        do not initialize map representations via Move Base Flex.
+ * @brief The SimpleRecoveryExecution basically uses the AbstractRecoveryExecution and loads recovery behavior plugins,
+ *        which implements the base class interface AbstractRecovery. This implementation allows recovery
+ *        behaviors, which do not initialize map representations via Move Base Flex.
  *
- * @ingroup controller_execution simple_server
+ * @ingroup recovery_execution simple_server
  */
-class SimpleControllerExecution : public AbstractControllerExecution
+class SimpleRecoveryExecution : public AbstractRecoveryExecution
 {
+
 public:
+  typedef boost::shared_ptr<SimpleRecoveryExecution> Ptr;
 
   /**
    * @brief Constructor
    * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
    * @param tf_listener_ptr Shared pointer to a common TransformListener
    */
-  SimpleControllerExecution(boost::condition_variable &condition,
-                            const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+  SimpleRecoveryExecution(boost::condition_variable &condition,
+                          const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
   /**
    * @brief Destructor
    */
-  virtual ~SimpleControllerExecution();
+  virtual ~SimpleRecoveryExecution();
 
 private:
 
   /**
-   * @brief Loads the plugin associated with the given controller type parameter
-   * @param controller_type The type of the controller plugin
-   * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
-   *         an empty pointer otherwise.
+   * @brief Loads a Recovery plugin associated with given recovery type parameter
+   * @param recovery_name The name of the Recovery plugin
+   * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
    */
-  virtual mbf_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
+  virtual mbf_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.
    */
-  virtual void initPlugin();
+  virtual void initPlugins();
 
 };
 
 } /* namespace move_base_flex */
 
-#endif /* MOVE_BASE_FLEX__SIMPLE_CONTROLLER_EXECUTION_H_ */
+#endif /* MBF__SIMPLE_RECOVERY_EXECUTION_H_ */

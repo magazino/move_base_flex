@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  wrapper_global_planner.cpp
+ *  simple_planner_execution.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,38 +38,42 @@
  *
  */
 
-#include "move_base_flex/nav_core_wrapper/wrapper_global_planner.h"
+#include "mbf_simple_nav/simple_planner_execution.h"
 
-namespace mbf_core
+namespace move_base_flex
 {
 
-uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
-                                        const geometry_msgs::PoseStamped &goal,
-                                        double tolerance,
-                                        std::vector<geometry_msgs::PoseStamped> &plan,
-                                        double &cost,
-                                        std::string &message)
+SimplePlannerExecution::SimplePlannerExecution(boost::condition_variable &condition) :
+    AbstractPlannerExecution(condition)
 {
-  bool success = nav_core_plugin_->makePlan(start, goal, plan, cost);
-  message = success ? "Plan found" : "Planner failed";
-  return success ? 0 : 50;  // SUCCESS | FAILURE
 }
 
-bool WrapperGlobalPlanner::cancel()
+SimplePlannerExecution::~SimplePlannerExecution()
 {
-  return false;
 }
 
-void WrapperGlobalPlanner::initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros)
+mbf_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
-  nav_core_plugin_->initialize(name, costmap_ros);
+  static pluginlib::ClassLoader<mbf_core::AbstractPlanner>
+      class_loader("mbf_core", "mbf_core::AbstractPlanner");
+  mbf_core::AbstractPlanner::Ptr planner_ptr;
+  ROS_INFO("Load global planner plugin.");
+  try
+  {
+    planner_ptr = class_loader.createInstance(planner_type);
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it is properly registered"
+                                           << " and that the containing library is built? Exception: " << ex.what());
+  }
+  ROS_INFO("Global planner plugin loaded.");
+
+  return planner_ptr;
 }
 
-WrapperGlobalPlanner::WrapperGlobalPlanner(boost::shared_ptr<nav_core::BaseGlobalPlanner> plugin)
-    : nav_core_plugin_(plugin)
-{}
+void SimplePlannerExecution::initPlugin()
+{
+}
 
-WrapperGlobalPlanner::~WrapperGlobalPlanner()
-{}
-
-};  /* namespace mbf_core */
+} /* namespace move_base_flex */

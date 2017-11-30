@@ -20,11 +20,6 @@ find_package(catkin REQUIRED
 
 find_package(Boost COMPONENTS thread chrono REQUIRED)
 
-# dynamic reconfigure
-generate_dynamic_reconfigure_options(
-  cfg/MoveBaseFlex.cfg
-)
-
 set(MBF_SIMPLE_SERVER_LIB mbf_simple_server)
 set(MBF_SIMPLE_SERVER_NODE mbf_simple_nav)
 
@@ -55,13 +50,12 @@ include_directories(
 )
 
 add_library(${MBF_SIMPLE_SERVER_LIB}
-  src/simple_server/simple_navigation_server.cpp
-  src/simple_server/simple_planner_execution.cpp
-  src/simple_server/simple_controller_execution.cpp
-  src/simple_server/simple_recovery_execution.cpp
+  src/simple_navigation_server.cpp
+  src/simple_planner_execution.cpp
+  src/simple_controller_execution.cpp
+  src/simple_recovery_execution.cpp
 )
 
-add_dependencies(${MBF_SIMPLE_SERVER_LIB} ${PROJECT_NAME}_gencfg)
 add_dependencies(${MBF_SIMPLE_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${MBF_SIMPLE_SERVER_LIB}
   ${catkin_LIBRARIES}

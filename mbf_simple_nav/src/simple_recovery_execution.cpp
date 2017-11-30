@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  wrapper_recovery_behavior.cpp
+ *  simple_recovery_execution.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,32 +38,44 @@
  *
  */
 
-#include "move_base_flex/nav_core_wrapper/wrapper_recovery_behavior.h"
+#include "mbf_simple_nav/simple_recovery_execution.h"
 
-namespace mbf_core
+namespace move_base_flex
 {
-void WrapperRecoveryBehavior::mbfInitialize(std::string name, tf::TransformListener *tf,
-                                            costmap_2d::Costmap2DROS *global_costmap,
-                                            costmap_2d::Costmap2DROS *local_costmap)
+
+SimpleRecoveryExecution::SimpleRecoveryExecution(boost::condition_variable &condition,
+                                                 const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+    AbstractRecoveryExecution(condition, tf_listener_ptr)
 {
-  nav_core_plugin_->initialize(name, tf, global_costmap, local_costmap);
 }
 
-uint32_t WrapperRecoveryBehavior::mbfRecover()
+SimpleRecoveryExecution::~SimpleRecoveryExecution()
 {
-  nav_core_plugin_->runBehavior();
 }
 
-bool WrapperRecoveryBehavior::mbfCancel()
+
+mbf_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPlugin(
+    const std::string& recovery_type)
 {
-  return false;
+  static pluginlib::ClassLoader<mbf_core::AbstractRecovery>
+      class_loader("mbf_core", "mbf_core::AbstractRecovery");
+  mbf_core::AbstractRecovery::Ptr recovery_ptr;
+
+  try
+  {
+    recovery_ptr = boost::static_pointer_cast<mbf_core::AbstractRecovery>(
+        class_loader.createInstance(recovery_type));
+  }
+  catch (pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
+        << " and that the containing library is built? Exception: " << ex.what());
+  }
+  return recovery_ptr;
 }
 
-WrapperRecoveryBehavior::WrapperRecoveryBehavior(boost::shared_ptr<nav_core::RecoveryBehavior> plugin)
-    : nav_core_plugin_(plugin)
-{}
+void SimpleRecoveryExecution::initPlugins()
+{
+}
 
-WrapperRecoveryBehavior::~WrapperRecoveryBehavior()
-{}
-
-};  /* namespace mbf_core */
+} /* namespace move_base_flex */

@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  simple_recovery_execution.cpp
+ *  simple_planner_execution.h
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,44 +38,50 @@
  *
  */
 
-#include "move_base_flex/simple_server/simple_recovery_execution.h"
+#ifndef MBF__SIMPLE_PLANNER_EXECUTION_H_
+#define MBF__SIMPLE_PLANNER_EXECUTION_H_
+
+#include <mbf_core/abstract_planner.h>
+#include <mbf_abstract_nav/abstract_planner_execution.h>
 
 namespace move_base_flex
 {
-
-SimpleRecoveryExecution::SimpleRecoveryExecution(boost::condition_variable &condition,
-                                                 const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr)
+/**
+ * @brief The SimplePlannerExecution basically uses the AbstractPlannerExecution and loads global planner plugins,
+ *        which implements the base class interface AbstractPlanner. This implementation allows planners, which
+ *        do not initialize map representations via Move Base Flex.
+ *
+ * @ingroup planner_execution simple_server
+ */
+class SimplePlannerExecution : public AbstractPlannerExecution
 {
-}
+public:
+  /**
+   * @brief Constructor
+   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
+   */
+  SimplePlannerExecution(boost::condition_variable &condition);
 
-SimpleRecoveryExecution::~SimpleRecoveryExecution()
-{
-}
+  /**
+   * @brief Destructor
+   */
+  virtual ~SimplePlannerExecution();
 
+private:
 
-mbf_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPlugin(
-    const std::string& recovery_type)
-{
-  static pluginlib::ClassLoader<mbf_core::AbstractRecovery>
-      class_loader("mbf_core", "mbf_core::AbstractRecovery");
-  mbf_core::AbstractRecovery::Ptr recovery_ptr;
+  /**
+   * @brief Loads the plugin associated with the given planner_type parameter.
+   * @param planner_type The type of the planner plugin to load.
+   * @return true, if the local planner plugin was successfully loaded.
+   */
+  virtual mbf_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
-  try
-  {
-    recovery_ptr = boost::static_pointer_cast<mbf_core::AbstractRecovery>(
-        class_loader.createInstance(recovery_type));
-  }
-  catch (pluginlib::PluginlibException &ex)
-  {
-    ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
-        << " and that the containing library is built? Exception: " << ex.what());
-  }
-  return recovery_ptr;
-}
-
-void SimpleRecoveryExecution::initPlugins()
-{
-}
+  /**
+   * @brief Empty init method. Nothing to initialize.
+   */
+  virtual void initPlugin();
+};
 
 } /* namespace move_base_flex */
+
+#endif /* MBF__SIMPLE_PLANNER_EXECUTION_H_ */

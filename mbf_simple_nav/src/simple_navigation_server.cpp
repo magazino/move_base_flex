@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  simple_planner_execution.h
+ *  simple_navigation_server.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,50 +38,25 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__SIMPLE_PLANNER_EXECUTION_H_
-#define MOVE_BASE_FLEX__SIMPLE_PLANNER_EXECUTION_H_
-
-#include "mbf_core/abstract_planner.h"
-#include "move_base_flex/abstract_server/abstract_planner_execution.h"
+#include "mbf_simple_nav/simple_navigation_server.h"
 
 namespace move_base_flex
 {
-/**
- * @brief The SimplePlannerExecution basically uses the AbstractPlannerExecution and loads global planner plugins,
- *        which implements the base class interface AbstractPlanner. This implementation allows planners, which
- *        do not initialize map representations via Move Base Flex.
- *
- * @ingroup planner_execution simple_server
- */
-class SimplePlannerExecution : public AbstractPlannerExecution
+
+SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+    AbstractNavigationServer(tf_listener_ptr, SimplePlannerExecution::Ptr(new SimplePlannerExecution(condition_)),
+                             SimpleControllerExecution::Ptr(new SimpleControllerExecution(condition_, tf_listener_ptr)),
+                             SimpleRecoveryExecution::Ptr(new SimpleRecoveryExecution(condition_, tf_listener_ptr)))
 {
-public:
-  /**
-   * @brief Constructor
-   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
-   */
-  SimplePlannerExecution(boost::condition_variable &condition);
+  // initialize all plugins
+  initializeServerComponents();
 
-  /**
-   * @brief Destructor
-   */
-  virtual ~SimplePlannerExecution();
+  // start all action servers
+  startActionServers();
+}
 
-private:
-
-  /**
-   * @brief Loads the plugin associated with the given planner_type parameter.
-   * @param planner_type The type of the planner plugin to load.
-   * @return true, if the local planner plugin was successfully loaded.
-   */
-  virtual mbf_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
-
-  /**
-   * @brief Empty init method. Nothing to initialize.
-   */
-  virtual void initPlugin();
-};
+SimpleNavigationServer::~SimpleNavigationServer()
+{
+}
 
 } /* namespace move_base_flex */
-
-#endif /* MOVE_BASE_FLEX__SIMPLE_PLANNER_EXECUTION_H_ */

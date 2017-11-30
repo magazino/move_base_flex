@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  wrapper_local_planner.cpp
+ *  simple_controller_execution.h
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,50 +38,55 @@
  *
  */
 
-#include "move_base_flex/nav_core_wrapper/wrapper_local_planner.h"
+#ifndef MBF__SIMPLE_CONTROLLER_EXECUTION_H_
+#define MBF__SIMPLE_CONTROLLER_EXECUTION_H_
 
-namespace mbf_core
+#include <mbf_core/abstract_controller.h>
+#include <mbf_abstract_nav/abstract_controller_execution.h>
+
+namespace move_base_flex
 {
-
-uint32_t WrapperLocalPlanner::computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message)
+/**
+ * @brief The SimpleControllerExecution basically uses the AbstractControllerExecution and loads local planner plugins,
+ *        which implements the base class interface AbstractController. This implementation allows planners, which
+ *        do not initialize map representations via Move Base Flex.
+ *
+ * @ingroup controller_execution simple_server
+ */
+class SimpleControllerExecution : public AbstractControllerExecution
 {
-  bool success = nav_core_plugin_->computeVelocityCommands(cmd_vel.twist);
-  message = success ? "Goal reached" : "Controller failed";
-  return success ? 0 : 100;  // SUCCESS | FAILURE
-}
+public:
 
-bool WrapperLocalPlanner::isGoalReached()
-{
-  return nav_core_plugin_->isGoalReached();
-}
+  /**
+   * @brief Constructor
+   * @param condition Condition variable for waking up all listeners, e.g. the navigation server, due to a state change
+   * @param tf_listener_ptr Shared pointer to a common TransformListener
+   */
+  SimpleControllerExecution(boost::condition_variable &condition,
+                            const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
-bool WrapperLocalPlanner::isGoalReached(double xy_tolerance, double yaw_tolerance)
-{
-  return isGoalReached();
-}
+  /**
+   * @brief Destructor
+   */
+  virtual ~SimpleControllerExecution();
 
-bool WrapperLocalPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
-{
-  return nav_core_plugin_->setPlan(plan);
-}
+private:
 
-bool WrapperLocalPlanner::cancel()
-{
-  return false;
-}
+  /**
+   * @brief Loads the plugin associated with the given controller type parameter
+   * @param controller_type The type of the controller plugin
+   * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+   *         an empty pointer otherwise.
+   */
+  virtual mbf_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
 
-void WrapperLocalPlanner::initialize(std::string name,
-                                     tf::TransformListener *tf,
-                                     costmap_2d::Costmap2DROS *costmap_ros)
-{
-  nav_core_plugin_->initialize(name, tf, costmap_ros);
-}
+  /**
+   * @brief Empty init method. Nothing to initialize.
+   */
+  virtual void initPlugin();
 
-WrapperLocalPlanner::WrapperLocalPlanner(boost::shared_ptr<nav_core::BaseLocalPlanner> plugin)
-    : nav_core_plugin_(plugin)
-{}
+};
 
-WrapperLocalPlanner::~WrapperLocalPlanner()
-{}
+} /* namespace move_base_flex */
 
-};  /* namespace mbf_core */
+#endif /* MBF__SIMPLE_CONTROLLER_EXECUTION_H_ */

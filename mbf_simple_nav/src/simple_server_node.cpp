@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/simple_server/simple_navigation_server.h"
+#include "mbf_simple_nav/simple_navigation_server.h"
 
 int main(int argc, char **argv)
 {

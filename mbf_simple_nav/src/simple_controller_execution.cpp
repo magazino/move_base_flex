@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  move_base_server_node.cpp
+ *  simple_controller_execution.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -38,24 +38,44 @@
  *
  */
 
-#include "move_base_flex/move_base_server/move_base_navigation_server.h"
+#include "mbf_simple_nav/simple_controller_execution.h"
 
-int main(int argc, char **argv)
+namespace move_base_flex
 {
-  ros::init(argc, argv, "mbf_2d_nav_server");
 
-  typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
-  typedef boost::shared_ptr<move_base_flex::MoveBaseNavigationServer> MoveBaseNavigationServerPtr;
-
-  ros::NodeHandle nh;
-  ros::NodeHandle private_nh("~");
-
-  double cache_time;
-  private_nh.param("tf_chache_time", cache_time, 10.0);
-
-  TransformListenerPtr tf_listener_ptr(new tf::TransformListener(nh, ros::Duration(cache_time), true));
-  MoveBaseNavigationServerPtr controller_ptr(
-      new move_base_flex::MoveBaseNavigationServer(TransformListenerPtr(tf_listener_ptr)));
-  ros::spin();
-  return EXIT_SUCCESS;
+SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &condition,
+                                                     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+    AbstractControllerExecution(condition, tf_listener_ptr)
+{
 }
+
+mbf_core::AbstractController::Ptr SimpleControllerExecution::loadControllerPlugin(
+    const std::string& controller_type)
+{
+  static pluginlib::ClassLoader<mbf_core::AbstractController>
+      class_loader("mbf_core", "mbf_core::MoveBaseController");
+  mbf_core::AbstractController::Ptr controller_ptr;
+  ROS_DEBUG("Load controller plugin.");
+  try
+  {
+    controller_ptr = class_loader.createInstance(controller_type);
+    ROS_INFO_STREAM("MBF_core-based local planner plugin " << controller_type << " loaded");
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_FATAL_STREAM("Failed to load the " << controller_type
+        << " local planner, are you sure it's properly registered"
+        << " and that the containing library is built? Exception: " << ex.what());
+  }
+  return controller_ptr;
+}
+
+void SimpleControllerExecution::initPlugin()
+{
+}
+
+SimpleControllerExecution::~SimpleControllerExecution()
+{
+}
+
+} /* namespace move_base_nav_moving */

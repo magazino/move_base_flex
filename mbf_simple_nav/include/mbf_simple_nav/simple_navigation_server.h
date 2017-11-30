@@ -38,14 +38,13 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__SIMPLE_NAVIGATION_SERVER_H_
-#define MOVE_BASE_FLEX__SIMPLE_NAVIGATION_SERVER_H_
+#ifndef MBF__SIMPLE_NAVIGATION_SERVER_H_
+#define MBF__SIMPLE_NAVIGATION_SERVER_H_
 
-#include <mbf_simple_nav/MoveBaseFlexConfig.h>
-#include "move_base_flex/abstract_server/abstract_navigation_server.h"
-#include "move_base_flex/simple_server/simple_planner_execution.h"
-#include "move_base_flex/simple_server/simple_controller_execution.h"
-#include "move_base_flex/simple_server/simple_recovery_execution.h"
+#include <mbf_abstract_nav/abstract_navigation_server.h>
+#include "simple_planner_execution.h"
+#include "simple_controller_execution.h"
+#include "simple_recovery_execution.h"
 
 namespace move_base_flex
 {
@@ -80,4 +79,4 @@ public:
 
 } /* namespace move_base_flex */
 
-#endif /* MOVE_BASE_FLEX__SIMPLE_NAVIGATION_SERVER_H_ */
+#endif /* MBF__SIMPLE_NAVIGATION_SERVER_H_ */
