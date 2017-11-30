@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/nav_core_wrapper/wrapper_recovery_behavior.h"
+#include "nav_core_wrapper/wrapper_recovery_behavior.h"
 
 namespace mbf_core
 {

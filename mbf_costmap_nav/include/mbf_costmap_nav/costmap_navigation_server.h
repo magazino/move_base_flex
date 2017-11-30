@@ -48,9 +48,9 @@
 #include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 
 #include "mbf_abstract_nav/abstract_navigation_server.h"
-#include "move_base_planner_execution.h"
-#include "move_base_controller_execution.h"
-#include "move_base_recovery_execution.h"
+#include "costmap_planner_execution.h"
+#include "costmap_controller_execution.h"
+#include "costmap_recovery_execution.h"
 
 namespace move_base_flex
 {

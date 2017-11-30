@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/nav_core_wrapper/wrapper_global_planner.h"
+#include "nav_core_wrapper/wrapper_global_planner.h"
 
 namespace mbf_core
 {

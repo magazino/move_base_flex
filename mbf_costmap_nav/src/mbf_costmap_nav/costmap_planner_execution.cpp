@@ -38,9 +38,9 @@
  *
  */
 #include <nav_core/base_global_planner.h>
-#include <move_base_flex/nav_core_wrapper/wrapper_global_planner.h>
+#include <nav_core_wrapper/wrapper_global_planner.h>
 
-#include "move_base_flex/move_base_server/move_base_planner_execution.h"
+#include "mbf_costmap_nav/costmap_planner_execution.h"
 
 namespace move_base_flex
 {

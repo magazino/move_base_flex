@@ -68,10 +68,10 @@ target_link_libraries(${MBF_NAV_CORE_WRAPPER_LIB}
 )
 
 add_library(${MBF_COSTMAP_2D_SERVER_LIB}
-  src/move_base_server/move_base_navigation_server.cpp
-  src/move_base_server/move_base_planner_execution.cpp
-  src/move_base_server/move_base_controller_execution.cpp
-  src/move_base_server/move_base_recovery_execution.cpp
+  src/mbf_costmap_nav/costmap_navigation_server.cpp
+  src/mbf_costmap_nav/costmap_planner_execution.cpp
+  src/mbf_costmap_nav/costmap_controller_execution.cpp
+  src/mbf_costmap_nav/costmap_recovery_execution.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})

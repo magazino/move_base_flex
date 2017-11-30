@@ -38,10 +38,9 @@
  *
  */
 #include <nav_core/recovery_behavior.h>
-#include <move_base_flex/nav_core_wrapper/wrapper_recovery_behavior.h>
-
-#include "move_base_flex/move_base_server/move_base_recovery_execution.h"
 #include <xmlrpcpp/XmlRpc.h>
+#include "nav_core_wrapper/wrapper_recovery_behavior.h"
+#include "mbf_costmap_nav/costmap_recovery_execution.h"
 
 namespace move_base_flex
 {

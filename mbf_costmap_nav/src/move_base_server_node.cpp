@@ -38,7 +38,7 @@
  *
  */
 
-#include "move_base_flex/move_base_server/move_base_navigation_server.h"
+#include "mbf_costmap_nav/costmap_navigation_server.h"
 
 int main(int argc, char **argv)
 {

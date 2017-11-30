@@ -44,7 +44,7 @@
 #include <base_local_planner/costmap_model.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
-#include "move_base_flex/move_base_server/move_base_navigation_server.h"
+#include "mbf_costmap_nav/costmap_navigation_server.h"
 
 namespace move_base_flex
 {
