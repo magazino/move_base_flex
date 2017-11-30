@@ -60,21 +60,21 @@ namespace mbf_core {
        * @param global_costmap A pointer to the global_costmap used by the navigation stack
        * @param local_costmap A pointer to the local_costmap used by the navigation stack
        */
-      virtual void mbfInitialize(std::string name, tf::TransformListener* tf,
+      virtual void initialize(std::string name, tf::TransformListener* tf,
                               costmap_2d::Costmap2DROS* global_costmap,
                               costmap_2d::Costmap2DROS* local_costmap) = 0;
 
       /**
        * @brief Runs the MoveBaseRecovery
        */
-      virtual uint32_t mbfRecover() = 0;
+      virtual uint32_t runBehavior() = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool cancel() = 0;
 
       /**
        * @brief Virtual destructor for the interface

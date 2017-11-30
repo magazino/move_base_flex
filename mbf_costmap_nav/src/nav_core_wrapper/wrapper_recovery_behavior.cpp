@@ -42,19 +42,19 @@
 
 namespace mbf_core
 {
-void WrapperRecoveryBehavior::mbfInitialize(std::string name, tf::TransformListener *tf,
-                                            costmap_2d::Costmap2DROS *global_costmap,
-                                            costmap_2d::Costmap2DROS *local_costmap)
+void WrapperRecoveryBehavior::initialize(std::string name, tf::TransformListener *tf,
+                                         costmap_2d::Costmap2DROS *global_costmap,
+                                         costmap_2d::Costmap2DROS *local_costmap)
 {
   nav_core_plugin_->initialize(name, tf, global_costmap, local_costmap);
 }
 
-uint32_t WrapperRecoveryBehavior::mbfRecover()
+uint32_t WrapperRecoveryBehavior::runBehavior()
 {
   nav_core_plugin_->runBehavior();
 }
 
-bool WrapperRecoveryBehavior::mbfCancel()
+bool WrapperRecoveryBehavior::cancel()
 {
   return false;
 }

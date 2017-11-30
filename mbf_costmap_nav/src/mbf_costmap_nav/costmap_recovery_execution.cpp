@@ -103,7 +103,7 @@ void MoveBaseRecoveryExecution::initPlugins()
         boost::static_pointer_cast<mbf_core::MoveBaseRecovery>(iter->second);
     std::string name = iter->first;
 
-    behavior->mbfInitialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());
+    behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());
   }
 }
 

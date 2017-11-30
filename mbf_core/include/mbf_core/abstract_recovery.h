@@ -53,7 +53,7 @@ namespace mbf_core {
       /**
        * @brief Runs the AbstractRecovery
        */
-      virtual uint32_t mbfRecover() = 0;
+      virtual uint32_t runBehavior() = 0;
 
       /**
        * @brief Virtual destructor for the interface
@@ -64,7 +64,7 @@ namespace mbf_core {
        * @brief Requests the recovery behavior to cancel, e.g. if it takes to much time.
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
-      virtual bool mbfCancel() = 0;
+      virtual bool cancel() = 0;
 
     protected:
       AbstractRecovery(){}

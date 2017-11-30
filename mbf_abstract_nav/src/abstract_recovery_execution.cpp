@@ -175,7 +175,7 @@ namespace move_base_flex
     if (current_behavior_)
     {
       // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-      return current_behavior_->mbfCancel();
+      return current_behavior_->cancel();
     }
     return false;
   }
@@ -232,7 +232,7 @@ namespace move_base_flex
     setState(RECOVERING);
     try
     {
-      current_behavior_->mbfRecover();
+      current_behavior_->runBehavior();
       if (canceled_)
       {
         setState(CANCELED);
