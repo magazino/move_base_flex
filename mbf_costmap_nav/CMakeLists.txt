@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mbf_costmap_2d_nav)
+project(mbf_costmap_nav)
 
 find_package(catkin REQUIRED
   COMPONENTS
@@ -26,7 +26,7 @@ generate_dynamic_reconfigure_options(
 
 set(MBF_NAV_CORE_WRAPPER_LIB mbf_nav_core_wrapper)
 set(MBF_COSTMAP_2D_SERVER_LIB mbf_costmap_2d_server)
-set(MBF_COSTMAP_2D_SERVER_NODE mbf_costmap_2d_nav)
+set(MBF_COSTMAP_2D_SERVER_NODE mbf_costmap_nav)
 
 catkin_package(
   INCLUDE_DIRS include

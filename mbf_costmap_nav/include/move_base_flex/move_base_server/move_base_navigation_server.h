@@ -45,7 +45,7 @@
 #include <std_srvs/Empty.h>
 
 #include <mbf_msgs/CheckPose.h>
-#include <mbf_costmap_2d_nav/MoveBaseFlexConfig.h>
+#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 
 #include "mbf_abstract_nav/abstract_navigation_server.h"
 #include "move_base_planner_execution.h"
@@ -60,7 +60,7 @@ namespace move_base_flex
  */
 
 
-typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_2d_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmap2d;
+typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmap2d;
 
 /**
  * @brief The MoveBaseNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
@@ -154,7 +154,7 @@ protected:
    * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
    * @param level bit mask, which parameters are set.
    */
-  void reconfigure(mbf_costmap_2d_nav::MoveBaseFlexConfig &config, uint32_t level);
+  void reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level);
 
   //! Dynamic reconfigure server for the mbf_costmap2d_specific part
   DynamicReconfigureServerCostmap2d dsrv_costmap2d_;

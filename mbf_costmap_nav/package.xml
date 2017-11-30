@@ -1,5 +1,5 @@
 <package>
-    <name>mbf_costmap_2d_nav</name>
+    <name>mbf_costmap_nav</name>
     <version>0.1.0</version>
     <description>
        Move Base Flex (MBF) is a backwards-compatible replacement for move_base.

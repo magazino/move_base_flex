@@ -101,9 +101,9 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
 
   current_goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
-  // dynamic reconfigure server for mbf_costmap_2d_nav specific config
-  dsrv_costmap2d_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_2d_nav::MoveBaseFlexConfig> >(private_nh_);
-  dynamic_reconfigure::Server<mbf_costmap_2d_nav::MoveBaseFlexConfig>::CallbackType cb =
+  // dynamic reconfigure server for mbf_costmap_nav specific config
+  dsrv_costmap2d_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
+  dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig>::CallbackType cb =
       boost::bind(&MoveBaseNavigationServer::reconfigure,
                   this, _1, _2);
   dsrv_costmap2d_->setCallback(cb);
@@ -116,7 +116,7 @@ MoveBaseNavigationServer::~MoveBaseNavigationServer()
   costmap_planner_ptr_->stop();
 }
 
-void MoveBaseNavigationServer::reconfigure(mbf_costmap_2d_nav::MoveBaseFlexConfig &config, uint32_t level)
+void MoveBaseNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
   // handle costmap activation reconfiguration here.
   if (shutdown_costmaps_ && !config.shutdown_costmaps)
