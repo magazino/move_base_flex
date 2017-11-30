@@ -171,16 +171,13 @@ namespace move_base_flex
 
   bool AbstractRecoveryExecution::cancel()
   {
-    if (canceled_)
-    {
-      ROS_WARN_STREAM("The current recovery has already been canceled!");
-    }
+    canceled_ = true;
     if (current_behavior_)
     {
-      // returns false if cancel is not implemented or not desired by the planner
-      canceled_ = current_behavior_->mbfCancel();
+      // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
+      return current_behavior_->mbfCancel();
     }
-    return canceled_;
+    return false;
   }
 
 

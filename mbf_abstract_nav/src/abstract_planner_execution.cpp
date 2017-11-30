@@ -183,8 +183,7 @@ namespace move_base_flex
   }
 
 
-  void AbstractPlannerExecution::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan,
-                                                                 double &cost)
+  void AbstractPlannerExecution::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan, double &cost)
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     // copy plan and costs to output
@@ -193,8 +192,7 @@ namespace move_base_flex
   }
 
 
-  void AbstractPlannerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan,
-                                                                 double cost)
+  void AbstractPlannerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, double cost)
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     plan_ = plan;
@@ -203,8 +201,7 @@ namespace move_base_flex
   }
 
 
-  void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal,
-                                                                 double tolerance)
+  void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal, double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
     goal_ = goal;
@@ -222,8 +219,8 @@ namespace move_base_flex
 
 
   void AbstractPlannerExecution::setNewStartAndGoal(const geometry_msgs::PoseStamped &start,
-                                                                         const geometry_msgs::PoseStamped &goal,
-                                                                         double tolerance)
+                                                    const geometry_msgs::PoseStamped &goal,
+                                                    double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
     start_ = start;
@@ -235,8 +232,8 @@ namespace move_base_flex
 
 
   bool AbstractPlannerExecution::startPlanning(const geometry_msgs::PoseStamped &start,
-                                                                    const geometry_msgs::PoseStamped &goal,
-                                                                    double tolerance)
+                                               const geometry_msgs::PoseStamped &goal,
+                                               double tolerance)
   {
     if (planning_)
     {
@@ -252,7 +249,7 @@ namespace move_base_flex
     geometry_msgs::Point g = goal.pose.position;
 
     ROS_INFO_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
-                    << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
+                                   << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
 
     setState(STARTED);
     thread_ = boost::thread(&AbstractPlannerExecution::run, this);
@@ -271,8 +268,9 @@ namespace move_base_flex
   bool AbstractPlannerExecution::cancel()
   {
     cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
-    cancel_ = planner_->cancel();
-    return cancel_;
+
+    // returns false if cancel is not implemented or rejected by the planner (will run until completion)
+    return planner_->cancel();
   }
 
 
@@ -428,4 +426,6 @@ namespace move_base_flex
       planning_ = false;
     }
   }
+
 } /* namespace move_base_flex */
+
