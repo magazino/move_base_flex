@@ -25,7 +25,7 @@ generate_dynamic_reconfigure_options(
 )
 
 set(MBF_NAV_CORE_WRAPPER_LIB mbf_nav_core_wrapper)
-set(MBF_COSTMAP_2D_SERVER_LIB mbf_costmap_2d_server)
+set(MBF_COSTMAP_2D_SERVER_LIB mbf_costmap_server)
 set(MBF_COSTMAP_2D_SERVER_NODE mbf_costmap_nav)
 
 catkin_package(
