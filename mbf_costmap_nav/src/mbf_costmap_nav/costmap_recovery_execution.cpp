@@ -45,7 +45,7 @@
 namespace move_base_flex
 {
 
-MoveBaseRecoveryExecution::MoveBaseRecoveryExecution(boost::condition_variable &condition,
+CostmapRecoveryExecution::CostmapRecoveryExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                                                      CostmapPtr &global_costmap, CostmapPtr &local_costmap) :
     AbstractRecoveryExecution(condition, tf_listener_ptr),
@@ -53,15 +53,15 @@ MoveBaseRecoveryExecution::MoveBaseRecoveryExecution(boost::condition_variable &
 {
 }
 
-MoveBaseRecoveryExecution::~MoveBaseRecoveryExecution()
+CostmapRecoveryExecution::~CostmapRecoveryExecution()
 {
 }
 
-mbf_abstract_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
+mbf_abstract_core::AbstractRecovery::Ptr CostmapRecoveryExecution::loadRecoveryPlugin(
     const std::string& recovery_type)
 {
-  static pluginlib::ClassLoader<mbf_costmap_core::MoveBaseRecovery>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseRecovery");
+  static pluginlib::ClassLoader<mbf_costmap_core::CostmapRecovery>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapRecovery");
   mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
   try
@@ -94,13 +94,13 @@ mbf_abstract_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecovery
   return recovery_ptr;
 }
 
-void MoveBaseRecoveryExecution::initPlugins()
+void CostmapRecoveryExecution::initPlugins()
 {
   for (std::map<std::string, mbf_abstract_core::AbstractRecovery::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
   {
-    mbf_costmap_core::MoveBaseRecovery::Ptr behavior =
-        boost::static_pointer_cast<mbf_costmap_core::MoveBaseRecovery>(iter->second);
+    mbf_costmap_core::CostmapRecovery::Ptr behavior =
+        boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(iter->second);
     std::string name = iter->first;
 
     behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());

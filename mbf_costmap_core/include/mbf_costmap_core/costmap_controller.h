@@ -52,10 +52,10 @@ namespace mbf_costmap_core {
    * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class MoveBaseController : public mbf_abstract_core::AbstractController{
+  class CostmapController : public mbf_abstract_core::AbstractController{
     public:
 
-      typedef boost::shared_ptr< ::mbf_costmap_core::MoveBaseController > Ptr;
+      typedef boost::shared_ptr< ::mbf_costmap_core::CostmapController > Ptr;
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
@@ -119,10 +119,10 @@ namespace mbf_costmap_core {
       /**
        * @brief  Virtual destructor for the interface
        */
-      virtual ~MoveBaseController(){}
+      virtual ~CostmapController(){}
 
     protected:
-      MoveBaseController(){}
+      CostmapController(){}
 
   };
 };  /* namespace mbf_costmap_core */

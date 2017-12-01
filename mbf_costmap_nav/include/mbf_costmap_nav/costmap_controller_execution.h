@@ -48,13 +48,13 @@
 namespace move_base_flex
 {
 /**
- * @brief The MoveBaseControllerExecution binds a local costmap to the AbstractControllerExecution and uses the
+ * @brief The CostmapControllerExecution binds a local costmap to the AbstractControllerExecution and uses the
  *        nav_core/BaseLocalPlanner class as base plugin interface. This class makes move_base_flex compatible to
  *        the old move_base.
  *
  * @ingroup controller_execution move_base_server
  */
-class MoveBaseControllerExecution : public AbstractControllerExecution
+class CostmapControllerExecution : public AbstractControllerExecution
 {
 public:
 
@@ -66,14 +66,14 @@ public:
    * @param tf_listener_ptr Shared pointer to a common tf listener
    * @param costmap_ptr Shared pointer to the costmap.
    */
-  MoveBaseControllerExecution(boost::condition_variable &condition,
+  CostmapControllerExecution(boost::condition_variable &condition,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                               CostmapPtr &costmap_ptr);
 
   /**
    * @brief Destructor
    */
-  virtual ~MoveBaseControllerExecution();
+  virtual ~CostmapControllerExecution();
 
 protected:
 

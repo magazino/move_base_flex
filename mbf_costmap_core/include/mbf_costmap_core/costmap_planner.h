@@ -45,15 +45,15 @@
 
 namespace mbf_costmap_core {
   /**
-   * @class MoveBasePlanner
+   * @class CostmapPlanner
    * @brief Provides an interface for global planners used in navigation.
    * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class MoveBasePlanner : public mbf_abstract_core::AbstractPlanner{
+  class CostmapPlanner : public mbf_abstract_core::AbstractPlanner{
     public:
 
-      typedef boost::shared_ptr< ::mbf_costmap_core::MoveBasePlanner > Ptr;
+      typedef boost::shared_ptr< ::mbf_costmap_core::CostmapPlanner > Ptr;
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -92,7 +92,7 @@ namespace mbf_costmap_core {
       virtual bool cancel() = 0;
 
       /**
-       * @brief Initialization function for the MoveBasePlanner
+       * @brief Initialization function for the CostmapPlanner
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
@@ -101,10 +101,10 @@ namespace mbf_costmap_core {
       /**
        * @brief  Virtual destructor for the interface
        */
-      virtual ~MoveBasePlanner(){}
+      virtual ~CostmapPlanner(){}
 
     protected:
-      MoveBasePlanner(){}
+      CostmapPlanner(){}
 
   };
 };  /* namespace mbf_costmap_core */

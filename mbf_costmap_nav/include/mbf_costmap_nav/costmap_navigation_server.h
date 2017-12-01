@@ -64,7 +64,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseF
 
 /**
  * @brief The MoveBaseNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
- *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseMoveBasePlanner and the
+ *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseCostmapPlanner and the
  *        nav_core/RecoveryBehavior base classes as plugin interfaces. These plugin interface are the same for the
  *        old move_base
  *

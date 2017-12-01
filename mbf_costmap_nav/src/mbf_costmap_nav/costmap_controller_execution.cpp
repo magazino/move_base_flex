@@ -43,7 +43,7 @@
 namespace move_base_flex
 {
 
-MoveBaseControllerExecution::MoveBaseControllerExecution(
+CostmapControllerExecution::CostmapControllerExecution(
     boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &costmap_ptr) :
     AbstractControllerExecution(condition, tf_listener_ptr),
@@ -51,14 +51,14 @@ MoveBaseControllerExecution::MoveBaseControllerExecution(
 {
 }
 
-MoveBaseControllerExecution::~MoveBaseControllerExecution()
+CostmapControllerExecution::~CostmapControllerExecution()
 {
 }
 
-mbf_abstract_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlugin(const std::string& controller_type)
+mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadControllerPlugin(const std::string& controller_type)
 {
-  static pluginlib::ClassLoader<mbf_costmap_core::MoveBaseController>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseController");
+  static pluginlib::ClassLoader<mbf_costmap_core::CostmapController>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapController");
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   // try to load and init local planner
   ROS_DEBUG("Load local planner plugin.");
@@ -93,7 +93,7 @@ mbf_abstract_core::AbstractController::Ptr MoveBaseControllerExecution::loadCont
   return controller_ptr;
 }
 
-void MoveBaseControllerExecution::initPlugin()
+void CostmapControllerExecution::initPlugin()
 {
   ROS_INFO_STREAM("Initialize controller \"" << controller_name_ << "\".");
 
@@ -113,13 +113,13 @@ void MoveBaseControllerExecution::initPlugin()
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  mbf_costmap_core::MoveBaseController::Ptr controller_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::MoveBaseController>(controller_);
+  mbf_costmap_core::CostmapController::Ptr controller_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_);
   controller_ptr->initialize(controller_name_, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
 }
 
-uint32_t MoveBaseControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message)
+uint32_t CostmapControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message)
 {
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)

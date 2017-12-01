@@ -51,7 +51,7 @@ namespace mbf_costmap_core {
    * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperLocalPlanner : public MoveBaseController{
+  class WrapperLocalPlanner : public CostmapController{
     public:
 
       /**

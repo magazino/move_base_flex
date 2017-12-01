@@ -48,12 +48,12 @@
 namespace move_base_flex
 {
 /**
- * @brief The MoveBasePlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
- *        nav_core/BaseMoveBasePlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ * @brief The CostmapPlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
+ *        nav_core/BaseCostmapPlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup planner_execution move_base_server
  */
-class MoveBasePlannerExecution : public AbstractPlannerExecution
+class CostmapPlannerExecution : public AbstractPlannerExecution
 {
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
@@ -63,12 +63,12 @@ public:
    * @param condition Thread sleep condition variable, to wake up connected threads
    * @param costmap Shared pointer to the costmap.
    */
-  MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap);
+  CostmapPlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap);
 
   /**
    * @brief Destructor
    */
-  virtual ~MoveBasePlannerExecution();
+  virtual ~CostmapPlannerExecution();
 
 protected:
 

@@ -49,17 +49,17 @@
 namespace move_base_flex
 {
 /**
- * @brief The MoveBaseRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
- *        nav_core/MoveBaseRecovery class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ * @brief The CostmapRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
+ *        nav_core/CostmapRecovery class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup recovery_execution move_base_server
  */
-class MoveBaseRecoveryExecution : public AbstractRecoveryExecution
+class CostmapRecoveryExecution : public AbstractRecoveryExecution
 {
 
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
-  typedef boost::shared_ptr<MoveBaseRecoveryExecution> Ptr;
+  typedef boost::shared_ptr<CostmapRecoveryExecution> Ptr;
 
   /**
    * @brief Constructor
@@ -68,7 +68,7 @@ public:
    * @param global_costmap Shared pointer to the global costmap.
    * @param local_costmap Shared pointer to the local costmap.
    */
-  MoveBaseRecoveryExecution(boost::condition_variable &condition,
+  CostmapRecoveryExecution(boost::condition_variable &condition,
                             const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                             CostmapPtr &global_costmap,
                             CostmapPtr &local_costmap);
@@ -76,7 +76,7 @@ public:
   /**
    * Destructor
    */
-  virtual ~MoveBaseRecoveryExecution();
+  virtual ~CostmapRecoveryExecution();
 
 protected:
 

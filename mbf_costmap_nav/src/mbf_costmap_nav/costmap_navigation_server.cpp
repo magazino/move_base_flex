@@ -53,13 +53,13 @@ namespace move_base_flex
 
 MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
   AbstractNavigationServer(tf_listener_ptr,
-                           MoveBasePlannerExecution::Ptr(
-                                new MoveBasePlannerExecution(condition_, costmap_planner_ptr_)),
-                           MoveBaseControllerExecution::Ptr(
-                                new MoveBaseControllerExecution(condition_, tf_listener_ptr,
+                           CostmapPlannerExecution::Ptr(
+                                new CostmapPlannerExecution(condition_, costmap_planner_ptr_)),
+                           CostmapControllerExecution::Ptr(
+                                new CostmapControllerExecution(condition_, tf_listener_ptr,
                                                                 costmap_controller_ptr_)),
-                           MoveBaseRecoveryExecution::Ptr(
-                                new MoveBaseRecoveryExecution(condition_, tf_listener_ptr,
+                           CostmapRecoveryExecution::Ptr(
+                                new CostmapRecoveryExecution(condition_, tf_listener_ptr,
                                                               costmap_planner_ptr_,
                                                               costmap_controller_ptr_))),
     costmap_planner_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),

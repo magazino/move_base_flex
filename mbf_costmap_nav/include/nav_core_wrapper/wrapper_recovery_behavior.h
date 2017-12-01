@@ -46,16 +46,16 @@
 
 namespace mbf_costmap_core {
   /**
-   * @class MoveBaseRecovery
+   * @class CostmapRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperRecoveryBehavior : public MoveBaseRecovery{
+  class WrapperRecoveryBehavior : public CostmapRecovery{
     public:
 
       /**
-       * @brief Initialization function for the MoveBaseRecovery
+       * @brief Initialization function for the CostmapRecovery
        * @param tf A pointer to a transform listener
        * @param global_costmap A pointer to the global_costmap used by the navigation stack
        * @param local_costmap A pointer to the local_costmap used by the navigation stack
@@ -65,7 +65,7 @@ namespace mbf_costmap_core {
                               costmap_2d::Costmap2DROS* local_costmap);
 
       /**
-       * @brief Runs the MoveBaseRecovery
+       * @brief Runs the CostmapRecovery
        */
       virtual uint32_t runBehavior();
 

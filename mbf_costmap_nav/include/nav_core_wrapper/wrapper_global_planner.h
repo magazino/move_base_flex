@@ -46,12 +46,12 @@
 
 namespace mbf_costmap_core {
   /**
-   * @class MoveBasePlanner
+   * @class CostmapPlanner
    * @brief Provides an interface for global planners used in navigation.
    * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperGlobalPlanner : public MoveBasePlanner{
+  class WrapperGlobalPlanner : public CostmapPlanner{
     public:
 
       /**
@@ -78,7 +78,7 @@ namespace mbf_costmap_core {
       virtual bool cancel();
 
       /**
-       * @brief Initialization function for the MoveBasePlanner
+       * @brief Initialization function for the CostmapPlanner
        * @param name The name of this planner
        * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */

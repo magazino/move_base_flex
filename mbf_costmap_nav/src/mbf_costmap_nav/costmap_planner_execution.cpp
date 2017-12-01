@@ -45,19 +45,19 @@
 namespace move_base_flex
 {
 
-MoveBasePlannerExecution::MoveBasePlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
+CostmapPlannerExecution::CostmapPlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
     AbstractPlannerExecution(condition), costmap_ptr_(costmap_ptr)
 {
 }
 
-MoveBasePlannerExecution::~MoveBasePlannerExecution()
+CostmapPlannerExecution::~CostmapPlannerExecution()
 {
 }
 
-mbf_abstract_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
+mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
-  static pluginlib::ClassLoader<mbf_costmap_core::MoveBasePlanner>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBasePlanner");
+  static pluginlib::ClassLoader<mbf_costmap_core::CostmapPlanner>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapPlanner");
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   // try to load and init global planner
   ROS_DEBUG("Load global planner plugin.");
@@ -92,10 +92,10 @@ mbf_abstract_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlu
   return planner_ptr;
 }
 
-void MoveBasePlannerExecution::initPlugin()
+void CostmapPlannerExecution::initPlugin()
 {
-  mbf_costmap_core::MoveBasePlanner::Ptr planner_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::MoveBasePlanner>(planner_);
+  mbf_costmap_core::CostmapPlanner::Ptr planner_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_);
   ROS_INFO_STREAM("Initialize planner \"" << planner_name_ << "\".");
 
   if (!costmap_ptr_)
@@ -113,7 +113,7 @@ void MoveBasePlannerExecution::initPlugin()
   ROS_INFO("Global planner plugin initialized.");
 }
 
-void MoveBasePlannerExecution::run() // TODO put lock around makePlan
+void CostmapPlannerExecution::run() // TODO put lock around makePlan
 {
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)
