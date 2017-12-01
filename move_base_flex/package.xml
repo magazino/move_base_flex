@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>move_base_flex</name>
+  <version>0.1.0</version>
+  <description>The move_base_flex package</description>
+
+  <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>
+  <license>BSD</license>
+  <url type="website">http://wiki.ros.org/move_base_flex</url>
+  <author email="spuetz@uos.de">Sebastian Pütz</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>mbf_abstract_core</build_depend>
+  <build_depend>mbf_abstract_nav</build_depend>
+  <build_depend>mbf_costmap_core</build_depend>
+  <build_depend>mbf_costmap_nav</build_depend>
+  <build_depend>mbf_msgs</build_depend>
+  <build_depend>mbf_simple_nav</build_depend>
+  <build_export_depend>mbf_abstract_core</build_export_depend>
+  <build_export_depend>mbf_abstract_nav</build_export_depend>
+  <build_export_depend>mbf_costmap_core</build_export_depend>
+  <build_export_depend>mbf_costmap_nav</build_export_depend>
+  <build_export_depend>mbf_msgs</build_export_depend>
+  <build_export_depend>mbf_simple_nav</build_export_depend>
+  <exec_depend>mbf_abstract_core</exec_depend>
+  <exec_depend>mbf_abstract_nav</exec_depend>
+  <exec_depend>mbf_costmap_core</exec_depend>
+  <exec_depend>mbf_costmap_nav</exec_depend>
+  <exec_depend>mbf_msgs</exec_depend>
+  <exec_depend>mbf_simple_nav</exec_depend>
+</package>
