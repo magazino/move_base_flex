@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_NAVIGATION_SERVER_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_NAVIGATION_SERVER_H_
+#ifndef MBF_COSTMAP_NAV__COSTMAP_NAVIGATION_SERVER_H_
+#define MBF_COSTMAP_NAV__COSTMAP_NAVIGATION_SERVER_H_
 
 #include <std_srvs/Empty.h>
 
@@ -52,7 +52,7 @@
 #include "costmap_controller_execution.h"
 #include "costmap_recovery_execution.h"
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 /**
  * @defgroup move_base_server Move Base Server
@@ -63,14 +63,14 @@ namespace move_base_flex
 typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmap2d;
 
 /**
- * @brief The MoveBaseNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
+ * @brief The CostmapNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
  *        execution classes which use the nav_core/BaseLocalPlanner, nav_core/BaseCostmapPlanner and the
  *        nav_core/RecoveryBehavior base classes as plugin interfaces. These plugin interface are the same for the
  *        old move_base
  *
  * @ingroup navigation_server move_base_server
  */
-class MoveBaseNavigationServer : public AbstractNavigationServer
+class CostmapNavigationServer : public mbf_abstract_nav::AbstractNavigationServer
 {
 public:
 
@@ -80,12 +80,12 @@ public:
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
    */
-  MoveBaseNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+  CostmapNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
   /**
    * @brief Destructor
    */
-  virtual ~MoveBaseNavigationServer();
+  virtual ~CostmapNavigationServer();
 
 protected:
 
@@ -174,6 +174,6 @@ protected:
 
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */
 
-#endif /* MOVE_BASE_FLEX__MOVE_BASE_NAVIGATION_SERVER_H_ */
+#endif /* MBF_COSTMAP_NAV__COSTMAP_NAVIGATION_SERVER_H_ */

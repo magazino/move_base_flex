@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_
+#ifndef MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
+#define MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_costmap_core/costmap_planner.h>
 #include <mbf_abstract_nav/abstract_planner_execution.h>
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapPlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup planner_execution move_base_server
  */
-class CostmapPlannerExecution : public AbstractPlannerExecution
+class CostmapPlannerExecution : public mbf_abstract_nav::AbstractPlannerExecution
 {
 public:
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
@@ -102,6 +102,6 @@ private:
   std::string planner_name_;
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */
 
-#endif /* MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_ */
+#endif /* MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_ */

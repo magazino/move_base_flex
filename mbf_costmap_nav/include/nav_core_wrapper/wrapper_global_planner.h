@@ -38,20 +38,20 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_
-#define MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_
+#ifndef MBF_COSTMAP_NAV__WRAPPER_GLOBAL_PLANNER_H_
+#define MBF_COSTMAP_NAV__WRAPPER_GLOBAL_PLANNER_H_
 
 #include <nav_core/base_global_planner.h>
 #include "mbf_costmap_core/costmap_planner.h"
 
-namespace mbf_costmap_core {
+namespace mbf_nav_core_wrapper {
   /**
    * @class CostmapPlanner
    * @brief Provides an interface for global planners used in navigation.
    * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperGlobalPlanner : public CostmapPlanner{
+  class WrapperGlobalPlanner : public mbf_costmap_core::CostmapPlanner{
     public:
 
       /**
@@ -98,6 +98,6 @@ namespace mbf_costmap_core {
     private:
       boost::shared_ptr< nav_core::BaseGlobalPlanner > nav_core_plugin_;
   };
-}  /* namespace mbf_abstract_core */
+}  /* namespace mbf_nav_core_wrapper */
 
-#endif  /* MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_ */
+#endif  /* MBF_COSTMAP_NAV__WRAPPER_GLOBAL_PLANNER_H_ */

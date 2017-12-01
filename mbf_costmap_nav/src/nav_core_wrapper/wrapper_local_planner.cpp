@@ -40,7 +40,7 @@
 
 #include "nav_core_wrapper/wrapper_local_planner.h"
 
-namespace mbf_costmap_core
+namespace mbf_nav_core_wrapper
 {
 
 uint32_t WrapperLocalPlanner::computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message)

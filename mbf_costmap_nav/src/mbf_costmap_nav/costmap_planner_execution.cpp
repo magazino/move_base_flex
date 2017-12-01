@@ -42,7 +42,7 @@
 
 #include "mbf_costmap_nav/costmap_planner_execution.h"
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 
 CostmapPlannerExecution::CostmapPlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
@@ -78,7 +78,7 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlug
       static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner>
           nav_core_class_loader("nav_core", "nav_core::BaseGlobalPlanner");
       boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_class_loader.createInstance(planner_type);
-      planner_ptr = boost::make_shared<mbf_costmap_core::WrapperGlobalPlanner>(nav_core_planner_ptr);
+      planner_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperGlobalPlanner>(nav_core_planner_ptr);
       planner_name_ = nav_core_class_loader.getName(planner_type);
       ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name_ << " loaded");
     }
@@ -125,4 +125,4 @@ void CostmapPlannerExecution::run() // TODO put lock around makePlan
   AbstractPlannerExecution::run();
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */

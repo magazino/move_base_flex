@@ -47,11 +47,11 @@
 
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 
 
-MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
   AbstractNavigationServer(tf_listener_ptr,
                            CostmapPlannerExecution::Ptr(
                                 new CostmapPlannerExecution(condition_, costmap_planner_ptr_)),
@@ -95,24 +95,24 @@ MoveBaseNavigationServer::MoveBaseNavigationServer(const boost::shared_ptr<tf::T
 
   // advertise services and current goal topic
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
-                                                     &MoveBaseNavigationServer::callServiceCheckPoseCost, this);
+                                                     &CostmapNavigationServer::callServiceCheckPoseCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
-                                                    &MoveBaseNavigationServer::callServiceClearCostmaps, this);
+                                                    &CostmapNavigationServer::callServiceClearCostmaps, this);
 
   current_goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
   // dynamic reconfigure server for mbf_costmap_nav specific config
   dsrv_costmap2d_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
-  dsrv_costmap2d_->setCallback(boost::bind(&MoveBaseNavigationServer::reconfigure, this, _1, _2));
+  dsrv_costmap2d_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 }
 
-MoveBaseNavigationServer::~MoveBaseNavigationServer()
+CostmapNavigationServer::~CostmapNavigationServer()
 {
   costmap_controller_ptr_->stop();
   costmap_planner_ptr_->stop();
 }
 
-void MoveBaseNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
+void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
   // handle costmap activation reconfiguration here.
   if (shutdown_costmaps_ && !config.shutdown_costmaps)
@@ -127,7 +127,7 @@ void MoveBaseNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &
   }
 }
 
-bool MoveBaseNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
+bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
                                                         mbf_msgs::CheckPose::Response &response)
 {
   // selecting the requested costmap
@@ -168,7 +168,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Req
   geometry_msgs::PoseStamped pose;
   if (request.current_pose)
   {
-    if (! move_base_flex::getRobotPose(*tf_listener_ptr_, robot_frame_, costmap_frame, ros::Duration(0.5), pose))
+    if (! mbf_abstract_nav::getRobotPose(*tf_listener_ptr_, robot_frame_, costmap_frame, ros::Duration(0.5), pose))
     {
       ROS_ERROR_STREAM("Get robot pose on " << costmap_name << " frame '" << costmap_frame << "' failed");
       return false;
@@ -176,7 +176,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Req
   }
   else
   {
-    if (! transformPose(*tf_listener_ptr_, costmap_frame, request.pose.header.stamp,
+    if (! mbf_abstract_nav::transformPose(*tf_listener_ptr_, costmap_frame, request.pose.header.stamp,
                         ros::Duration(0.5), request.pose, global_frame_, pose))
     {
       ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
@@ -259,7 +259,7 @@ bool MoveBaseNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Req
   return true;
 }
 
-bool MoveBaseNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
+bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
                                                         std_srvs::Empty::Response &response)
 {
   costmap_controller_ptr_->resetLayers();
@@ -267,7 +267,7 @@ bool MoveBaseNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request
   return true;
 }
 
-void MoveBaseNavigationServer::checkActivateCostmaps()
+void CostmapNavigationServer::checkActivateCostmaps()
 {
   if (shutdown_costmaps_ && !local_costmap_active_)
   {
@@ -284,7 +284,7 @@ void MoveBaseNavigationServer::checkActivateCostmaps()
   }
 }
 
-void MoveBaseNavigationServer::checkDeactivateCostmaps()
+void CostmapNavigationServer::checkDeactivateCostmaps()
 {
   if (!ros::ok() ||
       (shutdown_costmaps_ && local_costmap_active_ && !(active_planning_ || active_moving_ || active_recovery_)))
@@ -303,25 +303,25 @@ void MoveBaseNavigationServer::checkDeactivateCostmaps()
   }
 }
 
-void MoveBaseNavigationServer::callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal)
+void CostmapNavigationServer::callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal)
 {
   checkActivateCostmaps();
   AbstractNavigationServer::callActionGetPath(goal);
   checkDeactivateCostmaps();
 }
 
-void MoveBaseNavigationServer::callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal)
+void CostmapNavigationServer::callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal)
 {
   checkActivateCostmaps();
   AbstractNavigationServer::callActionExePath(goal);
   checkDeactivateCostmaps();
 }
 
-void MoveBaseNavigationServer::callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal)
+void CostmapNavigationServer::callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal)
 {
   checkActivateCostmaps();
   AbstractNavigationServer::callActionRecovery(goal);
   checkDeactivateCostmaps();
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */

@@ -40,7 +40,7 @@
 #include <nav_core_wrapper/wrapper_local_planner.h>
 #include "mbf_costmap_nav/costmap_controller_execution.h"
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 
 CostmapControllerExecution::CostmapControllerExecution(
@@ -79,7 +79,7 @@ mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadContr
           nav_core_class_loader("nav_core", "nav_core::BaseLocalPlanner");
       boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr
           = nav_core_class_loader.createInstance(controller_type);
-      controller_ptr = boost::make_shared<mbf_costmap_core::WrapperLocalPlanner>(nav_core_controller_ptr);
+      controller_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperLocalPlanner>(nav_core_controller_ptr);
       controller_name_ = nav_core_class_loader.getName(controller_type);
       ROS_INFO_STREAM("Nav_core-based local planner plugin " << controller_name_ << " loaded");
     }
@@ -130,4 +130,4 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(geometry_msgs::TwistStam
   return controller_->computeVelocityCommands(vel_cmd, message);
 }
 
-} /* namespace move_base_nav_moving */
+} /* namespace mbf_costmap_nav */

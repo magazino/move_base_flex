@@ -42,7 +42,7 @@
 #include "nav_core_wrapper/wrapper_recovery_behavior.h"
 #include "mbf_costmap_nav/costmap_recovery_execution.h"
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 
 CostmapRecoveryExecution::CostmapRecoveryExecution(boost::condition_variable &condition,
@@ -81,7 +81,7 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapRecoveryExecution::loadRecoveryP
       boost::shared_ptr<nav_core::RecoveryBehavior> nav_core_recovery_ptr =
           nav_core_class_loader.createInstance(recovery_type);
 
-      recovery_ptr = boost::make_shared<mbf_costmap_core::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
+      recovery_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
 
     }
     catch (const pluginlib::PluginlibException &ex)
@@ -107,4 +107,4 @@ void CostmapRecoveryExecution::initPlugins()
   }
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */

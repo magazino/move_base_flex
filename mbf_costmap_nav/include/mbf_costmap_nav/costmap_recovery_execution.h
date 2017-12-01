@@ -38,15 +38,15 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
+#ifndef MBF_COSTMAP_NAV__COSTMAP_RECOVERY_EXECUTION_H_
+#define MBF_COSTMAP_NAV__COSTMAP_RECOVERY_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_costmap_core/costmap_recovery.h>
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
 
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution move_base_server
  */
-class CostmapRecoveryExecution : public AbstractRecoveryExecution
+class CostmapRecoveryExecution : public mbf_abstract_nav::AbstractRecoveryExecution
 {
 
 public:
@@ -101,6 +101,6 @@ private:
   virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */
 
-#endif /* MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_ */
+#endif /* MBF_COSTMAP_NAV__COSTMAP_RECOVERY_EXECUTION_H_ */

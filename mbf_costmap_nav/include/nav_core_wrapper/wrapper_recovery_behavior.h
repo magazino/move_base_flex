@@ -38,20 +38,20 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_
-#define MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_
+#ifndef MBF_COSTMAP_NAV__WRAPPER_RECOVERY_BEHAVIOR_H_
+#define MBF_COSTMAP_NAV__WRAPPER_RECOVERY_BEHAVIOR_H_
 
 #include <nav_core/recovery_behavior.h>
 #include "mbf_costmap_core/costmap_recovery.h"
 
-namespace mbf_costmap_core {
+namespace mbf_nav_core_wrapper {
   /**
    * @class CostmapRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
    * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperRecoveryBehavior : public CostmapRecovery{
+  class WrapperRecoveryBehavior : public mbf_costmap_core::CostmapRecovery{
     public:
 
       /**
@@ -90,6 +90,6 @@ namespace mbf_costmap_core {
     private:
       boost::shared_ptr< nav_core::RecoveryBehavior > nav_core_plugin_;
   };
-};  /* namespace mbf_abstract_core */
+};  /* namespace mbf_nav_core_wrapper */
 
-#endif  /* MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_ */
+#endif  /* MBF_COSTMAP_NAV__WRAPPER_RECOVERY_BEHAVIOR_H_ */

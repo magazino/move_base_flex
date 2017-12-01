@@ -38,20 +38,20 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_
-#define MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_
+#ifndef MBF_COSTMAP_NAV__WRAPPER_LOCAL_PLANNER_H_
+#define MBF_COSTMAP_NAV__WRAPPER_LOCAL_PLANNER_H_
 
 #include <nav_core/base_local_planner.h>
 #include "mbf_costmap_core/costmap_controller.h"
 
-namespace mbf_costmap_core {
+namespace mbf_nav_core_wrapper {
   /**
    * @class LocalPlanner
    * @brief Provides an interface for local planners used in navigation.
    * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
    * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class WrapperLocalPlanner : public CostmapController{
+  class WrapperLocalPlanner : public mbf_costmap_core::CostmapController{
     public:
 
       /**
@@ -116,6 +116,6 @@ namespace mbf_costmap_core {
     private:
       boost::shared_ptr< nav_core::BaseLocalPlanner > nav_core_plugin_;
   };
-}  /* namespace mbf_abstract_core */
+}  /* namespace mbf_nav_core_wrapper */
 
-#endif  /* MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_ */
+#endif  /* MBF_COSTMAP_NAV__WRAPPER_LOCAL_PLANNER_H_ */

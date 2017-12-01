@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_EXECUTION_H_
-#define MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_EXECUTION_H_
+#ifndef MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_
+#define MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_costmap_core/costmap_controller.h>
 #include <mbf_abstract_nav/abstract_controller_execution.h>
 
-namespace move_base_flex
+namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapControllerExecution binds a local costmap to the AbstractControllerExecution and uses the
@@ -54,7 +54,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution move_base_server
  */
-class CostmapControllerExecution : public AbstractControllerExecution
+class CostmapControllerExecution : public mbf_abstract_nav::AbstractControllerExecution
 {
 public:
 
@@ -110,6 +110,6 @@ private:
   std::string controller_name_;
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_costmap_nav */
 
-#endif /* MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_EXECUTION_H_ */
+#endif /* MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_ */

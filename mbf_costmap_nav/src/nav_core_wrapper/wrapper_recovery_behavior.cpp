@@ -40,7 +40,7 @@
 
 #include "nav_core_wrapper/wrapper_recovery_behavior.h"
 
-namespace mbf_costmap_core
+namespace mbf_nav_core_wrapper
 {
 void WrapperRecoveryBehavior::initialize(std::string name, tf::TransformListener *tf,
                                          costmap_2d::Costmap2DROS *global_costmap,
