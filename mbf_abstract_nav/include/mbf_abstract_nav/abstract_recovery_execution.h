@@ -44,7 +44,7 @@
 #include <pluginlib/class_loader.h>
 #include <boost/chrono/thread_clock.hpp>
 #include <tf/transform_listener.h>
-#include <mbf_core/abstract_recovery.h>
+#include <mbf_abstract_core/abstract_recovery.h>
 
 #include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -165,13 +165,13 @@ namespace move_base_flex
     virtual void run();
 
     //! map to store the recovery behaviors. Each behavior can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<mbf_core::AbstractRecovery> > recovery_behaviors_;
+    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractRecovery> > recovery_behaviors_;
 
     //! map to store the type of the behavior as string
     std::map<std::string, std::string> recovery_behaviors_type_;
 
     //! the current loaded recovery behavior
-    mbf_core::AbstractRecovery::Ptr current_behavior_;
+    mbf_abstract_core::AbstractRecovery::Ptr current_behavior_;
 
     //! shared pointer to common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
@@ -195,7 +195,7 @@ namespace move_base_flex
      * @param recovery_name The name of the Recovery plugin
      * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
      */
-    virtual mbf_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
+    virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
 
     /**
      * loads the plugins defined in the parameter server

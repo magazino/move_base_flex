@@ -112,11 +112,11 @@ namespace move_base_flex
           ROS_ERROR_STREAM("The recovery behavior \"" << name << "\" has already been loaded! Names must be unique!");
           return false;
         }
-        mbf_core::AbstractRecovery::Ptr recovery_ptr = loadRecoveryPlugin(type);
+        mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr = loadRecoveryPlugin(type);
         if(recovery_ptr)
         {
           recovery_behaviors_.insert(
-              std::pair<std::string, mbf_core::AbstractRecovery::Ptr>(name, recovery_ptr));
+              std::pair<std::string, mbf_abstract_core::AbstractRecovery::Ptr>(name, recovery_ptr));
 
           recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
@@ -216,7 +216,7 @@ namespace move_base_flex
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
     canceled_ = false; // (re)set the canceled state
 
-    typename std::map<std::string, boost::shared_ptr<mbf_core::AbstractRecovery> >::iterator find_iter;
+    typename std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractRecovery> >::iterator find_iter;
     find_iter = recovery_behaviors_.find(requested_behavior_name_);
 
     if (find_iter == recovery_behaviors_.end())

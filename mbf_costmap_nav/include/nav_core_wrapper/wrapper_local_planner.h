@@ -42,9 +42,9 @@
 #define MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_
 
 #include <nav_core/base_local_planner.h>
-#include "mbf_core/move_base_controller.h"
+#include "mbf_costmap_core/costmap_controller.h"
 
-namespace mbf_core {
+namespace mbf_costmap_core {
   /**
    * @class LocalPlanner
    * @brief Provides an interface for local planners used in navigation.
@@ -116,6 +116,6 @@ namespace mbf_core {
     private:
       boost::shared_ptr< nav_core::BaseLocalPlanner > nav_core_plugin_;
   };
-}  /* namespace mbf_core */
+}  /* namespace mbf_abstract_core */
 
 #endif  /* MOVE_BASE_FLEX__WRAPPER_LOCAL_PLANNER_H_ */

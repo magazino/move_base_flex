@@ -46,7 +46,7 @@
 #include <boost/chrono/duration.hpp>
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <mbf_core/abstract_planner.h>
+#include <mbf_abstract_core/abstract_planner.h>
 
 #include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -202,7 +202,7 @@ namespace move_base_flex
   protected:
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<mbf_core::AbstractPlanner> planner_;
+    boost::shared_ptr<mbf_abstract_core::AbstractPlanner> planner_;
 
     //! the name of the loaded planner plugin
     std::string plugin_name_;
@@ -240,7 +240,7 @@ namespace move_base_flex
      * @param planner_type The type of the planner plugin to load.
      * @return true, if the local planner plugin was successfully loaded.
      */
-    virtual mbf_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
+    virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
 
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,

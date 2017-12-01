@@ -40,7 +40,7 @@
 
 #include "nav_core_wrapper/wrapper_global_planner.h"
 
-namespace mbf_core
+namespace mbf_costmap_core
 {
 
 uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
@@ -72,4 +72,4 @@ WrapperGlobalPlanner::WrapperGlobalPlanner(boost::shared_ptr<nav_core::BaseGloba
 WrapperGlobalPlanner::~WrapperGlobalPlanner()
 {}
 
-};  /* namespace mbf_core */
+};  /* namespace mbf_abstract_core */

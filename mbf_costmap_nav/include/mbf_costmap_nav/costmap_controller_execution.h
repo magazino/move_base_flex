@@ -42,8 +42,8 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_CONTROLLER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <mbf_core/move_base_controller.h>
-#include "mbf_abstract_nav/abstract_controller_execution.h"
+#include <mbf_costmap_core/costmap_controller.h>
+#include <mbf_abstract_nav/abstract_controller_execution.h>
 
 namespace move_base_flex
 {
@@ -92,7 +92,7 @@ private:
    * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
    *         an empty pointer otherwise.
    */
-  virtual mbf_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
+  virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
 
   /**
    * @brief Initializes the local planner plugin with its name, a pointer to the TransformListener

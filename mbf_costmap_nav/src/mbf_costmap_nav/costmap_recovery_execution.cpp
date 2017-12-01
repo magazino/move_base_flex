@@ -57,21 +57,21 @@ MoveBaseRecoveryExecution::~MoveBaseRecoveryExecution()
 {
 }
 
-mbf_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
+mbf_abstract_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
     const std::string& recovery_type)
 {
-  static pluginlib::ClassLoader<mbf_core::MoveBaseRecovery>
-      class_loader("mbf_core", "mbf_core::MoveBaseRecovery");
-  mbf_core::AbstractRecovery::Ptr recovery_ptr;
+  static pluginlib::ClassLoader<mbf_costmap_core::MoveBaseRecovery>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseRecovery");
+  mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
   try
   {
-    recovery_ptr = boost::static_pointer_cast<mbf_core::AbstractRecovery>(
+    recovery_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractRecovery>(
         class_loader.createInstance(recovery_type));
   }
   catch (pluginlib::PluginlibException &ex)
   {
-    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_core-based plugin;"
+    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_abstract_core-based plugin;"
                                            << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
     try
     {
@@ -81,7 +81,7 @@ mbf_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
       boost::shared_ptr<nav_core::RecoveryBehavior> nav_core_recovery_ptr =
           nav_core_class_loader.createInstance(recovery_type);
 
-      recovery_ptr = boost::make_shared<mbf_core::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
+      recovery_ptr = boost::make_shared<mbf_costmap_core::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
 
     }
     catch (const pluginlib::PluginlibException &ex)
@@ -96,11 +96,11 @@ mbf_core::AbstractRecovery::Ptr MoveBaseRecoveryExecution::loadRecoveryPlugin(
 
 void MoveBaseRecoveryExecution::initPlugins()
 {
-  for (std::map<std::string, mbf_core::AbstractRecovery::Ptr>::iterator iter =
+  for (std::map<std::string, mbf_abstract_core::AbstractRecovery::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
   {
-    mbf_core::MoveBaseRecovery::Ptr behavior =
-        boost::static_pointer_cast<mbf_core::MoveBaseRecovery>(iter->second);
+    mbf_costmap_core::MoveBaseRecovery::Ptr behavior =
+        boost::static_pointer_cast<mbf_costmap_core::MoveBaseRecovery>(iter->second);
     std::string name = iter->first;
 
     behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());

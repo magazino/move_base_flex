@@ -42,8 +42,8 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_RECOVERY_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <mbf_core/move_base_recovery.h>
-#include "mbf_abstract_nav/abstract_recovery_execution.h"
+#include <mbf_costmap_core/costmap_recovery.h>
+#include <mbf_abstract_nav/abstract_recovery_execution.h>
 
 
 namespace move_base_flex
@@ -98,7 +98,7 @@ private:
    * @param recovery_name The name of the Recovery plugin
    * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
    */
-  virtual mbf_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
+  virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 };
 
 } /* namespace move_base_flex */

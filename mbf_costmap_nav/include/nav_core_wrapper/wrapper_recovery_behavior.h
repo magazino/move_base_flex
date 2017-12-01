@@ -42,9 +42,9 @@
 #define MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_
 
 #include <nav_core/recovery_behavior.h>
-#include "mbf_core/move_base_recovery.h"
+#include "mbf_costmap_core/costmap_recovery.h"
 
-namespace mbf_core {
+namespace mbf_costmap_core {
   /**
    * @class MoveBaseRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
@@ -90,6 +90,6 @@ namespace mbf_core {
     private:
       boost::shared_ptr< nav_core::RecoveryBehavior > nav_core_plugin_;
   };
-};  /* namespace mbf_core */
+};  /* namespace mbf_abstract_core */
 
 #endif  /* MOVE_BASE_FLEX__WRAPPER_RECOVERY_BEHAVIOR_H_ */

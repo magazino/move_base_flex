@@ -40,7 +40,7 @@
 
 #include "nav_core_wrapper/wrapper_local_planner.h"
 
-namespace mbf_core
+namespace mbf_costmap_core
 {
 
 uint32_t WrapperLocalPlanner::computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message)
@@ -84,4 +84,4 @@ WrapperLocalPlanner::WrapperLocalPlanner(boost::shared_ptr<nav_core::BaseLocalPl
 WrapperLocalPlanner::~WrapperLocalPlanner()
 {}
 
-};  /* namespace mbf_core */
+};  /* namespace mbf_abstract_core */

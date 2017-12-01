@@ -42,7 +42,7 @@
 #define MBF__SIMPLE_RECOVERY_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
-#include <mbf_core/abstract_recovery.h>
+#include <mbf_abstract_core/abstract_recovery.h>
 
 namespace move_base_flex
 {
@@ -79,7 +79,7 @@ private:
    * @param recovery_name The name of the Recovery plugin
    * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
    */
-  virtual mbf_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
+  virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.

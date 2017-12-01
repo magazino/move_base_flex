@@ -9,7 +9,7 @@ find_package(catkin REQUIRED
   geometry_msgs
   mbf_abstract_nav
   mbf_msgs
-  mbf_core
+  mbf_abstract_core
   nav_msgs
   pluginlib
   roscpp
@@ -33,7 +33,7 @@ catkin_package(
   geometry_msgs
   mbf_abstract_nav
   mbf_msgs
-  mbf_core
+  mbf_abstract_core
   nav_msgs
   pluginlib
   roscpp

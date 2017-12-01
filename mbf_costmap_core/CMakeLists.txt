@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mbf_core)
+project(mbf_costmap_core)
 
 find_package(catkin REQUIRED
         COMPONENTS
             std_msgs
             geometry_msgs
+            mbf_abstract_core
             tf
             costmap_2d
         )
@@ -15,6 +16,7 @@ catkin_package(
     CATKIN_DEPENDS
             std_msgs
             geometry_msgs
+            mbf_abstract_core
             tf
             costmap_2d
 )

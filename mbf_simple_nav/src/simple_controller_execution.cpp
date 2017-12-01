@@ -49,12 +49,12 @@ SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &
 {
 }
 
-mbf_core::AbstractController::Ptr SimpleControllerExecution::loadControllerPlugin(
+mbf_abstract_core::AbstractController::Ptr SimpleControllerExecution::loadControllerPlugin(
     const std::string& controller_type)
 {
-  static pluginlib::ClassLoader<mbf_core::AbstractController>
-      class_loader("mbf_core", "mbf_core::MoveBaseController");
-  mbf_core::AbstractController::Ptr controller_ptr;
+  static pluginlib::ClassLoader<mbf_abstract_core::AbstractController>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseController");
+  mbf_abstract_core::AbstractController::Ptr controller_ptr;
   ROS_DEBUG("Load controller plugin.");
   try
   {

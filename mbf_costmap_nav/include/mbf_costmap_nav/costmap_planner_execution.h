@@ -42,8 +42,8 @@
 #define MOVE_BASE_FLEX__MOVE_BASE_PLANNER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
-#include <mbf_core/move_base_planner.h>
-#include "mbf_abstract_nav/abstract_planner_execution.h"
+#include <mbf_costmap_core/costmap_planner.h>
+#include <mbf_abstract_nav/abstract_planner_execution.h>
 
 namespace move_base_flex
 {
@@ -85,7 +85,7 @@ private:
    * @param planner_type The type of the planner plugin to load.
    * @return true, if the local planner plugin was successfully loaded.
    */
-  virtual mbf_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
+  virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
   /**
    * @brief Initializes the global planner plugin with its name and pointer to the costmap

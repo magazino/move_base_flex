@@ -47,7 +47,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <mbf_core/abstract_controller.h>
+#include <mbf_abstract_core/abstract_controller.h>
 
 #include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -204,7 +204,7 @@ namespace move_base_flex
     std::string plugin_name_;
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<mbf_core::AbstractController> controller_;
+    boost::shared_ptr<mbf_abstract_core::AbstractController> controller_;
 
     //! shared pointer to the shared tf listener
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
@@ -236,7 +236,7 @@ namespace move_base_flex
      * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
      *         an empty pointer otherwise.
      */
-    virtual mbf_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
+    virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
 
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,

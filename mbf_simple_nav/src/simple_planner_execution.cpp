@@ -52,11 +52,11 @@ SimplePlannerExecution::~SimplePlannerExecution()
 {
 }
 
-mbf_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
+mbf_abstract_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
-  static pluginlib::ClassLoader<mbf_core::AbstractPlanner>
-      class_loader("mbf_core", "mbf_core::AbstractPlanner");
-  mbf_core::AbstractPlanner::Ptr planner_ptr;
+  static pluginlib::ClassLoader<mbf_abstract_core::AbstractPlanner>
+      class_loader("mbf_abstract_core", "mbf_abstract_core::AbstractPlanner");
+  mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   ROS_INFO("Load global planner plugin.");
   try
   {

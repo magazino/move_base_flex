@@ -54,23 +54,23 @@ MoveBasePlannerExecution::~MoveBasePlannerExecution()
 {
 }
 
-mbf_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
+mbf_abstract_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
-  static pluginlib::ClassLoader<mbf_core::MoveBasePlanner>
-      class_loader("mbf_core", "mbf_core::MoveBasePlanner");
-  mbf_core::AbstractPlanner::Ptr planner_ptr;
+  static pluginlib::ClassLoader<mbf_costmap_core::MoveBasePlanner>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBasePlanner");
+  mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   // try to load and init global planner
   ROS_DEBUG("Load global planner plugin.");
   try
   {
-    planner_ptr = boost::static_pointer_cast<mbf_core::AbstractPlanner>(
+    planner_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractPlanner>(
         class_loader.createInstance(planner_type));
     planner_name_ = class_loader.getName(planner_type);
     ROS_INFO_STREAM("MBF_core-based global planner plugin " << planner_name_ << " loaded");
   }
   catch (const pluginlib::PluginlibException &ex)
   {
-    ROS_INFO_STREAM("Failed to load the " << planner_type << " planner as a mbf_core-based plugin."
+    ROS_INFO_STREAM("Failed to load the " << planner_type << " planner as a mbf_abstract_core-based plugin."
                      << " Try to load as a nav_core-based plugin. Exception: " << ex.what());
     try
     {
@@ -78,7 +78,7 @@ mbf_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const
       static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner>
           nav_core_class_loader("nav_core", "nav_core::BaseGlobalPlanner");
       boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_class_loader.createInstance(planner_type);
-      planner_ptr = boost::make_shared<mbf_core::WrapperGlobalPlanner>(nav_core_planner_ptr);
+      planner_ptr = boost::make_shared<mbf_costmap_core::WrapperGlobalPlanner>(nav_core_planner_ptr);
       planner_name_ = nav_core_class_loader.getName(planner_type);
       ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name_ << " loaded");
     }
@@ -94,8 +94,8 @@ mbf_core::AbstractPlanner::Ptr MoveBasePlannerExecution::loadPlannerPlugin(const
 
 void MoveBasePlannerExecution::initPlugin()
 {
-  mbf_core::MoveBasePlanner::Ptr planner_ptr
-      = boost::static_pointer_cast<mbf_core::MoveBasePlanner>(planner_);
+  mbf_costmap_core::MoveBasePlanner::Ptr planner_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::MoveBasePlanner>(planner_);
   ROS_INFO_STREAM("Initialize planner \"" << planner_name_ << "\".");
 
   if (!costmap_ptr_)

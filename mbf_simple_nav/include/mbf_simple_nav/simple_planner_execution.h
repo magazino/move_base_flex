@@ -41,7 +41,7 @@
 #ifndef MBF__SIMPLE_PLANNER_EXECUTION_H_
 #define MBF__SIMPLE_PLANNER_EXECUTION_H_
 
-#include <mbf_core/abstract_planner.h>
+#include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_abstract_nav/abstract_planner_execution.h>
 
 namespace move_base_flex
@@ -74,7 +74,7 @@ private:
    * @param planner_type The type of the planner plugin to load.
    * @return true, if the local planner plugin was successfully loaded.
    */
-  virtual mbf_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
+  virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
   /**
    * @brief Empty init method. Nothing to initialize.

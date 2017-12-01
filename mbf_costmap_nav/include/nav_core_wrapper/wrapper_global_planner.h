@@ -42,9 +42,9 @@
 #define MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_
 
 #include <nav_core/base_global_planner.h>
-#include "mbf_core/move_base_planner.h"
+#include "mbf_costmap_core/costmap_planner.h"
 
-namespace mbf_core {
+namespace mbf_costmap_core {
   /**
    * @class MoveBasePlanner
    * @brief Provides an interface for global planners used in navigation.
@@ -98,6 +98,6 @@ namespace mbf_core {
     private:
       boost::shared_ptr< nav_core::BaseGlobalPlanner > nav_core_plugin_;
   };
-}  /* namespace mbf_core */
+}  /* namespace mbf_abstract_core */
 
 #endif  /* MOVE_BASE_FLEX__WRAPPER_GLOBAL_PLANNER_H_ */

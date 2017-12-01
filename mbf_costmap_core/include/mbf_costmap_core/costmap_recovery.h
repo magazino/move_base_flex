@@ -30,45 +30,61 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_recovery_behavior.h
+ *  abstract_global_planner.h
  *
  *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
  *
  */
 
-#ifndef MBF_CORE__ABSTRACT_RECOVERY_H_
-#define MBF_CORE__ABSTRACT_RECOVERY_H_
+#ifndef MBF_CORE__MOVE_BASE_RECOVERY_H_
+#define MBF_CORE__MOVE_BASE_RECOVERY_H_
+#include <costmap_2d/costmap_2d_ros.h>
+#include <tf/transform_listener.h>
+#include "mbf_abstract_core/abstract_recovery.h"
 
-namespace mbf_core {
+namespace mbf_costmap_core {
   /**
-   * @class AbstractRecovery
+   * @class MoveBaseRecovery
    * @brief Provides an interface for recovery behaviors used in navigation.
-   * All recovery behaviors written as plugins for the navigation stack must adhere to this interface.
+   * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
+   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
    */
-  class AbstractRecovery{
+  class MoveBaseRecovery : public mbf_abstract_core::AbstractRecovery{
     public:
 
-      typedef boost::shared_ptr< ::mbf_core::AbstractRecovery > Ptr;
+      typedef boost::shared_ptr< ::mbf_costmap_core::MoveBaseRecovery> Ptr;
 
       /**
-       * @brief Runs the AbstractRecovery
+       * @brief Initialization function for the MoveBaseRecovery
+       * @param tf A pointer to a transform listener
+       * @param global_costmap A pointer to the global_costmap used by the navigation stack
+       * @param local_costmap A pointer to the local_costmap used by the navigation stack
+       */
+      virtual void initialize(std::string name, tf::TransformListener* tf,
+                              costmap_2d::Costmap2DROS* global_costmap,
+                              costmap_2d::Costmap2DROS* local_costmap) = 0;
+
+      /**
+       * @brief Runs the MoveBaseRecovery
        */
       virtual uint32_t runBehavior() = 0;
 
       /**
-       * @brief Virtual destructor for the interface
-       */
-      virtual ~AbstractRecovery(){}
-
-      /**
-       * @brief Requests the recovery behavior to cancel, e.g. if it takes to much time.
+       * @brief Requests the planner to cancel, e.g. if it takes to much time
+       * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
       virtual bool cancel() = 0;
 
-    protected:
-      AbstractRecovery(){}
-  };
-};  /* namespace mbf_core */
+      /**
+       * @brief Virtual destructor for the interface
+       */
+      virtual ~MoveBaseRecovery(){}
 
-#endif  /* MBF_CORE__ABSTRACT_RECOVERY_H_ */
+    protected:
+      MoveBaseRecovery(){}
+
+  };
+};  /* namespace mbf_costmap_core */
+
+#endif /* MBF_CORE__MOVE_BASE_RECOVERY_H_ */

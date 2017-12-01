@@ -30,37 +30,37 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_global_planner.h
+ *  abstract_local_planner.h
  *
  *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
  *
  */
 
-#ifndef MBF_CORE__MOVE_BASE_CONTROLLER_H_
-#define MBF_CORE__MOVE_BASE_CONTROLLER_H_
+#ifndef MBF_CORE__ABSTRACT_CONTROLLER_H_
+#define MBF_CORE__ABSTRACT_CONTROLLER_H_
 
-#include <geometry_msgs/PoseStamped.h>
+#include <ros/ros.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <costmap_2d/costmap_2d_ros.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_listener.h>
-#include "mbf_core/abstract_controller.h"
+#include <boost/shared_ptr.hpp>
 
-namespace mbf_core {
-  /**
-   * @class LocalPlanner
-   * @brief Provides an interface for local planners used in navigation.
-   * All local planners written to work as MBF plugins must adhere to this interface. Alternatively, this
-   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
-   */
-  class MoveBaseController : public AbstractController{
+namespace mbf_abstract_core{
+
+  class AbstractController{
+
     public:
 
-      typedef boost::shared_ptr< ::mbf_core::MoveBaseController > Ptr;
+      typedef boost::shared_ptr< ::mbf_abstract_core::AbstractController > Ptr;
+
+      /**
+       * @brief Destructor
+       */
+      virtual ~AbstractController(){};
 
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
-       * compute velocity commands to send to the base
-       * @remark New on MBF API; replaces version without output code and message
+       * compute velocity commands to send to the base.
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
        * @param message Optional more detailed outcome as a string
        * @return Result code as described on ExePath action result:
@@ -86,45 +86,32 @@ namespace mbf_core {
       virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message) = 0;
 
       /**
-       * @brief Check if the goal pose has been achieved by the local planner within tolerance limits
-       * @remark New on MBF API
-       * @param xy_tolerance Distance tolerance in meters
-       * @param yaw_tolerance Heading tolerance in radians
+       * @brief Check if the goal pose has been achieved by the local planner
+       * @param angle_tolerance The angle tolerance in which the current pose will be partly accepted as reached goal
+       * @param dist_tolerance The distance tolerance in which the current pose will be partly accepted as reached goal
        * @return True if achieved, false otherwise
        */
-      virtual bool isGoalReached(double xy_tolerance, double yaw_tolerance) = 0;
+      virtual bool isGoalReached(double dist_tolerance, double angle_tolerance) = 0;
 
       /**
-       * @brief  Set the plan that the local planner is following
+       * @brief Set the plan that the local planner is following
        * @param plan The plan to pass to the local planner
        * @return True if the plan was updated successfully, false otherwise
        */
       virtual bool setPlan(const std::vector<geometry_msgs::PoseStamped> &plan) = 0;
 
       /**
-       * @brief Requests the planner to cancel, e.g. if it takes to much time
-       * @remark New on MBF API
+       * @brief Requests the planner to cancel, e.g. if it takes to much time.
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
       virtual bool cancel() = 0;
 
-      /**
-       * @brief Constructs the local planner
-       * @param name The name to give this instance of the local planner
-       * @param tf A pointer to a transform listener
-       * @param costmap_ros The cost map to use for assigning costs to local plans
-       */
-      virtual void initialize(std::string name, tf::TransformListener *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
-
-      /**
-       * @brief  Virtual destructor for the interface
-       */
-      virtual ~MoveBaseController(){}
-
     protected:
-      MoveBaseController(){}
-
+      /**
+       * @brief Constructor
+       */
+      AbstractController(){};
   };
-};  /* namespace mbf_core */
+} /* namespace mbf_abstract_core */
 
-#endif  /* MBF_CORE__MOVE_BASE_CONTROLLER_H_ */
+#endif /* MBF_CORE__ABSTRACT_CONTROLLER_H_ */

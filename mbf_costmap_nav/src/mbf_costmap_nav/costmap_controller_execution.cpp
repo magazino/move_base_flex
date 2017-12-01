@@ -55,11 +55,11 @@ MoveBaseControllerExecution::~MoveBaseControllerExecution()
 {
 }
 
-mbf_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlugin(const std::string& controller_type)
+mbf_abstract_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlugin(const std::string& controller_type)
 {
-  static pluginlib::ClassLoader<mbf_core::MoveBaseController>
-      class_loader("mbf_core", "mbf_core::MoveBaseController");
-  mbf_core::AbstractController::Ptr controller_ptr;
+  static pluginlib::ClassLoader<mbf_costmap_core::MoveBaseController>
+      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseController");
+  mbf_abstract_core::AbstractController::Ptr controller_ptr;
   // try to load and init local planner
   ROS_DEBUG("Load local planner plugin.");
   try
@@ -70,7 +70,7 @@ mbf_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlu
   }
   catch (const pluginlib::PluginlibException &ex)
   {
-    ROS_INFO_STREAM("Failed to load the " << controller_type << " local planner as a mbf_core-based plugin;"
+    ROS_INFO_STREAM("Failed to load the " << controller_type << " local planner as a mbf_abstract_core-based plugin;"
                      << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
     try
     {
@@ -79,7 +79,7 @@ mbf_core::AbstractController::Ptr MoveBaseControllerExecution::loadControllerPlu
           nav_core_class_loader("nav_core", "nav_core::BaseLocalPlanner");
       boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr
           = nav_core_class_loader.createInstance(controller_type);
-      controller_ptr = boost::make_shared<mbf_core::WrapperLocalPlanner>(nav_core_controller_ptr);
+      controller_ptr = boost::make_shared<mbf_costmap_core::WrapperLocalPlanner>(nav_core_controller_ptr);
       controller_name_ = nav_core_class_loader.getName(controller_type);
       ROS_INFO_STREAM("Nav_core-based local planner plugin " << controller_name_ << " loaded");
     }
@@ -113,8 +113,8 @@ void MoveBaseControllerExecution::initPlugin()
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  mbf_core::MoveBaseController::Ptr controller_ptr
-      = boost::static_pointer_cast<mbf_core::MoveBaseController>(controller_);
+  mbf_costmap_core::MoveBaseController::Ptr controller_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::MoveBaseController>(controller_);
   controller_ptr->initialize(controller_name_, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
 }

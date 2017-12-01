@@ -54,16 +54,16 @@ SimpleRecoveryExecution::~SimpleRecoveryExecution()
 }
 
 
-mbf_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPlugin(
+mbf_abstract_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPlugin(
     const std::string& recovery_type)
 {
-  static pluginlib::ClassLoader<mbf_core::AbstractRecovery>
-      class_loader("mbf_core", "mbf_core::AbstractRecovery");
-  mbf_core::AbstractRecovery::Ptr recovery_ptr;
+  static pluginlib::ClassLoader<mbf_abstract_core::AbstractRecovery>
+      class_loader("mbf_abstract_core", "mbf_abstract_core::AbstractRecovery");
+  mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
   try
   {
-    recovery_ptr = boost::static_pointer_cast<mbf_core::AbstractRecovery>(
+    recovery_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractRecovery>(
         class_loader.createInstance(recovery_type));
   }
   catch (pluginlib::PluginlibException &ex)

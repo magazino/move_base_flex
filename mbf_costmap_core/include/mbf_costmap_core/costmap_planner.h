@@ -36,25 +36,24 @@
  *
  */
 
-#ifndef MBF_CORE__ABSTRACT_PLANNER_H_
-#define MBF_CORE__ABSTRACT_PLANNER_H_
+#ifndef MBF_CORE__MOVE_BASE_PLANNER_H_
+#define MBF_CORE__MOVE_BASE_PLANNER_H_
 
-#include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <boost/shared_ptr.hpp>
+#include <costmap_2d/costmap_2d_ros.h>
+#include <mbf_abstract_core/abstract_planner.h>
 
-namespace mbf_core
-{
-
-  class AbstractPlanner{
-
+namespace mbf_costmap_core {
+  /**
+   * @class MoveBasePlanner
+   * @brief Provides an interface for global planners used in navigation.
+   * All global planners written to work as MBF plugins must adhere to this interface. Alternatively, this
+   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
+   */
+  class MoveBasePlanner : public mbf_abstract_core::AbstractPlanner{
     public:
-      typedef boost::shared_ptr< ::mbf_core::AbstractPlanner > Ptr;
 
-      /**
-       * @brief Destructor
-       */
-      virtual ~AbstractPlanner(){};
+      typedef boost::shared_ptr< ::mbf_costmap_core::MoveBasePlanner > Ptr;
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -87,16 +86,27 @@ namespace mbf_core
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes to much time.
+       * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */
       virtual bool cancel() = 0;
 
-    protected:
       /**
-       * @brief Constructor
+       * @brief Initialization function for the MoveBasePlanner
+       * @param name The name of this planner
+       * @param costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
        */
-      AbstractPlanner(){};
-  };
-} /* namespace mbf_core */
+      virtual void initialize(std::string name, costmap_2d::Costmap2DROS *costmap_ros) = 0;
 
-#endif /* MBF_CORE__ABSTRACT_PLANNER_H_ */
+      /**
+       * @brief  Virtual destructor for the interface
+       */
+      virtual ~MoveBasePlanner(){}
+
+    protected:
+      MoveBasePlanner(){}
+
+  };
+};  /* namespace mbf_costmap_core */
+
+#endif  /* MBF_CORE__MOVE_BASE_PLANNER_H_ */

@@ -8,7 +8,7 @@ find_package(catkin REQUIRED
   dynamic_reconfigure
   geometry_msgs
   mbf_msgs
-  mbf_core
+  mbf_abstract_core
   nav_msgs
   pluginlib
   roscpp
@@ -36,7 +36,7 @@ catkin_package(
   dynamic_reconfigure
   geometry_msgs
   mbf_msgs
-  mbf_core
+  mbf_abstract_core
   nav_msgs
   pluginlib
   roscpp
