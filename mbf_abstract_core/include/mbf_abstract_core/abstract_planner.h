@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE__ABSTRACT_PLANNER_H_
-#define MBF_CORE__ABSTRACT_PLANNER_H_
+#ifndef MBF_ABSTRACT_CORE__ABSTRACT_PLANNER_H_
+#define MBF_ABSTRACT_CORE__ABSTRACT_PLANNER_H_
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -99,4 +99,4 @@ namespace mbf_abstract_core
   };
 } /* namespace mbf_abstract_core */
 
-#endif /* MBF_CORE__ABSTRACT_PLANNER_H_ */
+#endif /* MBF_ABSTRACT_CORE__ABSTRACT_PLANNER_H_ */

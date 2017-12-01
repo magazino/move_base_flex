@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE__ABSTRACT_RECOVERY_H_
-#define MBF_CORE__ABSTRACT_RECOVERY_H_
+#ifndef MBF_ABSTRACT_CORE__ABSTRACT_RECOVERY_H_
+#define MBF_ABSTRACT_CORE__ABSTRACT_RECOVERY_H_
 
 namespace mbf_abstract_core {
   /**
@@ -71,4 +71,4 @@ namespace mbf_abstract_core {
   };
 };  /* namespace mbf_abstract_core */
 
-#endif  /* MBF_CORE__ABSTRACT_RECOVERY_H_ */
+#endif  /* MBF_ABSTRACT_CORE__ABSTRACT_RECOVERY_H_ */
