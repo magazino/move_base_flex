@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE__MOVE_BASE_RECOVERY_H_
-#define MBF_CORE__MOVE_BASE_RECOVERY_H_
+#ifndef MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_
+#define MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
 #include "mbf_abstract_core/abstract_recovery.h"
@@ -87,4 +87,4 @@ namespace mbf_costmap_core {
   };
 };  /* namespace mbf_costmap_core */
 
-#endif /* MBF_CORE__MOVE_BASE_RECOVERY_H_ */
+#endif /* MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_ */

@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE__MOVE_BASE_PLANNER_H_
-#define MBF_CORE__MOVE_BASE_PLANNER_H_
+#ifndef MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_
+#define MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_
 
 #include <geometry_msgs/PoseStamped.h>
 #include <costmap_2d/costmap_2d_ros.h>
@@ -109,4 +109,4 @@ namespace mbf_costmap_core {
   };
 };  /* namespace mbf_costmap_core */
 
-#endif  /* MBF_CORE__MOVE_BASE_PLANNER_H_ */
+#endif  /* MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_ */

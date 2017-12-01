@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_CORE__MOVE_BASE_CONTROLLER_H_
-#define MBF_CORE__MOVE_BASE_CONTROLLER_H_
+#ifndef MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_
+#define MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -127,4 +127,4 @@ namespace mbf_costmap_core {
   };
 };  /* namespace mbf_costmap_core */
 
-#endif  /* MBF_CORE__MOVE_BASE_CONTROLLER_H_ */
+#endif  /* MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_ */
