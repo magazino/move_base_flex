@@ -2,7 +2,20 @@
 <package format="2">
   <name>move_base_flex</name>
   <version>0.1.0</version>
-  <description>The move_base_flex package</description>
+  <description>
+       Move Base Flex (MBF) is a backwards-compatible replacement for move_base.
+       MBF can use existing plugins for move_base, and provides an enhanced version
+       of the planner, controller and recovery plugin ROS interfaces. It exposes
+       action servers for planning, controlling and recovering, providing detailed 
+       information of the current state and the plugin’s feedback. An external executive
+       logic can use MBF and its actions to perform smart and flexible navigation 
+       strategies.
+
+       Furthermore, MBF enables the use of other map representations, e.g. meshes 
+       or grid_map
+       
+       See <a href="wiki.ros.org/move_base_flex"> move_base_flex ROS wiki page</a>.
+  </description>
 
   <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>
   <license>BSD</license>
