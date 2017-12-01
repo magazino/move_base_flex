@@ -42,7 +42,7 @@
 
 #include "mbf_abstract_nav/abstract_recovery_execution.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 
@@ -249,4 +249,4 @@ namespace move_base_flex
     condition_.notify_one();
     current_behavior_.reset();
   }
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */

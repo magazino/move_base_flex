@@ -42,7 +42,7 @@
 #include <nav_msgs/Path.h>
 #include "mbf_abstract_nav/abstract_navigation_server.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
   AbstractNavigationServer::AbstractNavigationServer(
@@ -80,28 +80,28 @@ namespace move_base_flex
         new ActionServerGetPath(
             private_nh_,
             name_action_get_path,
-            boost::bind(&move_base_flex::AbstractNavigationServer::callActionGetPath, this, _1),
+            boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionGetPath, this, _1),
             false));
 
     action_server_exe_path_ptr_ = ActionServerExePathPtr(
         new ActionServerExePath(
             private_nh_,
             name_action_exe_path,
-            boost::bind(&move_base_flex::AbstractNavigationServer::callActionExePath, this, _1),
+            boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionExePath, this, _1),
             false));
 
     action_server_recovery_ptr_ = ActionServerRecoveryPtr(
         new ActionServerRecovery(
             private_nh_,
             name_action_recovery,
-            boost::bind(&move_base_flex::AbstractNavigationServer::callActionRecovery, this, _1),
+            boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionRecovery, this, _1),
             false));
 
     action_server_move_base_ptr_ = ActionServerMoveBasePtr(
         new ActionServerMoveBase(
             private_nh_,
             name_action_move_base,
-            boost::bind(&move_base_flex::AbstractNavigationServer::callActionMoveBase, this, _1),
+            boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionMoveBase, this, _1),
             false));
 
     // dynamic reconfigure server
@@ -187,7 +187,7 @@ namespace move_base_flex
     for (iter = plan.begin(); iter != plan.end(); ++iter)
     {
       geometry_msgs::PoseStamped global_pose;
-      tf_success = move_base_flex::transformPose(*tf_listener_ptr_, global_frame_, iter->header.stamp,
+      tf_success = mbf_abstract_nav::transformPose(*tf_listener_ptr_, global_frame_, iter->header.stamp,
                                                  ros::Duration(tf_timeout_), *iter, global_frame_, global_pose);
       if (!tf_success)
       {
@@ -203,7 +203,7 @@ namespace move_base_flex
   bool AbstractNavigationServer::getRobotPose(
       geometry_msgs::PoseStamped &robot_pose)
   {
-    bool tf_success = move_base_flex::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
+    bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
                                                    ros::Duration(tf_timeout_), robot_pose);
 
     if (!tf_success)
@@ -574,21 +574,21 @@ namespace move_base_flex
           ROS_WARN_STREAM_THROTTLE_NAMED(3, name_action_exe_path, "Have not received a velocity command from the "
               << "local planner!");
           moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, goal_pose));
+          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, goal_pose));
+          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, goal_pose));
           action_server_exe_path_ptr_->publishFeedback(feedback);
           break;
 
         case AbstractControllerExecution::GOT_LOCAL_CMD:
-          if (move_base_flex::distance(robot_pose, oscillation_pose) >= oscillation_distance_)
+          if (mbf_abstract_nav::distance(robot_pose, oscillation_pose) >= oscillation_distance_)
           {
             last_oscillation_reset = ros::Time::now();
             oscillation_pose = robot_pose;
           }
 
           moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, goal_pose));
+          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, goal_pose));
+          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, goal_pose));
           action_server_exe_path_ptr_->publishFeedback(feedback);
 
           // check if oscillating
@@ -859,7 +859,7 @@ namespace move_base_flex
                     exe_path_goal,
                     ActionClientExePath::SimpleDoneCallback(),
                     ActionClientExePath::SimpleActiveCallback(),
-                    boost::bind(&move_base_flex::AbstractNavigationServer::actionMoveBaseExePathFeedback,this, _1));
+                    boost::bind(&mbf_abstract_nav::AbstractNavigationServer::actionMoveBaseExePathFeedback,this, _1));
                 state = EXE_PATH;
                 last_state = GET_PATH;
                 break;
@@ -869,8 +869,8 @@ namespace move_base_flex
                 // copy result from get_path action
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
-                move_base_result.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, target_pose));
-                move_base_result.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, target_pose));
+                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, target_pose));
                 move_base_result.final_pose = robot_pose;
 
                 if (!recovery_enabled_)
@@ -917,8 +917,8 @@ namespace move_base_flex
                 // copy result from get_path action
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
-                move_base_result.dist_to_goal = static_cast<float>(move_base_flex::distance(robot_pose, target_pose));
-                move_base_result.angle_to_goal = static_cast<float>(move_base_flex::angle(robot_pose, target_pose));
+                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, target_pose));
                 move_base_result.final_pose = robot_pose;
                 run = false;
                 action_server_move_base_ptr_->setPreempted(move_base_result, get_path_state.getText());
@@ -1185,4 +1185,4 @@ namespace move_base_flex
     action_server_move_base_ptr_->publishFeedback(feedback_out);
   }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */

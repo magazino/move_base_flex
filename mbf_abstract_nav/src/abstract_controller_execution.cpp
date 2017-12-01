@@ -40,7 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 
@@ -405,4 +405,4 @@ namespace move_base_flex
     vel_pub_.publish(cmd_vel);
   }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */

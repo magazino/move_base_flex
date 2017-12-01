@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__ABSTRACT_NAVIGATION_SERVER_H_
-#define MOVE_BASE_FLEX__ABSTRACT_NAVIGATION_SERVER_H_
+#ifndef MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_
+#define MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_
 
 #include "abstract_planner_execution.h"
 #include "abstract_controller_execution.h"
@@ -62,7 +62,7 @@
 #include "navigation_utility.h"
 #include "abstract_navigation_server.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 /**
  * @defgroup abstract_server Abstract Server
@@ -311,6 +311,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
   };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */
 
 #endif /* navigation_controller.h */

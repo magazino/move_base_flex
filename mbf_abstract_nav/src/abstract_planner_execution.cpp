@@ -40,7 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 
@@ -427,5 +427,5 @@ namespace move_base_flex
     }
   }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */
 

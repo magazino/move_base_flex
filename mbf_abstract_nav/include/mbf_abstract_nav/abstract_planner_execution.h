@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__ABSTRACT_PLANNER_EXECUTION_H_
-#define MOVE_BASE_FLEX__ABSTRACT_PLANNER_EXECUTION_H_
+#ifndef MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
+#define MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 
 #include <pluginlib/class_loader.h>
 #include <boost/chrono/thread_clock.hpp>
@@ -51,7 +51,7 @@
 #include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 /**
@@ -346,6 +346,6 @@ namespace move_base_flex
     boost::recursive_mutex configuration_mutex_;
   };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */
 
-#endif /* MOVE_BASE_FLEX__ABSTRACT_PLANNER_EXECUTION_H_ */
+#endif /* MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_ */

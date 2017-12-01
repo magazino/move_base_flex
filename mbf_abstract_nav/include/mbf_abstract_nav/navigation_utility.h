@@ -43,7 +43,7 @@
 
 #include <tf/transform_listener.h>
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 /**
@@ -95,6 +95,6 @@ double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::Pos
  */
 double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */
 
 #endif /* navigation_state.h */

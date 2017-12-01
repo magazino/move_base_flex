@@ -40,7 +40,7 @@
 
 #include "mbf_abstract_nav/navigation_utility.h"
 
-namespace move_base_flex
+namespace mbf_abstract_nav
 {
 
 bool getRobotPose(const tf::TransformListener &tf_listener,
@@ -55,13 +55,13 @@ bool getRobotPose(const tf::TransformListener &tf_listener,
   local_pose.stamp_ = ros::Time(0.0);  // most recent available
   geometry_msgs::PoseStamped local_pose_msg;
   tf::poseStampedTFToMsg(local_pose, local_pose_msg);
-  return move_base_flex::transformPose(tf_listener,
-                                       global_frame,
-                                       local_pose.stamp_,
-                                       timeout,
-                                       local_pose_msg,
-                                       global_frame,
-                                       robot_pose);
+  return transformPose(tf_listener,
+                       global_frame,
+                       local_pose.stamp_,
+                       timeout,
+                       local_pose_msg,
+                       global_frame,
+                       robot_pose);
 }
 
 bool transformPose(const tf::TransformListener &tf_listener,
@@ -121,4 +121,4 @@ double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseSt
   return rot1.angleShortestPath(rot2);
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_abstract_nav */
