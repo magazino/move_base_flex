@@ -38,15 +38,15 @@
  *
  */
 
-#ifndef MBF__SIMPLE_NAVIGATION_SERVER_H_
-#define MBF__SIMPLE_NAVIGATION_SERVER_H_
+#ifndef MBF_SIMPLE_NAV__SIMPLE_NAVIGATION_SERVER_H_
+#define MBF_SIMPLE_NAV__SIMPLE_NAVIGATION_SERVER_H_
 
 #include <mbf_abstract_nav/abstract_navigation_server.h>
 #include "simple_planner_execution.h"
 #include "simple_controller_execution.h"
 #include "simple_recovery_execution.h"
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 /**
  * @defgroup simple_server Simple Server
@@ -55,13 +55,13 @@ namespace move_base_flex
 
 /**
  * @brief The SimpleNavigationServer provides a simple navigation server, which does not bind a map representation to
- *        Move Base Flex. It combines the execution classes which use the move_base_flex_msgs/AbstractController,
- *        move_base_flex_msgs/AbstractPlanner and the move_base_flex_msgs/AbstractMoveBaseRecovery base classes
+ *        Move Base Flex. It combines the execution classes which use the mbf_abstract_core/AbstractController,
+ *        mbf_abstract_core/AbstractPlanner and the mbf_abstract_core/AbstractRecovery base classes
  *        as plugin interfaces.
  *
  * @ingroup navigation_server simple_server
  */
-class SimpleNavigationServer : public AbstractNavigationServer
+class SimpleNavigationServer : public mbf_abstract_nav::AbstractNavigationServer
 {
 public:
 
@@ -77,6 +77,6 @@ public:
   virtual ~SimpleNavigationServer();
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */
 
-#endif /* MBF__SIMPLE_NAVIGATION_SERVER_H_ */
+#endif /* MBF_SIMPLE_NAV__SIMPLE_NAVIGATION_SERVER_H_ */

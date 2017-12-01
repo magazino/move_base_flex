@@ -38,13 +38,13 @@
  *
  */
 
-#ifndef MBF__SIMPLE_PLANNER_EXECUTION_H_
-#define MBF__SIMPLE_PLANNER_EXECUTION_H_
+#ifndef MBF_SIMPLE_NAV__SIMPLE_PLANNER_EXECUTION_H_
+#define MBF_SIMPLE_NAV__SIMPLE_PLANNER_EXECUTION_H_
 
 #include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_abstract_nav/abstract_planner_execution.h>
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 /**
  * @brief The SimplePlannerExecution basically uses the AbstractPlannerExecution and loads global planner plugins,
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup planner_execution simple_server
  */
-class SimplePlannerExecution : public AbstractPlannerExecution
+class SimplePlannerExecution : public mbf_abstract_nav::AbstractPlannerExecution
 {
 public:
   /**
@@ -82,6 +82,6 @@ private:
   virtual void initPlugin();
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */
 
-#endif /* MBF__SIMPLE_PLANNER_EXECUTION_H_ */
+#endif /* MBF_SIMPLE_NAV__SIMPLE_PLANNER_EXECUTION_H_ */

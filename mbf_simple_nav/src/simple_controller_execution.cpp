@@ -40,12 +40,12 @@
 
 #include "mbf_simple_nav/simple_controller_execution.h"
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 
 SimpleControllerExecution::SimpleControllerExecution(boost::condition_variable &condition,
                                                      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractControllerExecution(condition, tf_listener_ptr)
+    mbf_abstract_nav::AbstractControllerExecution(condition, tf_listener_ptr)
 {
 }
 
@@ -53,7 +53,7 @@ mbf_abstract_core::AbstractController::Ptr SimpleControllerExecution::loadContro
     const std::string& controller_type)
 {
   static pluginlib::ClassLoader<mbf_abstract_core::AbstractController>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::MoveBaseController");
+      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapController");
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   ROS_DEBUG("Load controller plugin.");
   try

@@ -38,13 +38,13 @@
  *
  */
 
-#ifndef MBF__SIMPLE_CONTROLLER_EXECUTION_H_
-#define MBF__SIMPLE_CONTROLLER_EXECUTION_H_
+#ifndef MBF_SIMPLE_NAV__SIMPLE_CONTROLLER_EXECUTION_H_
+#define MBF_SIMPLE_NAV__SIMPLE_CONTROLLER_EXECUTION_H_
 
 #include <mbf_abstract_core/abstract_controller.h>
 #include <mbf_abstract_nav/abstract_controller_execution.h>
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 /**
  * @brief The SimpleControllerExecution basically uses the AbstractControllerExecution and loads local planner plugins,
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup controller_execution simple_server
  */
-class SimpleControllerExecution : public AbstractControllerExecution
+class SimpleControllerExecution : public mbf_abstract_nav::AbstractControllerExecution
 {
 public:
 
@@ -87,6 +87,6 @@ private:
 
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */
 
-#endif /* MBF__SIMPLE_CONTROLLER_EXECUTION_H_ */
+#endif /* MBF_SIMPLE_NAV__SIMPLE_CONTROLLER_EXECUTION_H_ */

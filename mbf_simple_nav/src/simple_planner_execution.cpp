@@ -40,11 +40,11 @@
 
 #include "mbf_simple_nav/simple_planner_execution.h"
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 
 SimplePlannerExecution::SimplePlannerExecution(boost::condition_variable &condition) :
-    AbstractPlannerExecution(condition)
+    mbf_abstract_nav::AbstractPlannerExecution(condition)
 {
 }
 
@@ -76,4 +76,4 @@ void SimplePlannerExecution::initPlugin()
 {
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */

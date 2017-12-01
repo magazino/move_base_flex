@@ -38,13 +38,13 @@
  *
  */
 
-#ifndef MBF__SIMPLE_RECOVERY_EXECUTION_H_
-#define MBF__SIMPLE_RECOVERY_EXECUTION_H_
+#ifndef MBF_SIMPLE_NAV__SIMPLE_RECOVERY_EXECUTION_H_
+#define MBF_SIMPLE_NAV__SIMPLE_RECOVERY_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
 #include <mbf_abstract_core/abstract_recovery.h>
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 /**
  * @brief The SimpleRecoveryExecution basically uses the AbstractRecoveryExecution and loads recovery behavior plugins,
@@ -53,7 +53,7 @@ namespace move_base_flex
  *
  * @ingroup recovery_execution simple_server
  */
-class SimpleRecoveryExecution : public AbstractRecoveryExecution
+class SimpleRecoveryExecution : public mbf_abstract_nav::AbstractRecoveryExecution
 {
 
 public:
@@ -88,6 +88,6 @@ private:
 
 };
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */
 
-#endif /* MBF__SIMPLE_RECOVERY_EXECUTION_H_ */
+#endif /* MBF_SIMPLE_NAV__SIMPLE_RECOVERY_EXECUTION_H_ */

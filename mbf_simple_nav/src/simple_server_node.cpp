@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "mbf_simple_server");
 
   typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
-  typedef boost::shared_ptr<move_base_flex::SimpleNavigationServer> SimpleNavigationServerPtr;
+  typedef boost::shared_ptr<mbf_simple_nav::SimpleNavigationServer> SimpleNavigationServerPtr;
 
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
   TransformListenerPtr tf_listener_ptr(new tf::TransformListener(nh, ros::Duration(cache_time), true));
   SimpleNavigationServerPtr controller_ptr(
-      new move_base_flex::SimpleNavigationServer(TransformListenerPtr(tf_listener_ptr)));
+      new mbf_simple_nav::SimpleNavigationServer(TransformListenerPtr(tf_listener_ptr)));
 
   ros::spin();
   return EXIT_SUCCESS;

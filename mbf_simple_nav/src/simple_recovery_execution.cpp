@@ -40,12 +40,12 @@
 
 #include "mbf_simple_nav/simple_recovery_execution.h"
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 
 SimpleRecoveryExecution::SimpleRecoveryExecution(boost::condition_variable &condition,
                                                  const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractRecoveryExecution(condition, tf_listener_ptr)
+    mbf_abstract_nav::AbstractRecoveryExecution(condition, tf_listener_ptr)
 {
 }
 
@@ -78,4 +78,4 @@ void SimpleRecoveryExecution::initPlugins()
 {
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */

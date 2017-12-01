@@ -40,11 +40,11 @@
 
 #include "mbf_simple_nav/simple_navigation_server.h"
 
-namespace move_base_flex
+namespace mbf_simple_nav
 {
 
 SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-    AbstractNavigationServer(tf_listener_ptr, SimplePlannerExecution::Ptr(new SimplePlannerExecution(condition_)),
+    mbf_abstract_nav::AbstractNavigationServer(tf_listener_ptr, SimplePlannerExecution::Ptr(new SimplePlannerExecution(condition_)),
                              SimpleControllerExecution::Ptr(new SimpleControllerExecution(condition_, tf_listener_ptr)),
                              SimpleRecoveryExecution::Ptr(new SimpleRecoveryExecution(condition_, tf_listener_ptr)))
 {
@@ -59,4 +59,4 @@ SimpleNavigationServer::~SimpleNavigationServer()
 {
 }
 
-} /* namespace move_base_flex */
+} /* namespace mbf_simple_nav */
