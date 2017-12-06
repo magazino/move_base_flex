@@ -43,6 +43,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <base_local_planner/footprint_helper.h>
 #include <mbf_msgs/MoveBaseAction.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
 
 #include "mbf_costmap_nav/costmap_navigation_server.h"
@@ -101,9 +102,9 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
 
   current_goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
-  // dynamic reconfigure server for mbf_costmap_nav specific config
-  dsrv_costmap2d_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
-  dsrv_costmap2d_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
+  // dynamic reconfigure server for mbf_costmap_nav configuration
+  dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
+  dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 }
 
 CostmapNavigationServer::~CostmapNavigationServer()
@@ -114,6 +115,39 @@ CostmapNavigationServer::~CostmapNavigationServer()
 
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
+  boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+  // The first time we're called, we just want to make sure we have the original configuration
+  // TODO not really,,, we use the first call to initialize all params, so all those calls to param sever are unnecessary
+  if (!setup_reconfigure_)
+  {
+//    last_config_ = config;
+    default_config_ = config;
+    setup_reconfigure_ = true;
+//    return;
+  }
+
+  if (config.restore_defaults)
+  {
+    config = default_config_;
+    // if someone sets restore defaults on the parameter server, prevent looping
+    config.restore_defaults = false;
+  }
+
+  // fill the abstract configuration common to all MBF-based navigation
+  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
+  abstract_config.global_planner = config.global_planner;
+  abstract_config.local_planner = config.local_planner;
+  abstract_config.planner_frequency = config.planner_frequency;
+  abstract_config.planner_patience = config.planner_patience;
+  abstract_config.planner_max_retries = config.planner_max_retries;
+  abstract_config.controller_frequency = config.controller_frequency;
+  abstract_config.controller_patience = config.controller_patience;
+  abstract_config.controller_max_retries = config.controller_max_retries;
+  abstract_config.recovery_enabled = config.recovery_enabled;
+  abstract_config.oscillation_timeout = config.oscillation_timeout;
+  abstract_config.oscillation_distance = config.oscillation_distance;
+  mbf_abstract_nav::AbstractNavigationServer::reconfigure(abstract_config, level);
+
   // handle costmap activation reconfiguration here.
   if (shutdown_costmaps_ && !config.shutdown_costmaps)
   {
@@ -125,6 +159,8 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
     shutdown_costmaps_ = config.shutdown_costmaps;
     checkDeactivateCostmaps();
   }
+
+  last_config_ = config;
 }
 
 bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,

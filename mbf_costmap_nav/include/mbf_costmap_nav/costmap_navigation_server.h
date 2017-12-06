@@ -60,7 +60,7 @@ namespace mbf_costmap_nav
  */
 
 
-typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmap2d;
+typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmapNav;
 
 /**
  * @brief The CostmapNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
@@ -149,7 +149,16 @@ protected:
   void reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level);
 
   //! Dynamic reconfigure server for the mbf_costmap2d_specific part
-  DynamicReconfigureServerCostmap2d dsrv_costmap2d_;
+  DynamicReconfigureServerCostmapNav dsrv_costmap_;
+
+  //! last configuration save
+  mbf_costmap_nav::MoveBaseFlexConfig last_config_;
+
+  //! the default parameter configuration save
+  mbf_costmap_nav::MoveBaseFlexConfig default_config_;
+
+  //! true, if the dynamic reconfigure has been setup.
+  bool setup_reconfigure_;
 
   //! Shared pointer to the common local costmap
   CostmapPtr costmap_controller_ptr_;

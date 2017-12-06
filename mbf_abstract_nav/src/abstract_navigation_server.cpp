@@ -104,12 +104,7 @@ namespace mbf_abstract_nav
             boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionMoveBase, this, _1),
             false));
 
-    // dynamic reconfigure server
-    dsrv_ = boost::make_shared<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBaseFlexConfig> >(private_nh_);
-    dynamic_reconfigure::Server<mbf_abstract_nav::MoveBaseFlexConfig>::CallbackType cb =
-        boost::bind(&AbstractNavigationServer::reconfigure,
-                    this, _1, _2);
-    dsrv_->setCallback(cb);
+    // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the specialized servers
   }
 
   void AbstractNavigationServer::initializeServerComponents()
@@ -137,31 +132,12 @@ namespace mbf_abstract_nav
   void AbstractNavigationServer::reconfigure(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
   {
-    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-    // The first time we're called, we just want to make sure we have the original configuration
-    if (!setup_reconfigure_)
-    {
-      last_config_ = config;
-      default_config_ = config;
-      setup_reconfigure_ = true;
-      return;
-    }
-
-    if (config.restore_defaults)
-    {
-      config = default_config_;
-      // if someone sets restore defaults on the parameter server, prevent looping
-      config.restore_defaults = false;
-    }
-
     planning_ptr_->reconfigure(config);
     moving_ptr_->reconfigure(config);
     recovery_ptr_->reconfigure(config);
     oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
     oscillation_distance_ = config.oscillation_distance;
     recovery_enabled_ = config.recovery_enabled;
-
-    last_config_ = config;
   }
 
   void AbstractNavigationServer::publishPath(
@@ -258,7 +234,7 @@ namespace mbf_abstract_nav
             << p.x << ", " << p.y << ", " << p.z << ").");
       }
     }
-    
+
     ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Starting the planning thread.");
     if (!planning_ptr_->startPlanning(start_pose, goal_pose, tolerance))
     {

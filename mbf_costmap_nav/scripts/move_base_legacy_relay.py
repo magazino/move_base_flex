@@ -8,7 +8,7 @@ import copy
 
 import rospy
 import nav_msgs.srv as nav_srvs
-import move_base_flex_msgs.msg as mbf_msgs
+import mbf_msgs.msg as mbf_msgs
 import move_base_msgs.msg as mb_msgs
 from dynamic_reconfigure.client import Client
 from dynamic_reconfigure.server import Server
@@ -91,8 +91,12 @@ def mb_reconf_cb(config, level):
         mbf_config['planner_patience'] = mbf_config.pop('planner_patience')
     if 'max_planning_retries' in mbf_config:
         mbf_config['planner_max_retries'] = mbf_config.pop('max_planning_retries')
+    if 'recovery_behavior_enabled' in mbf_config:
+        mbf_config['recovery_enabled'] = mbf_config.pop('recovery_behavior_enabled')
     if 'conservative_reset_dist' in mbf_config:
         mbf_config.pop('conservative_reset_dist')  # no mbf equivalent for this!
+    if 'clearing_rotation_allowed' in mbf_config:
+        mbf_config.pop('clearing_rotation_allowed')  # no mbf equivalent for this!  TODO: shouldn't? don't think so... if you don't want rotation, do not include that behavior! on recovery_behaviors list!
 
     mbf_drc.update_configuration(mbf_config)
     return config
