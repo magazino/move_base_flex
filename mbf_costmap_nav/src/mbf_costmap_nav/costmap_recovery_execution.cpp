@@ -61,7 +61,7 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapRecoveryExecution::loadRecoveryP
     const std::string& recovery_type)
 {
   static pluginlib::ClassLoader<mbf_costmap_core::CostmapRecovery>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapRecovery");
+      class_loader("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery");
   mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
   try

@@ -53,7 +53,7 @@ mbf_abstract_core::AbstractController::Ptr SimpleControllerExecution::loadContro
     const std::string& controller_type)
 {
   static pluginlib::ClassLoader<mbf_abstract_core::AbstractController>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapController");
+      class_loader("mbf_abstract_core", "mbf_abstract_core::AbstractController");
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   ROS_DEBUG("Load controller plugin.");
   try

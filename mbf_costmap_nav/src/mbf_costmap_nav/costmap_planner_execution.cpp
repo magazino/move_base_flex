@@ -57,7 +57,7 @@ CostmapPlannerExecution::~CostmapPlannerExecution()
 mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlugin(const std::string& planner_type)
 {
   static pluginlib::ClassLoader<mbf_costmap_core::CostmapPlanner>
-      class_loader("mbf_abstract_core", "mbf_costmap_core::CostmapPlanner");
+      class_loader("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner");
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   // try to load and init global planner
   ROS_DEBUG("Load global planner plugin.");
