@@ -61,12 +61,13 @@ namespace mbf_abstract_nav
   {
     ros::NodeHandle nh;
 
+    // non-dynamically reconfigurable parameters
     private_nh_.param("robot_frame", robot_frame_, std::string("base_link"));
     private_nh_.param("global_frame", global_frame_, std::string("map"));
     private_nh_.param("tolerance", tolerance_, 0.0);
     private_nh_.param("tf_timeout", tf_timeout_, 3.0);
-    private_nh_.param("recovery_enabled", recovery_enabled_, true);
 
+    // informative topics: current goal and global path
     path_pub_ = nh.advertise<nav_msgs::Path>("global_path", 1);
     current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
 
@@ -104,7 +105,9 @@ namespace mbf_abstract_nav
             boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionMoveBase, this, _1),
             false));
 
-    // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the specialized servers
+    // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the one possibly created by
+    // the base class. If none, it should call startDynamicReconfigureServer method to start the one defined here for
+    // providing just the abstract server parameters
   }
 
   void AbstractNavigationServer::initializeServerComponents()
@@ -129,15 +132,40 @@ namespace mbf_abstract_nav
     action_server_move_base_ptr_->start();
   }
 
+  void AbstractNavigationServer::startDynamicReconfigureServer()
+  {
+    // dynamic reconfigure server
+    dsrv_ = boost::make_shared<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBaseFlexConfig> >(private_nh_);
+    dsrv_->setCallback(boost::bind(&AbstractNavigationServer::reconfigure, this, _1, _2));
+  }
+
   void AbstractNavigationServer::reconfigure(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
   {
+    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+
+    // Make sure we have the original configuration the first time we're called, so we can restore it if needed
+    if (!setup_reconfigure_)
+    {
+      default_config_ = config;
+      setup_reconfigure_ = true;
+    }
+
+    if (config.restore_defaults)
+    {
+      config = default_config_;
+      // if someone sets restore defaults on the parameter server, prevent looping
+      config.restore_defaults = false;
+    }
+
     planning_ptr_->reconfigure(config);
     moving_ptr_->reconfigure(config);
     recovery_ptr_->reconfigure(config);
     oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
     oscillation_distance_ = config.oscillation_distance;
     recovery_enabled_ = config.recovery_enabled;
+
+    last_config_ = config;
   }
 
   void AbstractNavigationServer::publishPath(
@@ -180,7 +208,7 @@ namespace mbf_abstract_nav
       geometry_msgs::PoseStamped &robot_pose)
   {
     bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
-                                                   ros::Duration(tf_timeout_), robot_pose);
+                                                     ros::Duration(tf_timeout_), robot_pose);
 
     if (!tf_success)
     {

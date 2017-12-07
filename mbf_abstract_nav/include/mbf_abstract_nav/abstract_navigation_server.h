@@ -50,6 +50,7 @@
 #include <geometry_msgs/PoseStamped.h>
 
 #include <tf/transform_listener.h>
+#include <dynamic_reconfigure/server.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 
@@ -104,6 +105,8 @@ const std::string name_action_recovery = "recovery";
 //! MoveBase action topic name
 const std::string name_action_move_base = "move_base";
 
+
+typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBaseFlexConfig> > DynamicReconfigureServer;
 
 /**
  * @brief The AbstractNavigationServer is the abstract base class for all navigation servers in move_base_flex
@@ -207,7 +210,13 @@ const std::string name_action_move_base = "move_base";
                                     std::vector<geometry_msgs::PoseStamped> &global_plan);
 
     /**
-     * @brief Reconfiguration method called by the specialized servers implemented on child classes
+     * @brief Start a dynamic reconfigure server.
+     * This must be called only if the extending doesn't create its own.
+     */
+    virtual void startDynamicReconfigureServer();
+
+    /**
+     * @brief Reconfiguration method called by dynamic reconfigure
      * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
      * @param level bit mask, which parameters are set.
      */
@@ -228,8 +237,20 @@ const std::string name_action_move_base = "move_base";
     //! Publisher to publish the current goal pose, which is used for path planning
     ros::Publisher current_goal_pub_;
 
+    //! dynamic reconfigure server
+    DynamicReconfigureServer dsrv_;
+
     //! configuration mutex for derived classes and other threads.
     boost::recursive_mutex configuration_mutex_;
+
+    //! last configuration save
+    mbf_abstract_nav::MoveBaseFlexConfig last_config_;
+
+    //! the default parameter configuration save
+    mbf_abstract_nav::MoveBaseFlexConfig default_config_;
+
+    //! true, if the dynamic reconfigure has been setup.
+    bool setup_reconfigure_;
 
     //! condition variable to wake up control thread
     boost::condition_variable condition_;

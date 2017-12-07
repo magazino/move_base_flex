@@ -58,11 +58,11 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
                                 new CostmapPlannerExecution(condition_, costmap_planner_ptr_)),
                            CostmapControllerExecution::Ptr(
                                 new CostmapControllerExecution(condition_, tf_listener_ptr,
-                                                                costmap_controller_ptr_)),
+                                                               costmap_controller_ptr_)),
                            CostmapRecoveryExecution::Ptr(
                                 new CostmapRecoveryExecution(condition_, tf_listener_ptr,
-                                                              costmap_planner_ptr_,
-                                                              costmap_controller_ptr_))),
+                                                             costmap_planner_ptr_,
+                                                             costmap_controller_ptr_))),
     costmap_planner_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
     costmap_controller_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_))
 {
@@ -96,13 +96,13 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
 
   // advertise services and current goal topic
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
-                                                     &CostmapNavigationServer::callServiceCheckPoseCost, this);
+                                                      &CostmapNavigationServer::callServiceCheckPoseCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
-                                                    &CostmapNavigationServer::callServiceClearCostmaps, this);
+                                                     &CostmapNavigationServer::callServiceClearCostmaps, this);
 
   current_goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
-  // dynamic reconfigure server for mbf_costmap_nav configuration
+  // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 }
@@ -116,14 +116,12 @@ CostmapNavigationServer::~CostmapNavigationServer()
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
   boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-  // The first time we're called, we just want to make sure we have the original configuration
-  // TODO not really,,, we use the first call to initialize all params, so all those calls to param sever are unnecessary
+
+  // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
   {
-//    last_config_ = config;
     default_config_ = config;
     setup_reconfigure_ = true;
-//    return;
   }
 
   if (config.restore_defaults)
@@ -146,6 +144,7 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   abstract_config.recovery_enabled = config.recovery_enabled;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
   abstract_config.oscillation_distance = config.oscillation_distance;
+  abstract_config.restore_defaults = config.restore_defaults;
   mbf_abstract_nav::AbstractNavigationServer::reconfigure(abstract_config, level);
 
   // handle costmap activation reconfiguration here.
@@ -164,7 +163,7 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
 }
 
 bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
-                                                        mbf_msgs::CheckPose::Response &response)
+                                                       mbf_msgs::CheckPose::Response &response)
 {
   // selecting the requested costmap
   CostmapPtr costmap;
@@ -296,7 +295,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
 }
 
 bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
-                                                        std_srvs::Empty::Response &response)
+                                                       std_srvs::Empty::Response &response)
 {
   costmap_controller_ptr_->resetLayers();
   costmap_planner_ptr_->resetLayers();
