@@ -66,9 +66,6 @@ namespace mbf_abstract_nav
  *        controls the global planner execution. Due to a state change it wakes up all threads connected to the
  *        condition variable.
  *
- * @tparam PLANNER_BASE The base class derived from the AbstractPlanner class. The local planner plugin
- *         has to implement that interface base class to be compatible with move_base_flex
- *
  * @ingroup abstract_server planner_execution
  */
   class AbstractPlannerExecution

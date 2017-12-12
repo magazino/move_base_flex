@@ -63,9 +63,6 @@ namespace mbf_abstract_nav
  *        server, which controls the recovery behavior execution. Due to a state change it wakes up all threads
  *        connected to the condition variable.
  *
- * @tparam RECOVERY_BASE The base class derived from the AbstractRecovery class. The recovery behavior
- *         plugin has to implement that interface base class to be compatible with move_base_flex
- *
  * @ingroup abstract_server recovery_execution
  */
   class AbstractRecoveryExecution
