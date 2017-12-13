@@ -173,7 +173,7 @@ namespace mbf_abstract_nav
                        double tolerance);
 
     /**
-     * @brief Copys the plugin info to the references.
+     * @brief Copies the plugin info to the references.
      * @param plugin_code Reference to a variable, to which the code will be copied.
      * @param plugin_msg Reference to a variable, to which the plugin message will be copied.
      */

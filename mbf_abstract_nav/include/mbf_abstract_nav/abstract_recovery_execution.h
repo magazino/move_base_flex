@@ -157,7 +157,7 @@ namespace mbf_abstract_nav
   protected:
 
     /**
-     * @brief Main execution meathod which will be executed by the recovery execution thread_.
+     * @brief Main execution method which will be executed by the recovery execution thread_.
      */
     virtual void run();
 
