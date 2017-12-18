@@ -1,3 +1,2 @@
-.cproject
-.project
-.settings
+.*
+!/.gitignore
