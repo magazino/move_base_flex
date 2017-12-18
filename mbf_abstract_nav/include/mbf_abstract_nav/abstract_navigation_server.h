@@ -210,6 +210,12 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
                                     std::vector<geometry_msgs::PoseStamped> &global_plan);
 
     /**
+     * @brief Start a dynamic reconfigure server.
+     * This must be called only if the extending doesn't create its own.
+     */
+    virtual void startDynamicReconfigureServer();
+
+    /**
      * @brief Reconfiguration method called by dynamic reconfigure
      * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
      * @param level bit mask, which parameters are set.

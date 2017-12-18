@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   ros::NodeHandle private_nh("~");
 
   double cache_time;
-  private_nh.param("tf_chache_time", cache_time, 10.0);
+  private_nh.param("tf_cache_time", cache_time, 10.0);
 
   TransformListenerPtr tf_listener_ptr(new tf::TransformListener(nh, ros::Duration(cache_time), true));
   SimpleNavigationServerPtr controller_ptr(

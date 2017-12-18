@@ -103,7 +103,7 @@ namespace mbf_abstract_nav
 
     if(!private_nh_.getParam("global_planner", plugin_name_))
     {
-      ROS_ERROR_STREAM("Parameter \"global_planner\" ist not set!");
+      ROS_ERROR_STREAM("Parameter \"global_planner\" is not set!");
       exit(0);
     }
     private_nh_.param("robot_frame", robot_frame_, std::string("base_footprint"));
