@@ -43,7 +43,11 @@
 namespace mbf_nav_core_wrapper
 {
 
-uint32_t WrapperLocalPlanner::computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message)
+uint32_t WrapperLocalPlanner::computeVelocityCommands(
+    const geometry_msgs::PoseStamped& robot_pose,
+    const geometry_msgs::TwistStamped& robot_velocity,
+    geometry_msgs::TwistStamped &cmd_vel,
+    std::string &message)
 {
   bool success = nav_core_plugin_->computeVelocityCommands(cmd_vel.twist);
   message = success ? "Goal reached" : "Controller failed";

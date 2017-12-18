@@ -232,7 +232,9 @@ namespace mbf_abstract_nav
     setState(RECOVERING);
     try
     {
-      current_behavior_->runBehavior();
+      // TODO use outcome and message
+      std::string message;
+      uint32_t outcome = current_behavior_->runBehavior(message);
       if (canceled_)
       {
         setState(CANCELED);

@@ -119,15 +119,18 @@ void CostmapControllerExecution::initPlugin()
   ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
 }
 
-uint32_t CostmapControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message)
+uint32_t CostmapControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,
+                                                        const geometry_msgs::TwistStamped& robot_velocity,
+                                                        geometry_msgs::TwistStamped& vel_cmd,
+                                                        std::string& message)
 {
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return controller_->computeVelocityCommands(vel_cmd, message);
+    return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
-  return controller_->computeVelocityCommands(vel_cmd, message);
+  return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
 }
 
 } /* namespace mbf_costmap_nav */

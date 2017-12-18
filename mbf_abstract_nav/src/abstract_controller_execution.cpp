@@ -208,7 +208,10 @@ namespace mbf_abstract_nav
   uint32_t AbstractControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
                                                                            std::string& message)
   {
-    return controller_->computeVelocityCommands(vel_cmd, message);
+    // TODO calculate robot pose and velocity
+    geometry_msgs::PoseStamped robot_pose;
+    geometry_msgs::TwistStamped robot_velocity;
+    return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
 
 

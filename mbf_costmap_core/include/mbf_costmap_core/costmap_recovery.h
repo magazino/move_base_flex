@@ -32,7 +32,7 @@
  *
  *  abstract_global_planner.h
  *
- *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
+ *  author: Sebastian Pütz <spuetz@uniosnabrueck.de>
  *
  */
 
@@ -42,49 +42,52 @@
 #include <tf/transform_listener.h>
 #include "mbf_abstract_core/abstract_recovery.h"
 
-namespace mbf_costmap_core {
+namespace mbf_costmap_core
+{
+/**
+ * @class CostmapRecovery
+ * @brief Provides an interface for recovery behaviors used in navigation.
+ * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
+ * class can also operate as a wrapper for old API nav_corebased plugins, providing backward compatibility.
+ */
+class CostmapRecovery : public mbf_abstract_core::AbstractRecovery{
+ public:
+
+  typedef boost::shared_ptr< ::mbf_costmap_core::CostmapRecovery> Ptr;
+
   /**
-   * @class CostmapRecovery
-   * @brief Provides an interface for recovery behaviors used in navigation.
-   * All recovery behaviors written to work as MBF plugins must adhere to this interface. Alternatively, this
-   * class can also operate as a wrapper for old API nav_core-based plugins, providing backward compatibility.
+ * @brief Initialization function for the CostmapRecovery
+ * @param tf A pointer to a transform listener
+ * @param global_costmap A pointer to the global_costmap used by the navigation stack
+ * @param local_costmap A pointer to the local_costmap used by the navigation stack
+ */
+  virtual void initialize(std::string name, tf::TransformListener* tf,
+                          costmap_2d::Costmap2DROS* global_costmap,
+                          costmap_2d::Costmap2DROS* local_costmap) = 0;
+
+  /**
+   * @brief Runs the CostmapRecovery
+   * TODO Docu
    */
-  class CostmapRecovery : public mbf_abstract_core::AbstractRecovery{
-    public:
+  virtual uint32_t runBehavior(std::string& message) = 0;
 
-      typedef boost::shared_ptr< ::mbf_costmap_core::CostmapRecovery> Ptr;
+  /**
+   * @brief Requests the planner to cancel, e.g. if it takes to much time
+   * @remark New on MBF API
+   * @return True if a cancel has been successfully requested, false if not implemented.
+   */
+  virtual bool cancel() = 0;
 
-      /**
-       * @brief Initialization function for the CostmapRecovery
-       * @param tf A pointer to a transform listener
-       * @param global_costmap A pointer to the global_costmap used by the navigation stack
-       * @param local_costmap A pointer to the local_costmap used by the navigation stack
-       */
-      virtual void initialize(std::string name, tf::TransformListener* tf,
-                              costmap_2d::Costmap2DROS* global_costmap,
-                              costmap_2d::Costmap2DROS* local_costmap) = 0;
+  /**
+   * @brief Virtual destructor for the interface
+   */
+  virtual ~CostmapRecovery(){}
 
-      /**
-       * @brief Runs the CostmapRecovery
-       */
-      virtual uint32_t runBehavior() = 0;
+ protected:
+  CostmapRecovery(){}
 
-      /**
-       * @brief Requests the planner to cancel, e.g. if it takes to much time
-       * @remark New on MBF API
-       * @return True if a cancel has been successfully requested, false if not implemented.
-       */
-      virtual bool cancel() = 0;
+};
 
-      /**
-       * @brief Virtual destructor for the interface
-       */
-      virtual ~CostmapRecovery(){}
-
-    protected:
-      CostmapRecovery(){}
-
-  };
-};  /* namespace mbf_costmap_core */
+}  /* namespace mbf_costmap_core */
 
 #endif /* MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_ */

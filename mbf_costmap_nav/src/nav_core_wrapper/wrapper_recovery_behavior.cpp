@@ -38,6 +38,7 @@
  *
  */
 
+#include <mbf_msgs/RecoveryResult.h>
 #include "nav_core_wrapper/wrapper_recovery_behavior.h"
 
 namespace mbf_nav_core_wrapper
@@ -49,9 +50,11 @@ void WrapperRecoveryBehavior::initialize(std::string name, tf::TransformListener
   nav_core_plugin_->initialize(name, tf, global_costmap, local_costmap);
 }
 
-uint32_t WrapperRecoveryBehavior::runBehavior()
+uint32_t WrapperRecoveryBehavior::runBehavior(std::string& message)
 {
   nav_core_plugin_->runBehavior();
+  // TODO return a code for old API
+  return mbf_msgs::RecoveryResult::SUCCESS;
 }
 
 bool WrapperRecoveryBehavior::cancel()

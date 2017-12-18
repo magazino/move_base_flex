@@ -61,7 +61,9 @@ namespace mbf_abstract_core{
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
        * compute velocity commands to send to the base.
-       * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
+       * @param pose the current pose of the robot.
+       * @param velocity the current velocity of the robot.
+       * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
        * @param message Optional more detailed outcome as a string
        * @return Result code as described on ExePath action result:
        *         SUCCESS         = 0
@@ -83,7 +85,10 @@ namespace mbf_abstract_core{
        *         INTERNAL_ERROR  = 114
        *         121..149 are reserved as plugin specific errors
        */
-      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message) = 0;
+      virtual uint32_t computeVelocityCommands(const geometry_msgs::PoseStamped& pose,
+                                               const geometry_msgs::TwistStamped& velocity,
+                                               geometry_msgs::TwistStamped &cmd_vel,
+                                               std::string &message) = 0;
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner

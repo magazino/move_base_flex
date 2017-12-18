@@ -82,7 +82,11 @@ protected:
    *        before calling the planner.
    * @param vel_cmd_stamped current velocity command
    */
-  virtual uint32_t computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd, std::string& message);
+  virtual uint32_t computeVelocityCmd(
+      const geometry_msgs::PoseStamped& robot_pose,
+      const geometry_msgs::TwistStamped& robot_velocity,
+      geometry_msgs::TwistStamped& vel_cmd,
+      std::string& message);
 
 private:
 

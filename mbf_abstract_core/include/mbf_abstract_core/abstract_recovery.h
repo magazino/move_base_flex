@@ -52,8 +52,9 @@ namespace mbf_abstract_core {
 
       /**
        * @brief Runs the AbstractRecovery
+       * TODO Docu
        */
-      virtual uint32_t runBehavior() = 0;
+      virtual uint32_t runBehavior(std::string& message) = 0;
 
       /**
        * @brief Virtual destructor for the interface

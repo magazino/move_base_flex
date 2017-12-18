@@ -63,7 +63,11 @@ namespace mbf_nav_core_wrapper {
        * @return Result code as described on ExePath action result, as this is a wrapper to the nav_core,
        *         only 0 (SUCCESS) and 100 (FAILURE) are supported.
        */
-      virtual uint32_t computeVelocityCommands(geometry_msgs::TwistStamped &cmd_vel, std::string &message);
+      virtual uint32_t computeVelocityCommands(
+          const geometry_msgs::PoseStamped& robot_pose,
+          const geometry_msgs::TwistStamped& robot_velocity,
+          geometry_msgs::TwistStamped &cmd_vel,
+          std::string &message);
 
       /**
        * @brief Check if the goal pose has been achieved by the local planner
