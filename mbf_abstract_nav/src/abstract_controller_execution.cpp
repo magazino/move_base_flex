@@ -178,10 +178,9 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
   {
-    // TODO make a better warning here!
-    if (getState() == GOT_LOCAL_CMD)
+    if (moving_)
     {
-      ROS_WARN("Setting new path while moving!");
+      ROS_WARN("Setting new plan while moving!");
     }
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     new_plan_ = true;
