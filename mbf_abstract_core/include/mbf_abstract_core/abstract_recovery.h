@@ -52,7 +52,8 @@ namespace mbf_abstract_core {
 
       /**
        * @brief Runs the AbstractRecovery
-       * TODO Docu
+       * @param message The recovery behavior could set, the message should correspond to the return value
+       * @return An outcome which will be hand over to the action result.
        */
       virtual uint32_t runBehavior(std::string& message) = 0;
 
