@@ -303,6 +303,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! Publisher to publish the current computed path
     ros::Publisher path_pub_;
 
+    //! Path sequence counter
+    int path_seq_count_;
+
     //! Private node handle
     ros::NodeHandle private_nh_;
 
