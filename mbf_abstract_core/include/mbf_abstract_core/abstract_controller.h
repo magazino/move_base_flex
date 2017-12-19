@@ -61,8 +61,8 @@ namespace mbf_abstract_core{
       /**
        * @brief Given the current position, orientation, and velocity of the robot,
        * compute velocity commands to send to the base.
-       * @param pose the current pose of the robot.
-       * @param velocity the current velocity of the robot.
+       * @param pose The current pose of the robot.
+       * @param velocity The current velocity of the robot.
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
        * @param message Optional more detailed outcome as a string
        * @return Result code as described on ExePath action result:

@@ -55,6 +55,7 @@ namespace mbf_abstract_nav
       moving_ptr_(moving_ptr),
       recovery_ptr_(recovery_ptr),
       private_nh_("~"),
+      path_seq_count_(0),
       action_client_exe_path_(private_nh_, name_action_exe_path),
       action_client_get_path_(private_nh_, name_action_get_path),
       action_client_recovery_(private_nh_, name_action_recovery)
@@ -227,7 +228,7 @@ namespace mbf_abstract_nav
     mbf_msgs::GetPathResult result;
     geometry_msgs::PoseStamped start_pose, goal_pose;
 
-    result.path.header.seq = 0; // TODO check for a more meaningful sequence
+    result.path.header.seq = path_seq_count_++;
     result.path.header.frame_id = global_frame_;
     goal_pose = goal->target_pose;
     current_goal_pub_.publish(goal_pose);
