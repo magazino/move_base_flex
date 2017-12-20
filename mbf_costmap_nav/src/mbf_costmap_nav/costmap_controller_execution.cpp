@@ -109,7 +109,6 @@ void CostmapControllerExecution::initPlugin()
     exit(1);
   }
 
-  // TODO check this
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 

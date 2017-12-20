@@ -113,16 +113,20 @@ void CostmapPlannerExecution::initPlugin()
   ROS_INFO("Global planner plugin initialized.");
 }
 
-void CostmapPlannerExecution::run() // TODO put lock around makePlan
+uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
+                                           const geometry_msgs::PoseStamped start,
+                                           const geometry_msgs::PoseStamped goal,
+                                           double tolerance,
+                                           std::vector<geometry_msgs::PoseStamped> &plan,
+                                           double &cost,
+                                           std::string &message)
 {
-  // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    AbstractPlannerExecution::run();
-    return;
+    return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
   }
-  AbstractPlannerExecution::run();
+  return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */

@@ -246,6 +246,27 @@ namespace mbf_abstract_nav
     virtual void initPlugin() = 0;
 
     /**
+     * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
+     *        if a goal tolerance is enabled in the planner plugin.
+     * @param start The start pose for planning
+     * @param goal The goal pose for planning
+     * @param tolerance The goal tolerance
+     * @param plan The computed plan by the plugin
+     * @param cost The computed costs for the corresponding plan
+     * @param message An optional message which should correspond with the returned outcome
+     * @return An outcome number, see also the action definition in the GetPath.action file
+     */
+    virtual uint32_t makePlan(
+        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+        const geometry_msgs::PoseStamped start,
+        const geometry_msgs::PoseStamped goal,
+        double tolerance,
+        std::vector<geometry_msgs::PoseStamped> &plan,
+        double &cost,
+        std::string &message);
+
+
+    /**
      * @brief Sets the internal state, thread communication safe
      * @param state the current state
      */

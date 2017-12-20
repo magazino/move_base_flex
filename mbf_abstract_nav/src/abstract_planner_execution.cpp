@@ -273,6 +273,16 @@ namespace mbf_abstract_nav
     return planner_->cancel();
   }
 
+  uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                                          const geometry_msgs::PoseStamped start,
+                                          const geometry_msgs::PoseStamped goal,
+                                          double tolerance,
+                                          std::vector<geometry_msgs::PoseStamped> &plan,
+                                          double &cost,
+                                          std::string &message)
+  {
+    return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+  }
 
   void AbstractPlannerExecution::run()
   {
@@ -333,8 +343,9 @@ namespace mbf_abstract_nav
           ROS_INFO_STREAM("Start planning");
 
           std::string message;
-          uint32_t outcome = planner_->makePlan(current_start, current_goal, current_tolerance,
-                                                       plan, cost, message);
+
+          uint32_t outcome = makePlan(planner_, current_start, current_goal, current_tolerance, plan, cost, message);
+
           success = outcome < 10;
           setPluginInfo(outcome, message);
 
