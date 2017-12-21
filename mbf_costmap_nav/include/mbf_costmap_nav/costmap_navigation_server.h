@@ -86,17 +86,22 @@ public:
    */
   virtual ~CostmapNavigationServer();
 
-protected:
+private:
 
   /**
-   * check whether the costmaps should be activated.
+   * @brief Check whether the costmaps should be activated.
    */
   void checkActivateCostmaps();
 
   /**
-   * @brief checks whether the costmaps should and could be deactivated
+   * @brief Check whether the costmaps should and could be deactivated
    */
   void checkDeactivateCostmaps();
+
+  /**
+   * @brief Timer-triggered deactivation of both costmaps.
+   */
+  void deactivateCostmaps(const ros::TimerEvent &event);
 
   /**
    * @brief Callback method for the check_pose_cost service
@@ -140,7 +145,6 @@ protected:
   virtual void callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal);
 
   /**
-   *
    * @brief Reconfiguration method called by dynamic reconfigure.
    * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
    * @param level bit mask, which parameters are set.
@@ -160,10 +164,10 @@ protected:
   bool setup_reconfigure_;
 
   //! Shared pointer to the common local costmap
-  CostmapPtr costmap_controller_ptr_;
+  CostmapPtr local_costmap_ptr_;
 
   //! Shared pointer to the common global costmap
-  CostmapPtr costmap_planner_ptr_;
+  CostmapPtr global_costmap_ptr_;
 
   //! true, if the local costmap is active
   bool local_costmap_active_;
@@ -177,8 +181,10 @@ protected:
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
 
-  //! stop updating costmaps when not planning or controlling, if true
+  //! Stop updating costmaps when not planning or controlling, if true
   bool shutdown_costmaps_;
+  ros::Timer shutdown_costmaps_timer_;    //!< delayed shutdown timer
+  ros::Duration shutdown_costmaps_delay_; //!< delayed shutdown delay
 
 };
 

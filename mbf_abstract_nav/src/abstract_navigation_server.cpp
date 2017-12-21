@@ -479,6 +479,7 @@ namespace mbf_abstract_nav
     {
       if (!getRobotPose(robot_pose))
       {
+        active_moving_ = false;
         result.outcome = mbf_msgs::ExePathResult::TF_ERROR;
         result.message = "Could not get the robot pose!";
         action_server_exe_path_ptr_->setAborted(result, result.message);
