@@ -41,8 +41,8 @@
 #ifndef MBF_SIMPLE_NAV__SIMPLE_CONTROLLER_EXECUTION_H_
 #define MBF_SIMPLE_NAV__SIMPLE_CONTROLLER_EXECUTION_H_
 
-#include <mbf_abstract_core/abstract_controller.h>
 #include <mbf_abstract_nav/abstract_controller_execution.h>
+#include <mbf_abstract_core/abstract_controller.h>
 
 namespace mbf_simple_nav
 {

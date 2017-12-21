@@ -41,16 +41,15 @@
 #ifndef MBF_COSTMAP_NAV__COSTMAP_NAVIGATION_SERVER_H_
 #define MBF_COSTMAP_NAV__COSTMAP_NAVIGATION_SERVER_H_
 
-#include <std_srvs/Empty.h>
-
-#include <mbf_msgs/CheckPose.h>
-#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
-
-#include "mbf_abstract_nav/abstract_navigation_server.h"
+#include <mbf_abstract_nav/abstract_navigation_server.h>
 
 #include "costmap_planner_execution.h"
 #include "costmap_controller_execution.h"
 #include "costmap_recovery_execution.h"
+
+#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
+#include <std_srvs/Empty.h>
+#include <mbf_msgs/CheckPose.h>
 
 namespace mbf_costmap_nav
 {

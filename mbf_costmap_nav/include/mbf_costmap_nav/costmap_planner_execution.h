@@ -41,9 +41,9 @@
 #ifndef MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
 #define MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
 
-#include <costmap_2d/costmap_2d_ros.h>
-#include <mbf_costmap_core/costmap_planner.h>
 #include <mbf_abstract_nav/abstract_planner_execution.h>
+#include <mbf_costmap_core/costmap_planner.h>
+#include <costmap_2d/costmap_2d_ros.h>
 
 namespace mbf_costmap_nav
 {

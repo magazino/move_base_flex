@@ -39,9 +39,8 @@
 #ifndef MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_
 #define MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_
 
-#include <geometry_msgs/PoseStamped.h>
-#include <costmap_2d/costmap_2d_ros.h>
 #include <mbf_abstract_core/abstract_planner.h>
+#include <costmap_2d/costmap_2d_ros.h>
 
 namespace mbf_costmap_core {
   /**
@@ -107,6 +106,6 @@ namespace mbf_costmap_core {
       CostmapPlanner(){}
 
   };
-};  /* namespace mbf_costmap_core */
+}  /* namespace mbf_costmap_core */
 
 #endif  /* MBF_COSTMAP_CORE__COSTMAP_PLANNER_H_ */

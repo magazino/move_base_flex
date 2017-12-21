@@ -39,11 +39,12 @@
 #ifndef MBF_ABSTRACT_CORE__ABSTRACT_CONTROLLER_H_
 #define MBF_ABSTRACT_CORE__ABSTRACT_CONTROLLER_H_
 
-#include <ros/ros.h>
+#include <vector>
+#include <string>
+#include <stdint.h>
+#include <boost/shared_ptr.hpp>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_listener.h>
-#include <boost/shared_ptr.hpp>
 
 namespace mbf_abstract_core{
 

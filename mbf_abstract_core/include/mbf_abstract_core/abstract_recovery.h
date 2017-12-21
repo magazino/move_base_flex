@@ -39,6 +39,10 @@
 #ifndef MBF_ABSTRACT_CORE__ABSTRACT_RECOVERY_H_
 #define MBF_ABSTRACT_CORE__ABSTRACT_RECOVERY_H_
 
+#include <stdint.h>
+#include <string>
+#include <boost/shared_ptr.hpp>
+
 namespace mbf_abstract_core {
   /**
    * @class AbstractRecovery

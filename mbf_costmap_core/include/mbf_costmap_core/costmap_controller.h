@@ -39,11 +39,9 @@
 #ifndef MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_
 #define MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
+#include <mbf_abstract_core/abstract_controller.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
-#include <mbf_abstract_core/abstract_controller.h>
 
 namespace mbf_costmap_core {
   /**
@@ -128,6 +126,6 @@ namespace mbf_costmap_core {
       CostmapController(){}
 
   };
-};  /* namespace mbf_costmap_core */
+}  /* namespace mbf_costmap_core */
 
 #endif  /* MBF_COSTMAP_CORE__COSTMAP_CONTROLLER_H_ */

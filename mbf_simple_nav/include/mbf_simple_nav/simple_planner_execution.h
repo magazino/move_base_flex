@@ -41,8 +41,8 @@
 #ifndef MBF_SIMPLE_NAV__SIMPLE_PLANNER_EXECUTION_H_
 #define MBF_SIMPLE_NAV__SIMPLE_PLANNER_EXECUTION_H_
 
-#include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_abstract_nav/abstract_planner_execution.h>
+#include <mbf_abstract_core/abstract_planner.h>
 
 namespace mbf_simple_nav
 {

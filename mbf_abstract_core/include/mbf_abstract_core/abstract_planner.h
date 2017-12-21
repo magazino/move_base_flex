@@ -39,9 +39,11 @@
 #ifndef MBF_ABSTRACT_CORE__ABSTRACT_PLANNER_H_
 #define MBF_ABSTRACT_CORE__ABSTRACT_PLANNER_H_
 
-#include <ros/ros.h>
-#include <geometry_msgs/PoseStamped.h>
+#include <vector>
+#include <string>
+#include <stdint.h>
 #include <boost/shared_ptr.hpp>
+#include <geometry_msgs/PoseStamped.h>
 
 namespace mbf_abstract_core
 {

@@ -38,9 +38,10 @@
 
 #ifndef MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_
 #define MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_
+
+#include <mbf_abstract_core/abstract_recovery.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_listener.h>
-#include "mbf_abstract_core/abstract_recovery.h"
 
 namespace mbf_costmap_core
 {
@@ -88,7 +89,6 @@ class CostmapRecovery : public mbf_abstract_core::AbstractRecovery{
   CostmapRecovery(){}
 
 };
-
 }  /* namespace mbf_costmap_core */
 
 #endif /* MBF_COSTMAP_CORE__COSTMAP_RECOVERY_H_ */
