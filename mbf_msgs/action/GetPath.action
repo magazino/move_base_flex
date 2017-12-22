@@ -33,7 +33,7 @@ uint8 TF_ERROR        = 57
 uint8 NOT_INITIALIZED = 58
 uint8 INVALID_PLUGIN  = 59
 uint8 INTERNAL_ERROR  = 60
-uint8 STOPPED         = 61  # The planner execution hsa been stopped rigorously, e.g. Move Base Flex has been shut down.
+uint8 STOPPED         = 61  # The planner execution has been stopped rigorously, e.g. Move Base Flex has been shut down.
 # 71..99 are reserved as plugin specific errors
 
 uint32 outcome
