@@ -46,7 +46,7 @@ namespace mbf_abstract_nav
 
   AbstractControllerExecution::AbstractControllerExecution(
       boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED), moving_(false), plugin_code_(255)
+      condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED), moving_(false), outcome_(255)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -131,8 +131,8 @@ namespace mbf_abstract_nav
     {
       return false; // thread is already running.
     }
-    plugin_code_ = 255;
-    plugin_msg_ = "";
+    outcome_ = 255;
+    message_ = "";
     moving_ = true;
     thread_ = boost::thread(&AbstractControllerExecution::run, this);
     return true;
@@ -158,23 +158,6 @@ namespace mbf_abstract_nav
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
-
-
-  void AbstractControllerExecution::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
-  {
-    boost::lock_guard<boost::mutex> guard(pcode_mtx_);
-    plugin_code_ =  plugin_code;
-    plugin_msg_ = plugin_msg;
-  }
-
-
-  void AbstractControllerExecution::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
-  {
-    boost::lock_guard<boost::mutex> guard(pcode_mtx_);
-    plugin_code = plugin_code_;
-    plugin_msg = plugin_msg_;
-  }
-
 
   void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
   {
@@ -204,8 +187,7 @@ namespace mbf_abstract_nav
   }
 
 
-  uint32_t AbstractControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd,
-                                                                           std::string& message)
+  uint32_t AbstractControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd, std::string& message)
   {
     // TODO calculate robot pose and velocity
     geometry_msgs::PoseStamped robot_pose;
@@ -325,12 +307,10 @@ namespace mbf_abstract_nav
           lct_mtx_.unlock();
 
           // call plugin to compute the next velocity command
-          std::string message;
           geometry_msgs::TwistStamped cmd_vel_stamped;
-          uint32_t outcome = computeVelocityCmd(cmd_vel_stamped, message);
-          setPluginInfo(outcome, message);
+          outcome_ = computeVelocityCmd(cmd_vel_stamped, message_);
 
-          if (outcome < 10)
+          if (outcome_ < 10)
           {
             // set stamped values: frame id, time stamp and sequence number
             cmd_vel_stamped.header.seq = seq++;

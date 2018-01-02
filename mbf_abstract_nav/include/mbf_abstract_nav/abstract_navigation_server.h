@@ -210,6 +210,14 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
                                     std::vector<geometry_msgs::PoseStamped> &global_plan);
 
     /**
+     * @brief Utility method to fill the ExePath action result in a single line
+     * @param outcome ExePath action outcome
+     * @param message ExePath action message
+     * @param result The action result to fill
+     */
+    void fillExePathResult(uint32_t outcome, const std::string &message, mbf_msgs::ExePathResult &result);
+
+    /**
      * @brief Start a dynamic reconfigure server.
      * This must be called only if the extending doesn't create its own.
      */
@@ -290,6 +298,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     //! current robot pose; moving controller is responsible to update it by calling getRobotPose
     geometry_msgs::PoseStamped robot_pose_;
+
+    //! current goal pose; used to compute remaining distance and angle
+    geometry_msgs::PoseStamped goal_pose_;
 
     //! timeout after a oscillation is detected
     ros::Duration oscillation_timeout_;

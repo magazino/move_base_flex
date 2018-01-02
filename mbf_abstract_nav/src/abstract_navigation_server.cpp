@@ -210,7 +210,7 @@ namespace mbf_abstract_nav
   {
     bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
                                                      ros::Duration(tf_timeout_), robot_pose);
-
+    robot_pose.header.stamp = ros::Time::now(); // would be 0 if not, as we ask tf listener for the last pose available
     if (!tf_success)
     {
       ROS_ERROR_STREAM("Can not get the robot pose in the global frame. - robot frame: \""
@@ -369,7 +369,8 @@ namespace mbf_abstract_nav
           }
 
           result.path.poses = global_plan;
-          planning_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = planning_ptr_->getOutcome();
+          result.message = planning_ptr_->getMessage();
           action_server_get_path_ptr_->setSucceeded(result, result.message);
 
           active_planning_ = false;
@@ -378,14 +379,16 @@ namespace mbf_abstract_nav
           // no plan found
         case AbstractPlannerExecution::NO_PLAN_FOUND:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: no plan found");
-          planning_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = planning_ptr_->getOutcome();
+          result.message = planning_ptr_->getMessage();
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
           break;
 
         case AbstractPlannerExecution::MAX_RETRIES:
           ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Global planner reached the maximum number of retries");
-          planning_ptr_->getPluginInfo(result.outcome, result.message);
+          result.outcome = planning_ptr_->getOutcome();
+          result.message = planning_ptr_->getMessage();
           action_server_get_path_ptr_->setAborted(result, result.message);
           active_planning_ = false;
           break;
@@ -447,15 +450,15 @@ namespace mbf_abstract_nav
     typename AbstractControllerExecution::ControllerState state_moving_input;
 
     std::vector<geometry_msgs::PoseStamped> plan = goal->path.poses;
-    geometry_msgs::PoseStamped goal_pose = plan.back();
+    goal_pose_ = plan.back();
     ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Called action \""
         << name_action_exe_path << "\" with plan:" << std::endl
         << "frame: \"" << goal->path.header.frame_id << "\" " << std::endl
         << "stamp: " << goal->path.header.stamp << std::endl
         << "num poses: " << goal->path.poses.size() << std::endl
-        << "goal: (" << goal_pose.pose.position.x << ", "
-                     << goal_pose.pose.position.y << ", "
-                     << goal_pose.pose.position.z << ")");
+        << "goal: (" << goal_pose_.pose.position.x << ", "
+                     << goal_pose_.pose.position.y << ", "
+                     << goal_pose_.pose.position.z << ")");
 
     moving_ptr_->setNewPlan(plan);
     if (!moving_ptr_->startMoving())
@@ -485,11 +488,6 @@ namespace mbf_abstract_nav
         ROS_ERROR_STREAM_NAMED(name_action_exe_path, result.message << " Canceling the action call.");
         break;
       }
-      else
-      {
-        result.final_pose = robot_pose_;
-        feedback.current_pose = robot_pose_;
-      }
 
       if (first_cycle)
       {
@@ -509,8 +507,7 @@ namespace mbf_abstract_nav
       {
         case AbstractControllerExecution::STOPPED:
           ROS_WARN_STREAM_NAMED(name_action_exe_path, "The moving has been stopped!");
-          result.outcome = mbf_msgs::ExePathResult::CANCELED;
-          result.message = "Local planner preempted";
+          fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Local planner preempted", result);
           action_server_exe_path_ptr_->setPreempted(result, result.message);
           ROS_DEBUG_STREAM("Action \"ExePath\" preempted");
           active_moving_ = false;
@@ -534,7 +531,7 @@ namespace mbf_abstract_nav
         case AbstractControllerExecution::MAX_RETRIES:
           ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner has been aborted after it exceeded the maximum number of retries!");
           active_moving_ = false;
-          moving_ptr_->getPluginInfo(result.outcome, result.message);
+          fillExePathResult(moving_ptr_->getOutcome(), moving_ptr_->getMessage(), result);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
@@ -546,42 +543,33 @@ namespace mbf_abstract_nav
           ROS_WARN("################################################################################");
 
           active_moving_ = false;
-          result.outcome = mbf_msgs::ExePathResult::PAT_EXCEEDED;
-          result.message = "Local planner exceeded allocated time";
+          fillExePathResult(mbf_msgs::ExePathResult::PAT_EXCEEDED, "Local planner exceeded allocated time", result);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution::NO_PLAN:
           ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner has been started without any plan!");
           active_moving_ = false;
-          result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-          result.message = "Local planner started without a path to follow";
+          fillExePathResult(mbf_msgs::ExePathResult::INVALID_PATH, "Local planner started without a path", result);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution::EMPTY_PLAN:
           ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner has received an empty plan");
           active_moving_ = false;
-          result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-          result.message = "Local planner started with an empty plan";
+          fillExePathResult(mbf_msgs::ExePathResult::INVALID_PATH, "Local planner started with an empty plan", result);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution::INVALID_PLAN:
           ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner has received an invalid plan");
           active_moving_ = false;
-          result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-          result.message = "Local planner started with an invalid plan";
+          fillExePathResult(mbf_msgs::ExePathResult::INVALID_PATH, "Local planner started with an invalid plan", result);
           action_server_exe_path_ptr_->setAborted(result, result.message);
           break;
 
         case AbstractControllerExecution::NO_LOCAL_CMD:
-          ROS_WARN_STREAM_THROTTLE_NAMED(3, name_action_exe_path, "Have not received a velocity command from the "
-              << "local planner!");
-          moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose));
-          action_server_exe_path_ptr_->publishFeedback(feedback);
+          ROS_WARN_STREAM_THROTTLE_NAMED(3, name_action_exe_path, "No velocity command received from local planner!");
           break;
 
         case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -599,24 +587,23 @@ namespace mbf_abstract_nav
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
               moving_ptr_->stopMoving();
               active_moving_ = false;
-              result.outcome = mbf_msgs::ExePathResult::OSCILLATION;
-              result.message = "Oscillation detected!";
+              fillExePathResult(mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
               action_server_exe_path_ptr_->setAborted(result, result.message);
               break;
             }
           }
 
           moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose));
+          feedback.current_pose = robot_pose_;
+          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose_));
+          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose_));
           action_server_exe_path_ptr_->publishFeedback(feedback);
           break;
 
         case AbstractControllerExecution::ARRIVED_GOAL:
           ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Local planner succeeded; arrived to goal");
           active_moving_ = false;
-          result.outcome = mbf_msgs::ExePathResult::SUCCESS;
-          result.message = "Local planner succeeded; arrived to goal!";
+          fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Local planner succeeded; arrived to goal!", result);
           action_server_exe_path_ptr_->setSucceeded(result, result.message);
           break;
       }
@@ -978,6 +965,9 @@ namespace mbf_abstract_nav
                 run = false;
                 move_base_result.outcome = mbf_msgs::MoveBaseResult::OSCILLATION;
                 move_base_result.message = "Oscillation detected!";
+                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, target_pose));
+                move_base_result.final_pose = robot_pose_;
                 action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.message);
                 break;
               }
@@ -1218,5 +1208,16 @@ namespace mbf_abstract_nav
     feedback_out.current_twist = feedback->current_twist;
     action_server_move_base_ptr_->publishFeedback(feedback_out);
   }
+
+  void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::string &message,
+                                                   mbf_msgs::ExePathResult &result)
+  {
+    result.outcome = outcome;
+    result.message = message;
+    result.final_pose = robot_pose_;
+    result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose_));
+    result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose_));
+  }
+
 
 } /* namespace mbf_abstract_nav */

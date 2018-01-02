@@ -46,7 +46,7 @@ namespace mbf_abstract_nav
 
   AbstractPlannerExecution::AbstractPlannerExecution(boost::condition_variable &condition) :
       condition_(condition), state_(STOPPED), planning_(false),
-      has_new_start_(false), has_new_goal_(false), plugin_code_(255)
+      has_new_start_(false), has_new_goal_(false), outcome_(255)
   {
     loadParams();
   }
@@ -124,34 +124,16 @@ namespace mbf_abstract_nav
   }
 
 
-
-  void AbstractPlannerExecution::setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg)
-{
-  boost::lock_guard<boost::mutex> guard(pcode_mtx_);
-  plugin_code_ =  plugin_code;
-  plugin_msg_ = plugin_msg;
-}
-
-
-  void AbstractPlannerExecution::getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg)
-{
-  boost::lock_guard<boost::mutex> guard(pcode_mtx_);
-  plugin_code = plugin_code_;
-  plugin_msg = plugin_msg_;
-}
-
+  typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState()
+  {
+    boost::lock_guard<boost::mutex> guard(state_mtx_);
+    return state_;
+  }
 
   void AbstractPlannerExecution::setState(PlanningState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     state_ = state;
-  }
-
-
-  typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState()
-  {
-    boost::lock_guard<boost::mutex> guard(state_mtx_);
-    return state_;
   }
 
 
@@ -342,12 +324,8 @@ namespace mbf_abstract_nav
         {
           ROS_INFO_STREAM("Start planning");
 
-          std::string message;
-
-          uint32_t outcome = makePlan(planner_, current_start, current_goal, current_tolerance, plan, cost, message);
-
-          success = outcome < 10;
-          setPluginInfo(outcome, message);
+          outcome_ = makePlan(planner_, current_start, current_goal, current_tolerance, plan, cost, message_);
+          success = outcome_ < 10;
 
           if (cancel_ && !isPatienceExceeded())
           {

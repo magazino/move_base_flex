@@ -130,11 +130,14 @@ namespace mbf_abstract_nav
     ControllerState getState();
 
     /**
-     * @brief pulls the current plugin information, plugin code and plugin message!
-     * @param plugin_code Returns the last read code provided py the plugin
-     * @param plugin_msg Returns the last read message provided by the plugin
+     * @brief Gets the current plugin execution outcome
      */
-    void getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg);
+    uint32_t getOutcome() { return outcome_; };
+
+    /**
+     * @brief Gets the current plugin execution message
+     */
+    std::string getMessage() { return message_; };
 
     /**
      * @brief Returns the time of the last plugin call
@@ -193,13 +196,6 @@ namespace mbf_abstract_nav
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
-    /**
-     * @brief Sets the plugin code and the plugin msg. This method is for thread communication
-     * @param plugin_code
-     * @param plugin_msg
-     */
-    void setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg);
-
     //! the name of the loaded plugin
     std::string plugin_name_;
 
@@ -222,7 +218,6 @@ namespace mbf_abstract_nav
     ros::Duration patience_;
 
   private:
-
 
 
     /**
@@ -267,9 +262,6 @@ namespace mbf_abstract_nav
     //! mutex to handle safe thread communication for the last plugin call time
     boost::mutex lct_mtx_;
 
-    //! mutex to handle safe thread communication for the current plugin code
-    boost::mutex pcode_mtx_;
-
     //! true, if a new plan is available. See hasNewPlan()!
     bool new_plan_;
 
@@ -312,11 +304,11 @@ namespace mbf_abstract_nav
     //! the current controller state
     AbstractControllerExecution::ControllerState state_;
 
-    //! the last received plugin code
-    uint32_t plugin_code_;
+    //! the last received plugin execution outcome
+    uint32_t outcome_;
 
-    //! the last received plugin message
-    std::string plugin_msg_;
+    //! the last received plugin execution message
+    std::string message_;
 
     //! time before a timeout used for tf requests
     double tf_timeout_;

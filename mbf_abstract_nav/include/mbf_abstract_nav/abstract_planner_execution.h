@@ -134,6 +134,16 @@ namespace mbf_abstract_nav
     PlanningState getState();
 
     /**
+     * @brief Gets the current plugin execution outcome
+     */
+    uint32_t getOutcome() { return outcome_; };
+
+    /**
+     * @brief Gets the current plugin execution message
+     */
+    std::string getMessage() { return message_; };
+
+    /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
      * computation takes to much time.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
@@ -173,13 +183,6 @@ namespace mbf_abstract_nav
                        double tolerance);
 
     /**
-     * @brief Copies the plugin info to the references.
-     * @param plugin_code Reference to a variable, to which the code will be copied.
-     * @param plugin_msg Reference to a variable, to which the plugin message will be copied.
-     */
-    void getPluginInfo(uint32_t &plugin_code, std::string &plugin_msg);
-
-    /**
      * @brief Tries to stop the current planner execution by an thread interrupt.
      */
     void stopPlanning();
@@ -216,13 +219,6 @@ namespace mbf_abstract_nav
      * @brief Loads all parameters from the parameter server.
      */
     void loadParams();
-
-   /**
-    * @brief Saves the current plugin code and plugin message. This method is for a safe thread communication.
-    * @param plugin_code plugin code received from the plugin
-    * @param plugin_msg plugin message received from the plugin
-    */
-    void setPluginInfo(const uint32_t &plugin_code, const std::string &plugin_msg);
 
 
   private:
@@ -285,9 +281,6 @@ namespace mbf_abstract_nav
     //! mutex to handle safe thread communication for the plan and plan-costs
     boost::mutex plan_mtx_;
 
-    //! mutex to handle safe thread communication for the plugin code and the plugin message.
-    boost::mutex pcode_mtx_;
-
     //! mutex to handle safe thread communication for the goal and start pose.
     boost::mutex goal_start_mtx_;
 
@@ -312,11 +305,11 @@ namespace mbf_abstract_nav
     //! current global plan cost
     double cost_;
 
-    //! the current plugin code
-    uint32_t plugin_code_;
+    //! the last received plugin execution outcome
+    uint32_t outcome_;
 
-    //! the current plugin message
-    std::string plugin_msg_;
+    //! the last received plugin execution message
+    std::string message_;
 
     //! the current start pose used for planning
     geometry_msgs::PoseStamped start_;
