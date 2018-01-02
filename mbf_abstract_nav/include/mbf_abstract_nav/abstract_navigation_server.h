@@ -288,6 +288,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! loop variable for the recovery action
     bool active_recovery_;
 
+    //! current robot pose; moving controller is responsible to update it by calling getRobotPose
+    geometry_msgs::PoseStamped robot_pose_;
+
     //! timeout after a oscillation is detected
     ros::Duration oscillation_timeout_;
 

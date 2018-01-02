@@ -446,8 +446,6 @@ namespace mbf_abstract_nav
 
     typename AbstractControllerExecution::ControllerState state_moving_input;
 
-    ros::Time last_oscillation_reset = ros::Time::now();
-
     std::vector<geometry_msgs::PoseStamped> plan = goal->path.poses;
     geometry_msgs::PoseStamped goal_pose = plan.back();
     ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Called action \""
@@ -471,13 +469,14 @@ namespace mbf_abstract_nav
 
     active_moving_ = true;
 
-    geometry_msgs::PoseStamped robot_pose;
     geometry_msgs::PoseStamped oscillation_pose;
+    ros::Time last_oscillation_reset = ros::Time::now();
+
     bool first_cycle = true;
 
     while (active_moving_ && ros::ok())
     {
-      if (!getRobotPose(robot_pose))
+      if (!getRobotPose(robot_pose_))
       {
         active_moving_ = false;
         result.outcome = mbf_msgs::ExePathResult::TF_ERROR;
@@ -488,14 +487,14 @@ namespace mbf_abstract_nav
       }
       else
       {
-        result.final_pose = robot_pose;
-        feedback.current_pose = robot_pose;
+        result.final_pose = robot_pose_;
+        feedback.current_pose = robot_pose_;
       }
 
       if (first_cycle)
       {
         // init oscillation pose
-        oscillation_pose = robot_pose;
+        oscillation_pose = robot_pose_;
       }
 
       // check preempt requested
@@ -580,35 +579,37 @@ namespace mbf_abstract_nav
           ROS_WARN_STREAM_THROTTLE_NAMED(3, name_action_exe_path, "Have not received a velocity command from the "
               << "local planner!");
           moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, goal_pose));
+          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose));
+          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose));
           action_server_exe_path_ptr_->publishFeedback(feedback);
           break;
 
         case AbstractControllerExecution::GOT_LOCAL_CMD:
-          if (mbf_abstract_nav::distance(robot_pose, oscillation_pose) >= oscillation_distance_)
+          if (oscillation_timeout_ > ros::Duration(0.0))
           {
-            last_oscillation_reset = ros::Time::now();
-            oscillation_pose = robot_pose;
+            // check if oscillating
+            if (mbf_abstract_nav::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
+            {
+              last_oscillation_reset = ros::Time::now();
+              oscillation_pose = robot_pose_;
+            }
+            else if (last_oscillation_reset + oscillation_timeout_ < ros::Time::now())
+            {
+              ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner is oscillating for "
+                << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
+              moving_ptr_->stopMoving();
+              active_moving_ = false;
+              result.outcome = mbf_msgs::ExePathResult::OSCILLATION;
+              result.message = "Oscillation detected!";
+              action_server_exe_path_ptr_->setAborted(result, result.message);
+              break;
+            }
           }
 
           moving_ptr_->getLastValidCmdVel(feedback.current_twist);
-          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, goal_pose));
-          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, goal_pose));
+          feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose));
+          feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose));
           action_server_exe_path_ptr_->publishFeedback(feedback);
-
-          // check if oscillating
-          if (oscillation_timeout_ > ros::Duration(0.0)
-              && last_oscillation_reset + oscillation_timeout_ < ros::Time::now())
-          {
-            ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner is oscillating for "
-                << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            moving_ptr_->stopMoving();
-            active_moving_ = false;
-            result.outcome = mbf_msgs::ExePathResult::OSCILLATION;
-            result.message = "Oscillation detected!";
-            action_server_exe_path_ptr_->setAborted(result, result.message);
-          }
           break;
 
         case AbstractControllerExecution::ARRIVED_GOAL:
@@ -758,7 +759,6 @@ namespace mbf_abstract_nav
         return;
       }
     }
-    geometry_msgs::PoseStamped robot_pose;
 
     mbf_msgs::GetPathGoal get_path_goal;
     mbf_msgs::ExePathGoal exe_path_goal;
@@ -775,8 +775,8 @@ namespace mbf_abstract_nav
         goal->recovery_behaviors.empty() ? recovery_ptr_->listRecoveryBehaviors() : goal->recovery_behaviors;
     std::vector<std::string>::iterator current_recovery_behavior = recovery_behaviors.begin();
 
-    // get the current robot pose
-    if (!getRobotPose(robot_pose))
+    // get the current robot pose only at the beginning, as exe_path will keep updating it as we move
+    if (!getRobotPose(robot_pose_))
     {
       ROS_ERROR_STREAM_NAMED(name_action_move_base, "Could not get the current robot pose!");
       move_base_result.message = "Could not get the current robot pose!";
@@ -822,7 +822,12 @@ namespace mbf_abstract_nav
 
     bool run = true;
     bool preempted = false;
-    ros::Duration wait(0.5);
+    ros::Duration wait(0.05);
+
+    // we create a navigation-level oscillation detection independent of the exe_path action one,
+    // as the later doesn't handle oscillations created by quickly failing repeated plans
+    geometry_msgs::PoseStamped oscillation_pose = robot_pose_;
+    ros::Time last_oscillation_reset = ros::Time::now();
 
     std::string type; // recovery behavior type
     bool try_recovery = false; // init with false
@@ -875,9 +880,9 @@ namespace mbf_abstract_nav
                 // copy result from get_path action
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
-                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, target_pose));
-                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, target_pose));
-                move_base_result.final_pose = robot_pose;
+                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, target_pose));
+                move_base_result.final_pose = robot_pose_;
 
                 if (!recovery_enabled_)
                 {
@@ -923,9 +928,9 @@ namespace mbf_abstract_nav
                 // copy result from get_path action
                 move_base_result.outcome = get_path_result.outcome;
                 move_base_result.message = get_path_result.message;
-                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose, target_pose));
-                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose, target_pose));
-                move_base_result.final_pose = robot_pose;
+                move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, target_pose));
+                move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, target_pose));
+                move_base_result.final_pose = robot_pose_;
                 run = false;
                 action_server_move_base_ptr_->setPreempted(move_base_result, get_path_state.getText());
                 break;
@@ -954,8 +959,31 @@ namespace mbf_abstract_nav
         case EXE_PATH:
 
           if (!action_client_exe_path_.waitForResult(wait))
-          {  // no result -> action server is still running
-          // reset the recovery behaviors, if the robot moves
+          {
+            // no result -> action server is still running
+
+            if (oscillation_timeout_ > ros::Duration(0.0))
+            {
+              // check if oscillating
+              if (mbf_abstract_nav::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
+              {
+                last_oscillation_reset = ros::Time::now();
+                oscillation_pose = robot_pose_;
+              }
+              else if (last_oscillation_reset + oscillation_timeout_ < ros::Time::now())
+              {
+                ROS_WARN_STREAM_NAMED(name_action_exe_path, "Robot is oscillating for "
+                  << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
+                moving_ptr_->stopMoving();
+                run = false;
+                move_base_result.outcome = mbf_msgs::MoveBaseResult::OSCILLATION;
+                move_base_result.message = "Oscillation detected!";
+                action_server_move_base_ptr_->setAborted(move_base_result, move_base_result.message);
+                break;
+              }
+            }
+
+            // reset the recovery behaviors, if the robot moves
             if (moving_ptr_->isMoving())
             {
               ROS_INFO_STREAM_NAMED(name_action_move_base, "Reset current recovery behavior pointer to the first recovery behavior in the list!");
