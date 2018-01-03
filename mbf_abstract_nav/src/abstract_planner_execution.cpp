@@ -82,16 +82,6 @@ namespace mbf_abstract_nav
 
     max_retries_ = config.planner_max_retries;
     patience_ = ros::Duration(config.planner_patience);
-
-    // replanning chrono setup
-    if (config.planner_frequency > 0.0)
-    {
-      calling_duration_ = boost::chrono::microseconds((int)(1e6 / config.planner_frequency));
-    }
-    else
-    {
-      calling_duration_.zero();
-    }
   }
 
 
@@ -115,12 +105,6 @@ namespace mbf_abstract_nav
     // Timeout granted to the global planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(patience);
-
-    // replanning chrono setup
-    if (frequency > 0.0)
-    {
-      calling_duration_ = boost::chrono::microseconds((int)(1e6 / frequency));
-    }
   }
 
 
@@ -144,24 +128,9 @@ namespace mbf_abstract_nav
   }
 
 
-  ros::Time AbstractPlannerExecution::getLastCycleStartTime()
-  {
-    boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return last_cycle_start_time_;
-  }
-
-
-  void AbstractPlannerExecution::setLastCycleStartTime()
-  {
-    boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    last_cycle_start_time_ = ros::Time::now();
-  }
-
-
   bool AbstractPlannerExecution::isPatienceExceeded()
   {
-    boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_cycle_start_time_ > patience_);
+    return !patience_.isZero() && (ros::Time::now() - last_call_start_time_ > patience_);
   }
 
 
@@ -277,6 +246,7 @@ namespace mbf_abstract_nav
     bool make_plan = false;
     bool exceeded = false;
 
+    last_call_start_time_ = ros::Time::now();
     last_valid_plan_time_ = ros::Time::now();
 
     try
@@ -287,7 +257,6 @@ namespace mbf_abstract_nav
 
         boost::chrono::thread_clock::time_point start_time = boost::chrono::thread_clock::now();
 
-        setLastCycleStartTime();
         // call the planner
         std::vector<geometry_msgs::PoseStamped> plan;
         double cost;
@@ -322,8 +291,6 @@ namespace mbf_abstract_nav
         setState(PLANNING);
         if (make_plan)
         {
-          ROS_INFO_STREAM("Start planning");
-
           outcome_ = makePlan(planner_, current_start, current_goal, current_tolerance, plan, cost, message_);
           success = outcome_ < 10;
 
@@ -354,17 +321,17 @@ namespace mbf_abstract_nav
           }
           else if (isPatienceExceeded())
           {
-            // Patience exceeded is handled on the navigation server, who has tried to cancel planning (possibly
-            // without success, as old nav_core-based planners do not support canceling); here we just state the
-            // fact and cleanup the mess either after a succesfull canceling or after planner finally gived up
-            ROS_INFO_STREAM("Planning patience has been exceeded" << (cancel_ ? "; planner canceled!"
-                                                                              : " but we failed to cancel it!"));
+            // Patience exceeded is handled at two levels: here to stop retrying planning when max_retries is
+            // disabled, and on the navigation server when the planner doesn't return for more that patience seconds.
+            // In the second case, the navigation server has tried to cancel planning (possibly without success, as
+            // old nav_core-based planners do not support canceling), and we add here the fact to the log for info
+            ROS_INFO_STREAM("Planning patience has been exceeded" << cancel_ ? "; planner canceled!" : "");
             setState(PAT_EXCEEDED);
             exceeded = true;
             planning_ = false;
             condition_.notify_all(); // notify observer
           }
-          else if (max_retries_ == 0 && patience_ == ros::Duration(0))
+          else if (max_retries_ == 0 && patience_.isZero())
           {
             ROS_INFO_STREAM("Planning could not find a plan!");
             exceeded = true;
@@ -375,7 +342,7 @@ namespace mbf_abstract_nav
           else
           {
             exceeded = false;
-            ROS_INFO_STREAM("Planning could not find a plan! Trying again.");
+            ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
           }
         }
         else if (cancel_)
@@ -384,25 +351,6 @@ namespace mbf_abstract_nav
           setState(CANCELED);
           planning_ = false;
           condition_.notify_all();
-        }
-
-        //compute sleep time
-        boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
-        boost::chrono::microseconds execution_duration =
-            boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - start_time);
-        boost::chrono::microseconds sleep_time = calling_duration_ - execution_duration;
-        if (planning_ && ros::ok())
-        { // do not sleep if finished
-          if (sleep_time > boost::chrono::microseconds(0))
-          {
-            // interruption point
-            boost::this_thread::sleep_for(sleep_time);
-          }
-          else
-          {
-            // Warn every 100 seconds?  i don't understand this part  _SP_ please help!
-            ROS_WARN_THROTTLE(100, "Planning needs to much time to stay in the planning frequency!");
-          }
         }
       } // while (planning_ && ros::ok())
     }

@@ -100,12 +100,6 @@ namespace mbf_abstract_nav
     ros::Time getLastValidPlanTime();
 
     /**
-     * @brief Returns the time of the last cycle start.
-     * @return time, the last cycle started.
-     */
-    ros::Time getLastCycleStartTime();
-
-    /**
      * @brief Checks whether the patience was exceeded.
      * @return true, if the patience duration was exceeded.
      */
@@ -224,11 +218,6 @@ namespace mbf_abstract_nav
   private:
 
     /**
-     * @brief Saves the last cycle state. This method is for a safe thread communication.
-     */
-    void setLastCycleStartTime();
-
-    /**
      * @brief Loads the plugin associated with the given planner_type parameter.
      * @param planner_type The type of the planner plugin to load.
      * @return true, if the local planner plugin was successfully loaded.
@@ -284,17 +273,14 @@ namespace mbf_abstract_nav
     //! mutex to handle safe thread communication for the goal and start pose.
     boost::mutex goal_start_mtx_;
 
-    //! mutex to handle safe thread communication for the last cycle start time.
-    boost::mutex lct_mtx_;
-
     //! true, if a new goal pose has been set, until it is used.
     bool has_new_goal_;
 
     //! true, if a new start pose has been set, until it is used.
     bool has_new_start_;
 
-    //! the last cycle start time, updated each cycle.
-    ros::Time last_cycle_start_time_;
+    //! the last call start time, updated each cycle.
+    ros::Time last_call_start_time_;
 
     //! the last time a valid plan has been computed.
     ros::Time last_valid_plan_time_;
@@ -337,9 +323,6 @@ namespace mbf_abstract_nav
 
     //! thread for planning
     boost::thread thread_;
-
-    //! timing of the planning thread
-    boost::chrono::microseconds calling_duration_;
 
     //! robot frame used for computing the current robot pose
     std::string robot_frame_;
