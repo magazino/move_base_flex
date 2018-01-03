@@ -317,7 +317,7 @@ void CostmapNavigationServer::checkActivateCostmaps()
 
 void CostmapNavigationServer::checkDeactivateCostmaps()
 {
-  if (!ros::ok() ||
+  if (shutdown_costmaps_ &&
       ((local_costmap_active_ || global_costmap_active_) && !(active_planning_ || active_moving_ || active_recovery_)))
   {
     // Delay costmaps shutdown by shutdown_costmaps_delay so we don't need to enable at each step of a normal
