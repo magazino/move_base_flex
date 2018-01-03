@@ -450,6 +450,15 @@ namespace mbf_abstract_nav
     typename AbstractControllerExecution::ControllerState state_moving_input;
 
     std::vector<geometry_msgs::PoseStamped> plan = goal->path.poses;
+    if (plan.empty())
+    {
+      result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
+      result.message = "Local planner started with an empty plan!";
+      action_server_exe_path_ptr_->setAborted(result, result.message);
+      ROS_ERROR_STREAM_NAMED(name_action_exe_path, result.message << " Canceling the action call.");
+      return;
+    }
+
     goal_pose_ = plan.back();
     ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Called action \""
         << name_action_exe_path << "\" with plan:" << std::endl
