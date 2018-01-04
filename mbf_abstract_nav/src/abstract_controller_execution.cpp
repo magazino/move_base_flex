@@ -200,6 +200,8 @@ namespace mbf_abstract_nav
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     vel_cmd_stamped_ = vel_cmd;
+    if (vel_cmd_stamped_.header.stamp.isZero())
+      vel_cmd_stamped_.header.stamp = ros::Time::now();
   }
 
 
@@ -233,8 +235,7 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::isMoving()
   {
-    return moving_ && start_time_ < getLastValidCmdVelTime()
-        && !isPatienceExceeded();
+    return moving_ && start_time_ < getLastValidCmdVelTime() && !isPatienceExceeded();
   }
 
 

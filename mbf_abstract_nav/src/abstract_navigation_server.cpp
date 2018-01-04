@@ -985,7 +985,8 @@ namespace mbf_abstract_nav
             // reset the recovery behaviors, if the robot moves
             if (moving_ptr_->isMoving())
             {
-              ROS_INFO_STREAM_NAMED(name_action_move_base, "Reset current recovery behavior pointer to the first recovery behavior in the list!");
+              ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Reset current recovery behavior pointer "
+                << "to the first recovery behavior in the list!");
               current_recovery_behavior = recovery_behaviors.begin();
             }
 
