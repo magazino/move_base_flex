@@ -296,6 +296,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! loop variable for the recovery action
     bool active_recovery_;
 
+    //! loop variable for the move_base action
+    bool active_move_base_;
+
     //! current robot pose; moving controller is responsible to update it by calling getRobotPose
     geometry_msgs::PoseStamped robot_pose_;
 
