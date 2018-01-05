@@ -442,7 +442,7 @@ void AbstractNavigationServer::callActionGetPath(
 void AbstractNavigationServer::callActionExePath(
   const mbf_msgs::ExePathGoalConstPtr &goal)
 {
-  ROS_ERROR_STREAM_NAMED(name_action_exe_path, "Start action "  << name_action_exe_path);
+  ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Start action "  << name_action_exe_path);
 
   mbf_msgs::ExePathResult result;
   mbf_msgs::ExePathFeedback feedback;
@@ -515,7 +515,7 @@ void AbstractNavigationServer::callActionExePath(
     switch (state_moving_input)
     {
       case AbstractControllerExecution::STOPPED:
-        ROS_WARN_STREAM_NAMED(name_action_exe_path, "The moving has been stopped!");
+        // This is happens continuously if we keep replanning while moving
         fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Local planner preempted", result);
         action_server_exe_path_ptr_->setPreempted(result, result.message);
         ROS_DEBUG_STREAM("Action \"ExePath\" preempted");
@@ -736,6 +736,10 @@ void AbstractNavigationServer::callActionMoveBase(
   const std::string local_planner = goal->local_planner;
   const std::string global_planner = goal->global_planner;
 
+  mbf_msgs::GetPathGoal get_path_goal;
+  mbf_msgs::ExePathGoal exe_path_goal;
+  mbf_msgs::RecoveryGoal recovery_goal;
+
   mbf_msgs::MoveBaseResult move_base_result;
   mbf_msgs::GetPathResult get_path_result;
   mbf_msgs::ExePathResult exe_path_result;
@@ -756,9 +760,6 @@ void AbstractNavigationServer::callActionMoveBase(
     }
   }
 
-  mbf_msgs::GetPathGoal get_path_goal;
-  mbf_msgs::ExePathGoal exe_path_goal;
-  mbf_msgs::RecoveryGoal recovery_goal;
 
   get_path_goal.target_pose = target_pose;
   get_path_goal.use_start_pose = false; // use the robot pose
@@ -807,8 +808,18 @@ void AbstractNavigationServer::callActionMoveBase(
 
   active_move_base_ = true;
 
-  // call get_path action server
+  // call get_path action server to get a first plan
   action_client_get_path_.sendGoal(get_path_goal);
+
+  //set up the planner's thread
+  bool has_new_plan = false;
+  boost::mutex planner_mutex;
+  boost::condition_variable planner_cond;
+  boost::unique_lock<boost::mutex> planner_lock(planner_mutex);
+  boost::thread planner_thread(boost::bind(&AbstractNavigationServer::plannerThread, this,
+                                           boost::ref(planner_cond), boost::ref(planner_lock),
+                                           boost::ref(get_path_goal), boost::ref(get_path_result),
+                                           boost::ref(has_new_plan)));
 
   // init goal states with dummy values;
   actionlib::SimpleClientGoalState get_path_state(actionlib::SimpleClientGoalState::PENDING);
@@ -875,12 +886,16 @@ void AbstractNavigationServer::callActionMoveBase(
                 exe_path_goal,
                 ActionClientExePath::SimpleDoneCallback(),
                 ActionClientExePath::SimpleActiveCallback(),
-                boost::bind(&mbf_abstract_nav::AbstractNavigationServer::actionMoveBaseExePathFeedback,this, _1));
+                boost::bind(&mbf_abstract_nav::AbstractNavigationServer::actionMoveBaseExePathFeedback, this, _1));
+
+              planner_cond.notify_one();
+
               state = EXE_PATH;
               break;
 
             case actionlib::SimpleClientGoalState::ABORTED:
               get_path_result = *action_client_get_path_.getResult();
+
               // copy result from get_path action
               move_base_result.outcome = get_path_result.outcome;
               move_base_result.message = get_path_result.message;
@@ -941,17 +956,19 @@ void AbstractNavigationServer::callActionMoveBase(
 
             case actionlib::SimpleClientGoalState::RECALLED:
             case actionlib::SimpleClientGoalState::REJECTED:
-              ROS_FATAL_STREAM_NAMED(name_action_move_base, "The states RECALLED and REJECTED are not implemented "
-                << "in the SimpleActionServer!");
+              ROS_FATAL_STREAM_NAMED(name_action_move_base,
+                                     "The states RECALLED and REJECTED are not implemented in the SimpleActionServer!");
               run = false;
               action_server_move_base_ptr_->setAborted();
               break;
+
             case actionlib::SimpleClientGoalState::LOST:
               // TODO
               break;
 
             default:
-              ROS_FATAL_STREAM_NAMED(name_action_move_base, "Reached unreachable case! Unknown SimpleActionServer state!");
+              ROS_FATAL_STREAM_NAMED(name_action_move_base,
+                                     "Reached unreachable case! Unknown SimpleActionServer state!");
               run = false;
               action_server_move_base_ptr_->setAborted();
               break;
@@ -961,6 +978,20 @@ void AbstractNavigationServer::callActionMoveBase(
         break;
 
       case EXE_PATH:
+
+        if (has_new_plan)
+        {
+          ROS_DEBUG("Have new plan; restarting moving action");
+          exe_path_goal.path = get_path_result.path;
+          action_client_exe_path_.sendGoal(
+            exe_path_goal,
+            ActionClientExePath::SimpleDoneCallback(),
+            ActionClientExePath::SimpleActiveCallback(),
+            boost::bind(&mbf_abstract_nav::AbstractNavigationServer::actionMoveBaseExePathFeedback, this, _1));
+
+          has_new_plan = false;
+        }
+        planner_cond.notify_one();
 
         if (!action_client_exe_path_.waitForResult(wait))
         {
@@ -1079,7 +1110,8 @@ void AbstractNavigationServer::callActionMoveBase(
               break;
 
             default:
-              ROS_FATAL_STREAM_NAMED(name_action_move_base, "Reached unreachable case! Unknown SimpleActionServer state!");
+              ROS_FATAL_STREAM_NAMED(name_action_move_base,
+                                     "Reached unreachable case! Unknown SimpleActionServer state!");
               run = false;
               action_server_move_base_ptr_->setAborted();
               break;
@@ -1107,8 +1139,9 @@ void AbstractNavigationServer::callActionMoveBase(
             }
             else
             {
-              ROS_WARN_STREAM_NAMED(name_action_move_base, "Executed all available recovery behaviors! Abort controlling: "
-                << exe_path_result.message);
+              ROS_WARN_STREAM_NAMED(name_action_move_base,
+                                    "Executed all available recovery behaviors! Abort controlling: "
+                                      << exe_path_result.message);
             }
             run = false;
             action_server_move_base_ptr_->setAborted(move_base_result, exe_path_state.getText());
@@ -1153,8 +1186,10 @@ void AbstractNavigationServer::callActionMoveBase(
                                                              << ", outcome: " << recovery_result.outcome);
 
               current_recovery_behavior++; // use next behavior;
-              if(current_recovery_behavior == recovery_behaviors.end()){
-                ROS_DEBUG_STREAM_NAMED(name_action_move_base, "All recovery behaviours failed. Abort recovering and abort the move_base action");
+              if (current_recovery_behavior == recovery_behaviors.end())
+              {
+                ROS_DEBUG_STREAM_NAMED(name_action_move_base,
+                                       "All recovery behaviours failed. Abort recovering and abort the move_base action");
                 action_server_move_base_ptr_->setAborted(move_base_result, "All recovery behaviors failed.");
                 run = false;
               }
@@ -1173,8 +1208,8 @@ void AbstractNavigationServer::callActionMoveBase(
               //go to planning state
               ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Execution of the recovery behavior \""
                 << *current_recovery_behavior << "\" succeeded!");
-              ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Try planning again and increment the current recovery "
-                << "behavior in the list.");
+              ROS_DEBUG_STREAM_NAMED(name_action_move_base,
+                                     "Try planning again and increment the current recovery behavior in the list.");
               state = GET_PATH;
               current_recovery_behavior++; // use next behavior, the next time;
               action_client_get_path_.sendGoal(get_path_goal);
@@ -1185,15 +1220,15 @@ void AbstractNavigationServer::callActionMoveBase(
               break;
             case actionlib::SimpleClientGoalState::RECALLED:
             case actionlib::SimpleClientGoalState::REJECTED:
-              ROS_FATAL_STREAM_NAMED(name_action_move_base, "The states RECALLED and REJECTED are not implemented "
-                << "in the SimpleActionServer!");
+              ROS_FATAL_STREAM_NAMED(name_action_move_base,
+                                     "The states RECALLED and REJECTED are not implemented in the SimpleActionServer!");
               run = false;
               action_server_move_base_ptr_->setAborted();
               break;
             case actionlib::SimpleClientGoalState::LOST:
             default:
-              ROS_FATAL_STREAM_NAMED(name_action_move_base, "Reached unreachable case! Unknown SimpleActionServer "
-                << "state!");
+              ROS_FATAL_STREAM_NAMED(name_action_move_base,
+                                     "Reached unreachable case! Unknown SimpleActionServer state!");
               run = false;
               action_server_move_base_ptr_->setAborted();
               break;
@@ -1211,7 +1246,35 @@ void AbstractNavigationServer::callActionMoveBase(
     }
   }
 
+  planner_thread.interrupt();
+  planner_thread.join();
+
   active_move_base_ = false;
+}
+
+void AbstractNavigationServer::plannerThread(boost::condition_variable &cond, boost::unique_lock<boost::mutex> &lock,
+                                             const mbf_msgs::GetPathGoal &goal, mbf_msgs::GetPathResult &result,
+                                             bool &has_new_plan)
+{
+  if (planning_ptr_->getFrequency() <= 0.0)
+    return;
+
+  ros::Rate rate(planning_ptr_->getFrequency());  // TODO: will ignore dyn. reconf. until next run
+
+  while (ros::ok())
+  {
+    ROS_DEBUG("Planner thread waiting...");
+    cond.wait(lock);
+    ROS_DEBUG("Planner thread started!");
+
+    // keep calling get_path action server at planner_frequency Hz to get updated plans
+    action_client_get_path_.sendGoal(goal);
+    action_client_get_path_.waitForResult();
+    result = *action_client_get_path_.getResult();
+    if (result.outcome < 10)
+      has_new_plan = true;
+    rate.sleep();
+  }
 }
 
 void AbstractNavigationServer::actionMoveBaseExePathFeedback(

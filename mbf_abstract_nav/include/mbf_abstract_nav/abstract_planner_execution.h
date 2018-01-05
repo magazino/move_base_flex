@@ -138,6 +138,11 @@ namespace mbf_abstract_nav
     std::string getMessage() { return message_; };
 
     /**
+     * @brief Gets planning frequency
+     */
+    double getFrequency() { return frequency_; };
+
+    /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
      * computation takes to much time.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
@@ -306,7 +311,7 @@ namespace mbf_abstract_nav
     //! optional goal tolerance, in meters
     double tolerance_;
 
-    //! planning cycle frequency
+    //! planning cycle frequency (used only when running full navigation; we store here for grouping parameters nicely)
     double frequency_;
 
     //! planning patience duration time

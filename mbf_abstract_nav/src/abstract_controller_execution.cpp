@@ -366,9 +366,10 @@ namespace mbf_abstract_nav
     }
     catch (const boost::thread_interrupted &ex)
     {
-      // Controller thread interrupted; probably robot is oscillating or we have exceeded planner patience
-      ROS_WARN_STREAM("Controller thread interrupted!");
-      publishZeroVelocity();
+      // Controller thread interrupted; in most cases we have started a new plan
+      // Can also be that robot is oscillating or we have exceeded planner patience
+      ROS_DEBUG_STREAM("Controller thread interrupted!");
+      // publishZeroVelocity();  TODO comment this makes sense for continuous replanning
       setState(STOPPED);
       condition_.notify_all();
       moving_ = false;

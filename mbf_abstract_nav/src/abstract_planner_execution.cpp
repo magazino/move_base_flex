@@ -81,6 +81,7 @@ namespace mbf_abstract_nav
     }
 
     max_retries_ = config.planner_max_retries;
+    frequency_ = config.planner_frequency;
     patience_ = ros::Duration(config.planner_patience);
   }
 
@@ -224,13 +225,13 @@ namespace mbf_abstract_nav
     return planner_->cancel();
   }
 
-  uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
-                                          const geometry_msgs::PoseStamped start,
-                                          const geometry_msgs::PoseStamped goal,
-                                          double tolerance,
-                                          std::vector<geometry_msgs::PoseStamped> &plan,
-                                          double &cost,
-                                          std::string &message)
+  uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
+                                              const geometry_msgs::PoseStamped start,
+                                              const geometry_msgs::PoseStamped goal,
+                                              double tolerance,
+                                              std::vector<geometry_msgs::PoseStamped> &plan,
+                                              double &cost,
+                                              std::string &message)
   {
     return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
   }
@@ -313,7 +314,7 @@ namespace mbf_abstract_nav
           }
           else if (max_retries_ > 0 && ++retries > max_retries_)
           {
-            ROS_INFO_STREAM("Planning reached max retries!");
+            ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
             setState(MAX_RETRIES);
             exceeded = true;
             planning_ = false;
@@ -325,7 +326,8 @@ namespace mbf_abstract_nav
             // disabled, and on the navigation server when the planner doesn't return for more that patience seconds.
             // In the second case, the navigation server has tried to cancel planning (possibly without success, as
             // old nav_core-based planners do not support canceling), and we add here the fact to the log for info
-            ROS_INFO_STREAM("Planning patience has been exceeded" << cancel_ ? "; planner canceled!" : "");
+            ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
+                                                  << cancel_ ? "; planner canceled!" : "");
             setState(PAT_EXCEEDED);
             exceeded = true;
             planning_ = false;
