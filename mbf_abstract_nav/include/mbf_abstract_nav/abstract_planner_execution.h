@@ -214,11 +214,6 @@ namespace mbf_abstract_nav
      */
     virtual void run();
 
-    /**
-     * @brief Loads all parameters from the parameter server.
-     */
-    void loadParams();
-
 
   private:
 

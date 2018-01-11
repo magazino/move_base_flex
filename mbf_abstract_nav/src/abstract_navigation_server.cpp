@@ -65,7 +65,6 @@ AbstractNavigationServer::AbstractNavigationServer(
   // non-dynamically reconfigurable parameters
   private_nh_.param("robot_frame", robot_frame_, std::string("base_link"));
   private_nh_.param("global_frame", global_frame_, std::string("map"));
-  private_nh_.param("tolerance", tolerance_, 0.0);
   private_nh_.param("tf_timeout", tf_timeout_, 3.0);
 
   // informative topics: current goal and global path
@@ -113,8 +112,8 @@ AbstractNavigationServer::AbstractNavigationServer(
 
 void AbstractNavigationServer::initializeServerComponents()
 {
-  planning_ptr_->initialize();
   moving_ptr_->initialize();
+  planning_ptr_->initialize();
   recovery_ptr_->initialize();
 }
 

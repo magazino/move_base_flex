@@ -51,32 +51,14 @@ namespace mbf_abstract_nav
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
 
-    double patience, frequency;
+    // get plugin name so the server can call initialize before the first reconfiguration
+    private_nh.param("local_planner", plugin_name_, std::string("base_local_planner/TrajectoryPlannerROS"));
 
-    if(!private_nh.getParam("local_planner", plugin_name_))
-    {
-      ROS_ERROR_STREAM("Parameter \"local_planner\" not set!");
-      exit(0);
-    }
+    // non-dynamically reconfigurable parameters
     private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
-    private_nh.param("controller_max_retries", max_retries_, 10);
-    private_nh.param("controller_patience", patience, 1.0);
-    private_nh.param("controller_frequency", frequency, 10.0);
     private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
-
-    // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
-    // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
-    patience_ = ros::Duration(patience);
-
-    if (frequency <= 0.0)
-    {
-      ROS_ERROR("Movement frequency must be greater than 0.0!");
-      exit(0);
-    }
-    // set the calling duration by the moving frequency
-    calling_duration_ = boost::chrono::microseconds((int)(1e6 / frequency));
 
     // init cmd_vel publisher for the robot velocity t
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
@@ -111,12 +93,13 @@ namespace mbf_abstract_nav
       new_plan_ = true;  // ensure we reset the current plan (if any) to the new controller
     }
 
+    // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
+    // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
 
+    // set the calling duration by the moving frequency
     if (config.controller_frequency > 0.0)
-    {
       calling_duration_ = boost::chrono::microseconds((int)(1e6 / config.controller_frequency));
-    }
     else
       ROS_ERROR("Movement frequency must be greater than 0.0!");
 

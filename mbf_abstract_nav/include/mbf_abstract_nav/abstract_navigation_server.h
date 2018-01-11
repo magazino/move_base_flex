@@ -282,9 +282,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! the global frame, in which the robot is moving
     std::string global_frame_;
 
-    //! the tolerance for planning
-    double tolerance_;
-
     //! timeout after tf returns without a result
     double tf_timeout_;
 

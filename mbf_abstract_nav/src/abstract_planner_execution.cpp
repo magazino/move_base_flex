@@ -48,9 +48,15 @@ namespace mbf_abstract_nav
       condition_(condition), state_(STOPPED), planning_(false),
       has_new_start_(false), has_new_goal_(false), outcome_(255)
   {
-    loadParams();
-  }
+    ros::NodeHandle private_nh("~");
 
+    // get plugin name so the server can call initialize before the first reconfiguration
+    private_nh.param("global_planner", plugin_name_, std::string("navfn/NavfnROS"));
+
+    // non-dynamically reconfigurable parameters
+    private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
+    private_nh.param("map_frame", global_frame_, std::string("map"));
+  }
 
   AbstractPlannerExecution::~AbstractPlannerExecution()
   {
@@ -82,30 +88,10 @@ namespace mbf_abstract_nav
 
     max_retries_ = config.planner_max_retries;
     frequency_ = config.planner_frequency;
-    patience_ = ros::Duration(config.planner_patience);
-  }
-
-
-  void AbstractPlannerExecution::loadParams()
-  {
-    double patience, frequency;
-
-    ros::NodeHandle private_nh_("~");
-
-    if(!private_nh_.getParam("global_planner", plugin_name_))
-    {
-      ROS_ERROR_STREAM("Parameter \"global_planner\" is not set!");
-      exit(0);
-    }
-    private_nh_.param("robot_frame", robot_frame_, std::string("base_footprint"));
-    private_nh_.param("map_frame", global_frame_, std::string("map"));
-    private_nh_.param("planner_max_retries", max_retries_, 10);
-    private_nh_.param("planner_patience", patience, 5.0);
-    private_nh_.param("planner_frequency", frequency, 0.0);
 
     // Timeout granted to the global planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
-    patience_ = ros::Duration(patience);
+    patience_ = ros::Duration(config.planner_patience);
   }
 
 
