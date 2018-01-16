@@ -298,7 +298,7 @@ namespace mbf_abstract_nav
             setState(FOUND_PLAN);
             condition_.notify_all(); // notify observer
           }
-          else if (max_retries_ > 0 && ++retries > max_retries_)
+          else if (max_retries_ >= 0 && ++retries > max_retries_)
           {
             ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
             setState(MAX_RETRIES);
@@ -313,7 +313,7 @@ namespace mbf_abstract_nav
             // In the second case, the navigation server has tried to cancel planning (possibly without success, as
             // old nav_core-based planners do not support canceling), and we add here the fact to the log for info
             ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
-                                                  << cancel_ ? "; planner canceled!" : "");
+                                                  << (cancel_ ? "; planner canceled!" : ""));
             setState(PAT_EXCEEDED);
             exceeded = true;
             planning_ = false;
