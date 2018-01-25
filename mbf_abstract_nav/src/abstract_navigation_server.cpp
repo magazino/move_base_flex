@@ -463,20 +463,13 @@ void AbstractNavigationServer::callActionExePath(
     << name_action_exe_path << "\" with plan:" << std::endl
     << "frame: \"" << goal->path.header.frame_id << "\" " << std::endl
     << "stamp: " << goal->path.header.stamp << std::endl
-    << "num poses: " << goal->path.poses.size() << std::endl
+    << "poses: " << goal->path.poses.size() << std::endl
     << "goal: (" << goal_pose_.pose.position.x << ", "
     << goal_pose_.pose.position.y << ", "
     << goal_pose_.pose.position.z << ")");
 
   moving_ptr_->setNewPlan(plan);
-  if (!moving_ptr_->startMoving())
-  {
-    result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
-    result.message = "Could not start moving, because another moving thread is already / still running!";
-    action_server_exe_path_ptr_->setAborted(result, result.message);
-    ROS_ERROR_STREAM_NAMED(name_action_exe_path, result.message << " Canceling the action call.");
-    return;
-  }
+  moving_ptr_->startMoving();
 
   active_moving_ = true;
 
@@ -506,26 +499,37 @@ void AbstractNavigationServer::callActionExePath(
     // check preempt requested
     if (action_server_exe_path_ptr_->isPreemptRequested())
     {
-      moving_ptr_->stopMoving();
+      if (action_server_exe_path_ptr_->isNewGoalAvailable())
+      {
+        // This probably means that we are continuously replanning, so we don't stop navigation
+        ROS_INFO_STREAM("Action \"ExePath\" preempted with a new path; switching...");
+      }
+      else
+      {
+        moving_ptr_->stopMoving();
+        ROS_INFO_STREAM("Action \"ExePath\" preempted");
+      }
+
+      fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Local planner preempted", result);
+      action_server_exe_path_ptr_->setPreempted(result, result.message);
+      break;
     }
+
 
     state_moving_input = moving_ptr_->getState();
 
     switch (state_moving_input)
     {
       case AbstractControllerExecution::STOPPED:
-        // This is happens continuously if we keep replanning while moving
-        fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Local planner preempted", result);
-        action_server_exe_path_ptr_->setPreempted(result, result.message);
-        ROS_DEBUG_STREAM("Action \"ExePath\" preempted");
-        active_moving_ = false;
+        // TODO when this realy happens?   not when continuously replanning, for sure
+        ROS_WARN_STREAM("The moving has been stopped!");
         break;
 
       case AbstractControllerExecution::STARTED:
         ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "The moving has been started!");
         break;
 
-        // in progress
+      // in progress
       case AbstractControllerExecution::PLANNING:
         if (moving_ptr_->isPatienceExceeded())
         {
@@ -635,7 +639,8 @@ void AbstractNavigationServer::callActionExePath(
   }
   else
   {
-    ROS_ERROR_STREAM_NAMED(name_action_exe_path, "\"ExePath\" action has been stopped!");
+    // normal on continuous replanning
+    ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "\"ExePath\" action has been stopped!");
   }
 }
 

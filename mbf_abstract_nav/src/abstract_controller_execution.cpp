@@ -146,7 +146,8 @@ namespace mbf_abstract_nav
   {
     if (moving_)
     {
-      ROS_WARN("Setting new plan while moving!");
+      // This is fine on continuous replanning
+      ROS_DEBUG("Setting new plan while moving");
     }
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     new_plan_ = true;
