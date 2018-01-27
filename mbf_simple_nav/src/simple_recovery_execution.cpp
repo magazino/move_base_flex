@@ -74,8 +74,9 @@ mbf_abstract_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPl
   return recovery_ptr;
 }
 
-void SimpleRecoveryExecution::initPlugins()
+bool SimpleRecoveryExecution::initPlugins()
 {
+  return true;
 }
 
 } /* namespace mbf_simple_nav */

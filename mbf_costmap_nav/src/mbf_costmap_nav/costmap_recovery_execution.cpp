@@ -94,7 +94,7 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapRecoveryExecution::loadRecoveryP
   return recovery_ptr;
 }
 
-void CostmapRecoveryExecution::initPlugins()
+bool CostmapRecoveryExecution::initPlugins()
 {
   for (std::map<std::string, mbf_abstract_core::AbstractRecovery::Ptr>::iterator iter =
       recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
@@ -105,6 +105,7 @@ void CostmapRecoveryExecution::initPlugins()
 
     behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_.get(), local_costmap_.get());
   }
+  return true;
 }
 
 } /* namespace mbf_costmap_nav */

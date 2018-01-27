@@ -90,8 +90,9 @@ private:
 
   /**
    * @brief Initializes a recovery behavior plugin with its name and pointers to the global and local costmaps
+   * @return true if init succeeded, false otherwise
    */
-  virtual void initPlugins();
+  virtual bool initPlugins();
 
   /**
    * @brief Loads a Recovery plugin associated with given recovery type parameter

@@ -93,20 +93,20 @@ mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadContr
   return controller_ptr;
 }
 
-void CostmapControllerExecution::initPlugin()
+bool CostmapControllerExecution::initPlugin()
 {
   ROS_INFO_STREAM("Initialize controller \"" << controller_name_ << "\".");
 
   if (!tf_listener_ptr)
   {
     ROS_ERROR_STREAM("The tf listener pointer has not been initialized!");
-    exit(1);
+    return false;
   }
 
   if (!costmap_ptr_)
   {
     ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
-    exit(1);
+    return false;
   }
 
   ros::NodeHandle private_nh("~");
@@ -116,6 +116,7 @@ void CostmapControllerExecution::initPlugin()
       = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_);
   controller_ptr->initialize(controller_name_, tf_listener_ptr.get(), costmap_ptr_.get());
   ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
+  return true;
 }
 
 uint32_t CostmapControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,

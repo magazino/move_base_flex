@@ -78,8 +78,9 @@ private:
 
   /**
    * @brief Empty init method. Nothing to initialize.
+   * @return true always
    */
-  virtual void initPlugin();
+  virtual bool initPlugin();
 };
 
 } /* namespace mbf_simple_nav */

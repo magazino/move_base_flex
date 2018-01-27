@@ -92,7 +92,7 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlug
   return planner_ptr;
 }
 
-void CostmapPlannerExecution::initPlugin()
+bool CostmapPlannerExecution::initPlugin()
 {
   mbf_costmap_core::CostmapPlanner::Ptr planner_ptr
       = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_);
@@ -101,16 +101,12 @@ void CostmapPlannerExecution::initPlugin()
   if (!costmap_ptr_)
   {
     ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
-    exit(1);
+    return false;
   }
 
-  // TODO check this
-  ros::NodeHandle private_nh("~");
-  private_nh.param("planner_lock_costmap", lock_costmap_, true);
-
   planner_ptr->initialize(planner_name_, costmap_ptr_.get());
-
   ROS_INFO("Global planner plugin initialized.");
+  return true;
 }
 
 uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
@@ -121,6 +117,10 @@ uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlan
                                            double &cost,
                                            std::string &message)
 {
+
+  ros::NodeHandle private_nh("~");
+  private_nh.param("planner_lock_costmap", lock_costmap_, true);
+
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));

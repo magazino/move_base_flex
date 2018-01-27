@@ -166,7 +166,7 @@ namespace mbf_abstract_nav
     /**
      * @brief Loads the plugin given by the parameter "local_planner"
      */
-    void initialize();
+    bool initialize();
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution,
@@ -236,8 +236,9 @@ namespace mbf_abstract_nav
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
+     * @return true if init succeeded, false otherwise
      */
-    virtual void initPlugin() = 0;
+    virtual bool initPlugin() = 0;
 
     /**
      * publishes a velocity command with zero values to stop the robot.

@@ -59,23 +59,15 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractRecoveryExecution::initialize()
+  bool AbstractRecoveryExecution::initialize()
   {
-    if (!loadPlugins())
+    if (loadPlugins() && initPlugins())
     {
-      ROS_ERROR_STREAM("Could not load the recovery behaviors!");
-      // TODO load default recovery behavior plugins
+      setState(INITIALIZED);
+      ROS_INFO_STREAM("All recovery behavior plugins has been loaded successfully!");
+      return true;
     }
-    else
-    {
-      if(!recovery_behaviors_.empty())
-      {
-        ROS_INFO_STREAM("All recovery behavior plugins has been loaded successfully!");
-      }
-    }
-
-    initPlugins();
-    setState(INITIALIZED);
+    return false;
   }
 
 

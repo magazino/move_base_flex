@@ -72,8 +72,9 @@ mbf_abstract_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugi
   return planner_ptr;
 }
 
-void SimplePlannerExecution::initPlugin()
+bool SimplePlannerExecution::initPlugin()
 {
+  return true;
 }
 
 } /* namespace mbf_simple_nav */

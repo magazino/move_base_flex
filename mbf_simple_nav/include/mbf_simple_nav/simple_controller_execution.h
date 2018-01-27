@@ -82,8 +82,9 @@ private:
 
   /**
    * @brief Empty init method. Nothing to initialize.
+   * @return true if init succeeded, false otherwise.
    */
-  virtual void initPlugin();
+  virtual bool initPlugin();
 
 };
 

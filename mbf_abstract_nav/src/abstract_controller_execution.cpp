@@ -70,16 +70,15 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractControllerExecution::initialize()
+  bool AbstractControllerExecution::initialize()
   {
     controller_ = loadControllerPlugin(plugin_name_);
-    if (!controller_)
+    if (controller_ && initPlugin())
     {
-      exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
+      setState(INITIALIZED);
+      return true;
     }
-
-    initPlugin();
-    setState(INITIALIZED);
+    return false;
   }
 
   void AbstractControllerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)

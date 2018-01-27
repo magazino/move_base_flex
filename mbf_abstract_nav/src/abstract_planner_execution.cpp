@@ -63,16 +63,15 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractPlannerExecution::initialize()
+  bool AbstractPlannerExecution::initialize()
   {
     planner_ = loadPlannerPlugin(plugin_name_);
-    if (!planner_)
+    if (planner_ && initPlugin())
     {
-      exit(1);  // TODO: do not exit directly, so we can just show a WARN on reconfigure
+      setState(INITIALIZED);
+      return true;
     }
-
-    initPlugin();
-    setState(INITIALIZED);
+    return false;
   }
 
 

@@ -84,7 +84,7 @@ private:
   /**
    * @brief Empty init method. Nothing to initialize.
    */
-  virtual void initPlugins();
+  virtual bool initPlugins();
 
 };
 

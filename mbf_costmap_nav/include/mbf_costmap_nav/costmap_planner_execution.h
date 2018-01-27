@@ -81,8 +81,9 @@ private:
 
   /**
    * @brief Initializes the global planner plugin with its name and pointer to the costmap
+   * @return true if init succeeded, false otherwise.
    */
-  virtual void initPlugin();
+  virtual bool initPlugin();
 
   /**
    * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,

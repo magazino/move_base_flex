@@ -118,7 +118,7 @@ namespace mbf_abstract_nav
     /**
      * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
      */
-    void initialize();
+    bool initialize();
 
     /**
      * @brief Reconfigures the current configuration and reloads all parameters. This method is called from a dynamic
@@ -184,8 +184,9 @@ namespace mbf_abstract_nav
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
+     * @return true if init succeeded, false otherwise
      */
-    virtual void initPlugins() = 0;
+    virtual bool initPlugins() = 0;
 
     /**
      * @brief Loads a Recovery plugin associated with given recovery type parameter

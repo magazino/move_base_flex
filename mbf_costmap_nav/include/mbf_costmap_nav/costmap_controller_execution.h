@@ -101,8 +101,9 @@ private:
   /**
    * @brief Initializes the local planner plugin with its name, a pointer to the TransformListener
    *        and pointer to the costmap
+   * @brief true if the init succeeded, false otherwise
    */
-  virtual void initPlugin();
+  virtual bool initPlugin();
 
   //! costmap for 2d navigation planning
   CostmapPtr &costmap_ptr_;

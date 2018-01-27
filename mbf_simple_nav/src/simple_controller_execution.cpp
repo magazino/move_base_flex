@@ -70,8 +70,9 @@ mbf_abstract_core::AbstractController::Ptr SimpleControllerExecution::loadContro
   return controller_ptr;
 }
 
-void SimpleControllerExecution::initPlugin()
+bool SimpleControllerExecution::initPlugin()
 {
+  return true;
 }
 
 SimpleControllerExecution::~SimpleControllerExecution()
