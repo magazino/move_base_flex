@@ -2,8 +2,8 @@
 
 nav_msgs/Path path
 
-# Plugin to use; defaults to the first one specified on local_planners parameter
-string local_planner
+# Plugin to use; defaults to the first one specified on "controllers" parameter
+string controller
 
 ---
 

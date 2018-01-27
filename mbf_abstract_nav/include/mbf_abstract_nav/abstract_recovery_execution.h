@@ -182,11 +182,22 @@ namespace mbf_abstract_nav
     void setState(RecoveryState state);
 
     /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
+     * @brief Initialize all recovery behaviors
      * @return true if init succeeded, false otherwise
      */
-    virtual bool initPlugins() = 0;
+    bool initPlugins();
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+     *        some plugins need to be initialized!
+     * @param name The name of the recovery behavior
+     * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
+     * @return true if init succeeded, false otherwise
+     */
+    virtual bool initPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr
+    ) = 0;
 
     /**
      * @brief Loads a Recovery plugin associated with given recovery type parameter

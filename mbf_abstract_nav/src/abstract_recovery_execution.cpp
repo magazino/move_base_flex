@@ -58,6 +58,29 @@ namespace mbf_abstract_nav
   {
   }
 
+  bool AbstractRecoveryExecution::initPlugins()
+  {
+    bool ret = true;
+    for (std::map<std::string, mbf_abstract_core::AbstractRecovery::Ptr>::iterator iter =
+        recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
+    {
+      if(initPlugin(iter->first, iter->second))
+      {
+        ROS_INFO_STREAM("Recovery behavior with the \"" << iter->first << "\" and the type \""
+            << iter->second << "\" successfully initialized.");
+      }
+      else
+      {
+        ROS_ERROR_STREAM("Recovery behavior with the \"" << iter->first << "\" and the type \""
+            << iter->second << "\" could not be initialized!");
+
+        ret = false;
+      }
+
+    }
+    return ret;
+  }
+
 
   bool AbstractRecoveryExecution::initialize()
   {

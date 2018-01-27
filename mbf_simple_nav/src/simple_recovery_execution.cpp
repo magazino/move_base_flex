@@ -74,7 +74,9 @@ mbf_abstract_core::AbstractRecovery::Ptr SimpleRecoveryExecution::loadRecoveryPl
   return recovery_ptr;
 }
 
-bool SimpleRecoveryExecution::initPlugins()
+bool SimpleRecoveryExecution::initPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr)
 {
   return true;
 }

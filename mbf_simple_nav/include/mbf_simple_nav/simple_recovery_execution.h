@@ -82,9 +82,16 @@ private:
   virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
 
   /**
-   * @brief Empty init method. Nothing to initialize.
+   * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+   *        some plugins need to be initialized!
+   * @param name The name of the recovery behavior
+   * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
    */
-  virtual bool initPlugins();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr
+  );
 
 };
 

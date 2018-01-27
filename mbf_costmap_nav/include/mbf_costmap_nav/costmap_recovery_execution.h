@@ -90,9 +90,13 @@ private:
 
   /**
    * @brief Initializes a recovery behavior plugin with its name and pointers to the global and local costmaps
+   * @param name The name of the recovery behavior
+   * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
    * @return true if init succeeded, false otherwise
    */
-  virtual bool initPlugins();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr);
 
   /**
    * @brief Loads a Recovery plugin associated with given recovery type parameter
