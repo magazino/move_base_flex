@@ -92,6 +92,25 @@ namespace mbf_abstract_nav
     }
   }
 
+  bool AbstractPlannerExecution::switchPlanner(const std::string& name){
+    std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr>::iterator new_planner
+        = planners_.find(name);
+    if(new_planner != planners_.end())
+    {
+      plugin_name_ = new_planner->first;
+      planner_ = new_planner->second;
+      ROS_INFO_STREAM("Reconfiguration changed the current planner plugin to \"" << new_planner->first << "\" with "
+          << "the type \"" << planners_type_[new_planner->first] << "\"");
+      return true;
+    }
+    else
+    {
+      ROS_WARN_STREAM("The planner \"" << name << "\" has not yet been loaded!"
+          << " No switch of the planner!");
+      return false;
+    }
+  }
+
   bool AbstractPlannerExecution::loadPlugins()
   {
     ros::NodeHandle private_nh("~");
@@ -157,20 +176,7 @@ namespace mbf_abstract_nav
 
     if (config.global_planner != plugin_name_)
     {
-      std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr>::iterator new_planner
-          = planners_.find(config.global_planner);
-      if(new_planner != planners_.end())
-      {
-        plugin_name_ = new_planner->first;
-        planner_ = new_planner->second;
-        ROS_INFO_STREAM("Reconfiguration changed the current planner plugin to \"" << new_planner->first << "\" with "
-            << "the type \"" << planners_type_[new_planner->first] << "\"");
-      }
-      else
-      {
-        ROS_WARN_STREAM("The planner \"" << config.global_planner << "\" has not yet been loaded!"
-            << " No switch of the planner!");
-      }
+      switchPlanner(config.global_planner);
     }
 
     max_retries_ = config.planner_max_retries;

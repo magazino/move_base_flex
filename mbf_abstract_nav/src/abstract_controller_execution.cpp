@@ -162,27 +162,34 @@ namespace mbf_abstract_nav
     return true;
   }
 
+  bool AbstractControllerExecution::switchController(const std::string& name)
+  {
+    std::map<std::string, mbf_abstract_core::AbstractController::Ptr>::iterator new_controller
+        = controllers_.find(name);
+    if(new_controller != controllers_.end())
+    {
+      plugin_name_ = new_controller->first;
+      controller_ = new_controller->second;
+      new_plan_ = true;  // ensure we reset the current plan (if any) for the new controller
+      ROS_INFO_STREAM("Reconfiguration changed the current controller plugin to \"" << new_controller->first
+          << "\" with the type \"" << controllers_type_[new_controller->first] << "\"");
+      return true;
+    }
+    else
+    {
+      ROS_WARN_STREAM("The controller \"" << name << "\" has not yet been loaded!"
+          << " No switch of the controller!");
+      return false;
+    }
+  }
+
   void AbstractControllerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
     if (config.local_planner != plugin_name_)
     {
-      std::map<std::string, mbf_abstract_core::AbstractController::Ptr>::iterator new_controller
-          = controllers_.find(config.local_planner);
-      if(new_controller != controllers_.end())
-      {
-        plugin_name_ = new_controller->first;
-        controller_ = new_controller->second;
-        new_plan_ = true;  // ensure we reset the current plan (if any) for the new controller
-        ROS_INFO_STREAM("Reconfiguration changed the current controller plugin to \"" << new_controller->first
-            << "\" with the type \"" << controllers_type_[new_controller->first] << "\"");
-      }
-      else
-      {
-        ROS_WARN_STREAM("The controller \"" << config.local_planner << "\" has not yet been loaded!"
-            << " No switch of the controller!");
-      }
+      switchController(config.local_planner);
     }
 
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times

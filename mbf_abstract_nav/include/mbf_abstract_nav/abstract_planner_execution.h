@@ -198,6 +198,13 @@ namespace mbf_abstract_nav
      */
     void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
 
+    /**
+     * @brief Switches the planner to planner with the given name
+     * @param name The name of the planner in the planners list
+     * @return true if the switch was successful, false otherwise.
+     */
+    bool switchPlanner(const std::string& name);
+
   protected:
 
     //! the local planer to calculate the velocity command

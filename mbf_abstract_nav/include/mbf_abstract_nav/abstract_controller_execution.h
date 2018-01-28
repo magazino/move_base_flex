@@ -181,6 +181,13 @@ namespace mbf_abstract_nav
      */
     bool isMoving();
 
+    /**
+     * @brief Switch to the controller with the given name in the controllers list
+     * @param name The name of the controller in the loaded controller list.
+     * @return true if the switch was successful, false otherwise
+     */
+    bool switchController(const std::string& name);
+
   protected:
 
     /**
