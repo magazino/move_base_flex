@@ -72,7 +72,10 @@ mbf_abstract_core::AbstractPlanner::Ptr SimplePlannerExecution::loadPlannerPlugi
   return planner_ptr;
 }
 
-bool SimplePlannerExecution::initPlugin()
+bool SimplePlannerExecution::initPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractPlanner::Ptr&  planner_ptr
+)
 {
   return true;
 }

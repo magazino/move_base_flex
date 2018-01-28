@@ -207,8 +207,8 @@ namespace mbf_abstract_nav
     virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
 
     /**
-     * loads the plugins defined in the parameter server
-     * @return true, if all recovery behavior could be read successfully.
+     * @brief Loads the plugins defined in the parameter server
+     * @return true, if all recovery behavior have been loaded successfully.
      */
     bool loadPlugins();
 

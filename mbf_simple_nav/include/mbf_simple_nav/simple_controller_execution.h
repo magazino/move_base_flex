@@ -82,9 +82,14 @@ private:
 
   /**
    * @brief Empty init method. Nothing to initialize.
-   * @return true if init succeeded, false otherwise.
+   * @param name The name of the controller
+   * @param controller_ptr pointer to the controller object which corresponds to the name param
+   * @return true always
    */
-  virtual bool initPlugin();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractController::Ptr& controller_ptr
+  );
 
 };
 

@@ -196,6 +196,12 @@ namespace mbf_abstract_nav
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
+    //! map to store the controllers. Each controller can be accessed by its corresponding name
+    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractController> > controllers_;
+
+    //! map to store the type of the controllers as string
+    std::map<std::string, std::string> controllers_type_;
+
     //! the name of the loaded plugin
     std::string plugin_name_;
 
@@ -236,9 +242,20 @@ namespace mbf_abstract_nav
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
+     * @param name The name of the controller
+     * @param controller_ptr pointer to the controller object which corresponds to the name param
      * @return true if init succeeded, false otherwise
      */
-    virtual bool initPlugin() = 0;
+    virtual bool initPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractController::Ptr& controller_ptr
+    ) = 0;
+
+    /**
+     * @brief Loads the plugins defined in the parameter server
+     * @return true, if all controllers have been loaded successfully.
+     */
+    bool loadPlugins();
 
     /**
      * publishes a velocity command with zero values to stop the robot.

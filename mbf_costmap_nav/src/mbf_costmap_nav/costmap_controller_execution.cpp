@@ -93,9 +93,11 @@ mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadContr
   return controller_ptr;
 }
 
-bool CostmapControllerExecution::initPlugin()
+bool CostmapControllerExecution::initPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractController::Ptr& controller_ptr)
 {
-  ROS_INFO_STREAM("Initialize controller \"" << controller_name_ << "\".");
+  ROS_INFO_STREAM("Initialize controller \"" << name << "\".");
 
   if (!tf_listener_ptr)
   {
@@ -112,10 +114,10 @@ bool CostmapControllerExecution::initPlugin()
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);
 
-  mbf_costmap_core::CostmapController::Ptr controller_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_);
-  controller_ptr->initialize(controller_name_, tf_listener_ptr.get(), costmap_ptr_.get());
-  ROS_INFO_STREAM("Controller plugin \"" << controller_name_ << "\" initialized.");
+  mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
+  costmap_controller_ptr->initialize(name, tf_listener_ptr.get(), costmap_ptr_.get());
+  ROS_INFO_STREAM("Controller plugin \"" << name << "\" initialized.");
   return true;
 }
 

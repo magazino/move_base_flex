@@ -92,11 +92,14 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlug
   return planner_ptr;
 }
 
-bool CostmapPlannerExecution::initPlugin()
+bool CostmapPlannerExecution::initPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+)
 {
-  mbf_costmap_core::CostmapPlanner::Ptr planner_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_);
-  ROS_INFO_STREAM("Initialize planner \"" << planner_name_ << "\".");
+  mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
+  ROS_INFO_STREAM("Initialize planner \"" << name << "\".");
 
   if (!costmap_ptr_)
   {
@@ -104,7 +107,7 @@ bool CostmapPlannerExecution::initPlugin()
     return false;
   }
 
-  planner_ptr->initialize(planner_name_, costmap_ptr_.get());
+  costmap_planner_ptr->initialize(name, costmap_ptr_.get());
   ROS_INFO("Global planner plugin initialized.");
   return true;
 }

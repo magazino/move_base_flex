@@ -99,11 +99,16 @@ private:
   virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
 
   /**
-   * @brief Initializes the local planner plugin with its name, a pointer to the TransformListener
+   * @brief Initializes the controller plugin with its name, a pointer to the TransformListener
    *        and pointer to the costmap
-   * @brief true if the init succeeded, false otherwise
+   * @param name The name of the controller
+   * @param controller_ptr pointer to the controller object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
    */
-  virtual bool initPlugin();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractController::Ptr& controller_ptr
+  );
 
   //! costmap for 2d navigation planning
   CostmapPtr &costmap_ptr_;

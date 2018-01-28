@@ -39,6 +39,7 @@
  */
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
+#include <xmlrpcpp/XmlRpcException.h>
 
 namespace mbf_abstract_nav
 {
@@ -49,9 +50,6 @@ namespace mbf_abstract_nav
       has_new_start_(false), has_new_goal_(false), outcome_(255)
   {
     ros::NodeHandle private_nh("~");
-
-    // get plugin name so the server can call initialize before the first reconfiguration
-    private_nh.param("global_planner", plugin_name_, std::string("navfn/NavfnROS"));
 
     // non-dynamically reconfigurable parameters
     private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
@@ -65,15 +63,67 @@ namespace mbf_abstract_nav
 
   bool AbstractPlannerExecution::initialize()
   {
-    planner_ = loadPlannerPlugin(plugin_name_);
-    if (planner_ && initPlugin())
-    {
-      setState(INITIALIZED);
-      return true;
-    }
-    return false;
+    return loadPlugins();
   }
 
+  bool AbstractPlannerExecution::loadPlugins()
+  {
+    ros::NodeHandle private_nh("~");
+
+    XmlRpc::XmlRpcValue planners_param_list;
+    if(!private_nh.getParam("planners", planners_param_list)){
+      ROS_WARN_STREAM("No planners configured! - Use the param \"planners\", which must be a list of tuples with a name and a type.");
+      return false;
+    }
+
+    try
+    {
+      for (int i = 0; i < planners_param_list.size(); i++)
+      {
+        XmlRpc::XmlRpcValue elem = planners_param_list[i];
+
+        std::string name = elem["name"];
+        std::string type = elem["type"];
+
+        if (planners_.find(name) != planners_.end())
+        {
+          ROS_ERROR_STREAM("The planner \"" << name << "\" has already been loaded! Names must be unique!");
+          return false;
+        }
+        mbf_abstract_core::AbstractPlanner::Ptr planner_ptr = loadPlannerPlugin(type);
+        if(planner_ptr && initPlugin(name, planner_ptr))
+        {
+          if(!planner_)
+          {
+            planner_ = planner_ptr;
+            plugin_name_ = name;
+            setState(INITIALIZED);
+          }
+
+          planners_.insert(
+              std::pair<std::string, mbf_abstract_core::AbstractPlanner::Ptr>(name, planner_ptr));
+
+          planners_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
+
+          ROS_INFO_STREAM("The planner \"" << type << "\" has been loaded successfully under the name \""
+              << name << "\".");
+        }
+        else
+        {
+          ROS_ERROR_STREAM("Could not load the plugin with the name \""
+              << name << "\" and the type \"" << type << "\"!");
+        }
+      }
+    }
+    catch (XmlRpc::XmlRpcException &e)
+    {
+      ROS_ERROR_STREAM("Invalid parameter structure. The \"planners\" parameter has to be a list of structs "
+                           << "with fields \"name\" and \"type\" of !");
+      ROS_ERROR_STREAM(e.getMessage());
+      return false;
+    }
+    return true;
+  }
 
   void AbstractPlannerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
   {
@@ -81,8 +131,20 @@ namespace mbf_abstract_nav
 
     if (config.global_planner != plugin_name_)
     {
-      plugin_name_ = config.global_planner;
-      initialize();
+      std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr>::iterator new_planner
+          = planners_.find(config.global_planner);
+      if(new_planner != planners_.end())
+      {
+        plugin_name_ = new_planner->first;
+        planner_ = new_planner->second;
+        ROS_INFO_STREAM("Reconfiguration changed the current planner plugin to \"" << new_planner->first << "\" with "
+            << "the type \"" << planners_type_[new_planner->first] << "\"");
+      }
+      else
+      {
+        ROS_WARN_STREAM("The planner \"" << config.global_planner << "\" has not yet been loaded!"
+            << " No switch of the planner!");
+      }
     }
 
     max_retries_ = config.planner_max_retries;

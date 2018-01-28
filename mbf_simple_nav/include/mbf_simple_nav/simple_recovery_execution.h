@@ -86,7 +86,7 @@ private:
    *        some plugins need to be initialized!
    * @param name The name of the recovery behavior
    * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
-   * @return true if init succeeded, false otherwise
+   * @return true always
    */
   virtual bool initPlugin(
       const std::string& name,

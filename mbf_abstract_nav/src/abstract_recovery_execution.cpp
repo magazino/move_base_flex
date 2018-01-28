@@ -58,39 +58,9 @@ namespace mbf_abstract_nav
   {
   }
 
-  bool AbstractRecoveryExecution::initPlugins()
-  {
-    bool ret = true;
-    for (std::map<std::string, mbf_abstract_core::AbstractRecovery::Ptr>::iterator iter =
-        recovery_behaviors_.begin(); iter != recovery_behaviors_.end(); ++iter)
-    {
-      if(initPlugin(iter->first, iter->second))
-      {
-        ROS_INFO_STREAM("Recovery behavior with the \"" << iter->first << "\" and the type \""
-            << iter->second << "\" successfully initialized.");
-      }
-      else
-      {
-        ROS_ERROR_STREAM("Recovery behavior with the \"" << iter->first << "\" and the type \""
-            << iter->second << "\" could not be initialized!");
-
-        ret = false;
-      }
-
-    }
-    return ret;
-  }
-
-
   bool AbstractRecoveryExecution::initialize()
   {
-    if (loadPlugins() && initPlugins())
-    {
-      setState(INITIALIZED);
-      ROS_INFO_STREAM("All recovery behavior plugins has been loaded successfully!");
-      return true;
-    }
-    return false;
+    return loadPlugins();
   }
 
 
@@ -128,8 +98,13 @@ namespace mbf_abstract_nav
           return false;
         }
         mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr = loadRecoveryPlugin(type);
-        if(recovery_ptr)
+        if(recovery_ptr && initPlugin(name, recovery_ptr))
         {
+          if(!current_behavior_)
+          {
+            current_behavior_ = recovery_ptr;
+            setState(INITIALIZED);
+          }
           recovery_behaviors_.insert(
               std::pair<std::string, mbf_abstract_core::AbstractRecovery::Ptr>(name, recovery_ptr));
 

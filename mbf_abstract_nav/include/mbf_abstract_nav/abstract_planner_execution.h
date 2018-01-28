@@ -203,6 +203,12 @@ namespace mbf_abstract_nav
     //! the local planer to calculate the velocity command
     boost::shared_ptr<mbf_abstract_core::AbstractPlanner> planner_;
 
+    //! map to store the planners. Each planner can be accessed by its corresponding name
+    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractPlanner> > planners_;
+
+    //! map to store the type of the planner as string
+    std::map<std::string, std::string> planners_type_;
+
     //! the name of the loaded planner plugin
     std::string plugin_name_;
 
@@ -227,9 +233,14 @@ namespace mbf_abstract_nav
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
+     * @param name The name of the planner
+     * @param planner_ptr pointer to the planner object which corresponds to the name param
      * @return true if init succeeded, false otherwise
      */
-    virtual bool initPlugin() = 0;
+    virtual bool initPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+    ) = 0;
 
     /**
      * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
@@ -251,6 +262,11 @@ namespace mbf_abstract_nav
         double &cost,
         std::string &message);
 
+    /**
+     * @brief Loads the plugins defined in the parameter server
+     * @return true, if all planners have been loaded successfully.
+     */
+    bool loadPlugins();
 
     /**
      * @brief Sets the internal state, thread communication safe

@@ -80,10 +80,15 @@ private:
   virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
 
   /**
-   * @brief Initializes the global planner plugin with its name and pointer to the costmap
-   * @return true if init succeeded, false otherwise.
+   * @brief Initializes the controller plugin with its name and pointer to the costmap
+   * @param name The name of the planner
+   * @param planner_ptr pointer to the planner object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
    */
-  virtual bool initPlugin();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+  );
 
   /**
    * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,

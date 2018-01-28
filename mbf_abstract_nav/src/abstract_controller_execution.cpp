@@ -39,6 +39,7 @@
  */
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
+#include <xmlrpcpp/XmlRpcException.h>
 
 namespace mbf_abstract_nav
 {
@@ -50,9 +51,6 @@ namespace mbf_abstract_nav
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
-
-    // get plugin name so the server can call initialize before the first reconfiguration
-    private_nh.param("local_planner", plugin_name_, std::string("base_local_planner/TrajectoryPlannerROS"));
 
     // non-dynamically reconfigurable parameters
     private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
@@ -72,13 +70,68 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::initialize()
   {
-    controller_ = loadControllerPlugin(plugin_name_);
-    if (controller_ && initPlugin())
-    {
-      setState(INITIALIZED);
-      return true;
+    return loadPlugins();
+  }
+  bool AbstractControllerExecution::loadPlugins()
+  {
+    ros::NodeHandle private_nh("~");
+
+    XmlRpc::XmlRpcValue controllers_param_list;
+    if(!private_nh.getParam("controllers", controllers_param_list)){
+      ROS_WARN_STREAM("No controllers configured! - Use the param \"controllers\", which must be a list of tuples with a name and a type.");
+      return false;
     }
-    return false;
+
+    try
+    {
+      for (int i = 0; i < controllers_param_list.size(); i++)
+      {
+        XmlRpc::XmlRpcValue elem = controllers_param_list[i];
+
+        std::string name = elem["name"];
+        std::string type = elem["type"];
+
+        if (controllers_.find(name) != controllers_.end())
+        {
+          ROS_ERROR_STREAM("The controller \"" << name << "\" has already been loaded! Names must be unique!");
+          return false;
+        }
+        // load and init
+        mbf_abstract_core::AbstractController::Ptr controller_ptr = loadControllerPlugin(type);
+        if(controller_ptr && initPlugin(name, controller_ptr))
+        {
+          // set default controller to the first in the list
+          if(!controller_)
+          {
+            controller_ = controller_ptr;
+            plugin_name_ = name;
+            setState(INITIALIZED);
+          }
+
+          controllers_.insert(
+              std::pair<std::string, mbf_abstract_core::AbstractController::Ptr>(name, controller_ptr));
+
+          controllers_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
+
+          ROS_INFO_STREAM("The planner \"" << type << "\" has been loaded and initialized"
+              << " successfully under the name \"" << name << "\".");
+
+        }
+        else
+        {
+          ROS_ERROR_STREAM("Could not load and initialize the plugin with the name \""
+              << name << "\" and the type \"" << type << "\"!");
+        }
+      }
+    }
+    catch (XmlRpc::XmlRpcException &e)
+    {
+      ROS_ERROR_STREAM("Invalid parameter structure. The \"controllers\" parameter has to be a list of structs "
+                           << "with fields \"name\" and \"type\" of !");
+      ROS_ERROR_STREAM(e.getMessage());
+      return false;
+    }
+    return true;
   }
 
   void AbstractControllerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
@@ -87,9 +140,21 @@ namespace mbf_abstract_nav
 
     if (config.local_planner != plugin_name_)
     {
-      plugin_name_ = config.local_planner;
-      initialize();
-      new_plan_ = true;  // ensure we reset the current plan (if any) to the new controller
+      std::map<std::string, mbf_abstract_core::AbstractController::Ptr>::iterator new_controller
+          = controllers_.find(config.local_planner);
+      if(new_controller != controllers_.end())
+      {
+        plugin_name_ = new_controller->first;
+        controller_ = new_controller->second;
+        new_plan_ = true;  // ensure we reset the current plan (if any) for the new controller
+        ROS_INFO_STREAM("Reconfiguration changed the current controller plugin to \"" << new_controller->first
+            << "\" with the type \"" << controllers_type_[new_controller->first] << "\"");
+      }
+      else
+      {
+        ROS_WARN_STREAM("The controller \"" << config.local_planner << "\" has not yet been loaded!"
+            << " No switch of the controller!");
+      }
     }
 
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times

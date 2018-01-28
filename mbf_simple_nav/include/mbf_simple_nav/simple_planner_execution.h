@@ -78,9 +78,14 @@ private:
 
   /**
    * @brief Empty init method. Nothing to initialize.
+   * @param name The name of the planner
+   * @param planner_ptr pointer to the planner object which corresponds to the name param
    * @return true always
    */
-  virtual bool initPlugin();
+  virtual bool initPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+  );
 };
 
 } /* namespace mbf_simple_nav */
