@@ -68,8 +68,7 @@ namespace mbf_abstract_nav
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-    // Disabled on move_base... TODO: try to enable in mbf if turns to be useful
-    // config.recovery_behaviors;
+    // Nothing to do here, as recovery_enabled is loaded and used in the navigation server
   }
 
 
@@ -78,7 +77,8 @@ namespace mbf_abstract_nav
     ros::NodeHandle private_nh("~");
 
     XmlRpc::XmlRpcValue recovery_behaviors_param_list;
-    if(!private_nh.getParam("recovery_behaviors", recovery_behaviors_param_list)){
+    if(!private_nh.getParam("recovery_behaviors", recovery_behaviors_param_list))
+    {
       ROS_WARN_STREAM("No recovery bahaviors configured! - Use the param \"recovery_behaviors\", which must be a list of tuples with a name and a type.");
       return true;
     }

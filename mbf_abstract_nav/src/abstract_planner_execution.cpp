@@ -63,33 +63,7 @@ namespace mbf_abstract_nav
 
   bool AbstractPlannerExecution::initialize()
   {
-    ros::NodeHandle private_nh("~");
-
-    // handle default case for only one planner using the global_planner param.
-    // get plugin name so the server can call initialize before the first reconfiguration.
-    std::string single_planner;
-    if(private_nh.getParam("global_planner", single_planner))
-    {
-      std::string name("planner");
-      planner_ = loadPlannerPlugin(single_planner);
-      if(planner_ && initPlugin(name, planner_))
-      {
-        planners_.insert(
-            std::pair<std::string, mbf_abstract_core::AbstractPlanner::Ptr>(name, planner_));
-        planners_type_.insert(std::pair<std::string, std::string>(name, single_planner));
-        plugin_name_ = name;
-        setState(INITIALIZED);
-        return true;
-      }
-      else
-      {
-        ROS_WARN_STREAM("Could not load the controller \"" << single_planner << "\"!");
-        return false;
-      }
-    }
-    else{
-      return loadPlugins();
-    }
+    return loadPlugins();
   }
 
   bool AbstractPlannerExecution::switchPlanner(const std::string& name){
@@ -121,7 +95,8 @@ namespace mbf_abstract_nav
     ros::NodeHandle private_nh("~");
 
     XmlRpc::XmlRpcValue planners_param_list;
-    if(!private_nh.getParam("planners", planners_param_list)){
+    if(!private_nh.getParam("planners", planners_param_list))
+    {
       ROS_WARN_STREAM("No planners configured! - Use the param \"planners\", which must be a list of tuples with a name and a type.");
       return false;
     }
@@ -143,6 +118,7 @@ namespace mbf_abstract_nav
         mbf_abstract_core::AbstractPlanner::Ptr planner_ptr = loadPlannerPlugin(type);
         if(planner_ptr && initPlugin(name, planner_ptr))
         {
+          // set default planner to the first in the list
           if(!planner_)
           {
             planner_ = planner_ptr;

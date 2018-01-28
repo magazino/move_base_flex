@@ -72,41 +72,16 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::initialize()
   {
-    ros::NodeHandle private_nh("~");
-
-    // handle default case for only one controller using the local_planner param.
-    // get plugin name so the server can call initialize before the first reconfiguration.
-    std::string single_controller;
-    if(private_nh.getParam("local_planner", single_controller))
-    {
-      std::string name("controller");
-      controller_ = loadControllerPlugin(single_controller);
-      if(controller_ && initPlugin(name, controller_))
-      {
-        controllers_.insert(
-            std::pair<std::string, mbf_abstract_core::AbstractController::Ptr>(name, controller_));
-        controllers_type_.insert(std::pair<std::string, std::string>(name, single_controller));
-        plugin_name_ = name;
-        setState(INITIALIZED);
-        return true;
-      }
-      else
-      {
-        ROS_WARN_STREAM("Could not load the controller \"" << single_controller << "\"!");
-        return false;
-      }
-    }
-    else{
-      return loadPlugins();
-    }
-
+    return loadPlugins();
   }
+
   bool AbstractControllerExecution::loadPlugins()
   {
     ros::NodeHandle private_nh("~");
 
     XmlRpc::XmlRpcValue controllers_param_list;
-    if(!private_nh.getParam("controllers", controllers_param_list)){
+    if(!private_nh.getParam("controllers", controllers_param_list))
+    {
       ROS_WARN_STREAM("No controllers configured! - Use the param \"controllers\", which must be a list of tuples with a name and a type.");
       return false;
     }
