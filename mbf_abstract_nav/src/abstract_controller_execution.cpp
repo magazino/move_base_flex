@@ -164,6 +164,11 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::switchController(const std::string& name)
   {
+    if(name == plugin_name_)
+    {
+      ROS_DEBUG_STREAM("No controller switch necessary, \"" << name << "\" already set.");
+      return true;
+    }
     std::map<std::string, mbf_abstract_core::AbstractController::Ptr>::iterator new_controller
         = controllers_.find(name);
     if(new_controller != controllers_.end())
@@ -171,8 +176,8 @@ namespace mbf_abstract_nav
       plugin_name_ = new_controller->first;
       controller_ = new_controller->second;
       new_plan_ = true;  // ensure we reset the current plan (if any) for the new controller
-      ROS_INFO_STREAM("Reconfiguration changed the current controller plugin to \"" << new_controller->first
-          << "\" with the type \"" << controllers_type_[new_controller->first] << "\"");
+      ROS_INFO_STREAM("Switched the controller plugin to \"" << new_controller->first
+          << "\" with the type \"" << controllers_type_[new_controller->first] << "\".");
       return true;
     }
     else
@@ -187,10 +192,7 @@ namespace mbf_abstract_nav
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-    if (config.local_planner != plugin_name_)
-    {
-      switchController(config.local_planner);
-    }
+    switchController(config.local_planner);
 
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action

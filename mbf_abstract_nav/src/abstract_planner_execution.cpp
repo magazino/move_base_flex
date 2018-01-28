@@ -93,13 +93,18 @@ namespace mbf_abstract_nav
   }
 
   bool AbstractPlannerExecution::switchPlanner(const std::string& name){
+    if(name == plugin_name_)
+    {
+      ROS_DEBUG_STREAM("No planner switch necessary, \"" << name << "\" already set.");
+      return true;
+    }
     std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr>::iterator new_planner
         = planners_.find(name);
     if(new_planner != planners_.end())
     {
       plugin_name_ = new_planner->first;
       planner_ = new_planner->second;
-      ROS_INFO_STREAM("Reconfiguration changed the current planner plugin to \"" << new_planner->first << "\" with "
+      ROS_INFO_STREAM("Switched the planner plugin to \"" << new_planner->first << "\" with "
           << "the type \"" << planners_type_[new_planner->first] << "\"");
       return true;
     }
@@ -174,10 +179,7 @@ namespace mbf_abstract_nav
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-    if (config.global_planner != plugin_name_)
-    {
-      switchPlanner(config.global_planner);
-    }
+    switchPlanner(config.global_planner);
 
     max_retries_ = config.planner_max_retries;
     frequency_ = config.planner_frequency;
