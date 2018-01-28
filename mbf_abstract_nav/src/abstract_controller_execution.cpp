@@ -40,6 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 #include <xmlrpcpp/XmlRpcException.h>
+#include <mbf_msgs/ExePathResult.h>
 
 namespace mbf_abstract_nav
 {
@@ -57,6 +58,7 @@ namespace mbf_abstract_nav
     private_nh.param("map_frame", global_frame_, std::string("map"));
     private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
+    private_nh.param("tf_timeout", tf_timeout_, 1.0);
 
     // init cmd_vel publisher for the robot velocity t
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
@@ -274,9 +276,21 @@ namespace mbf_abstract_nav
 
   uint32_t AbstractControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd, std::string& message)
   {
-    // TODO calculate robot pose and velocity
     geometry_msgs::PoseStamped robot_pose;
+    // TODO compute velocity
     geometry_msgs::TwistStamped robot_velocity;
+
+    bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
+                                                     ros::Duration(tf_timeout_), robot_pose);
+    // would be 0 if not, as we ask tf listener for the last pose available
+    robot_pose.header.stamp = ros::Time::now();
+    if (!tf_success)
+    {
+      ROS_ERROR_STREAM("Could not get the robot pose in the global frame. - robot frame: \""
+                           << robot_frame_ << "\"   global frame: \"" << global_frame_ << std::endl);
+      message = "Could not get the robot pose";
+      return mbf_msgs::ExePathResult::TF_ERROR;
+    }
     return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
 
