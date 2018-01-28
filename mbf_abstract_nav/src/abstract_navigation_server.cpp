@@ -292,7 +292,7 @@ void AbstractNavigationServer::callActionGetPath(
   AbstractPlannerExecution::PlanningState state_planning_input;
 
   std::vector<geometry_msgs::PoseStamped> plan, global_plan;
-  double costs;
+  double cost;
 
   int feedback_cnt = 0;
 
@@ -352,14 +352,13 @@ void AbstractNavigationServer::callActionGetPath(
       case AbstractPlannerExecution::FOUND_PLAN:
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
-        ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan");
-        planning_ptr_->getNewPlan(plan, costs);
+        planning_ptr_->getNewPlan(plan, cost);
         publishPath(plan);
 
-        if (costs > 0)
-        {
-          ROS_INFO_STREAM_NAMED(name_action_get_path, "Found a path with the costs: " << costs);
-        }
+        if (cost > 0)
+          ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan with cost: " << cost);
+        else
+          ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan");
 
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
@@ -533,8 +532,8 @@ void AbstractNavigationServer::callActionExePath(
     {
       if (action_server_exe_path_ptr_->isNewGoalAvailable())
       {
-        // This probably means that we are continuously replanning, so we don't stop navigation
-        ROS_INFO_STREAM("Action \"ExePath\" preempted with a new path; switching...");
+        // This probably means that we are continuously replanning, so we don't stop navigation and log as DEBUG
+        ROS_DEBUG_STREAM("Action \"ExePath\" preempted with a new path; switching...");
       }
       else
       {

@@ -255,7 +255,7 @@ namespace mbf_abstract_nav
     geometry_msgs::Point s = start.pose.position;
     geometry_msgs::Point g = goal.pose.position;
 
-    ROS_INFO_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
+    ROS_DEBUG_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
                                    << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
 
     setState(STARTED);
@@ -359,7 +359,7 @@ namespace mbf_abstract_nav
           }
           else if (success)
           {
-            ROS_INFO_STREAM("Successfully found a plan.");
+            ROS_DEBUG_STREAM("Successfully found a plan.");
             exceeded = false;
             planning_ = false;
 
