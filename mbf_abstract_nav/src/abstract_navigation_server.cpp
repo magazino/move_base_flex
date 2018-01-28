@@ -769,8 +769,6 @@ void AbstractNavigationServer::callActionMoveBase(
   ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Start action "  << name_action_move_base);
 
   const geometry_msgs::PoseStamped target_pose = goal->target_pose;
-  const std::string local_planner = goal->local_planner;
-  const std::string global_planner = goal->global_planner;
 
   mbf_msgs::GetPathGoal get_path_goal;
   mbf_msgs::ExePathGoal exe_path_goal;
@@ -780,6 +778,28 @@ void AbstractNavigationServer::callActionMoveBase(
   mbf_msgs::GetPathResult get_path_result;
   mbf_msgs::ExePathResult exe_path_result;
   mbf_msgs::RecoveryResult recovery_result;
+
+  if(!goal->controller.empty() && !moving_ptr_->switchController(goal->controller))
+  {
+    std::stringstream ss;
+    ss << "No controller with the name \"" << goal->controller << "\" loaded! ";
+    ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the controller before using it!");
+    move_base_result.outcome = mbf_msgs::MoveBaseResult::INVALID_PLUGIN;
+    move_base_result.message = ss.str();
+    action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
+    return;
+  }
+
+  if(!goal->planner.empty() && !planning_ptr_->switchPlanner(goal->planner))
+  {
+    std::stringstream ss;
+    ss << "No planner with the name \"" << goal->planner << "\" loaded! ";
+    ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the planner before using it!");
+    move_base_result.outcome = mbf_msgs::MoveBaseResult::INVALID_PLUGIN;
+    move_base_result.message = ss.str();
+    action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
+    return;
+  }
 
   for(std::vector<std::string>::const_iterator iter = goal->recovery_behaviors.begin();
       iter != goal->recovery_behaviors.end(); ++iter)

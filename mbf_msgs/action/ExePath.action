@@ -2,7 +2,7 @@
 
 nav_msgs/Path path
 
-# Plugin to use; defaults to the first one specified on "controllers" parameter
+# Controller to use; defaults to the first one specified on "controllers" parameter
 string controller
 
 ---

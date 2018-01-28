@@ -12,7 +12,7 @@ geometry_msgs/PoseStamped target_pose
 # If the goal is obstructed, how many meters the planner can relax the constraint in x and y before failing
 float64 tolerance
 
-# Plugin to use; defaults to the first one specified on "planners" parameter
+# Planner to use; defaults to the first one specified on "planners" parameter
 string planner
 
 ---

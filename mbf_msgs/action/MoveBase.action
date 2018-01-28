@@ -3,13 +3,13 @@
 
 geometry_msgs/PoseStamped target_pose
 
-# Local planner plugin to use; defaults to the first one specified on local_planners parameter
-string local_planner
+# Controller to use; defaults to the first one specified on "controllers" parameter
+string controller
 
-# Global planner plugin to use; defaults to the first one specified on global_planners parameter
-string global_planner
+# Planner to use; defaults to the first one specified on "planners" parameter
+string planner
 
-# Recovery behaviors to try on case of failure; defaults to the recovery_behaviors parameter value
+# Recovery behaviors to try on case of failure; defaults to the "recovery_behaviors" parameter value
 string[] recovery_behaviors
 
 ---
