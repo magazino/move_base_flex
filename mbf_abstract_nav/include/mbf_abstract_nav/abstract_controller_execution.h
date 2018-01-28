@@ -197,7 +197,7 @@ namespace mbf_abstract_nav
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
     //! map to store the controllers. Each controller can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractController> > controllers_;
+    std::map<std::string, mbf_abstract_core::AbstractController::Ptr > controllers_;
 
     //! map to store the type of the controllers as string
     std::map<std::string, std::string> controllers_type_;
@@ -206,7 +206,7 @@ namespace mbf_abstract_nav
     std::string plugin_name_;
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<mbf_abstract_core::AbstractController> controller_;
+    mbf_abstract_core::AbstractController::Ptr controller_;
 
     //! shared pointer to the shared tf listener
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;

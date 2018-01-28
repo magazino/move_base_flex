@@ -63,7 +63,33 @@ namespace mbf_abstract_nav
 
   bool AbstractPlannerExecution::initialize()
   {
-    return loadPlugins();
+    ros::NodeHandle private_nh("~");
+
+    // handle default case for only one planner using the global_planner param.
+    // get plugin name so the server can call initialize before the first reconfiguration.
+    std::string single_planner;
+    if(private_nh.getParam("global_planner", single_planner))
+    {
+      std::string name("planner");
+      planner_ = loadPlannerPlugin(single_planner);
+      if(planner_ && initPlugin(name, planner_))
+      {
+        planners_.insert(
+            std::pair<std::string, mbf_abstract_core::AbstractPlanner::Ptr>(name, planner_));
+        planners_type_.insert(std::pair<std::string, std::string>(name, single_planner));
+        plugin_name_ = name;
+        setState(INITIALIZED);
+        return true;
+      }
+      else
+      {
+        ROS_WARN_STREAM("Could not load the controller \"" << single_planner << "\"!");
+        return false;
+      }
+    }
+    else{
+      return loadPlugins();
+    }
   }
 
   bool AbstractPlannerExecution::loadPlugins()

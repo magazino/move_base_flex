@@ -201,10 +201,10 @@ namespace mbf_abstract_nav
   protected:
 
     //! the local planer to calculate the velocity command
-    boost::shared_ptr<mbf_abstract_core::AbstractPlanner> planner_;
+    mbf_abstract_core::AbstractPlanner::Ptr planner_;
 
     //! map to store the planners. Each planner can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractPlanner> > planners_;
+    std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr > planners_;
 
     //! map to store the type of the planner as string
     std::map<std::string, std::string> planners_type_;
