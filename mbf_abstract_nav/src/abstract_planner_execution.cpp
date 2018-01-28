@@ -179,8 +179,6 @@ namespace mbf_abstract_nav
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
-    switchPlanner(config.global_planner);
-
     max_retries_ = config.planner_max_retries;
     frequency_ = config.planner_frequency;
 

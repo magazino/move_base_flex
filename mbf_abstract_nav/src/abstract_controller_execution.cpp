@@ -111,7 +111,6 @@ namespace mbf_abstract_nav
       return false;
     }
 
-
     try
     {
       for (int i = 0; i < controllers_param_list.size(); i++)
@@ -193,8 +192,6 @@ namespace mbf_abstract_nav
   void AbstractControllerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-
-    switchController(config.local_planner);
 
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
