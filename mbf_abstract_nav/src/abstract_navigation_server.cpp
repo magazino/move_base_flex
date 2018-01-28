@@ -235,6 +235,22 @@ void AbstractNavigationServer::callActionGetPath(
   double tolerance = goal->tolerance;
   bool use_start_pose = goal->use_start_pose;
 
+  // Try to switch the planner if a special planner is specified in the action goal.
+  if(!goal->planner.empty()){
+
+    if(planning_ptr_->switchPlanner(goal->planner))
+    {
+      ROS_INFO_STREAM("Using the planner \"" << goal->planner << "\".");
+    }
+    else
+    {
+      result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
+      result.message = "Could not switch to the planner \"" + goal->planner + "\"!";
+      action_server_get_path_ptr_->setAborted(result, result.message);
+      return;
+    }
+  }
+
   active_planning_ = true;
 
   if(use_start_pose)
@@ -456,6 +472,22 @@ void AbstractNavigationServer::callActionExePath(
     action_server_exe_path_ptr_->setAborted(result, result.message);
     ROS_ERROR_STREAM_NAMED(name_action_exe_path, result.message << " Canceling the action call.");
     return;
+  }
+
+  // Try to switch the planner if a special planner is specified in the action goal.
+  if(!goal->controller.empty()){
+
+    if(moving_ptr_->switchController(goal->controller))
+    {
+      ROS_INFO_STREAM("Using the controller \"" << goal->controller << "\".");
+    }
+    else
+    {
+      result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
+      result.message = "Could not switch to the controller \"" + goal->controller + "\"!";
+      action_server_exe_path_ptr_->setAborted(result, result.message);
+      return;
+    }
   }
 
   goal_pose_ = plan.back();
