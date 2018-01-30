@@ -91,7 +91,7 @@ namespace mbf_abstract_nav
      * @param plan A reference to a plan, which then will be filled.
      * @param cost A reference to the costs, which then will be filled.
      */
-    void getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan, double &cost);
+    std::vector<geometry_msgs::PoseStamped> getPlan();
 
     /**
      * @brief Returns the last time a valid plan was available.
@@ -141,6 +141,12 @@ namespace mbf_abstract_nav
      * @brief Gets planning frequency
      */
     double getFrequency() { return frequency_; };
+
+    /**
+     * @brief Gets computed costs
+     * @return The costs of the computed path
+     */
+    double getCosts();
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
@@ -280,13 +286,6 @@ namespace mbf_abstract_nav
      * @param state the current state
      */
     void setState(PlanningState state);
-
-    /**
-     * @brief Saves the plan, after a plan has been found. Thread communication safe.
-     * @param plan The computed plan to be transferred.
-     * @param cost The computed costs to be transfered.
-     */
-    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, double cost);
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;

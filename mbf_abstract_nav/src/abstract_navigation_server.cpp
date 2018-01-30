@@ -352,13 +352,10 @@ void AbstractNavigationServer::callActionGetPath(
       case AbstractPlannerExecution::FOUND_PLAN:
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
-        planning_ptr_->getNewPlan(plan, cost);
-        publishPath(plan);
+        plan = planning_ptr_->getPlan();
+        publishPath(result.path.poses);
 
-        if (cost > 0)
-          ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan with cost: " << cost);
-        else
-          ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan");
+        ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan with cost: " << cost);
 
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
@@ -383,6 +380,7 @@ void AbstractNavigationServer::callActionGetPath(
         }
 
         result.path.poses = global_plan;
+        result.costs = planning_ptr_->getCosts();
         result.outcome = planning_ptr_->getOutcome();
         result.message = planning_ptr_->getMessage();
         action_server_get_path_ptr_->setSucceeded(result, result.message);

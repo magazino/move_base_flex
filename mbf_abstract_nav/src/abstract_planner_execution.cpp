@@ -151,6 +151,25 @@ namespace mbf_abstract_nav
     return true;
   }
 
+  double AbstractPlannerExecution::getCosts()
+  {
+    boost::lock_guard<boost::mutex> guard(plan_mtx_);
+    // copy plan and costs to output
+    // if the planner plugin do not compute costs compute costs by discrete path length
+    if(cost_ == 0 && !plan_.empty()) {
+      ROS_DEBUG_STREAM("Compute costs by discrete path length!");
+      double cost = 0;
+
+      geometry_msgs::PoseStamped prev_pose = plan_.front();
+      for(std::vector<geometry_msgs::PoseStamped>::iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
+      {
+        cost += mbf_abstract_nav::distance(prev_pose, *iter);
+      }
+      return cost;
+    }
+    return cost_;
+  }
+
   void AbstractPlannerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
@@ -190,21 +209,11 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractPlannerExecution::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan, double &cost)
+  std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     // copy plan and costs to output
-    plan = plan_;
-    cost = cost_;
-  }
-
-
-  void AbstractPlannerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, double cost)
-  {
-    boost::lock_guard<boost::mutex> guard(plan_mtx_);
-    plan_ = plan;
-    cost_ = cost;
-    last_valid_plan_time_ = ros::Time::now();
+    return plan_;
   }
 
 
@@ -363,8 +372,13 @@ namespace mbf_abstract_nav
             exceeded = false;
             planning_ = false;
 
-            setNewPlan(plan, cost);
+            plan_mtx_.lock();
+            plan_ = plan;
+            cost_ = cost;
+            last_valid_plan_time_ = ros::Time::now();
+            plan_mtx_.unlock();
             setState(FOUND_PLAN);
+
             condition_.notify_all(); // notify observer
           }
           else if (max_retries_ >= 0 && ++retries > max_retries_)
