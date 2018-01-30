@@ -270,6 +270,18 @@ namespace mbf_abstract_nav
     void publishZeroVelocity();
 
     /**
+     * @brief Checks whether the goal has been reached in the range of tolerance or not
+     * @return true if the goal has been reached, false otherwise
+     */
+    bool reachedGoalCheck();
+
+    /**
+     * @brief Computes the robot pose;
+     * @return true if the robot pose has been computed successfully, false otherwise.
+     */
+    bool computeRobotPose();
+
+    /**
      * @brief Sets the controller state. This method makes the communication of the state thread safe.
      * @param state The current controller state.
      */
@@ -344,11 +356,17 @@ namespace mbf_abstract_nav
     //! main controller loop variable, true if the controller is running, false otherwise
     bool moving_;
 
+    //! whether move base flex should check for the goal tolerance or not.
+    bool mbf_tolerance_check_;
+
     //! distance tolerance to the given goal pose
     double dist_tolerance_;
 
     //! angle tolerance to the given goal pose
     double angle_tolerance_;
+
+    //! current robot pose;
+    geometry_msgs::PoseStamped robot_pose_;
   };
 
 } /* namespace mbf_abstract_nav */
