@@ -146,7 +146,7 @@ namespace mbf_abstract_nav
      * @brief Gets computed costs
      * @return The costs of the computed path
      */
-    double getCosts();
+    double getCost();
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the

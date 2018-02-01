@@ -380,7 +380,7 @@ void AbstractNavigationServer::callActionGetPath(
         }
 
         result.path.poses = global_plan;
-        result.costs = planning_ptr_->getCosts();
+        result.cost = planning_ptr_->getCost();
         result.outcome = planning_ptr_->getOutcome();
         result.message = planning_ptr_->getMessage();
         action_server_get_path_ptr_->setSucceeded(result, result.message);

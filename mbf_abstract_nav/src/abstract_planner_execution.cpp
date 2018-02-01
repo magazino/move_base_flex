@@ -151,7 +151,7 @@ namespace mbf_abstract_nav
     return true;
   }
 
-  double AbstractPlannerExecution::getCosts()
+  double AbstractPlannerExecution::getCost()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     // copy plan and costs to output
@@ -164,6 +164,7 @@ namespace mbf_abstract_nav
       for(std::vector<geometry_msgs::PoseStamped>::iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
       {
         cost += mbf_abstract_nav::distance(prev_pose, *iter);
+        prev_pose = *iter;
       }
       return cost;
     }
