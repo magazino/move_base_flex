@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
   geometry_msgs
   mbf_msgs
   mbf_abstract_core
+  mbf_utility
   nav_msgs
   pluginlib
   roscpp
@@ -27,12 +28,11 @@ generate_dynamic_reconfigure_options(
   cfg/MoveBaseFlex.cfg
 )
 
-set(MBF_UTILITY_LIB mbf_navigation_util)
 set(MBF_ABSTRACT_SERVER_LIB mbf_abstract_server)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES ${MBF_UTILITY_LIB} ${MBF_ABSTRACT_SERVER_LIB}
+  LIBRARIES ${MBF_ABSTRACT_SERVER_LIB}
   CATKIN_DEPENDS
   actionlib
   actionlib_msgs
@@ -40,6 +40,7 @@ catkin_package(
   geometry_msgs
   mbf_msgs
   mbf_abstract_core
+  mbf_utility
   nav_msgs
   pluginlib
   roscpp
@@ -55,25 +56,21 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
-add_library(${MBF_UTILITY_LIB} src/navigation_utility.cpp)
-
 add_library(${MBF_ABSTRACT_SERVER_LIB}
   src/abstract_navigation_server.cpp
   src/abstract_planner_execution.cpp
   src/abstract_controller_execution.cpp
   src/abstract_recovery_execution.cpp
   )
-add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${MBF_UTILITY_LIB})
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${PROJECT_NAME}_gencfg)
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${MBF_ABSTRACT_SERVER_LIB}
-  ${MBF_UTILITY_LIB}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   )
 
 install(TARGETS
-  ${MBF_UTILITY_LIB} ${MBF_ABSTRACT_SERVER_LIB}
+  ${MBF_ABSTRACT_SERVER_LIB}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

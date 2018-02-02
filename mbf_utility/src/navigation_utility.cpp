@@ -38,9 +38,9 @@
  *
  */
 
-#include "mbf_abstract_nav/navigation_utility.h"
+#include "mbf_utility/navigation_utility.h"
 
-namespace mbf_abstract_nav
+namespace mbf_utility
 {
 
 bool getRobotPose(const tf::TransformListener &tf_listener,
@@ -121,4 +121,4 @@ double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseSt
   return rot1.angleShortestPath(rot2);
 }
 
-} /* namespace mbf_abstract_nav */
+} /* namespace mbf_utility */

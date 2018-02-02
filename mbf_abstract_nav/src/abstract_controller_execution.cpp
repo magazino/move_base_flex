@@ -249,7 +249,7 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::computeRobotPose()
   {
-    bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
+    bool tf_success = mbf_utility::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
                                                      ros::Duration(tf_timeout_), robot_pose_);
     // would be 0 if not, as we ask tf listener for the last pose available
     robot_pose_.header.stamp = ros::Time::now();
@@ -319,8 +319,8 @@ namespace mbf_abstract_nav
   {
     // check whether the controller plugin returns goal reached or if mbf should check for goal reached.
     return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
-        && mbf_abstract_nav::distance(robot_pose_, plan_.back()) < dist_tolerance_
-        && mbf_abstract_nav::angle(robot_pose_, plan_.back()) < angle_tolerance_);
+        && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
+        && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
   }
 
 

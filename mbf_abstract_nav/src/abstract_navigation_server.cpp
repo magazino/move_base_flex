@@ -191,7 +191,7 @@ bool AbstractNavigationServer::transformPlanToGlobalFrame(
   for (iter = plan.begin(); iter != plan.end(); ++iter)
   {
     geometry_msgs::PoseStamped global_pose;
-    tf_success = mbf_abstract_nav::transformPose(*tf_listener_ptr_, global_frame_, iter->header.stamp,
+    tf_success = mbf_utility::transformPose(*tf_listener_ptr_, global_frame_, iter->header.stamp,
                                                  ros::Duration(tf_timeout_), *iter, global_frame_, global_pose);
     if (!tf_success)
     {
@@ -207,7 +207,7 @@ bool AbstractNavigationServer::transformPlanToGlobalFrame(
 bool AbstractNavigationServer::getRobotPose(
   geometry_msgs::PoseStamped &robot_pose)
 {
-  bool tf_success = mbf_abstract_nav::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
+  bool tf_success = mbf_utility::getRobotPose(*tf_listener_ptr_, robot_frame_, global_frame_,
                                                    ros::Duration(tf_timeout_), robot_pose);
   robot_pose.header.stamp = ros::Time::now(); // would be 0 if not, as we ask tf listener for the last pose available
   if (!tf_success)
@@ -617,7 +617,7 @@ void AbstractNavigationServer::callActionExePath(
         if (!oscillation_timeout_.isZero() && !active_move_base_)
         {
           // check if oscillating only if move_base action is not active, as it has his own wider-scope detector
-          if (mbf_abstract_nav::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
+          if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
           {
             last_oscillation_reset = ros::Time::now();
             oscillation_pose = robot_pose_;
@@ -636,8 +636,8 @@ void AbstractNavigationServer::callActionExePath(
 
         moving_ptr_->getLastValidCmdVel(feedback.current_twist);
         feedback.current_pose = robot_pose_;
-        feedback.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose_));
-        feedback.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose_));
+        feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+        feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
         action_server_exe_path_ptr_->publishFeedback(feedback);
         break;
 
@@ -952,8 +952,8 @@ void AbstractNavigationServer::callActionMoveBase(
               // copy result from get_path action
               move_base_result.outcome = get_path_result.outcome;
               move_base_result.message = get_path_result.message;
-              move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, target_pose));
-              move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, target_pose));
+              move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, target_pose));
+              move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, target_pose));
               move_base_result.final_pose = robot_pose_;
 
               if (!recovery_enabled_)
@@ -1000,8 +1000,8 @@ void AbstractNavigationServer::callActionMoveBase(
               // copy result from get_path action
               move_base_result.outcome = get_path_result.outcome;
               move_base_result.message = get_path_result.message;
-              move_base_result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, target_pose));
-              move_base_result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, target_pose));
+              move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, target_pose));
+              move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, target_pose));
               move_base_result.final_pose = robot_pose_;
               run = false;
               action_server_move_base_ptr_->setPreempted(move_base_result, get_path_state.getText());
@@ -1053,7 +1053,7 @@ void AbstractNavigationServer::callActionMoveBase(
           if (!oscillation_timeout_.isZero())
           {
             // check if oscillating
-            if (mbf_abstract_nav::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
+            if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
             {
               last_oscillation_reset = ros::Time::now();
               oscillation_pose = robot_pose_;
@@ -1347,8 +1347,8 @@ void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::st
   result.outcome = outcome;
   result.message = message;
   result.final_pose = robot_pose_;
-  result.dist_to_goal = static_cast<float>(mbf_abstract_nav::distance(robot_pose_, goal_pose_));
-  result.angle_to_goal = static_cast<float>(mbf_abstract_nav::angle(robot_pose_, goal_pose_));
+  result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+  result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
 }
 
 

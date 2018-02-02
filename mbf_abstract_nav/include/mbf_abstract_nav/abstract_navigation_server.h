@@ -59,7 +59,8 @@
 #include <mbf_msgs/RecoveryAction.h>
 #include <mbf_msgs/MoveBaseAction.h>
 
-#include "navigation_utility.h"
+#include <mbf_utility/navigation_utility.h>
+
 #include "abstract_navigation_server.h"
 
 namespace mbf_abstract_nav

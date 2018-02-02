@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef MOVE_BASE_FLEX__NAVIGATION_STATE_H_
-#define MOVE_BASE_FLEX__NAVIGATION_STATE_H_
+#ifndef MBF_UTILITY__NAVIGATION_UTILITY_H_
+#define MBF_UTILITY__NAVIGATION_UTILITY_H_
 
 #include <tf/transform_listener.h>
 
-namespace mbf_abstract_nav
+namespace mbf_utility
 {
 
 /**
@@ -95,6 +95,6 @@ double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::Pos
  */
 double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
 
-} /* namespace mbf_abstract_nav */
+} /* namespace mbf_utility */
 
-#endif /* navigation_state.h */
+#endif /* navigation_utility.h */

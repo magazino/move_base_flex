@@ -163,7 +163,7 @@ namespace mbf_abstract_nav
       geometry_msgs::PoseStamped prev_pose = plan_.front();
       for(std::vector<geometry_msgs::PoseStamped>::iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
       {
-        cost += mbf_abstract_nav::distance(prev_pose, *iter);
+        cost += mbf_utility::distance(prev_pose, *iter);
         prev_pose = *iter;
       }
       return cost;

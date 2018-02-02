@@ -47,8 +47,8 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <mbf_abstract_core/abstract_planner.h>
+#include <mbf_utility/navigation_utility.h>
 
-#include "navigation_utility.h"
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 
 namespace mbf_abstract_nav
