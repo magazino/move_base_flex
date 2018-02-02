@@ -33,6 +33,7 @@
     <build_depend>mbf_abstract_nav</build_depend>
     <build_depend>mbf_costmap_core</build_depend>
     <build_depend>mbf_msgs</build_depend>
+    <build_depend>mbf_utility</build_depend>
     <build_depend>nav_core</build_depend>
     <build_depend>nav_msgs</build_depend>
     <build_depend>geometry_msgs</build_depend>
@@ -49,6 +50,7 @@
     <run_depend>mbf_abstract_nav</run_depend>
     <run_depend>mbf_costmap_core</run_depend>
     <run_depend>mbf_msgs</run_depend>
+    <run_depend>mbf_utility</run_depend>
     <run_depend>nav_core</run_depend>
     <run_depend>nav_msgs</run_depend>
     <run_depend>geometry_msgs</run_depend>

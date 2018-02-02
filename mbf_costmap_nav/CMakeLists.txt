@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
   mbf_abstract_nav
   mbf_costmap_core
   mbf_msgs
+  mbf_utility
   nav_core
   nav_msgs
   roscpp
@@ -40,6 +41,7 @@ catkin_package(
   mbf_abstract_nav
   mbf_costmap_core
   mbf_msgs
+  mbf_utility
   nav_core
   nav_msgs
   pluginlib
