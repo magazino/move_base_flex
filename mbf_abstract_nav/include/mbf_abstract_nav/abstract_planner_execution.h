@@ -118,7 +118,8 @@ namespace mbf_abstract_nav
       PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
       NO_PLAN_FOUND,///< No plan has been found (MAX_RETRIES and PAT_EXCEEDED are 0).
       CANCELED,     ///< The planner has been canceled.
-      STOPPED       ///< The planner has been stopped.
+      STOPPED,      ///< The planner has been stopped.
+      INTERNAL_ERROR///< An internal error occurred.
     };
 
     /**

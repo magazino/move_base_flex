@@ -121,6 +121,7 @@ namespace mbf_abstract_nav
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.
       STOPPED,      ///< The controller has been stopped!
+      INTERNAL_ERROR///< An internal error occurred.
     };
 
     /**

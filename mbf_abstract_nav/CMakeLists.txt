@@ -18,7 +18,7 @@ find_package(catkin REQUIRED
   tf
   )
 
-find_package(Boost COMPONENTS thread chrono REQUIRED)
+find_package(Boost COMPONENTS thread chrono exception REQUIRED)
 
 # dynamic reconfigure: we provide the abstract configuration common to all MBF-based navigation
 # frameworks in a python module, so it can easily be included in particular navigation flavours

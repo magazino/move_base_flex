@@ -39,6 +39,7 @@
  */
 
 #include <XmlRpcException.h>
+#include <boost/exception/diagnostic_information.hpp>
 
 #include "mbf_abstract_nav/abstract_recovery_execution.h"
 
@@ -237,6 +238,10 @@ namespace mbf_abstract_nav
     catch (boost::thread_interrupted &ex)
     {
       setState(STOPPED);
+    }
+    catch (...){
+      ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+      setState(INTERNAL_ERROR);
     }
     condition_.notify_one();
     current_behavior_.reset();

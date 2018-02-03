@@ -40,6 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
 #include <xmlrpcpp/XmlRpcException.h>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace mbf_abstract_nav
 {
@@ -433,6 +434,10 @@ namespace mbf_abstract_nav
       setState(STOPPED);
       condition_.notify_all(); // notify observer
       planning_ = false;
+    }
+    catch (...){
+      ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+      setState(INTERNAL_ERROR);
     }
   }
 

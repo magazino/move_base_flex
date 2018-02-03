@@ -107,6 +107,7 @@ namespace mbf_abstract_nav
       RECOVERY_DONE, ///< The recovery behavior execution is done.
       CANCELED,      ///< The recovery execution was canceled.
       STOPPED,       ///< The recovery execution has been stopped.
+      INTERNAL_ERROR ///< An internal error occurred.
     };
 
     /**
