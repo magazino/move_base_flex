@@ -112,9 +112,18 @@ AbstractNavigationServer::AbstractNavigationServer(
 
 void AbstractNavigationServer::initializeServerComponents()
 {
-  moving_ptr_->initialize();
-  planning_ptr_->initialize();
-  recovery_ptr_->initialize();
+  if(!moving_ptr_->initialize())
+  {
+    ROS_WARN_STREAM("No controller has been loaded and initialized successfully!");
+  }
+  if(!planning_ptr_->initialize())
+  {
+    ROS_WARN_STREAM("No planner has been loaded and initialized successfully!");
+  }
+  if(recovery_ptr_->initialize())
+  {
+    ROS_WARN_STREAM("No recovery behavior has been loaded and initialized successfully!");
+  }
 }
 
 AbstractNavigationServer::~AbstractNavigationServer()

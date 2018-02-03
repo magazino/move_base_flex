@@ -132,7 +132,7 @@ namespace mbf_abstract_nav
 
           planners_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
-          ROS_INFO_STREAM("The planner \"" << type << "\" has been loaded successfully under the name \""
+          ROS_INFO_STREAM("The planner with the type \"" << type << "\" has been loaded successfully under the name \""
               << name << "\".");
         }
         else
@@ -149,7 +149,8 @@ namespace mbf_abstract_nav
       ROS_ERROR_STREAM(e.getMessage());
       return false;
     }
-    return true;
+    // is there any planner initialized?
+    return planner_ ? true : false;
   }
 
   double AbstractPlannerExecution::getCost()

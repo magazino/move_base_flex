@@ -127,7 +127,8 @@ namespace mbf_abstract_nav
       ROS_ERROR_STREAM(e.getMessage());
       return false;
     }
-    return true;
+    // Is there any recovery behavior initialized?
+    return current_behavior_ ? true : false;
   }
 
 

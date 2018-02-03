@@ -119,7 +119,7 @@ namespace mbf_abstract_nav
 
           controllers_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
 
-          ROS_INFO_STREAM("The planner \"" << type << "\" has been loaded and initialized"
+          ROS_INFO_STREAM("The controller with the type \"" << type << "\" has been loaded and initialized"
               << " successfully under the name \"" << name << "\".");
 
         }
@@ -137,7 +137,8 @@ namespace mbf_abstract_nav
       ROS_ERROR_STREAM(e.getMessage());
       return false;
     }
-    return true;
+    // is there any controller initialized?
+    return controller_ ? true : false;
   }
 
   bool AbstractControllerExecution::switchController(const std::string& name)
