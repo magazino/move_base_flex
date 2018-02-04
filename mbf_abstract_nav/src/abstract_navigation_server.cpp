@@ -120,7 +120,7 @@ void AbstractNavigationServer::initializeServerComponents()
   {
     ROS_WARN_STREAM("No planner has been loaded and initialized successfully!");
   }
-  if(recovery_ptr_->initialize())
+  if(!recovery_ptr_->initialize())
   {
     ROS_WARN_STREAM("No recovery behavior has been loaded and initialized successfully!");
   }
