@@ -258,6 +258,7 @@ namespace mbf_abstract_nav
     {
       return false;
     }
+    boost::lock_guard<boost::mutex> guard(planning_mtx_);
     planning_ = true;
     cancel_ = false;
     start_ = start;
@@ -305,6 +306,7 @@ namespace mbf_abstract_nav
 
   void AbstractPlannerExecution::run()
   {
+    boost::lock_guard<boost::mutex> guard(planning_mtx_);
     int retries = 0;
     geometry_msgs::PoseStamped current_start = start_;
     geometry_msgs::PoseStamped current_goal = goal_;

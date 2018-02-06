@@ -297,6 +297,9 @@ namespace mbf_abstract_nav
     //! mutex to handle safe thread communication for the goal and start pose.
     boost::mutex goal_start_mtx_;
 
+    //! mutex to handle safe thread communication for the planning_ flag.
+    boost::mutex planning_mtx_;
+
     //! true, if a new goal pose has been set, until it is used.
     bool has_new_goal_;
 
