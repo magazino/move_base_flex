@@ -7,4 +7,4 @@ plugins which are defined in the lists *planners*, *controllers* and *recovery_b
 of a *name* and a *type*. The *type* defines which kind of plugin to load. The *name* defines under which name
 the plugin should be callable by the actions.
 
-![mbf_abstract_nav sketch](https://github.com/magazino/move_base_flex/blob/master/docs/images/mbf_abstract_nav.png)
+![mbf_abstract_nav sketch](doc/images/mbf_abstract_nav_s.png)

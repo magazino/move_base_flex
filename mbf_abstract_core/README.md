@@ -1,4 +1,4 @@
-# Move Base Flex Abstract Core  {#mainpage}
+# Move Base Flex Abstract Core {#mainpage}
 
 The mbf_abstract_core package of Move Base Flex (MBF) contains the abstract interfaces for planning controlling and recovering. Derived packages of the mbf_abstract_nav should use derived interfaces of the mbf_abstract_core which then, for example, contain a method for initialization of the plugin, e.g. by handing over a pointer to the map representation of choice.
 
