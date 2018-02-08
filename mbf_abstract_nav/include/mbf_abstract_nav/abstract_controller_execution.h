@@ -174,7 +174,7 @@ namespace mbf_abstract_nav
      *        if a user uses dynamic reconfigure to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
-    void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
+    void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
      * @brief Returns weather the robot should normally move or not. True if the local planner seems to work properly.

@@ -173,7 +173,7 @@ namespace mbf_abstract_nav
     return cost_;
   }
 
-  void AbstractPlannerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
+  void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 

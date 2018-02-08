@@ -126,7 +126,7 @@ namespace mbf_abstract_nav
      *        reconfigure tool.
      * @param config Current MoveBaseFlexConfig object. See the MoveBaseFlex.cfg definition.
      */
-    void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
+    void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
      * @brief Tries to cancel the execution of the recovery behavior plugin.
