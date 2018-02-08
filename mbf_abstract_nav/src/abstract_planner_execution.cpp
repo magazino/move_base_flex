@@ -294,8 +294,8 @@ namespace mbf_abstract_nav
   }
 
   uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                                              const geometry_msgs::PoseStamped start,
-                                              const geometry_msgs::PoseStamped goal,
+                                              const geometry_msgs::PoseStamped &start,
+                                              const geometry_msgs::PoseStamped &goal,
                                               double tolerance,
                                               std::vector<geometry_msgs::PoseStamped> &plan,
                                               double &cost,
