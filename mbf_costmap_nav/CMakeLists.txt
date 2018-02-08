@@ -77,6 +77,7 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})
+add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(${MBF_COSTMAP_2D_SERVER_LIB}
   ${MBF_NAV_CORE_WRAPPER_LIB}
