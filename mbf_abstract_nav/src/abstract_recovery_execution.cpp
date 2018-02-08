@@ -41,7 +41,7 @@
 #include <XmlRpcException.h>
 #include <boost/exception/diagnostic_information.hpp>
 
-#include "mbf_abstract_nav/abstract_recovery_execution.h"
+#include <mbf_abstract_nav/abstract_recovery_execution.h>
 
 namespace mbf_abstract_nav
 {
@@ -146,7 +146,7 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractRecoveryExecution::startRecovery(const std::string name)
+  void AbstractRecoveryExecution::startRecovery(const std::string &name)
   {
     requested_behavior_name_ = name;
     setState(STARTED);
