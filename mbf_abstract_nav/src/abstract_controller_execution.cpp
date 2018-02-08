@@ -354,7 +354,7 @@ namespace mbf_abstract_nav
         // update plan dynamically
         if (hasNewPlan())
         {
-          getNewPlan();
+          plan = getNewPlan();
 
           // check if plan is empty
           if (plan.empty())
