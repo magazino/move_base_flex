@@ -105,8 +105,8 @@ private:
 
   /**
    * @brief Callback method for the check_pose_cost service
-   * @param request Request object, see the move_base_flex_msgs/CheckPose service definition file.
-   * @param response Response object, see the move_base_flex_msgs/CheckPose service definition file.
+   * @param request Request object, see the mbf_msgs/CheckPose service definition file.
+   * @param response Response object, see the mbf_msgs/CheckPose service definition file.
    * @return true, if the service completed successfully, false otherwise
    */
   bool callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
@@ -124,7 +124,7 @@ private:
    * @brief GetPath action execution method. This method will be called if the action server receives a goal. It
    *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
    * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in move_base_flex_msgs.
+   *        definitions in mbf_msgs.
    */
   virtual void callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal);
 
@@ -132,7 +132,7 @@ private:
    * @brief ExePath action execution method. This method will be called if the action server receives a goal. It
    *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
    * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in move_base_flex_msgs.
+   *        definitions in mbf_msgs.
    */
   virtual void callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal);
 
@@ -140,7 +140,7 @@ private:
    * @brief Recovery action execution method. This method will be called if the action server receives a goal. It
    *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
    * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in move_base_flex_msgs.
+   *        definitions in mbf_msgs.
    */
   virtual void callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal);
 

@@ -9934,7 +9934,7 @@
 		</g>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 563.8802 169.2559)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-2" y="12" class="st4 st5">/recovery</tspan><tspan x="-35.4" y="21.6" class="st4 st18">move_base_flex_msgs/Recovery</tspan></text>
+<text transform="matrix(1 0 0 1 563.8802 169.2559)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-2" y="12" class="st4 st5">/recovery</tspan><tspan x="-35.4" y="21.6" class="st4 st18">mbf_msgs/Recovery</tspan></text>
 <g>
 	<g>
 		<g>
@@ -10493,7 +10493,7 @@
 		</g>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 563.8798 110.8194)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-3.8" y="12" class="st4 st5">/exe_path</tspan><tspan x="-34" y="21.6" class="st4 st18">move_base_flex_msgs/ExePath</tspan></text>
+<text transform="matrix(1 0 0 1 563.8798 110.8194)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-3.8" y="12" class="st4 st5">/exe_path</tspan><tspan x="-34" y="21.6" class="st4 st18">mbf_msgs/ExePath</tspan></text>
 <g>
 	<g>
 		<g>
@@ -11052,7 +11052,7 @@
 		</g>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 563.8798 52.8331)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-3.5" y="12" class="st4 st5">/get_path</tspan><tspan x="-34.1" y="21.6" class="st4 st18">move_base_flex_msgs/GetPath</tspan></text>
+<text transform="matrix(1 0 0 1 563.8798 52.8331)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-3.5" y="12" class="st4 st5">/get_path</tspan><tspan x="-34.1" y="21.6" class="st4 st18">mbf_msgs/GetPath</tspan></text>
 <g>
 	<g>
 		<g>
@@ -11609,7 +11609,7 @@
 		</g>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 562.2178 370.7475)"><tspan x="0" y="0" class="st2 st3">Service</tspan><tspan x="-17.5" y="12" class="st4 st5">/check_pose_cost</tspan><tspan x="-36.6" y="21.6" class="st4 st18">move_base_flex_msgs/CheckPose</tspan></text>
+<text transform="matrix(1 0 0 1 562.2178 370.7475)"><tspan x="0" y="0" class="st2 st3">Service</tspan><tspan x="-17.5" y="12" class="st4 st5">/check_pose_cost</tspan><tspan x="-36.6" y="21.6" class="st4 st18">mbf_msgs/CheckPose</tspan></text>
 <g>
 	<g>
 		<g>
@@ -12725,7 +12725,7 @@
 		</g>
 	</g>
 </g>
-<text transform="matrix(1 0 0 1 563.8802 227.6918)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-8.1" y="12" class="st4 st5">/move_base</tspan><tspan x="-37.4" y="21.6" class="st4 st18">move_base_flex_msgs/MoveBase</tspan></text>
+<text transform="matrix(1 0 0 1 563.8802 227.6918)"><tspan x="0" y="0" class="st2 st3">Action</tspan><tspan x="-8.1" y="12" class="st4 st5">/move_base</tspan><tspan x="-37.4" y="21.6" class="st4 st18">mbf_msgs/MoveBase</tspan></text>
 <text transform="matrix(0 -1 1 0 660.3375 460.5384)" class="st13 st2 st7">Action &amp; Service Interface</text>
 <g>
 	<g>
