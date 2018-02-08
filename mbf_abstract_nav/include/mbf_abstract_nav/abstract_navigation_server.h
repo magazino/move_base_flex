@@ -41,27 +41,27 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_
 
-#include "abstract_planner_execution.h"
-#include "abstract_controller_execution.h"
-#include "abstract_recovery_execution.h"
+#include <string>
+#include <stdint.h>
 
-#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include <boost/shared_ptr.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
-#include <geometry_msgs/PoseStamped.h>
-
-#include <tf/transform_listener.h>
-#include <dynamic_reconfigure/server.h>
-#include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
+#include <actionlib/server/simple_action_server.h>
+#include <dynamic_reconfigure/server.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_listener.h>
 
+#include <mbf_abstract_nav/abstract_planner_execution.h>
+#include <mbf_abstract_nav/abstract_controller_execution.h>
+#include <mbf_abstract_nav/abstract_recovery_execution.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <mbf_msgs/GetPathAction.h>
 #include <mbf_msgs/ExePathAction.h>
 #include <mbf_msgs/RecoveryAction.h>
 #include <mbf_msgs/MoveBaseAction.h>
-
 #include <mbf_utility/navigation_utility.h>
-
-#include "abstract_navigation_server.h"
 
 namespace mbf_abstract_nav
 {
