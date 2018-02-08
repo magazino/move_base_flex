@@ -73,7 +73,10 @@ namespace mbf_abstract_core {
       virtual bool cancel() = 0;
 
     protected:
-      AbstractRecovery(){}
+      /**
+       * @brief Constructor
+       */
+      AbstractRecovery(){};
   };
 };  /* namespace mbf_abstract_core */
 
