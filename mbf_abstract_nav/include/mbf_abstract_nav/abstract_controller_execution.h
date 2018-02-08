@@ -125,7 +125,7 @@ namespace mbf_abstract_nav
     };
 
     /**
-     * Return the current state of the controller execution. Thread communication safe.
+     * @brief Return the current state of the controller execution. Thread communication safe.
      * @return current state, enum value of ControllerState
      */
     ControllerState getState();
@@ -154,9 +154,9 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Returns the last valid velocity command set by setVelocityCmd method
-     * @param vel_cmd_stamped Returns the last valid velocity command.
+     * @return The last valid velocity command.
      */
-    void getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd_stamped);
+    geometry_msgs::TwistStamped getLastValidCmdVel();
 
     /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
@@ -311,9 +311,9 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Gets the new available plan. This method is thread safe.
-     * @param plan A reference to a plan which will then be filled with the new plan
+     * @return The plan
      */
-    void getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan);
+    std::vector<geometry_msgs::PoseStamped> getNewPlan();
 
     //! the last calculated velocity command
     geometry_msgs::TwistStamped vel_cmd_stamped_;
