@@ -41,15 +41,23 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 
-#include <pluginlib/class_loader.h>
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/chrono/duration.hpp>
-#include <tf/transform_listener.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <mbf_abstract_core/abstract_planner.h>
-#include <mbf_utility/navigation_utility.h>
+#include <map>
+#include <stdint.h>
+#include <string>
+#include <vector>
 
-#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include <boost/chrono/duration.hpp>
+#include <boost/chrono/thread_clock.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+
+#include <geometry_msgs/PoseStamped.h>
+#include <pluginlib/class_loader.h>
+#include <tf/transform_listener.h>
+
+#include <mbf_abstract_core/abstract_planner.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
+#include <mbf_utility/navigation_utility.h>
 
 namespace mbf_abstract_nav
 {

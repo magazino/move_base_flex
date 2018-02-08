@@ -41,13 +41,21 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_RECOVERY_EXECUTION_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_RECOVERY_EXECUTION_H_
 
-#include <pluginlib/class_loader.h>
-#include <boost/chrono/thread_clock.hpp>
-#include <tf/transform_listener.h>
-#include <mbf_abstract_core/abstract_recovery.h>
-#include <mbf_utility/navigation_utility.h>
+#include <map>
+#include <string>
+#include <stdint.h>
+#include <vector>
 
-#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include <boost/chrono/thread_clock.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+
+#include <pluginlib/class_loader.h>
+#include <tf/transform_listener.h>
+
+#include <mbf_abstract_core/abstract_recovery.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
+#include <mbf_utility/navigation_utility.h>
 
 namespace mbf_abstract_nav
 {
