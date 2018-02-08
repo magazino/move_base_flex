@@ -38,9 +38,10 @@
  *
  */
 
-#include "mbf_abstract_nav/abstract_planner_execution.h"
 #include <xmlrpcpp/XmlRpcException.h>
 #include <boost/exception/diagnostic_information.hpp>
+
+#include <mbf_abstract_nav/abstract_planner_execution.h>
 
 namespace mbf_abstract_nav
 {
@@ -354,7 +355,7 @@ namespace mbf_abstract_nav
           ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
         }
 
-        make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
+        make_plan = !(success || exceeded);
 
         // unlock goal
         goal_start_mtx_.unlock();
@@ -374,7 +375,6 @@ namespace mbf_abstract_nav
           else if (success)
           {
             ROS_DEBUG_STREAM("Successfully found a plan.");
-            exceeded = false;
             planning_ = false;
 
             plan_mtx_.lock();
@@ -390,7 +390,6 @@ namespace mbf_abstract_nav
           {
             ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
             setState(MAX_RETRIES);
-            exceeded = true;
             planning_ = false;
             condition_.notify_all(); // notify observer
           }
@@ -403,14 +402,12 @@ namespace mbf_abstract_nav
             ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
                                                   << (cancel_ ? "; planner canceled!" : ""));
             setState(PAT_EXCEEDED);
-            exceeded = true;
             planning_ = false;
             condition_.notify_all(); // notify observer
           }
           else if (max_retries_ == 0 && patience_.isZero())
           {
             ROS_INFO_STREAM("Planning could not find a plan!");
-            exceeded = true;
             setState(NO_PLAN_FOUND);
             condition_.notify_all(); // notify observer
             planning_ = false;
