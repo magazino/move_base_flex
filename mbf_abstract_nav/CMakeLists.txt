@@ -16,6 +16,8 @@ find_package(catkin REQUIRED
   std_msgs
   std_srvs
   tf
+  visualization_msgs
+  xmlrpcpp
   )
 
 find_package(Boost COMPONENTS thread chrono exception REQUIRED)
@@ -47,6 +49,8 @@ catkin_package(
   std_msgs
   std_srvs
   tf
+  visualization_msgs
+  xmlrpcpp
   DEPENDS Boost
 )
 
