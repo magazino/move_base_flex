@@ -143,35 +143,35 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     /**
      * @brief GetPath action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-     *        definitions in move_base_flex_msgs.
+     *        definitions in mbf_msgs.
      */
     virtual void callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal);
 
     /**
      * @brief ExePath action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-     *        definitions in move_base_flex_msgs.
+     *        definitions in mbf_msgs.
      */
     virtual void callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal);
 
     /**
      * @brief Recovery action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-     *        definitions in move_base_flex_msgs.
+     *        definitions in mbf_msgs.
      */
     virtual void callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal);
 
     /**
      * @brief MoveBase action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-     *        definitions in move_base_flex_msgs.
+     *        definitions in mbf_msgs.
      */
     virtual void callActionMoveBase(const mbf_msgs::MoveBaseGoalConstPtr &goal);
 
     /**
      * @brief Callback function of the MoveBase action, while is executes the GetPath action part to compute a path
      * @param feedback SimpleActionServer feedback containing all feedback information for the MoveBase action. See the
-     *        action definitions in move_base_flex_msgs.
+     *        action definitions in mbf_msgs.
      */
     virtual void actionMoveBaseExePathFeedback(const mbf_msgs::ExePathFeedbackConstPtr &feedback);
 
