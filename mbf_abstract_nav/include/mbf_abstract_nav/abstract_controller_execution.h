@@ -55,9 +55,10 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 
-#include <mbf_abstract_core/abstract_controller.h>
-#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <mbf_utility/navigation_utility.h>
+#include <mbf_abstract_core/abstract_controller.h>
+
+#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 
 namespace mbf_abstract_nav
 {
