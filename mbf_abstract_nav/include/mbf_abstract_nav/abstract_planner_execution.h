@@ -52,7 +52,6 @@
 #include <boost/thread.hpp>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <pluginlib/class_loader.h>
 #include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_planner.h>

@@ -38,7 +38,6 @@
  *
  */
 
-#include <visualization_msgs/Marker.h>
 #include <nav_msgs/Path.h>
 #include "mbf_abstract_nav/abstract_navigation_server.h"
 

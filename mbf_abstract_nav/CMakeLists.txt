@@ -11,12 +11,10 @@ find_package(catkin REQUIRED
   mbf_abstract_core
   mbf_utility
   nav_msgs
-  pluginlib
   roscpp
   std_msgs
   std_srvs
   tf
-  visualization_msgs
   xmlrpcpp
   )
 
@@ -36,21 +34,19 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${MBF_ABSTRACT_SERVER_LIB}
   CATKIN_DEPENDS
-  actionlib
-  actionlib_msgs
-  dynamic_reconfigure
-  geometry_msgs
-  mbf_msgs
-  mbf_abstract_core
-  mbf_utility
-  nav_msgs
-  pluginlib
-  roscpp
-  std_msgs
-  std_srvs
-  tf
-  visualization_msgs
-  xmlrpcpp
+      actionlib
+      actionlib_msgs
+      dynamic_reconfigure
+      geometry_msgs
+      mbf_msgs
+      mbf_abstract_core
+      mbf_utility
+      nav_msgs
+      roscpp
+      std_msgs
+      std_srvs
+      tf
+      xmlrpcpp
   DEPENDS Boost
 )
 

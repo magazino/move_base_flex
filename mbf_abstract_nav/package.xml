@@ -23,7 +23,6 @@
 
     <build_depend>tf</build_depend>
     <build_depend>roscpp</build_depend>
-    <build_depend>pluginlib</build_depend>
     <build_depend>actionlib</build_depend>
     <build_depend>actionlib_msgs</build_depend>
     <build_depend>dynamic_reconfigure</build_depend>
@@ -35,11 +34,9 @@
     <build_depend>mbf_msgs</build_depend>
     <build_depend>mbf_utility</build_depend>
     <build_depend>xmlrpcpp</build_depend>
-    <build_depend>visualization_msgs</build_depend>
 
     <run_depend>tf</run_depend>
     <run_depend>roscpp</run_depend>
-    <run_depend>pluginlib</run_depend>
     <run_depend>actionlib</run_depend>
     <run_depend>actionlib_msgs</run_depend>
     <run_depend>dynamic_reconfigure</run_depend>
@@ -51,7 +48,6 @@
     <run_depend>mbf_msgs</run_depend>
     <run_depend>mbf_utility</run_depend>
     <run_depend>xmlrpcpp</run_depend>
-    <run_depend>visualization_msgs</run_depend>
 
     <export>
       <rosdoc config="rosdoc.yaml" />
