@@ -50,7 +50,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
-#include <pluginlib/class_loader.h>
 #include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_recovery.h>
@@ -66,7 +65,7 @@ namespace mbf_abstract_nav
  */
 
 /**
- * @brief The AbstractiRecoveryExecution class loads and binds the recovery behavior plugin. It contains a thread
+ * @brief The AbstractRecoveryExecution class loads and binds the recovery behavior plugin. It contains a thread
  *        running the plugin, executing the recovery behavior. An internal state is saved and will be pulled by the
  *        server, which controls the recovery behavior execution. Due to a state change it wakes up all threads
  *        connected to the condition variable.
