@@ -241,11 +241,11 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractControllerExecution::getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan)
+  std::vector<geometry_msgs::PoseStamped> AbstractControllerExecution::getNewPlan()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     new_plan_ = false;
-    plan = plan_;
+    return plan_;
   }
 
 
@@ -284,10 +284,10 @@ namespace mbf_abstract_nav
   }
 
 
-  void AbstractControllerExecution::getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd)
+  geometry_msgs::TwistStamped AbstractControllerExecution::getLastValidCmdVel()
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
-    vel_cmd = vel_cmd_stamped_;
+    return vel_cmd_stamped_;
   }
 
 
@@ -354,7 +354,7 @@ namespace mbf_abstract_nav
         // update plan dynamically
         if (hasNewPlan())
         {
-          getNewPlan(plan);
+          plan = getNewPlan();
 
           // check if plan is empty
           if (plan.empty())

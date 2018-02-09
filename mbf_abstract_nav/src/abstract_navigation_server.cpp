@@ -642,8 +642,7 @@ void AbstractNavigationServer::callActionExePath(
             break;
           }
         }
-
-        moving_ptr_->getLastValidCmdVel(feedback.current_twist);
+        feedback.current_twist = moving_ptr_->getLastValidCmdVel();
         feedback.current_pose = robot_pose_;
         feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
         feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
