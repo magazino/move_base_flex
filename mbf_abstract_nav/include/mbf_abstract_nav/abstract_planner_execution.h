@@ -195,6 +195,7 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Loads the plugin given by the parameter "local_planner"
+     * @return true, if successful
      */
     bool initialize();
 
@@ -240,7 +241,7 @@ namespace mbf_abstract_nav
     /**
      * @brief Loads the plugin associated with the given planner_type parameter.
      * @param planner_type The type of the planner plugin to load.
-     * @return true, if the local planner plugin was successfully loaded.
+     * @return Pointer to the loaded plugin
      */
     virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
 
@@ -268,9 +269,9 @@ namespace mbf_abstract_nav
      * @return An outcome number, see also the action definition in the GetPath.action file
      */
     virtual uint32_t makePlan(
-        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
-        const geometry_msgs::PoseStamped start,
-        const geometry_msgs::PoseStamped goal,
+        const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
+        const geometry_msgs::PoseStamped &start,
+        const geometry_msgs::PoseStamped &goal,
         double tolerance,
         std::vector<geometry_msgs::PoseStamped> &plan,
         double &cost,
