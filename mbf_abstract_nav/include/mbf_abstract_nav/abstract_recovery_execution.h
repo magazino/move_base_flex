@@ -184,12 +184,6 @@ namespace mbf_abstract_nav
     void setState(RecoveryState state);
 
     /**
-     * @brief Initialize all recovery behaviors
-     * @return true if init succeeded, false otherwise
-     */
-    bool initPlugins(){}
-
-    /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
      *        some plugins need to be initialized!
      * @param name The name of the recovery behavior
