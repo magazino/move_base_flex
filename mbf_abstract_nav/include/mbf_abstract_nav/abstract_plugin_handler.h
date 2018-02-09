@@ -89,8 +89,9 @@ namespace mbf_abstract_nav
 
       /**
        * @brief Constructor
+       * @param _condition
        */
-      AbstractPluginHandler();
+      explicit AbstractPluginHandler(boost::condition_variable &_condition);
 
       /**
        * @brief Getter of the isInit_ member field
@@ -113,7 +114,7 @@ namespace mbf_abstract_nav
        * @return true, if successful
        * @warning This function must be overloaded by the user
        */
-      virtual bool initPlugin(const std::string &_name, CoreTypePtr _plugin);
+      virtual bool initPlugin(const std::string &_name, const CoreTypePtr &_plugin);
 
       //! List of the available plugins . This list will be populated from ROS parameter server
       NamePluginMap plugins_;
@@ -130,6 +131,9 @@ namespace mbf_abstract_nav
       //! Mutex to avoid concurrent access to the plugin
       boost::mutex pluginMutex_;
 
+      //! Condition variable to notify waiting threads
+      boost::condition_variable &condition_;
+
   private:
 
       //!
@@ -139,8 +143,9 @@ namespace mbf_abstract_nav
   }; // class AbstractPluginHandler
 
   template<typename CoreType>
-  AbstractPluginHandler<CoreType>::AbstractPluginHandler() :
-    isInit_(false)
+  AbstractPluginHandler<CoreType>::AbstractPluginHandler(boost::condition_variable &_condition) :
+    isInit_(false),
+    condition_(_condition)
   {
 
   }
@@ -270,7 +275,7 @@ namespace mbf_abstract_nav
   }
 
   template<typename CoreType>
-  bool AbstractPluginHandler<CoreType>::initPlugin(const std::string &_name, AbstractPluginHandler::CoreTypePtr _plugin)
+  bool AbstractPluginHandler<CoreType>::initPlugin(const std::string &_name, const CoreTypePtr &_plugin)
   {
     ROS_FATAL_STREAM_NAMED("AbstractPluginHandler::initPlugin", "This function must be overloaded by the user");
     return false;

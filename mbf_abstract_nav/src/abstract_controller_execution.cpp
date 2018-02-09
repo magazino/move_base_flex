@@ -49,7 +49,11 @@ namespace mbf_abstract_nav
 
   AbstractControllerExecution::AbstractControllerExecution(
       boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED), moving_(false), outcome_(255)
+      tf_listener_ptr(tf_listener_ptr),
+      state_(STOPPED),
+      moving_(false),
+      outcome_(255),
+      AbstractPluginHandler<mbf_abstract_core::AbstractController>(condition)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -74,9 +78,15 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::initialize()
   {
-    const std::string pluginClass = "controller";
-    return loadPlugins(pluginClass);
+    static const std::string pluginClass = "controller";
+    if(loadPlugins(pluginClass))
+    {
+      setState(INITIALIZED);
+      return true;
+    }
+    return false;
   }
+
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
@@ -106,14 +116,14 @@ namespace mbf_abstract_nav
     outcome_ = 255;
     message_ = "";
     moving_ = true;
-    thread_ = boost::thread(&AbstractControllerExecution::run, this);
+    pluginThread_ = boost::thread(&AbstractControllerExecution::run, this);
     return true;
   }
 
 
   void AbstractControllerExecution::stopMoving()
   {
-    thread_.interrupt();
+    pluginThread_.interrupt();
   }
 
 
@@ -124,12 +134,12 @@ namespace mbf_abstract_nav
   }
 
 
-  typename AbstractControllerExecution::ControllerState
-  AbstractControllerExecution::getState()
+  typename AbstractControllerExecution::ControllerState AbstractControllerExecution::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
+
 
   void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
   {
@@ -182,7 +192,9 @@ namespace mbf_abstract_nav
   {
     // TODO compute velocity
     geometry_msgs::TwistStamped robot_velocity;
-    return controller_->computeVelocityCommands(robot_pose_, robot_velocity, vel_cmd, message);
+    // Hint: this lock guard can be removed if the computeVelocityCommands will be const
+    boost::lock_guard<boost::mutex> guard(pluginMutex_);
+    return plugin_.second->computeVelocityCommands(robot_pose_, robot_velocity, vel_cmd, message);
   }
 
 
@@ -228,10 +240,13 @@ namespace mbf_abstract_nav
     return moving_ && start_time_ < getLastValidCmdVelTime() && !isPatienceExceeded();
   }
 
+
   bool AbstractControllerExecution::reachedGoalCheck()
   {
     // check whether the controller plugin returns goal reached or if mbf should check for goal reached.
-    return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
+    // Hint: this lock guard can be removed if the isGoalReached will be const
+    boost::lock_guard<boost::mutex> guard(pluginMutex_);
+    return plugin_.second->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
         && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
         && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
   }
@@ -277,14 +292,17 @@ namespace mbf_abstract_nav
           }
 
           // check if plan could be set
-          if(!controller_->setPlan(plan))
           {
-            setState(INVALID_PLAN);
-            condition_.notify_all();
-            moving_ = false;
-            return;
+            // lock the guard, since we might call switchPlugins()
+            boost::lock_guard<boost::mutex> guard(pluginMutex_);
+            if(!plugin_.second->setPlan(plan))
+            {
+              setState(INVALID_PLAN);
+              condition_.notify_all();
+              moving_ = false;
+              return;
+            }
           }
-
         }
 
         // compute robot pose and store it in robot_pose_
