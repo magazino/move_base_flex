@@ -51,6 +51,7 @@
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_plugin_handler.h"
 
 namespace mbf_abstract_nav
 {
@@ -68,7 +69,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server controller_execution
  */
-  class AbstractControllerExecution
+  class AbstractControllerExecution : public AbstractPluginHandler<mbf_abstract_core::AbstractController>
   {
   public:
 
@@ -182,13 +183,6 @@ namespace mbf_abstract_nav
      */
     bool isMoving();
 
-    /**
-     * @brief Switch to the controller with the given name in the controllers list
-     * @param name The name of the controller in the loaded controller list.
-     * @return true if the switch was successful, false otherwise
-     */
-    bool switchController(const std::string& name);
-
   protected:
 
     /**
@@ -258,12 +252,6 @@ namespace mbf_abstract_nav
         const std::string& name,
         const mbf_abstract_core::AbstractController::Ptr& controller_ptr
     ) = 0;
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all controllers have been loaded successfully.
-     */
-    bool loadPlugins();
 
     /**
      * publishes a velocity command with zero values to stop the robot.
