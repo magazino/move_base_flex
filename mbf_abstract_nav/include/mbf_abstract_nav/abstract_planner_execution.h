@@ -203,7 +203,7 @@ namespace mbf_abstract_nav
      *        to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
-    void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
+    void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
      * @brief Switches the planner to planner with the given name

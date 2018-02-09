@@ -167,7 +167,7 @@ namespace mbf_abstract_nav
     }
   }
 
-  void AbstractControllerExecution::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config)
+  void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
     boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
