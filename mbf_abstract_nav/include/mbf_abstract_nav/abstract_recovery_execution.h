@@ -88,7 +88,7 @@ namespace mbf_abstract_nav
      * @brief starts the recovery behavior thread, which calls the recovery behavior plugin.
      * @param name The name of the recovery behavior loaded.
      */
-    void startRecovery(const std::string name);
+    void startRecovery(const std::string &name);
 
     /**
      * @brief Tries to stop the recovery behavior thread by an interrupt
@@ -118,6 +118,7 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
+     * @return true, if successful
      */
     bool initialize();
 
@@ -181,12 +182,6 @@ namespace mbf_abstract_nav
      * @param state The state to set.
      */
     void setState(RecoveryState state);
-
-    /**
-     * @brief Initialize all recovery behaviors
-     * @return true if init succeeded, false otherwise
-     */
-    bool initPlugins();
 
     /**
      * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
