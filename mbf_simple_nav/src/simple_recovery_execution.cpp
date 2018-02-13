@@ -39,6 +39,7 @@
  */
 
 #include "mbf_simple_nav/simple_recovery_execution.h"
+#include <pluginlib/class_loader.h>
 
 namespace mbf_simple_nav
 {

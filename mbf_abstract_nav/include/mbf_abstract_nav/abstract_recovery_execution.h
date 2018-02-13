@@ -41,9 +41,17 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_RECOVERY_EXECUTION_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_RECOVERY_EXECUTION_H_
 
-#include <pluginlib/class_loader.h>
+#include <map>
+#include <string>
+#include <stdint.h>
+#include <vector>
+
 #include <boost/chrono/thread_clock.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+
 #include <tf/transform_listener.h>
+
 #include <mbf_abstract_core/abstract_recovery.h>
 #include <mbf_utility/navigation_utility.h>
 
@@ -58,7 +66,7 @@ namespace mbf_abstract_nav
  */
 
 /**
- * @brief The AbstractiRecoveryExecution class loads and binds the recovery behavior plugin. It contains a thread
+ * @brief The AbstractRecoveryExecution class loads and binds the recovery behavior plugin. It contains a thread
  *        running the plugin, executing the recovery behavior. An internal state is saved and will be pulled by the
  *        server, which controls the recovery behavior execution. Due to a state change it wakes up all threads
  *        connected to the condition variable.
