@@ -449,7 +449,7 @@ namespace mbf_abstract_nav
           }
           else
           {
-            ROS_WARN_THROTTLE(1.0, "Calculation needs to much time to stay in the moving frequency!");
+            ROS_WARN_THROTTLE(1.0, "Calculation needs too much time to stay in the moving frequency!");
           }
         }
       }

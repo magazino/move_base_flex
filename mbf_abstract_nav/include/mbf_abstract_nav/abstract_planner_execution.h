@@ -159,7 +159,7 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
-     * computation takes to much time.
+     * computation takes too much time.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
      */
     bool cancel();
