@@ -158,7 +158,8 @@ namespace mbf_abstract_nav
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     // copy plan and costs to output
     // if the planner plugin do not compute costs compute costs by discrete path length
-    if(cost_ == 0 && !plan_.empty()) {
+    if(cost_ == 0 && !plan_.empty())
+    {
       ROS_DEBUG_STREAM("Compute costs by discrete path length!");
       double cost = 0;
 
@@ -438,7 +439,8 @@ namespace mbf_abstract_nav
       condition_.notify_all(); // notify observer
       planning_ = false;
     }
-    catch (...){
+    catch (...)
+    {
       ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
       setState(INTERNAL_ERROR);
     }

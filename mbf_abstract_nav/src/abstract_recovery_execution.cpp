@@ -54,10 +54,10 @@ namespace mbf_abstract_nav
   {
   }
 
-
   AbstractRecoveryExecution::~AbstractRecoveryExecution()
   {
   }
+
 
   bool AbstractRecoveryExecution::initialize()
   {
@@ -67,9 +67,13 @@ namespace mbf_abstract_nav
 
   void AbstractRecoveryExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
-    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+    boost::lock_guard<boost::mutex> guard(conf_mtx_);
 
-    // Nothing to do here, as recovery_enabled is loaded and used in the navigation server
+    // Maximum time allowed to recovery behaviors. Intended as a safeward for the case a behavior hangs.
+    // If it doesn't return within time, the navigator will cancel it and abort the corresponding action.
+    patience_ = ros::Duration(config.recovery_patience);
+
+    // Nothing else to do here, as recovery_enabled is loaded and used in the navigation server
   }
 
 
@@ -202,10 +206,15 @@ namespace mbf_abstract_nav
     return false;
   }
 
+  bool AbstractRecoveryExecution::isPatienceExceeded()
+  {
+    boost::lock_guard<boost::mutex> guard1(conf_mtx_);
+    boost::lock_guard<boost::mutex> guard2(time_mtx_);
+    return (patience_ > ros::Duration(0)) && (ros::Time::now() - start_time_ > patience_);
+  }
 
   void AbstractRecoveryExecution::run()
   {
-    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
     canceled_ = false; // (re)set the canceled state
 
     typename std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractRecovery> >::iterator find_iter;
@@ -220,6 +229,9 @@ namespace mbf_abstract_nav
       return;
     }
 
+    time_mtx_.lock();
+    start_time_ = ros::Time::now();
+    time_mtx_.unlock();
     current_behavior_ = find_iter->second;
     setState(RECOVERING);
     try
