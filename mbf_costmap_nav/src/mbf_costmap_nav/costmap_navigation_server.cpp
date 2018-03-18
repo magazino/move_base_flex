@@ -136,6 +136,7 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   abstract_config.controller_patience = config.controller_patience;
   abstract_config.controller_max_retries = config.controller_max_retries;
   abstract_config.recovery_enabled = config.recovery_enabled;
+  abstract_config.recovery_patience = config.recovery_patience;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
   abstract_config.oscillation_distance = config.oscillation_distance;
   abstract_config.restore_defaults = config.restore_defaults;

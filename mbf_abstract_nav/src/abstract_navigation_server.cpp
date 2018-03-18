@@ -698,8 +698,12 @@ void AbstractNavigationServer::callActionRecovery(
     switch (state_recovery_input)
     {
       case AbstractRecoveryExecution::STOPPED:
-        ROS_WARN_STREAM_NAMED(name_action_recovery, "Recovering \"" << behavior << "\" has been stopped!");
+        // Recovery behavior doesn't support or didn't answered to cancel and has been ruthlessly stopped
+        ROS_WARN_STREAM("Recovering \"" << behavior << "\" exceeded the patience time and has been stopped!");
         active_recovery_ = false; // stopping the action
+        result.outcome = mbf_msgs::RecoveryResult::CANCELED;
+        result.message = "Recovery \"" + behavior + "\" exceeded the patience time";
+        action_server_recovery_ptr_->setSucceeded(result, result.message);
         break;
 
       case AbstractRecoveryExecution::STARTED:
@@ -712,6 +716,15 @@ void AbstractNavigationServer::callActionRecovery(
         if (action_server_recovery_ptr_->isPreemptRequested() && recovery_ptr_->cancel())
         {
           ROS_DEBUG_STREAM_NAMED(name_action_recovery, "Recovering \"" << behavior << "\" canceled!");
+        }
+        else if (recovery_ptr_->isPatienceExceeded())
+        {
+          ROS_INFO_STREAM("Recovery behavior \"" << behavior << "\" patience exceeded! Cancel recovering...");
+          if (!recovery_ptr_->cancel())
+          {
+            ROS_WARN_STREAM("Cancel recovering \"" << behavior << "\" failed or not supported; interrupt it!");
+            recovery_ptr_->stopRecovery();
+          }
         }
         else
         {

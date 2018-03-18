@@ -104,6 +104,12 @@ namespace mbf_abstract_nav
     void stopRecovery();
 
     /**
+     * @brief Checks whether the patience was exceeded.
+     * @return true, if the patience duration was exceeded.
+     */
+    bool isPatienceExceeded();
+
+    /**
      * @brief internal state.
      */
     enum RecoveryState
@@ -219,6 +225,16 @@ namespace mbf_abstract_nav
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
 
+    //! dynamic reconfigure and start time mutexes to mutually exclude read/write configuration
+    boost::mutex conf_mtx_;
+    boost::mutex time_mtx_;
+
+    //! recovery behavior allowed time
+    ros::Duration patience_;
+
+    //! recovery behavior start time
+    ros::Time start_time_;
+
     //! the last requested recovery behavior to start
     std::string requested_behavior_name_;
 
@@ -233,9 +249,6 @@ namespace mbf_abstract_nav
 
     //! current canceled state
     bool canceled_;
-
-    //! dynamic reconfigure mutex for a thread safe communication
-    boost::recursive_mutex configuration_mutex_;
   };
 
 } /* namespace mbf_abstract_nav */
