@@ -7,7 +7,8 @@
 #  ...
 # WARN: parameters added here must be copied on the specific MBF implementation reconfigure callback, e.g. in:
 #       https://github.com/magazino/move_base_flex/blob/master/mbf_costmap_nav/src/mbf_costmap_nav/costmap_navigation_server.cpp#L130
-#
+# Also, you need to touch https://github.com/magazino/move_base_flex/blob/master/mbf_costmap_nav/cfg/MoveBaseFlex.cfg
+# when recompiling to ensure configuration code is regenerated with the new parameters
 
 # need this only for dataype declarations
 from dynamic_reconfigure.parameter_generator_catkin import str_t, double_t, int_t, bool_t
