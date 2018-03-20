@@ -421,9 +421,19 @@ void AbstractNavigationServer::callActionGetPath(
         active_planning_ = false;
         break;
 
+      case AbstractPlannerExecution::INTERNAL_ERROR:
+        ROS_FATAL_STREAM_NAMED(name_action_get_path, "Internal error: Unknown error thrown by the plugin!"); // TODO getMessage from planning
+        active_recovery_ = false;
+        result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        result.message = "Internal error: Unknown error thrown by the plugin!";
+        action_server_get_path_ptr_->setAborted(result, result.message);
+        break;
+
       default:
-        ROS_FATAL_STREAM_NAMED(name_action_get_path, "Unknown state in move base flex controller with the number:"
-          << state_planning_input);
+        result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+        result.message = "Internal error: Unknown state in a move base flex planner execution with the number: " + state_planning_input;
+        ROS_FATAL_STREAM_NAMED(name_action_get_path, result.message);
+        action_server_get_path_ptr_->setAborted(result, result.message);
         active_planning_ = false;
     }
 
@@ -654,6 +664,20 @@ void AbstractNavigationServer::callActionExePath(
         fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Local planner succeeded; arrived to goal!", result);
         action_server_exe_path_ptr_->setSucceeded(result, result.message);
         break;
+
+      case AbstractControllerExecution::INTERNAL_ERROR:
+        ROS_FATAL_STREAM_NAMED(name_action_exe_path, "Internal error: Unknown error thrown by the plugin!"); // TODO getMessage from controller
+        active_moving_ = false;
+        fillExePathResult(mbf_msgs::ExePathResult::INTERNAL_ERROR, "Internal error: Unknown error thrown by the plugin!", result);
+        action_server_exe_path_ptr_->setAborted(result, result.message);
+        break;
+
+      default:
+        result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
+        result.message = "Internal error: Unknown state in a move base flex controller execution with the number: " + state_moving_input;
+        ROS_FATAL_STREAM_NAMED(name_action_exe_path, result.message);
+        action_server_exe_path_ptr_->setAborted(result, result.message);
+        active_moving_ = false;
     }
 
     if (active_moving_)
@@ -757,6 +781,21 @@ void AbstractNavigationServer::callActionRecovery(
         ROS_DEBUG_STREAM_NAMED(name_action_recovery, result.message);
         action_server_recovery_ptr_->setSucceeded(result, result.message);
         break;
+
+      case AbstractRecoveryExecution::INTERNAL_ERROR:
+        ROS_FATAL_STREAM_NAMED(name_action_recovery, "Internal error: Unknown error thrown by the plugin!"); // TODO getMessage from recovery
+        active_recovery_ = false;
+        result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
+        result.message = "Internal error: Unknown error thrown by the plugin!";
+        action_server_recovery_ptr_->setAborted(result, result.message);
+        break;
+
+      default:
+        result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
+        result.message = "Internal error: Unknown state in a move base flex recovery execution with the number: " + state_recovery_input;
+        ROS_FATAL_STREAM_NAMED(name_action_recovery, result.message);
+        action_server_recovery_ptr_->setAborted(result, result.message);
+        active_recovery_ = false;
     }
 
     if (active_recovery_)

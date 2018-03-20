@@ -465,7 +465,8 @@ namespace mbf_abstract_nav
       moving_ = false;
     }
     catch (...){
-      ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+      message_ = "Unknown error occurred: " + boost::current_exception_diagnostic_information();
+      ROS_FATAL_STREAM(message_);
       setState(INTERNAL_ERROR);
     }
   }
