@@ -2,8 +2,7 @@
     <name>mbf_msgs</name>
     <version>0.1.0</version>
     <description>
-        The move_base_flex messages package: For the package move_base_flex
-	    See <a href="http://wiki.ros.org/move_base_flex">move_base_flex</a>.
+        The move_base_flex messages package providing the action definition files for the action GetPath, ExePath, Recovery and MoveBase. The action servers providing these action are implemented in <a href="http://wiki.ros.org/mbf_abstract_nav">mbf_abstract_nav</a>.
     </description>
     <author email="santos@magazino.eu">Jorge Santos</author>
     <author email="spuetz@uni-osnabrueck.de">Sebastian Pütz</author>
