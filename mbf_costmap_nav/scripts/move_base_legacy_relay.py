@@ -118,7 +118,7 @@ if __name__ == '__main__':
     mbf_drc = Client("move_base_flex", timeout=10)
 
     # move_base simple topic and action server
-    mb_sg = rospy.Subscriber('/move_base_simple/goal', PoseStamped, simple_goal_cb)
+    mb_sg = rospy.Subscriber('move_base_simple/goal', PoseStamped, simple_goal_cb)
     mb_as = actionlib.SimpleActionServer('move_base', mb_msgs.MoveBaseAction, mb_execute_cb, auto_start=False)
     mb_as.start()
 
