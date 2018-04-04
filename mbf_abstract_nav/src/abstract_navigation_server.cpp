@@ -368,7 +368,7 @@ void AbstractNavigationServer::callActionGetPath(
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
           result.outcome = mbf_msgs::GetPathResult::TF_ERROR;
-          result.message = "Cloud not transform the plan to the global frame!";
+          result.message = "Could not transform the plan to the global frame!";
 
           ROS_ERROR_STREAM_NAMED(name_action_get_path, result.message << " Canceling the action call.");
           action_server_get_path_ptr_->setAborted(result, result.message);
