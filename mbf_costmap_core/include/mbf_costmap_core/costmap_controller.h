@@ -56,8 +56,8 @@ namespace mbf_costmap_core {
       typedef boost::shared_ptr< ::mbf_costmap_core::CostmapController > Ptr;
 
       /**
-       * @brief Given the current position, orientation, and velocity of the robot,
-       * compute velocity commands to send to the base.
+       * @brief Given the current position, orientation, and velocity of the robot, compute velocity commands
+       * to send to the base.
        * @param pose the current pose of the robot.
        * @param velocity the current velocity of the robot.
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
@@ -86,6 +86,7 @@ namespace mbf_costmap_core {
                                                const geometry_msgs::TwistStamped& velocity,
                                                geometry_msgs::TwistStamped &cmd_vel,
                                                std::string &message) = 0;
+
       /**
        * @brief Check if the goal pose has been achieved by the local planner within tolerance limits
        * @remark New on MBF API

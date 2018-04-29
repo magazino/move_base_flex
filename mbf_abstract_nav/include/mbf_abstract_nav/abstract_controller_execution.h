@@ -200,11 +200,18 @@ namespace mbf_abstract_nav
   protected:
 
     /**
-     * @brief Request plugin for a new velocity command. We use this virtual method to give concrete implementations
-     *        as move_base the chance to override it and do additional stuff, for example locking the costmap.
-     * @param vel_cmd_stamped current velocity command
+     * @brief Request plugin for a new velocity command, given the current position, orientation, and velocity of the
+     * robot. We use this virtual method to give concrete implementations as move_base the chance to override it and do
+     * additional stuff, for example locking the costmap.
+     * @param pose the current pose of the robot.
+     * @param velocity the current velocity of the robot.
+     * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
+     * @param message Optional more detailed outcome as a string.
+     * @return Result code as described on ExePath action result and plugin's header.
      */
-    virtual uint32_t computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd_stamped, std::string& message);
+    virtual uint32_t computeVelocityCmd(const geometry_msgs::PoseStamped& pose,
+                                        const geometry_msgs::TwistStamped& velocity,
+                                        geometry_msgs::TwistStamped& vel_cmd, std::string& message);
 
     /**
      * @brief Sets the velocity command, to make it available for another thread

@@ -91,7 +91,7 @@ private:
   );
 
   /**
-   * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
+   * @brief Calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
    *        if a goal tolerance is enabled in the planner plugin.
    * @param start The start pose for planning
    * @param goal The goal pose for planning
@@ -102,9 +102,8 @@ private:
    * @return An outcome number, see also the action definition in the GetPath.action file
    */
   virtual uint32_t makePlan(
-      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
-      const geometry_msgs::PoseStamped start,
-      const geometry_msgs::PoseStamped goal,
+      const geometry_msgs::PoseStamped &start,
+      const geometry_msgs::PoseStamped &goal,
       double tolerance,
       std::vector<geometry_msgs::PoseStamped> &plan,
       double &cost,
