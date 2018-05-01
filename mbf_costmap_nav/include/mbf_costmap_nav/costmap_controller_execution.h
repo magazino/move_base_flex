@@ -96,7 +96,7 @@ private:
    * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
    *         an empty pointer otherwise.
    */
-  virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
+  virtual mbf_abstract_core::AbstractController::Ptr loadPlugin(const std::string &controller_type); // override
 
   /**
    * @brief Initializes the controller plugin with its name, a pointer to the TransformListener
@@ -106,9 +106,8 @@ private:
    * @return true if init succeeded, false otherwise
    */
   virtual bool initPlugin(
-      const std::string& name,
-      const mbf_abstract_core::AbstractController::Ptr& controller_ptr
-  );
+    const std::string& name,
+    const mbf_abstract_core::AbstractController::Ptr& controller_ptr) ; // override
 
   //! costmap for 2d navigation planning
   CostmapPtr &costmap_ptr_;

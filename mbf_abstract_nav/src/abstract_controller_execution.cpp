@@ -49,7 +49,11 @@ namespace mbf_abstract_nav
 
   AbstractControllerExecution::AbstractControllerExecution(
       boost::condition_variable &condition, const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), tf_listener_ptr(tf_listener_ptr), state_(STOPPED), moving_(false), outcome_(255)
+      tf_listener_ptr(tf_listener_ptr),
+      state_(STOPPED),
+      moving_(false),
+      outcome_(255),
+      AbstractPluginHandler<mbf_abstract_core::AbstractController>(condition)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -74,98 +78,15 @@ namespace mbf_abstract_nav
 
   bool AbstractControllerExecution::initialize()
   {
-    return loadPlugins();
-  }
-
-  bool AbstractControllerExecution::loadPlugins()
-  {
-    ros::NodeHandle private_nh("~");
-
-    XmlRpc::XmlRpcValue controllers_param_list;
-    if(!private_nh.getParam("controllers", controllers_param_list))
+    static const std::string pluginClass = "controller";
+    if(loadPlugins(pluginClass))
     {
-      ROS_WARN_STREAM("No controllers configured! - Use the param \"controllers\", which must be a list of tuples with a name and a type.");
-      return false;
-    }
-
-    try
-    {
-      for (int i = 0; i < controllers_param_list.size(); i++)
-      {
-        XmlRpc::XmlRpcValue elem = controllers_param_list[i];
-
-        std::string name = elem["name"];
-        std::string type = elem["type"];
-
-        if (controllers_.find(name) != controllers_.end())
-        {
-          ROS_ERROR_STREAM("The controller \"" << name << "\" has already been loaded! Names must be unique!");
-          return false;
-        }
-        // load and init
-        mbf_abstract_core::AbstractController::Ptr controller_ptr = loadControllerPlugin(type);
-        if(controller_ptr && initPlugin(name, controller_ptr))
-        {
-          // set default controller to the first in the list
-          if(!controller_)
-          {
-            controller_ = controller_ptr;
-            plugin_name_ = name;
-            setState(INITIALIZED);
-          }
-
-          controllers_.insert(
-              std::pair<std::string, mbf_abstract_core::AbstractController::Ptr>(name, controller_ptr));
-
-          controllers_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
-
-          ROS_INFO_STREAM("The controller with the type \"" << type << "\" has been loaded and initialized"
-              << " successfully under the name \"" << name << "\".");
-
-        }
-        else
-        {
-          ROS_ERROR_STREAM("Could not load and initialize the plugin with the name \""
-              << name << "\" and the type \"" << type << "\"!");
-        }
-      }
-    }
-    catch (XmlRpc::XmlRpcException &e)
-    {
-      ROS_ERROR_STREAM("Invalid parameter structure. The \"controllers\" parameter has to be a list of structs "
-                           << "with fields \"name\" and \"type\" of !");
-      ROS_ERROR_STREAM(e.getMessage());
-      return false;
-    }
-    // is there any controller initialized?
-    return controller_ ? true : false;
-  }
-
-  bool AbstractControllerExecution::switchController(const std::string& name)
-  {
-    if(name == plugin_name_)
-    {
-      ROS_DEBUG_STREAM("No controller switch necessary, \"" << name << "\" already set.");
+      setState(INITIALIZED);
       return true;
     }
-    std::map<std::string, mbf_abstract_core::AbstractController::Ptr>::iterator new_controller
-        = controllers_.find(name);
-    if(new_controller != controllers_.end())
-    {
-      plugin_name_ = new_controller->first;
-      controller_ = new_controller->second;
-      new_plan_ = true;  // ensure we reset the current plan (if any) for the new controller
-      ROS_INFO_STREAM("Switched the controller plugin to \"" << new_controller->first
-          << "\" with the type \"" << controllers_type_[new_controller->first] << "\".");
-      return true;
-    }
-    else
-    {
-      ROS_WARN_STREAM("The controller \"" << name << "\" has not yet been loaded!"
-          << " No switch of the controller!");
-      return false;
-    }
+    return false;
   }
+
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
@@ -195,14 +116,14 @@ namespace mbf_abstract_nav
     outcome_ = 255;
     message_ = "";
     moving_ = true;
-    thread_ = boost::thread(&AbstractControllerExecution::run, this);
+    pluginThread_ = boost::thread(&AbstractControllerExecution::run, this);
     return true;
   }
 
 
   void AbstractControllerExecution::stopMoving()
   {
-    thread_.interrupt();
+    pluginThread_.interrupt();
   }
 
 
@@ -213,12 +134,12 @@ namespace mbf_abstract_nav
   }
 
 
-  typename AbstractControllerExecution::ControllerState
-  AbstractControllerExecution::getState()
+  typename AbstractControllerExecution::ControllerState AbstractControllerExecution::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
     return state_;
   }
+
 
   void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
   {
@@ -271,7 +192,9 @@ namespace mbf_abstract_nav
   {
     // TODO compute velocity
     geometry_msgs::TwistStamped robot_velocity;
-    return controller_->computeVelocityCommands(robot_pose_, robot_velocity, vel_cmd, message);
+    // Hint: this lock guard can be removed if the computeVelocityCommands will be const
+    boost::lock_guard<boost::mutex> guard(pluginMutex_);
+    return plugin_.second->computeVelocityCommands(robot_pose_, robot_velocity, vel_cmd, message);
   }
 
 
@@ -317,10 +240,13 @@ namespace mbf_abstract_nav
     return moving_ && start_time_ < getLastValidCmdVelTime() && !isPatienceExceeded();
   }
 
+
   bool AbstractControllerExecution::reachedGoalCheck()
   {
     // check whether the controller plugin returns goal reached or if mbf should check for goal reached.
-    return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
+    // Hint: this lock guard can be removed if the isGoalReached will be const
+    boost::lock_guard<boost::mutex> guard(pluginMutex_);
+    return plugin_.second->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
         && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
         && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
   }
@@ -366,14 +292,17 @@ namespace mbf_abstract_nav
           }
 
           // check if plan could be set
-          if(!controller_->setPlan(plan))
           {
-            setState(INVALID_PLAN);
-            condition_.notify_all();
-            moving_ = false;
-            return;
+            // lock the guard, since we might call switchPlugins()
+            boost::lock_guard<boost::mutex> guard(pluginMutex_);
+            if(!plugin_.second->setPlan(plan))
+            {
+              setState(INVALID_PLAN);
+              condition_.notify_all();
+              moving_ = false;
+              return;
+            }
           }
-
         }
 
         // compute robot pose and store it in robot_pose_

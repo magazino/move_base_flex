@@ -492,7 +492,7 @@ void AbstractNavigationServer::callActionExePath(
   // Try to switch the planner if a special planner is specified in the action goal.
   if(!goal->controller.empty()){
 
-    if(moving_ptr_->switchController(goal->controller))
+    if(moving_ptr_->switchPlugins(goal->controller))
     {
       ROS_INFO_STREAM("Using the controller \"" << goal->controller << "\".");
     }
@@ -835,7 +835,7 @@ void AbstractNavigationServer::callActionMoveBase(
   mbf_msgs::ExePathResult exe_path_result;
   mbf_msgs::RecoveryResult recovery_result;
 
-  if(!goal->controller.empty() && !moving_ptr_->switchController(goal->controller))
+  if(!goal->controller.empty() && !moving_ptr_->switchPlugins(goal->controller))
   {
     std::stringstream ss;
     ss << "No controller with the name \"" << goal->controller << "\" loaded! ";

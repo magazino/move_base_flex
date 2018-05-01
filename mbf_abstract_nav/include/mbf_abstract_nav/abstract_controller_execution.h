@@ -59,6 +59,7 @@
 #include <mbf_abstract_core/abstract_controller.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_plugin_handler.h"
 
 namespace mbf_abstract_nav
 {
@@ -76,7 +77,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server controller_execution
  */
-  class AbstractControllerExecution
+  class AbstractControllerExecution : public AbstractPluginHandler<mbf_abstract_core::AbstractController>
   {
   public:
 
@@ -190,13 +191,6 @@ namespace mbf_abstract_nav
      */
     bool isMoving();
 
-    /**
-     * @brief Switch to the controller with the given name in the controllers list
-     * @param name The name of the controller in the loaded controller list.
-     * @return true if the switch was successful, false otherwise
-     */
-    bool switchController(const std::string& name);
-
   protected:
 
     /**
@@ -211,18 +205,6 @@ namespace mbf_abstract_nav
      * @param vel_cmd_stamped current velocity command
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
-
-    //! map to store the controllers. Each controller can be accessed by its corresponding name
-    std::map<std::string, mbf_abstract_core::AbstractController::Ptr > controllers_;
-
-    //! map to store the type of the controllers as string
-    std::map<std::string, std::string> controllers_type_;
-
-    //! the name of the loaded plugin
-    std::string plugin_name_;
-
-    //! the local planer to calculate the velocity command
-    mbf_abstract_core::AbstractController::Ptr controller_;
 
     //! shared pointer to the shared tf listener
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
@@ -246,32 +228,6 @@ namespace mbf_abstract_nav
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
     virtual void run();
-
-    /**
-     * @brief Loads the plugin associated with the given controller type parameter
-     * @param controller_type The type of the controller plugin
-     * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
-     *         an empty pointer otherwise.
-     */
-    virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
-
-    /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
-     * @param name The name of the controller
-     * @param controller_ptr pointer to the controller object which corresponds to the name param
-     * @return true if init succeeded, false otherwise
-     */
-    virtual bool initPlugin(
-        const std::string& name,
-        const mbf_abstract_core::AbstractController::Ptr& controller_ptr
-    ) = 0;
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all controllers have been loaded successfully.
-     */
-    bool loadPlugins();
 
     /**
      * publishes a velocity command with zero values to stop the robot.
@@ -328,12 +284,6 @@ namespace mbf_abstract_nav
 
     //! the last set plan which is currently processed by the controller
     std::vector<geometry_msgs::PoseStamped> plan_;
-
-    //! condition variable to wake up control thread
-    boost::condition_variable &condition_;
-
-    //! the controlling thread object
-    boost::thread thread_;
 
     //! the duration which corresponds with the controller frequency.
     boost::chrono::microseconds calling_duration_;

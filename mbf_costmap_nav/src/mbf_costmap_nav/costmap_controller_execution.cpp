@@ -55,7 +55,7 @@ CostmapControllerExecution::~CostmapControllerExecution()
 {
 }
 
-mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadControllerPlugin(const std::string& controller_type)
+mbf_abstract_core::AbstractController::Ptr CostmapControllerExecution::loadPlugin(const std::string &controller_type)
 {
   static pluginlib::ClassLoader<mbf_costmap_core::CostmapController>
       class_loader("mbf_costmap_core", "mbf_costmap_core::CostmapController");
@@ -130,9 +130,9 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(const geometry_msgs::Pos
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
+    return plugin_.second->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
-  return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
+  return plugin_.second->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
 }
 
 } /* namespace mbf_costmap_nav */
