@@ -368,7 +368,7 @@ void AbstractNavigationServer::callActionGetPath(
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
           result.outcome = mbf_msgs::GetPathResult::TF_ERROR;
-          result.message = "Cloud not transform the plan to the global frame!";
+          result.message = "Could not transform the plan to the global frame!";
 
           ROS_ERROR_STREAM_NAMED(name_action_get_path, result.message << " Canceling the action call.");
           action_server_get_path_ptr_->setAborted(result, result.message);
@@ -840,7 +840,7 @@ void AbstractNavigationServer::callActionMoveBase(
     std::stringstream ss;
     ss << "No controller with the name \"" << goal->controller << "\" loaded! ";
     ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the controller before using it!");
-    move_base_result.outcome = mbf_msgs::MoveBaseResult::INVALID_PLUGIN;
+    move_base_result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
     move_base_result.message = ss.str();
     action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
     return;
@@ -851,7 +851,7 @@ void AbstractNavigationServer::callActionMoveBase(
     std::stringstream ss;
     ss << "No planner with the name \"" << goal->planner << "\" loaded! ";
     ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the planner before using it!");
-    move_base_result.outcome = mbf_msgs::MoveBaseResult::INVALID_PLUGIN;
+    move_base_result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
     move_base_result.message = ss.str();
     action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
     return;
@@ -865,7 +865,7 @@ void AbstractNavigationServer::callActionMoveBase(
       std::stringstream ss;
       ss << "No recovery behavior with the name \"" << *iter << "\" loaded! ";
       ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the behaviors before using them!");
-      move_base_result.outcome = mbf_msgs::MoveBaseResult::INVALID_PLUGIN;
+      move_base_result.outcome = mbf_msgs::RecoveryResult::INVALID_NAME;
       move_base_result.message = ss.str();
       action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
       return;
