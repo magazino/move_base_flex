@@ -57,7 +57,13 @@ AbstractNavigationServer::AbstractNavigationServer(
   path_seq_count_(0),
   action_client_exe_path_(private_nh_, name_action_exe_path),
   action_client_get_path_(private_nh_, name_action_get_path),
-  action_client_recovery_(private_nh_, name_action_recovery)
+  action_client_recovery_(private_nh_, name_action_recovery),
+  planner_plugin_manager_("planners", boost::bind(&AbstractNavigationServer::loadPlannerPlugin, this, _1),
+                          boost::bind(&AbstractNavigationServer::initializePlannerPlugin, this, _1, _2)),
+  controller_plugin_manager_("controllers", boost::bind(&AbstractNavigationServer::loadControllerPlugin, this, _1),
+                             boost::bind(&AbstractNavigationServer::initializeControllerPlugin, this, _1, _2)),
+  recovery_plugin_manager_("recovery_behaviors", boost::bind(&AbstractNavigationServer::loadRecoveryPlugin, this, _1),
+                           boost::bind(&AbstractNavigationServer::initializeRecoveryPlugin, this, _1, _2))
 {
   ros::NodeHandle nh;
 
@@ -111,18 +117,9 @@ AbstractNavigationServer::AbstractNavigationServer(
 
 void AbstractNavigationServer::initializeServerComponents()
 {
-  if(!moving_ptr_->initialize())
-  {
-    ROS_WARN_STREAM("No controller has been loaded and initialized successfully!");
-  }
-  if(!planning_ptr_->initialize())
-  {
-    ROS_WARN_STREAM("No planner has been loaded and initialized successfully!");
-  }
-  if(!recovery_ptr_->initialize())
-  {
-    ROS_WARN_STREAM("No recovery behavior has been loaded and initialized successfully!");
-  }
+  planner_plugin_manager_.loadPlugins();
+  controller_plugin_manager_.loadPlugins();
+  recovery_plugin_manager_.loadPlugins();
 }
 
 AbstractNavigationServer::~AbstractNavigationServer()

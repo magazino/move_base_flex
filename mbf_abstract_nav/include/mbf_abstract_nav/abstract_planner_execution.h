@@ -87,7 +87,8 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      */
-    AbstractPlannerExecution(boost::condition_variable &condition);
+    AbstractPlannerExecution(boost::condition_variable &condition,
+                             const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr);
 
     /**
      * @brief Destructor
@@ -202,35 +203,16 @@ namespace mbf_abstract_nav
     void stopPlanning();
 
     /**
-     * @brief Loads the plugin given by the parameter "local_planner"
-     * @return true, if successful
-     */
-    bool initialize();
-
-    /**
      * @brief Is called by the server thread to reconfigure the controller execution, if a user uses dynamic reconfigure
      *        to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
     void reconfigure(const MoveBaseFlexConfig &config);
 
-    /**
-     * @brief Switches the planner to planner with the given name
-     * @param name The name of the planner in the planners list
-     * @return true if the switch was successful, false otherwise.
-     */
-    bool switchPlanner(const std::string& name);
-
   protected:
 
     //! the local planer to calculate the velocity command
     mbf_abstract_core::AbstractPlanner::Ptr planner_;
-
-    //! map to store the planners. Each planner can be accessed by its corresponding name
-    std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr > planners_;
-
-    //! map to store the type of the planner as string
-    std::map<std::string, std::string> planners_type_;
 
     //! the name of the loaded planner plugin
     std::string plugin_name_;
@@ -246,24 +228,6 @@ namespace mbf_abstract_nav
 
   private:
 
-    /**
-     * @brief Loads the plugin associated with the given planner_type parameter.
-     * @param planner_type The type of the planner plugin to load.
-     * @return Pointer to the loaded plugin
-     */
-    virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
-
-    /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
-     * @param name The name of the planner
-     * @param planner_ptr pointer to the planner object which corresponds to the name param
-     * @return true if init succeeded, false otherwise
-     */
-    virtual bool initPlugin(
-        const std::string& name,
-        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
-    ) = 0;
 
     /**
      * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
@@ -284,12 +248,6 @@ namespace mbf_abstract_nav
         std::vector<geometry_msgs::PoseStamped> &plan,
         double &cost,
         std::string &message);
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all planners have been loaded successfully.
-     */
-    bool loadPlugins();
 
     /**
      * @brief Sets the internal state, thread communication safe

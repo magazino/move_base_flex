@@ -85,6 +85,7 @@ namespace mbf_abstract_nav
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
     AbstractRecoveryExecution(boost::condition_variable &condition,
+                              const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
     /**
@@ -96,7 +97,7 @@ namespace mbf_abstract_nav
      * @brief starts the recovery behavior thread, which calls the recovery behavior plugin.
      * @param name The name of the recovery behavior loaded.
      */
-    void startRecovery(const std::string &name);
+    void startRecovery();
 
     /**
      * @brief Tries to stop the recovery behavior thread by an interrupt
@@ -131,12 +132,6 @@ namespace mbf_abstract_nav
     AbstractRecoveryExecution::RecoveryState getState();
 
     /**
-     * @brief Reads the parameter server and tries to load and initialize the recovery behaviors
-     * @return true, if successful
-     */
-    bool initialize();
-
-    /**
      * @brief Reconfigures the current configuration and reloads all parameters. This method is called from a dynamic
      *        reconfigure tool.
      * @param config Current MoveBaseFlexConfig object. See the MoveBaseFlex.cfg definition.
@@ -149,27 +144,6 @@ namespace mbf_abstract_nav
      */
     bool cancel();
 
-    /**
-     * @brief Returns true is the given name has been loaded as recovery behavior.
-     * @param name The name of the recovery behavior.
-     * @return true, if the recovery behavior exists, false otherwise.
-     */
-    bool hasRecoveryBehavior(const std::string &name);
-
-    /**
-     * @brief Returns a list of all loaded recovery behavior.
-     * @return list of all loaded recovery behavior names.
-     */
-    std::vector<std::string> listRecoveryBehaviors();
-
-    /**
-     * @brief Returns the type for the corresponding name
-     * @param name Name of the plugin
-     * @param type Type of the plugin, returned
-     * @return true, if the name exists and a type could be written.
-     */
-    bool getTypeOfBehavior(const std::string &name, std::string &type);
-
   protected:
 
     /**
@@ -177,14 +151,8 @@ namespace mbf_abstract_nav
      */
     virtual void run();
 
-    //! map to store the recovery behaviors. Each behavior can be accessed by its corresponding name
-    std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractRecovery> > recovery_behaviors_;
-
-    //! map to store the type of the behavior as string
-    std::map<std::string, std::string> recovery_behaviors_type_;
-
     //! the current loaded recovery behavior
-    mbf_abstract_core::AbstractRecovery::Ptr current_behavior_;
+    mbf_abstract_core::AbstractRecovery::Ptr behavior_;
 
     //! shared pointer to common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
@@ -196,31 +164,6 @@ namespace mbf_abstract_nav
      * @param state The state to set.
      */
     void setState(RecoveryState state);
-
-    /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
-     * @param name The name of the recovery behavior
-     * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
-     * @return true if init succeeded, false otherwise
-     */
-    virtual bool initPlugin(
-        const std::string& name,
-        const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr
-    ) = 0;
-
-    /**
-     * @brief Loads a Recovery plugin associated with given recovery type parameter
-     * @param recovery_name The name of the Recovery plugin
-     * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
-     */
-    virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all recovery behavior have been loaded successfully.
-     */
-    bool loadPlugins();
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
@@ -234,9 +177,6 @@ namespace mbf_abstract_nav
 
     //! recovery behavior start time
     ros::Time start_time_;
-
-    //! the last requested recovery behavior to start
-    std::string requested_behavior_name_;
 
     //! condition variable to wake up control thread
     boost::condition_variable &condition_;

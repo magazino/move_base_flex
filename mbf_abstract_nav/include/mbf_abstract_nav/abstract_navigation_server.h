@@ -59,6 +59,7 @@
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_utility/navigation_utility.h>
 
+#include "mbf_abstract_nav/abstract_plugin_manager.h"
 #include "mbf_abstract_nav/abstract_planner_execution.h"
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 #include "mbf_abstract_nav/abstract_recovery_execution.h"
@@ -140,6 +141,65 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @brief Destructor
      */
     virtual ~AbstractNavigationServer();
+
+    /**
+     * @brief Loads the plugin associated with the given planner_type parameter.
+     * @param planner_type The type of the planner plugin to load.
+     * @return Pointer to the loaded plugin
+     */
+    virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
+
+    /**
+     * @brief Loads the plugin associated with the given controller type parameter
+     * @param controller_type The type of the controller plugin
+     * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+     *         an empty pointer otherwise.
+     */
+    virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
+
+    /**
+     * @brief Loads a Recovery plugin associated with given recovery type parameter
+     * @param recovery_name The name of the Recovery plugin
+     * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
+     */
+    virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type) = 0;
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+     *        some plugins need to be initialized!
+     * @param name The name of the planner
+     * @param planner_ptr pointer to the planner object which corresponds to the name param
+     * @return true if init succeeded, false otherwise
+     */
+    virtual bool initializePlannerPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+    ) = 0;
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+     *        some plugins need to be initialized!
+     * @param name The name of the controller
+     * @param controller_ptr pointer to the controller object which corresponds to the name param
+     * @return true if init succeeded, false otherwise
+     */
+    virtual bool initializeControllerPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractController::Ptr& controller_ptr
+    ) = 0;
+
+    /**
+     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
+     *        some plugins need to be initialized!
+     * @param name The name of the recovery behavior
+     * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
+     * @return true if init succeeded, false otherwise
+     */
+    virtual bool initializeRecoveryPlugin(
+        const std::string& name,
+        const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr
+    ) = 0;
+
 
     /**
      * @brief GetPath action execution method. This method will be called if the action server receives a goal
@@ -244,6 +304,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     void plannerThread(boost::condition_variable &cond, boost::unique_lock<boost::mutex> &lock,
                        const mbf_msgs::GetPathGoal &goal, mbf_msgs::GetPathResult &result, bool &has_new_plan);
 
+    AbstractPluginManager<mbf_abstract_core::AbstractPlanner>planner_plugin_manager_;
+    AbstractPluginManager<mbf_abstract_core::AbstractController>controller_plugin_manager_;
+    AbstractPluginManager<mbf_abstract_core::AbstractRecovery>recovery_plugin_manager_;
 
     //! shared pointer to the Recovery action server
     ActionServerRecoveryPtr action_server_recovery_ptr_;
