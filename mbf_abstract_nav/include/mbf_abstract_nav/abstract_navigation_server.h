@@ -132,15 +132,26 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @param moving_ptr shared pointer to an object of the concrete derived implementation of the AbstractControllerExecution
      * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
-    AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                             AbstractPlannerExecution::Ptr planning_ptr,
-                             AbstractControllerExecution::Ptr moving_ptr,
-                             AbstractRecoveryExecution::Ptr recovery_ptr);
-
+    AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
     /**
      * @brief Destructor
      */
     virtual ~AbstractNavigationServer();
+
+    //! shared pointer to the @ref planner_execution "PlannerExecution"
+    virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
+        boost::condition_variable& condition,
+        const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);
+
+    //! shared pointer to the @ref controller_execution "ControllerExecution"
+    virtual mbf_abstract_nav::AbstractControllerExecution::Ptr newControllerExecution(
+        boost::condition_variable& condition,
+        const mbf_abstract_core::AbstractController::Ptr plugin_ptr);
+
+    //! shared pointer to the @ref recovery_execution "RecoveryExecution"
+    virtual mbf_abstract_nav::AbstractRecoveryExecution::Ptr newRecoveryExecution(
+        boost::condition_variable& condition,
+        const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr);
 
     /**
      * @brief Loads the plugin associated with the given planner_type parameter.
@@ -352,15 +363,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     //! shared pointer to the common TransformListener
     const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
-
-    //! shared pointer to the @ref planner_execution "PlannerExecution"
-    AbstractPlannerExecution::Ptr planning_ptr_;
-
-    //! shared pointer to the @ref controller_execution "ControllerExecution"
-    AbstractControllerExecution::Ptr moving_ptr_;
-
-    //! shared pointer to the @ref recovery_execution "RecoveryExecution"
-    AbstractRecoveryExecution::Ptr recovery_ptr_;
 
     //! loop variable for the controller action
     bool active_moving_;

@@ -45,14 +45,8 @@ namespace mbf_abstract_nav
 {
 
 AbstractNavigationServer::AbstractNavigationServer(
-  const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-  typename AbstractPlannerExecution::Ptr planning_ptr,
-  typename AbstractControllerExecution::Ptr moving_ptr,
-  typename AbstractRecoveryExecution::Ptr recovery_ptr) :
+  const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
   tf_listener_ptr_(tf_listener_ptr),
-  planning_ptr_(planning_ptr),
-  moving_ptr_(moving_ptr),
-  recovery_ptr_(recovery_ptr),
   private_nh_("~"),
   path_seq_count_(0),
   action_client_exe_path_(private_nh_, name_action_exe_path),
@@ -124,9 +118,33 @@ void AbstractNavigationServer::initializeServerComponents()
 
 AbstractNavigationServer::~AbstractNavigationServer()
 {
-  moving_ptr_->stopMoving();
-  planning_ptr_->stopPlanning();
-  recovery_ptr_->stopRecovery();
+  // TODO stop all running executions
+  action_server_get_path_ptr_->shutdown();
+  action_server_exe_path_ptr_->shutdown();
+  action_server_recovery_ptr_->shutdown();
+  action_server_move_base_ptr_->shutdown();
+}
+
+mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
+{
+  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(boost::ref(condition), plugin_ptr);
+}
+
+mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::newControllerExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
+{
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(boost::ref(condition), plugin_ptr, tf_listener_ptr_);
+}
+
+mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
+{
+  return mbf_abstract_nav::AbstractRecoveryExecution::Ptr(
+      new mbf_abstract_nav::AbstractRecoveryExecution(condition, plugin_ptr, tf_listener_ptr_));
 }
 
 void AbstractNavigationServer::startActionServers()
@@ -163,9 +181,11 @@ void AbstractNavigationServer::reconfigure(
     config.restore_defaults = false;
   }
 
+  /* TODO reconfigure all executions
   planning_ptr_->reconfigure(config);
-  moving_ptr_->reconfigure(config);
+  controller_execution->reconfigure(config);
   recovery_ptr_->reconfigure(config);
+  */
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
   recovery_enabled_ = config.recovery_enabled;
@@ -241,10 +261,16 @@ void AbstractNavigationServer::callActionGetPath(
   bool use_start_pose = goal->use_start_pose;
 
   // Try to switch the planner if a special planner is specified in the action goal.
+  // TODO load default planner
+
+  mbf_abstract_nav::AbstractPlannerExecution::Ptr planner_execution;
+
   if(!goal->planner.empty()){
 
-    if(planning_ptr_->switchPlanner(goal->planner))
+    mbf_abstract_core::AbstractPlanner::Ptr planner_ptr = planner_plugin_manager_.getPlugin(goal->planner);
+    if(planner_ptr)
     {
+      planner_execution = newPlannerExecution(condition_, planner_ptr);
       ROS_INFO_STREAM("Using the planner \"" << goal->planner << "\".");
     }
     else
@@ -285,7 +311,7 @@ void AbstractNavigationServer::callActionGetPath(
   }
 
   ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Starting the planning thread.");
-  if (!planning_ptr_->startPlanning(start_pose, goal_pose, tolerance))
+  if (!planner_execution->startPlanning(start_pose, goal_pose, tolerance))
   {
     result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
     result.message = "Another thread is still planning!";
@@ -299,12 +325,10 @@ void AbstractNavigationServer::callActionGetPath(
   std::vector<geometry_msgs::PoseStamped> plan, global_plan;
   double cost;
 
-  int feedback_cnt = 0;
-
   while (active_planning_ && ros::ok())
   {
     // get the current state of the planning thread
-    state_planning_input = planning_ptr_->getState();
+    state_planning_input = planner_execution->getState();
 
     switch (state_planning_input)
     {
@@ -337,11 +361,11 @@ void AbstractNavigationServer::callActionGetPath(
 
         // in progress
       case AbstractPlannerExecution::PLANNING:
-        if (planning_ptr_->isPatienceExceeded())
+        if (planner_execution->isPatienceExceeded())
         {
           ROS_INFO_STREAM_NAMED(name_action_get_path, "Global planner patience has been exceeded! "
             << "Cancel planning...");
-          if (!planning_ptr_->cancel())
+          if (!planner_execution->cancel())
           {
             ROS_WARN_STREAM_THROTTLE_NAMED(2.0, name_action_get_path, "Cancel planning failed or is not supported; "
               "must wait until current plan finish!");
@@ -357,7 +381,7 @@ void AbstractNavigationServer::callActionGetPath(
       case AbstractPlannerExecution::FOUND_PLAN:
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
-        plan = planning_ptr_->getPlan();
+        plan = planner_execution->getPlan();
         publishPath(result.path.poses);
 
         ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: found plan with cost: " << cost);
@@ -385,9 +409,9 @@ void AbstractNavigationServer::callActionGetPath(
         }
 
         result.path.poses = global_plan;
-        result.cost = planning_ptr_->getCost();
-        result.outcome = planning_ptr_->getOutcome();
-        result.message = planning_ptr_->getMessage();
+        result.cost = planner_execution->getCost();
+        result.outcome = planner_execution->getOutcome();
+        result.message = planner_execution->getMessage();
         action_server_get_path_ptr_->setSucceeded(result, result.message);
 
         active_planning_ = false;
@@ -396,16 +420,16 @@ void AbstractNavigationServer::callActionGetPath(
         // no plan found
       case AbstractPlannerExecution::NO_PLAN_FOUND:
         ROS_DEBUG_STREAM_NAMED(name_action_get_path, "robot navigation state: no plan found");
-        result.outcome = planning_ptr_->getOutcome();
-        result.message = planning_ptr_->getMessage();
+        result.outcome = planner_execution->getOutcome();
+        result.message = planner_execution->getMessage();
         action_server_get_path_ptr_->setAborted(result, result.message);
         active_planning_ = false;
         break;
 
       case AbstractPlannerExecution::MAX_RETRIES:
         ROS_DEBUG_STREAM_NAMED(name_action_get_path, "Global planner reached the maximum number of retries");
-        result.outcome = planning_ptr_->getOutcome();
-        result.message = planning_ptr_->getMessage();
+        result.outcome = planner_execution->getOutcome();
+        result.message = planner_execution->getMessage();
         action_server_get_path_ptr_->setAborted(result, result.message);
         active_planning_ = false;
         break;
@@ -438,7 +462,7 @@ void AbstractNavigationServer::callActionGetPath(
     if (action_server_get_path_ptr_->isPreemptRequested()
       && state_planning_input == AbstractPlannerExecution::PLANNING)
     {
-      if (!planning_ptr_->cancel())
+      if (!planner_execution->cancel())
       {
         ROS_WARN_STREAM_THROTTLE_NAMED(2.0, name_action_get_path, "Cancel planning failed or is not supported; "
           << "Wait until the current plan finished");
@@ -486,11 +510,16 @@ void AbstractNavigationServer::callActionExePath(
     return;
   }
 
+  mbf_abstract_nav::AbstractControllerExecution::Ptr controller_execution;
+
+  // TODO handle default controller
   // Try to switch the planner if a special planner is specified in the action goal.
   if(!goal->controller.empty()){
+    mbf_abstract_core::AbstractController::Ptr controller_plugin = controller_plugin_manager_.getPlugin(goal->controller);
 
-    if(moving_ptr_->switchController(goal->controller))
+    if(controller_plugin)
     {
+      controller_execution = newControllerExecution(condition_, controller_plugin);
       ROS_INFO_STREAM("Using the controller \"" << goal->controller << "\".");
     }
     else
@@ -512,8 +541,8 @@ void AbstractNavigationServer::callActionExePath(
     << goal_pose_.pose.position.y << ", "
     << goal_pose_.pose.position.z << ")");
 
-  moving_ptr_->setNewPlan(plan);
-  moving_ptr_->startMoving();
+  controller_execution->setNewPlan(plan);
+  controller_execution->startMoving();
 
   active_moving_ = true;
 
@@ -550,7 +579,7 @@ void AbstractNavigationServer::callActionExePath(
       }
       else
       {
-        moving_ptr_->stopMoving();
+        controller_execution->stopMoving();
         ROS_INFO_STREAM("Action \"ExePath\" preempted");
       }
 
@@ -560,7 +589,7 @@ void AbstractNavigationServer::callActionExePath(
     }
 
 
-    state_moving_input = moving_ptr_->getState();
+    state_moving_input = controller_execution->getState();
 
     switch (state_moving_input)
     {
@@ -575,19 +604,19 @@ void AbstractNavigationServer::callActionExePath(
 
       // in progress
       case AbstractControllerExecution::PLANNING:
-        if (moving_ptr_->isPatienceExceeded())
+        if (controller_execution->isPatienceExceeded())
         {
           ROS_DEBUG_STREAM_NAMED(name_action_exe_path, "Local planner patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
           // We will try to stop the thread, but does nothing with DWA or TR controllers
-          moving_ptr_->stopMoving();
+          controller_execution->stopMoving();
         }
         break;
 
       case AbstractControllerExecution::MAX_RETRIES:
         ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner has been aborted after it exceeded the maximum number of retries!");
         active_moving_ = false;
-        fillExePathResult(moving_ptr_->getOutcome(), moving_ptr_->getMessage(), result);
+        fillExePathResult(controller_execution->getOutcome(), controller_execution->getMessage(), result);
         action_server_exe_path_ptr_->setAborted(result, result.message);
         break;
 
@@ -641,14 +670,14 @@ void AbstractNavigationServer::callActionExePath(
           {
             ROS_WARN_STREAM_NAMED(name_action_exe_path, "The local planner is oscillating for "
               << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            moving_ptr_->stopMoving();
+            controller_execution->stopMoving();
             active_moving_ = false;
             fillExePathResult(mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
             action_server_exe_path_ptr_->setAborted(result, result.message);
             break;
           }
         }
-        feedback.current_twist = moving_ptr_->getLastValidCmdVel();
+        feedback.current_twist = controller_execution->getLastValidCmdVel();
         feedback.current_pose = robot_pose_;
         feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
         feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
@@ -708,14 +737,29 @@ void AbstractNavigationServer::callActionRecovery(
 
   mbf_msgs::RecoveryResult result;
   std::string behavior = goal->behavior;
-  recovery_ptr_->startRecovery(behavior);
+  mbf_abstract_nav::AbstractRecoveryExecution::Ptr recovery_execution;
+  mbf_abstract_core::AbstractRecovery::Ptr recovery_plugin = recovery_plugin_manager_.getPlugin(goal->behavior);
   active_recovery_ = true;
+  if(recovery_plugin){
+    recovery_execution = newRecoveryExecution(condition_, recovery_plugin);
+    recovery_execution->startRecovery();
+  }
+  else{
+    active_recovery_ = false; // stopping the action
+    result.outcome = mbf_msgs::RecoveryResult::INVALID_NAME;
+    result.message = "No recovery plugin loaded with the given name\"" + behavior + "\"!";
+    action_server_recovery_ptr_->setAborted(result, result.message);
+    ROS_ERROR_STREAM_NAMED(name_action_recovery, result.message);
+  }
+
+
+
 
   typename AbstractRecoveryExecution::RecoveryState state_recovery_input;
 
   while (active_recovery_ && ros::ok())
   {
-    state_recovery_input = recovery_ptr_->getState();
+    state_recovery_input = recovery_execution->getState();
     switch (state_recovery_input)
     {
       case AbstractRecoveryExecution::STOPPED:
@@ -734,17 +778,17 @@ void AbstractNavigationServer::callActionRecovery(
       case AbstractRecoveryExecution::RECOVERING:
         // check preempt requested; we let for the next iteration to set the action as preempted to
         // give time to the executing thread to finish, set the CANCELED state and notify condition
-        if (action_server_recovery_ptr_->isPreemptRequested() && recovery_ptr_->cancel())
+        if (action_server_recovery_ptr_->isPreemptRequested() && recovery_execution->cancel())
         {
           ROS_DEBUG_STREAM_NAMED(name_action_recovery, "Recovering \"" << behavior << "\" canceled!");
         }
-        else if (recovery_ptr_->isPatienceExceeded())
+        else if (recovery_execution->isPatienceExceeded())
         {
           ROS_INFO_STREAM("Recovery behavior \"" << behavior << "\" patience exceeded! Cancel recovering...");
-          if (!recovery_ptr_->cancel())
+          if (!recovery_execution->cancel())
           {
             ROS_WARN_STREAM("Cancel recovering \"" << behavior << "\" failed or not supported; interrupt it!");
-            recovery_ptr_->stopRecovery();
+            recovery_execution->stopRecovery();
           }
         }
         else
@@ -752,14 +796,6 @@ void AbstractNavigationServer::callActionRecovery(
           // we keep silent if cancel failed because most recovery behaviors don't support canceling
           ROS_DEBUG_STREAM_THROTTLE_NAMED(3, name_action_move_base, "Recovering with: " << behavior);
         }
-        break;
-
-      case AbstractRecoveryExecution::WRONG_NAME:
-        active_recovery_ = false; // stopping the action
-        result.outcome = mbf_msgs::RecoveryResult::INVALID_NAME;
-        result.message = "No recovery plugin loaded with the given name\"" + behavior + "\"!";
-        action_server_recovery_ptr_->setAborted(result, result.message);
-        ROS_ERROR_STREAM_NAMED(name_action_recovery, result.message);
         break;
 
       case AbstractRecoveryExecution::CANCELED:
@@ -819,6 +855,8 @@ void AbstractNavigationServer::callActionRecovery(
 void AbstractNavigationServer::callActionMoveBase(
   const mbf_msgs::MoveBaseGoalConstPtr &goal)
 {
+
+  /*
   ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Start action "  << name_action_move_base);
 
   const geometry_msgs::PoseStamped target_pose = goal->target_pose;
@@ -832,7 +870,9 @@ void AbstractNavigationServer::callActionMoveBase(
   mbf_msgs::ExePathResult exe_path_result;
   mbf_msgs::RecoveryResult recovery_result;
 
-  if(!goal->controller.empty() && !moving_ptr_->switchController(goal->controller))
+  // TODO load default plugins
+
+  if(!goal->controller.empty && !controller_plugin_manager_.hasPlugin(goal->controller))
   {
     std::stringstream ss;
     ss << "No controller with the name \"" << goal->controller << "\" loaded! ";
@@ -843,8 +883,7 @@ void AbstractNavigationServer::callActionMoveBase(
     return;
   }
 
-  if(!goal->planner.empty() && !planning_ptr_->switchPlanner(goal->planner))
-  {
+  if(!goal->planner.empty() && !planner_plugin_manager_.hasPlugin(goal->planner)){
     std::stringstream ss;
     ss << "No planner with the name \"" << goal->planner << "\" loaded! ";
     ROS_ERROR_STREAM_NAMED(name_action_move_base, ss.str() << " Please load the planner before using it!");
@@ -857,7 +896,7 @@ void AbstractNavigationServer::callActionMoveBase(
   for(std::vector<std::string>::const_iterator iter = goal->recovery_behaviors.begin();
       iter != goal->recovery_behaviors.end(); ++iter)
   {
-    if(!recovery_ptr_->hasRecoveryBehavior(*iter))
+    if(!recovery_plugin_manager_.hasPlugin(*iter))
     {
       std::stringstream ss;
       ss << "No recovery behavior with the name \"" << *iter << "\" loaded! ";
@@ -869,16 +908,18 @@ void AbstractNavigationServer::callActionMoveBase(
     }
   }
 
-
   get_path_goal.target_pose = target_pose;
   get_path_goal.use_start_pose = false; // use the robot pose
+  get_path_goal.planner = goal->planner;
+  exe_path_goal.controller = goal->controller;
+
 
   ros::Duration connection_timeout(1.0);
 
   // start recovering with the first behavior, use the recovery behaviors from the action request, if specified,
   // otherwise all loaded behaviors.
   std::vector<std::string> recovery_behaviors =
-    goal->recovery_behaviors.empty() ? recovery_ptr_->listRecoveryBehaviors() : goal->recovery_behaviors;
+    goal->recovery_behaviors.empty() ? recovery_plugin_manager_.getLoadedNames() : goal->recovery_behaviors;
   std::vector<std::string>::iterator current_recovery_behavior = recovery_behaviors.begin();
 
   // get the current robot pose only at the beginning, as exe_path will keep updating it as we move
@@ -919,16 +960,6 @@ void AbstractNavigationServer::callActionMoveBase(
 
   // call get_path action server to get a first plan
   action_client_get_path_.sendGoal(get_path_goal);
-
-  //set up the planner's thread
-  bool has_new_plan = false;
-  boost::mutex planner_mutex;
-  boost::condition_variable planner_cond;
-  boost::unique_lock<boost::mutex> planner_lock(planner_mutex);
-  boost::thread planner_thread(boost::bind(&AbstractNavigationServer::plannerThread, this,
-                                           boost::ref(planner_cond), boost::ref(planner_lock),
-                                           boost::ref(get_path_goal), boost::ref(get_path_result),
-                                           boost::ref(has_new_plan)));
 
   // init goal states with dummy values;
   actionlib::SimpleClientGoalState get_path_state(actionlib::SimpleClientGoalState::PENDING);
@@ -997,8 +1028,6 @@ void AbstractNavigationServer::callActionMoveBase(
                 ActionClientExePath::SimpleActiveCallback(),
                 boost::bind(&mbf_abstract_nav::AbstractNavigationServer::actionMoveBaseExePathFeedback, this, _1));
 
-              planner_cond.notify_one();
-
               state = EXE_PATH;
               break;
 
@@ -1040,9 +1069,8 @@ void AbstractNavigationServer::callActionMoveBase(
               else
               {
                 recovery_goal.behavior = *current_recovery_behavior;
-                recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
                 ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Start recovery behavior\""
-                  << *current_recovery_behavior << "\" of the type \"" << type << "\".");
+                  << *current_recovery_behavior <<"\".");
                 action_client_recovery_.sendGoal(recovery_goal);
                 recovery_trigger = GET_PATH;
                 state = RECOVERY;
@@ -1101,6 +1129,7 @@ void AbstractNavigationServer::callActionMoveBase(
           has_new_plan = false;
         }
         planner_cond.notify_one();
+        action_client_get_path_.
 
         if (!action_client_exe_path_.waitForResult(wait))
         {
@@ -1126,14 +1155,14 @@ void AbstractNavigationServer::callActionMoveBase(
               ROS_WARN_STREAM_NAMED(name_action_exe_path, "Robot is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
               last_oscillation_reset = ros::Time::now();
-              moving_ptr_->stopMoving();
+              action_client_exe_path_.cancelGoal();
 
               recovery_trigger = OSCILLATING;
               try_recovery = true;
             }
           }
 
-          if (recovery_trigger == EXE_PATH && moving_ptr_->isMoving())
+          if (recovery_trigger == EXE_PATH && controller_execution->isMoving())
           {
             ROS_INFO_NAMED(name_action_move_base, "Recovered from controller failure: restart recovery behaviors");
             current_recovery_behavior = recovery_behaviors.begin();
@@ -1259,7 +1288,7 @@ void AbstractNavigationServer::callActionMoveBase(
           else
           {
             recovery_goal.behavior = *current_recovery_behavior;
-            recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
+            recovery_execution->getTypeOfBehavior(*current_recovery_behavior, type);
             ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Start recovery behavior\""
               << *current_recovery_behavior << "\" of the type \"" << type << "\".");
             action_client_recovery_.sendGoal(recovery_goal);
@@ -1288,7 +1317,7 @@ void AbstractNavigationServer::callActionMoveBase(
             case actionlib::SimpleClientGoalState::ABORTED:
               ROS_DEBUG_STREAM_NAMED(name_action_move_base, "Recovery behavior aborted!");
               recovery_result = *action_client_recovery_.getResult();
-              recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
+              recovery_execution->getTypeOfBehavior(*current_recovery_behavior, type);
               ROS_DEBUG_STREAM_NAMED(name_action_move_base, "The recovery behavior \""
                 << *current_recovery_behavior << "\"" << "of the type \"" << type << "\" failed. ");
               ROS_DEBUG_STREAM("Recovery behavior message: " << recovery_result.message
@@ -1305,7 +1334,7 @@ void AbstractNavigationServer::callActionMoveBase(
               else
               {
                 recovery_goal.behavior = *current_recovery_behavior;
-                recovery_ptr_->getTypeOfBehavior(*current_recovery_behavior, type);
+                recovery_execution->getTypeOfBehavior(*current_recovery_behavior, type);
 
                 ROS_INFO_STREAM_NAMED(name_action_move_base, "Run the next recovery behavior\""
                   << *current_recovery_behavior << "\" of the type \"" << type << "\".");
@@ -1359,31 +1388,8 @@ void AbstractNavigationServer::callActionMoveBase(
   planner_thread.join();
 
   active_move_base_ = false;
-}
 
-void AbstractNavigationServer::plannerThread(boost::condition_variable &cond, boost::unique_lock<boost::mutex> &lock,
-                                             const mbf_msgs::GetPathGoal &goal, mbf_msgs::GetPathResult &result,
-                                             bool &has_new_plan)
-{
-  if (planning_ptr_->getFrequency() <= 0.0)
-    return;
-
-  ros::Rate rate(planning_ptr_->getFrequency());  // TODO: will ignore dyn. reconf. until next run
-
-  while (ros::ok())
-  {
-    ROS_DEBUG("Planner thread waiting...");
-    cond.wait(lock);
-    ROS_DEBUG("Planner thread started!");
-
-    // keep calling get_path action server at planner_frequency Hz to get updated plans
-    action_client_get_path_.sendGoal(goal);
-    action_client_get_path_.waitForResult();
-    result = *action_client_get_path_.getResult();
-    if (result.outcome < 10)
-      has_new_plan = true;
-    rate.sleep();
-  }
+   */
 }
 
 void AbstractNavigationServer::actionMoveBaseExePathFeedback(

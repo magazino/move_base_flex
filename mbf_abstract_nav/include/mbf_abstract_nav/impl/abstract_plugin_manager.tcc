@@ -51,6 +51,7 @@ bool AbstractPluginManager<PluginType>::loadPlugins()
             std::pair<std::string, typename PluginType::Ptr>(name, plugin_ptr));
 
         plugins_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
+        names_.push_back(name);
 
         ROS_INFO_STREAM("The plugin with the type \"" << type << "\" has been loaded successfully under the name \""
                                                        << name << "\".");
@@ -74,6 +75,18 @@ bool AbstractPluginManager<PluginType>::loadPlugins()
 }
 
 template <typename PluginType>
+std::vector<std::string> AbstractPluginManager<PluginType>::getLoadedNames()
+{
+  return names_;
+}
+
+template <typename PluginType>
+bool AbstractPluginManager<PluginType>::hasPlugin(const std::string& name)
+{
+  return static_cast<bool>(plugins_.count(name)); // returns 1 or 0;
+}
+
+template <typename PluginType>
 typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std::string& name)
 {
   typename std::map<std::string, typename PluginType::Ptr>::iterator new_plugin
@@ -85,7 +98,7 @@ typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std:
   else
   {
     ROS_WARN_STREAM("The plugin with the name \"" << name << "\" has not yet been loaded!");
-    return PluginType::Ptr(); // return null ptr
+    return typename PluginType::Ptr(); // return null ptr
   }
 }
 

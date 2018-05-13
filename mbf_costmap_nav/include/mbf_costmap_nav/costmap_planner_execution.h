@@ -63,7 +63,9 @@ public:
    * @param condition Thread sleep condition variable, to wake up connected threads
    * @param costmap Shared pointer to the costmap.
    */
-  CostmapPlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap);
+  CostmapPlannerExecution(boost::condition_variable &condition,
+                          const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
+                          CostmapPtr &costmap);
 
   /**
    * @brief Destructor
@@ -71,24 +73,6 @@ public:
   virtual ~CostmapPlannerExecution();
 
 private:
-
-  /**
-   * @brief Loads the plugin associated with the given planner_type parameter.
-   * @param planner_type The type of the planner plugin to load.
-   * @return true, if the local planner plugin was successfully loaded.
-   */
-  virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
-
-  /**
-   * @brief Initializes the controller plugin with its name and pointer to the costmap
-   * @param name The name of the planner
-   * @param planner_ptr pointer to the planner object which corresponds to the name param
-   * @return true if init succeeded, false otherwise
-   */
-  virtual bool initPlugin(
-      const std::string& name,
-      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
-  );
 
   /**
    * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,

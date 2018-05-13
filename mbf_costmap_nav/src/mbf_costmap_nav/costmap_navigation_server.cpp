@@ -45,26 +45,30 @@
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
+#include <nav_core_wrapper/wrapper_global_planner.h>
+#include <nav_core_wrapper/wrapper_local_planner.h>
+#include <nav_core_wrapper/wrapper_recovery_behavior.h>
 
 #include "mbf_costmap_nav/costmap_navigation_server.h"
+#include "mbf_costmap_nav/costmap_planner_execution.h"
+#include "mbf_costmap_nav/costmap_controller_execution.h"
+#include "mbf_costmap_nav/costmap_recovery_execution.h"
 
 namespace mbf_costmap_nav
 {
 
 
 CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-  AbstractNavigationServer(tf_listener_ptr,
-                           CostmapPlannerExecution::Ptr(
-                                new CostmapPlannerExecution(condition_, global_costmap_ptr_)),
-                           CostmapControllerExecution::Ptr(
-                                new CostmapControllerExecution(condition_, tf_listener_ptr,
-                                                               local_costmap_ptr_)),
-                           CostmapRecoveryExecution::Ptr(
-                                new CostmapRecoveryExecution(condition_, tf_listener_ptr,
-                                                             global_costmap_ptr_,
-                                                             local_costmap_ptr_))),
-    global_costmap_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
-    local_costmap_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_))
+  AbstractNavigationServer(tf_listener_ptr),
+  recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
+  nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
+  controller_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapController"),
+  nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner"),
+  planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner"),
+  nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
+  global_costmap_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
+  local_costmap_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_)),
+  setup_reconfigure_(false), shutdown_costmaps_(false)
 {
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
   // need it here to decide weather to start or not the costmaps on starting up
@@ -102,6 +106,198 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 }
+
+mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
+{
+  return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
+      boost::ref(condition),
+      boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr),
+      boost::ref(global_costmap_ptr_));
+}
+
+mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
+{
+  return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
+      boost::ref(condition),
+      boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
+      tf_listener_ptr_,
+      boost::ref(local_costmap_ptr_));
+}
+
+mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
+    boost::condition_variable& condition,
+    const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
+{
+  return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
+      boost::ref(condition),
+      boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr),
+      tf_listener_ptr_,
+      boost::ref(global_costmap_ptr_),
+      boost::ref(local_costmap_ptr_));
+}
+
+mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string& planner_type)
+{
+  mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
+  // try to load and init global planner
+  ROS_DEBUG("Load global planner plugin.");
+
+  try
+  {
+    planner_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractPlanner>(
+        planner_plugin_loader_.createInstance(planner_type));
+    std::string planner_name = planner_plugin_loader_.getName(planner_type);
+    ROS_INFO_STREAM("MBF_core-based global planner plugin " << planner_name << " loaded");
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_INFO_STREAM("Failed to load the " << planner_type << " planner as a mbf_abstract_core-based plugin."
+                                          << " Try to load as a nav_core-based plugin. Exception: " << ex.what());
+    try
+    {
+      // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
+      boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_planner_plugin_loader_.createInstance(planner_type);
+      planner_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperGlobalPlanner>(nav_core_planner_ptr);
+      std::string planner_name = nav_core_planner_plugin_loader_.getName(planner_type);
+      ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name << " loaded");
+    }
+    catch (const pluginlib::PluginlibException &ex)
+    {
+      ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it's properly registered"
+                                             << " and that the containing library is built? Exception: " << ex.what());
+    }
+  }
+
+  return planner_ptr;
+}
+
+bool CostmapNavigationServer::initializePlannerPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+)
+{
+  mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
+  ROS_INFO_STREAM("Initialize planner \"" << name << "\".");
+
+  if (!global_costmap_ptr_)
+  {
+    ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
+    return false;
+  }
+
+  costmap_planner_ptr->initialize(name, global_costmap_ptr_.get());
+  ROS_INFO("Global planner plugin initialized.");
+  return true;
+}
+
+
+mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string& controller_type)
+{
+  mbf_abstract_core::AbstractController::Ptr controller_ptr;
+  // try to load and init local planner
+  ROS_DEBUG("Load local planner plugin.");
+  try
+  {
+    controller_ptr = controller_plugin_loader_.createInstance(controller_type);
+    std::string controller_name = controller_plugin_loader_.getName(controller_type);
+    ROS_INFO_STREAM("MBF_core-based local planner plugin " << controller_name << " loaded");
+  }
+  catch (const pluginlib::PluginlibException &ex)
+  {
+    ROS_INFO_STREAM("Failed to load the " << controller_type << " local planner as a mbf_abstract_core-based plugin;"
+                                          << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    try
+    {
+      // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
+      boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr
+          = nav_core_controller_plugin_loader_.createInstance(controller_type);
+      controller_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperLocalPlanner>(nav_core_controller_ptr);
+      std::string controller_name = nav_core_controller_plugin_loader_.getName(controller_type);
+      ROS_INFO_STREAM("Nav_core-based local planner plugin " << controller_name << " loaded");
+    }
+    catch (const pluginlib::PluginlibException &ex)
+    {
+      ROS_FATAL_STREAM("Failed to load the " << controller_type
+                                             << " local planner, are you sure it's properly registered"
+                                             << " and that the containing library is built? Exception: " << ex.what());
+    }
+  }
+  return controller_ptr;
+}
+
+bool CostmapNavigationServer::initializeControllerPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractController::Ptr& controller_ptr)
+{
+  ROS_INFO_STREAM("Initialize controller \"" << name << "\".");
+
+  if (!tf_listener_ptr_)
+  {
+    ROS_ERROR_STREAM("The tf listener pointer has not been initialized!");
+    return false;
+  }
+
+  if (!local_costmap_ptr_)
+  {
+    ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
+    return false;
+  }
+
+  mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr
+      = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
+  costmap_controller_ptr->initialize(name, tf_listener_ptr_.get(), local_costmap_ptr_.get());
+  ROS_INFO_STREAM("Controller plugin \"" << name << "\" initialized.");
+  return true;
+}
+
+mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPlugin(
+    const std::string& recovery_type)
+{
+  mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
+
+  try
+  {
+    recovery_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractRecovery>(
+        recovery_plugin_loader_.createInstance(recovery_type));
+  }
+  catch (pluginlib::PluginlibException &ex)
+  {
+    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_abstract_core-based plugin;"
+                                           << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    try
+    {
+      // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
+      boost::shared_ptr<nav_core::RecoveryBehavior> nav_core_recovery_ptr =
+          nav_core_recovery_plugin_loader_.createInstance(recovery_type);
+
+      recovery_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
+
+    }
+    catch (const pluginlib::PluginlibException &ex)
+    {
+      ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
+                                             << " and that the containing library is built? Exception: " << ex.what());
+    }
+  }
+
+  return recovery_ptr;
+}
+
+bool CostmapNavigationServer::initializeRecoveryPlugin(
+    const std::string& name,
+    const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr)
+{
+  mbf_costmap_core::CostmapRecovery::Ptr behavior =
+      boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(behavior_ptr);
+  behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_ptr_.get(), local_costmap_ptr_.get());
+  return true;
+}
+
 
 CostmapNavigationServer::~CostmapNavigationServer()
 {

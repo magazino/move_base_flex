@@ -22,11 +22,16 @@ class AbstractPluginManager
 
   bool loadPlugins();
 
+  bool hasPlugin(const std::string& name);
+
+  std::vector<std::string> getLoadedNames();
+
   typename PluginType::Ptr getPlugin(const std::string& name);
 
  protected:
-  std::map<std::string, PluginType> plugins_;
+  std::map<std::string, typename PluginType::Ptr> plugins_;
   std::map<std::string, std::string> plugins_type_;
+  std::vector<std::string> names_;
   const std::string param_name_;
   const loadPluginFunction loadPlugin_;
   const initPluginFunction initPlugin_;
