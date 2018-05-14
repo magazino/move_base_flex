@@ -39,9 +39,7 @@
  */
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
-#include <XmlRpcException.h>
 #include <mbf_msgs/ExePathResult.h>
-#include <boost/exception/diagnostic_information.hpp>
 
 namespace mbf_abstract_nav
 {

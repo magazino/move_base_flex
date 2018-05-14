@@ -38,7 +38,6 @@
  *
  */
 #include <nav_core/recovery_behavior.h>
-#include <xmlrpcpp/XmlRpc.h>
 #include "nav_core_wrapper/wrapper_recovery_behavior.h"
 #include "mbf_costmap_nav/costmap_recovery_execution.h"
 
