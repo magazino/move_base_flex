@@ -185,7 +185,7 @@ namespace mbf_abstract_nav
     void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
-     * @brief Returns weather the robot should normally move or not. True if the local planner seems to work properly.
+     * @brief Returns whether the robot should normally move or not. True if the local planner seems to work properly.
      * @return true, if the robot should normally move, false otherwise
      */
     bool isMoving();
