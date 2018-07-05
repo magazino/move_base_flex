@@ -39,6 +39,7 @@
  */
 
 #include <nav_msgs/Path.h>
+#include <sstream>
 #include "mbf_abstract_nav/abstract_navigation_server.h"
 
 namespace mbf_abstract_nav
@@ -431,7 +432,9 @@ void AbstractNavigationServer::callActionGetPath(
 
       default:
         result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown state in a move base flex planner execution with the number: " + state_planning_input;
+        std::ostringstream ss;
+        ss << "Internal error: Unknown state in a move base flex planner execution with the number: " << static_cast<int>(state_planning_input);
+        result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_action_get_path, result.message);
         action_server_get_path_ptr_->setAborted(result, result.message);
         active_planning_ = false;
@@ -674,7 +677,9 @@ void AbstractNavigationServer::callActionExePath(
 
       default:
         result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown state in a move base flex controller execution with the number: " + state_moving_input;
+        std::ostringstream ss;
+        ss << "Internal error: Unknown state in a move base flex controller execution with the number: " << static_cast<int>(state_moving_input);
+        result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_action_exe_path, result.message);
         action_server_exe_path_ptr_->setAborted(result, result.message);
         active_moving_ = false;
@@ -792,7 +797,9 @@ void AbstractNavigationServer::callActionRecovery(
 
       default:
         result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown state in a move base flex recovery execution with the number: " + state_recovery_input;
+        std::ostringstream ss;
+        ss << "Internal error: Unknown state in a move base flex recovery execution with the number: " << static_cast<int>(state_recovery_input);
+        result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_action_recovery, result.message);
         action_server_recovery_ptr_->setAborted(result, result.message);
         active_recovery_ = false;
