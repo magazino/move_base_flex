@@ -255,7 +255,6 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.behavior + "\"!";
     goal_handle.setRejected(result, result.message);
-    goal.
     return;
   }
 
