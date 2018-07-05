@@ -84,8 +84,7 @@ namespace mbf_abstract_nav
      * @param condition Thread sleep condition variable, to wake up connected threads
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
-    AbstractRecoveryExecution(boost::condition_variable &condition,
-                              const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
+    AbstractRecoveryExecution(const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
     /**
@@ -144,6 +143,13 @@ namespace mbf_abstract_nav
      */
     bool cancel();
 
+    void waitForStateUpdate(boost::chrono::microseconds const &duration)
+    {
+      boost::mutex mutex;
+      boost::unique_lock<boost::mutex> lock(mutex);
+      condition_.wait_for(lock, duration);
+    }
+
   protected:
 
     /**
@@ -179,7 +185,7 @@ namespace mbf_abstract_nav
     ros::Time start_time_;
 
     //! condition variable to wake up control thread
-    boost::condition_variable &condition_;
+    boost::condition_variable condition_;
 
     //! thread for running recovery behaviors
     boost::thread thread_;

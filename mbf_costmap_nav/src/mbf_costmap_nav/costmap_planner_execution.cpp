@@ -44,10 +44,11 @@
 namespace mbf_costmap_nav
 {
 
-CostmapPlannerExecution::CostmapPlannerExecution(boost::condition_variable &condition,
-                                                 const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-                                                 CostmapPtr &costmap_ptr) :
-    AbstractPlannerExecution(condition, planner_ptr), costmap_ptr_(costmap_ptr)
+CostmapPlannerExecution::CostmapPlannerExecution(
+    const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
+    CostmapPtr &costmap_ptr)
+      : AbstractPlannerExecution(planner_ptr),
+        costmap_ptr_(costmap_ptr)
 {
 }
 

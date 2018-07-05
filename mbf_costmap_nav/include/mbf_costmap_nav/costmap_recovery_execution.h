@@ -63,17 +63,15 @@ public:
 
   /**
    * @brief Constructor
-   * @param condition Thread sleep condition variable, to wake up connected threads
    * @param tf_listener_ptr Shared pointer to a common tf listener
    * @param global_costmap Shared pointer to the global costmap.
    * @param local_costmap Shared pointer to the local costmap.
    */
-  CostmapRecoveryExecution(boost::condition_variable &condition,
-                           const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-                           const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                           CostmapPtr &global_costmap,
-                           CostmapPtr &local_costmap);
-
+  CostmapRecoveryExecution(
+      const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
+      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      CostmapPtr &global_costmap,
+      CostmapPtr &local_costmap);
   /**
    * Destructor
    */

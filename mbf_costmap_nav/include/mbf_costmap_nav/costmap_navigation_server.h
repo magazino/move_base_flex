@@ -94,17 +94,14 @@ private:
 
   //! shared pointer to a new @ref planner_execution "PlannerExecution"
   virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
-      boost::condition_variable& condition,
       const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);
 
   //! shared pointer to a new @ref controller_execution "ControllerExecution"
   virtual mbf_abstract_nav::AbstractControllerExecution::Ptr newControllerExecution(
-      boost::condition_variable& condition,
       const mbf_abstract_core::AbstractController::Ptr plugin_ptr);
 
   //! shared pointer to a new @ref recovery_execution "RecoveryExecution"
   virtual mbf_abstract_nav::AbstractRecoveryExecution::Ptr newRecoveryExecution(
-      boost::condition_variable& condition,
       const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr);
 
   /**
@@ -194,30 +191,6 @@ private:
    * @return true, if the service completed successfully, false otherwise
    */
   bool callServiceClearCostmaps(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
-
-  /**
-   * @brief GetPath action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal);
-
-  /**
-   * @brief ExePath action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal);
-
-  /**
-   * @brief Recovery action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal);
 
   /**
    * @brief Reconfiguration method called by dynamic reconfigure.

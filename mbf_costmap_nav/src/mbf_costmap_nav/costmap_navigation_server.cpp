@@ -97,40 +97,32 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
                                                      &CostmapNavigationServer::callServiceClearCostmaps, this);
 
-  current_goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
-
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
-    boost::condition_variable& condition,
     const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
-      boost::ref(condition),
       boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr),
       boost::ref(global_costmap_ptr_));
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
-    boost::condition_variable& condition,
     const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
-      boost::ref(condition),
       boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
       tf_listener_ptr_,
       boost::ref(local_costmap_ptr_));
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
-    boost::condition_variable& condition,
     const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
-      boost::ref(condition),
       boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr),
       tf_listener_ptr_,
       boost::ref(global_costmap_ptr_),
@@ -487,6 +479,7 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request 
   return true;
 }
 
+//TODO enable checkActivateCostmap for multi thread planning, controlling, recovering
 void CostmapNavigationServer::checkActivateCostmaps()
 {
   shutdown_costmaps_timer_.stop();
@@ -507,10 +500,12 @@ void CostmapNavigationServer::checkActivateCostmaps()
   }
 }
 
+//TODO enable checkDeactivateCostmap for multi thread planning, controlling, recovering
 void CostmapNavigationServer::checkDeactivateCostmaps()
 {
   if (shutdown_costmaps_ &&
-      ((local_costmap_active_ || global_costmap_active_) && !(active_planning_ || active_moving_ || active_recovery_)))
+      ((local_costmap_active_ || global_costmap_active_)))
+      // && !(active_planning_ || active_moving_ || active_recovery_))) // TODO check if active thread
   {
     // Delay costmaps shutdown by shutdown_costmaps_delay so we don't need to enable at each step of a normal
     // navigation sequence, what is terribly inneficient; the timer is stopped on costmaps re-activation and
@@ -528,27 +523,6 @@ void CostmapNavigationServer::deactivateCostmaps(const ros::TimerEvent &event)
   global_costmap_ptr_->stop();
   global_costmap_active_ = false;
   ROS_DEBUG_STREAM("Global costmap deactivated.");
-}
-
-void CostmapNavigationServer::callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal)
-{
-  checkActivateCostmaps();
-  AbstractNavigationServer::callActionGetPath(goal);
-  checkDeactivateCostmaps();
-}
-
-void CostmapNavigationServer::callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal)
-{
-  checkActivateCostmaps();
-  AbstractNavigationServer::callActionExePath(goal);
-  checkDeactivateCostmaps();
-}
-
-void CostmapNavigationServer::callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal)
-{
-  checkActivateCostmaps();
-  AbstractNavigationServer::callActionRecovery(goal);
-  checkDeactivateCostmaps();
 }
 
 } /* namespace mbf_costmap_nav */

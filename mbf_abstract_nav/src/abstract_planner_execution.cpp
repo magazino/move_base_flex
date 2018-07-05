@@ -44,9 +44,8 @@ namespace mbf_abstract_nav
 {
 
 
-  AbstractPlannerExecution::AbstractPlannerExecution(boost::condition_variable &condition,
-                                                     const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr) :
-      condition_(condition), planner_(planner_ptr), state_(STOPPED), planning_(false),
+  AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr) :
+      planner_(planner_ptr), state_(STOPPED), planning_(false),
       has_new_start_(false), has_new_goal_(false), outcome_(255)
   {
     ros::NodeHandle private_nh("~");
@@ -199,7 +198,14 @@ namespace mbf_abstract_nav
     cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
 
     // returns false if cancel is not implemented or rejected by the planner (will run until completion)
-    return planner_->cancel();
+    if(!planner_->cancel())
+    {
+      ROS_WARN_STREAM("Cancel planning failed or is not supported by the plugin. "
+          << "Wait until the current planning finished!");
+
+      return false;
+    }
+    return true;
   }
 
   uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,

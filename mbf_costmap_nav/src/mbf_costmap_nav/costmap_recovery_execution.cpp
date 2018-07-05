@@ -44,12 +44,13 @@
 namespace mbf_costmap_nav
 {
 
-CostmapRecoveryExecution::CostmapRecoveryExecution(boost::condition_variable &condition,
-                                                   const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-                                                   const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                                                   CostmapPtr &global_costmap, CostmapPtr &local_costmap) :
-    AbstractRecoveryExecution(condition, recovery_ptr, tf_listener_ptr),
-    global_costmap_(global_costmap), local_costmap_(local_costmap)
+CostmapRecoveryExecution::CostmapRecoveryExecution(
+    const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
+    const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+    CostmapPtr &global_costmap, CostmapPtr &local_costmap)
+      : AbstractRecoveryExecution(recovery_ptr, tf_listener_ptr),
+        global_costmap_(global_costmap),
+        local_costmap_(local_costmap)
 {
 }
 

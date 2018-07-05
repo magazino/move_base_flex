@@ -63,9 +63,9 @@ public:
    * @param condition Thread sleep condition variable, to wake up connected threads
    * @param costmap Shared pointer to the costmap.
    */
-  CostmapPlannerExecution(boost::condition_variable &condition,
-                          const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-                          CostmapPtr &costmap);
+  CostmapPlannerExecution(
+      const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
+      CostmapPtr &costmap);
 
   /**
    * @brief Destructor

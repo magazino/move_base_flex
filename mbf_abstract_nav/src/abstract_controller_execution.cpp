@@ -46,10 +46,10 @@ namespace mbf_abstract_nav
 
 
   AbstractControllerExecution::AbstractControllerExecution(
-      boost::condition_variable &condition, const mbf_abstract_core::AbstractController::Ptr controller_ptr,
+      const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(STOPPED),
-      moving_(false), outcome_(255)
+      controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(STOPPED),
+      moving_(false), outcome_(255), cancel_(false)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -61,6 +61,8 @@ namespace mbf_abstract_nav
     private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
     private_nh.param("tf_timeout", tf_timeout_, 1.0);
+
+    current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
     // init cmd_vel publisher for the robot velocity t
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
@@ -99,6 +101,7 @@ namespace mbf_abstract_nav
     outcome_ = 255;
     message_ = "";
     moving_ = true;
+    cancel_ = false;
     thread_ = boost::thread(&AbstractControllerExecution::run, this);
     return true;
   }
@@ -255,6 +258,13 @@ namespace mbf_abstract_nav
 
         boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
 
+        if(cancel_){
+          setState(CANCELED);
+          condition_.notify_all();
+          moving_ = false;
+          return;
+        }
+
         // update plan dynamically
         if (hasNewPlan())
         {
@@ -277,7 +287,7 @@ namespace mbf_abstract_nav
             moving_ = false;
             return;
           }
-
+          current_goal_pub_.publish(plan.back());
         }
 
         // compute robot pose and store it in robot_pose_

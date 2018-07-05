@@ -89,8 +89,7 @@ namespace mbf_abstract_nav
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
     AbstractControllerExecution(
-        boost::condition_variable &condition,
-        const mbf_abstract_core::AbstractController::Ptr controller_ptr,
+        const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
         const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
 
     /**
@@ -131,6 +130,7 @@ namespace mbf_abstract_nav
       NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.
+      CANCELED,     ///< The controller has been canceled.
       STOPPED,      ///< The controller has been stopped!
       INTERNAL_ERROR///< An internal error occurred.
     };
@@ -187,6 +187,17 @@ namespace mbf_abstract_nav
      * @return true, if the robot should normally move, false otherwise
      */
     bool isMoving();
+
+    void waitForStateUpdate(boost::chrono::microseconds const &duration)
+    {
+      boost::mutex mutex;
+      boost::unique_lock<boost::mutex> lock(mutex);
+      condition_.wait_for(lock, duration);
+    }
+
+    void cancel(){
+      cancel_ = true;
+    }
 
   protected:
 
@@ -289,7 +300,7 @@ namespace mbf_abstract_nav
     std::vector<geometry_msgs::PoseStamped> plan_;
 
     //! condition variable to wake up control thread
-    boost::condition_variable &condition_;
+    boost::condition_variable condition_;
 
     //! the controlling thread object
     boost::thread thread_;
@@ -305,6 +316,9 @@ namespace mbf_abstract_nav
 
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;
+
+    //! publisher for the current goal
+    ros::Publisher current_goal_pub_;
 
     //! the current controller state
     AbstractControllerExecution::ControllerState state_;
@@ -335,6 +349,9 @@ namespace mbf_abstract_nav
 
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
+
+    //! flag for canceling controlling
+    bool cancel_;
   };
 
 } /* namespace mbf_abstract_nav */

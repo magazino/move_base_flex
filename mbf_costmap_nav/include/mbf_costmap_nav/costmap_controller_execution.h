@@ -66,10 +66,10 @@ public:
    * @param tf_listener_ptr Shared pointer to a common tf listener
    * @param costmap_ptr Shared pointer to the costmap.
    */
-  CostmapControllerExecution(boost::condition_variable &condition,
-                             const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
-                             const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-                             CostmapPtr &costmap_ptr);
+  CostmapControllerExecution(
+      const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
+      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      CostmapPtr &costmap_ptr);
 
   /**
    * @brief Destructor

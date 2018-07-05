@@ -57,26 +57,32 @@ include_directories(
 )
 
 add_library(${MBF_ABSTRACT_SERVER_LIB}
+  src/robot_Information.cpp
+  src/controller_action.cpp
+  src/planner_action.cpp
+  src/recovery_action.cpp
+  src/move_base_action.cpp
   src/abstract_navigation_server.cpp
   src/abstract_planner_execution.cpp
   src/abstract_controller_execution.cpp
   src/abstract_recovery_execution.cpp
-  )
+)
+
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${PROJECT_NAME}_gencfg)
 add_dependencies(${MBF_ABSTRACT_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${MBF_ABSTRACT_SERVER_LIB}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
-  )
+)
 
 install(TARGETS
   ${MBF_ABSTRACT_SERVER_LIB}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
+)
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  )
+)
 

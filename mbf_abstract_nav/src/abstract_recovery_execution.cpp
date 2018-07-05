@@ -48,10 +48,9 @@ namespace mbf_abstract_nav
 
 
   AbstractRecoveryExecution::AbstractRecoveryExecution(
-      boost::condition_variable &condition,
       mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED), canceled_(false)
+      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED), canceled_(false)
   {
   }
 

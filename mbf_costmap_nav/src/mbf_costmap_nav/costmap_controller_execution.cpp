@@ -43,12 +43,11 @@ namespace mbf_costmap_nav
 {
 
 CostmapControllerExecution::CostmapControllerExecution(
-    boost::condition_variable &condition,
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-    CostmapPtr &costmap_ptr) :
-    AbstractControllerExecution(condition, controller_ptr, tf_listener_ptr),
-    costmap_ptr_(costmap_ptr)
+    CostmapPtr &costmap_ptr)
+      : AbstractControllerExecution(controller_ptr, tf_listener_ptr),
+        costmap_ptr_(costmap_ptr)
 {
 }
 
@@ -56,10 +55,11 @@ CostmapControllerExecution::~CostmapControllerExecution()
 {
 }
 
-uint32_t CostmapControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,
-                                                        const geometry_msgs::TwistStamped& robot_velocity,
-                                                        geometry_msgs::TwistStamped& vel_cmd,
-                                                        std::string& message)
+uint32_t CostmapControllerExecution::computeVelocityCmd(
+    const geometry_msgs::PoseStamped& robot_pose,
+    const geometry_msgs::TwistStamped& robot_velocity,
+    geometry_msgs::TwistStamped& vel_cmd,
+    std::string& message)
 {
   ros::NodeHandle private_nh("~");
   private_nh.param("controller_lock_costmap", lock_costmap_, true);

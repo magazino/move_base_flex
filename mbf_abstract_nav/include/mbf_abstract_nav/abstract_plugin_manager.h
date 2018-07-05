@@ -24,7 +24,9 @@ class AbstractPluginManager
 
   bool hasPlugin(const std::string& name);
 
-  std::vector<std::string> getLoadedNames();
+  std::string getType(const std::string& name);
+
+  const std::vector<std::string>& getLoadedNames();
 
   typename PluginType::Ptr getPlugin(const std::string& name);
 

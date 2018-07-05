@@ -87,8 +87,7 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      */
-    AbstractPlannerExecution(boost::condition_variable &condition,
-                             const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr);
+    AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr);
 
     /**
      * @brief Destructor
@@ -209,6 +208,13 @@ namespace mbf_abstract_nav
      */
     void reconfigure(const MoveBaseFlexConfig &config);
 
+    void waitForStateUpdate(boost::chrono::milliseconds const &duration)
+    {
+      boost::mutex mutex;
+      boost::unique_lock<boost::mutex> lock(mutex);
+      condition_.wait_for(lock, duration);
+    }
+
   protected:
 
     //! the local planer to calculate the velocity command
@@ -224,7 +230,6 @@ namespace mbf_abstract_nav
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */
     virtual void run();
-
 
   private:
 
@@ -313,7 +318,7 @@ namespace mbf_abstract_nav
     bool planning_;
 
     //! condition variable to wake up server thread
-    boost::condition_variable &condition_;
+    boost::condition_variable condition_;
 
     //! thread for planning
     boost::thread thread_;
@@ -332,6 +337,7 @@ namespace mbf_abstract_nav
 
     //! dynamic reconfigure mutex for a thread safe communication
     boost::recursive_mutex configuration_mutex_;
+
   };
 
 } /* namespace mbf_abstract_nav */
