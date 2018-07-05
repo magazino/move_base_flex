@@ -125,8 +125,19 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
 {
   const mbf_msgs::GetPathGoal &goal = *(goal_handle.getGoal().get());
 
-  std::string std_planner_name; // TODO set std_controller_name;
-  std::string planner_name = goal.planner.empty() ? std_planner_name : goal.planner;
+  std::string planner_name;
+  if(!planner_plugin_manager_.getLoadedNames().empty())
+  {
+    planner_name = goal.planner.empty() ? planner_plugin_manager_.getLoadedNames().front() : goal.planner;
+  }
+  else
+  {
+    mbf_msgs::GetPathResult result;
+    result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
+    result.message = "No plugins loaded at all!";
+    goal_handle.setRejected(result, result.message);
+    return;
+  }
 
   if(!planner_plugin_manager_.hasPlugin(planner_name))
   {
@@ -134,6 +145,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
     result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.planner + "\"!";
     goal_handle.setRejected(result, result.message);
+    return;
   }
 
   mbf_abstract_core::AbstractPlanner::Ptr planner_plugin = planner_plugin_manager_.getPlugin(planner_name);
@@ -169,8 +181,19 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
 
-  std::string std_controller_name; // TODO set std_controller_name;
-  std::string controller_name = goal.controller.empty() ? std_controller_name : goal.controller;
+  std::string controller_name;
+  if(!controller_plugin_manager_.getLoadedNames().empty())
+  {
+    controller_name = goal.controller.empty() ? controller_plugin_manager_.getLoadedNames().front() : goal.controller;
+  }
+  else
+  {
+    mbf_msgs::ExePathResult result;
+    result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
+    result.message = "No plugins loaded at all!";
+    goal_handle.setRejected(result, result.message);
+    return;
+  }
 
   if(!controller_plugin_manager_.hasPlugin(controller_name))
   {
@@ -178,6 +201,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
     result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.controller + "\"!";
     goal_handle.setRejected(result, result.message);
+    return;
   }
 
   mbf_abstract_core::AbstractController::Ptr controller_plugin = controller_plugin_manager_.getPlugin(controller_name);
@@ -210,15 +234,29 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 {
   const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
 
-  std::string std_recovery_name; // TODO set std_recovery_name;
-  std::string recovery_name = goal.behavior.empty() ? std_recovery_name : goal.behavior;
+  std::string recovery_name;
+
+  if(!recovery_plugin_manager_.getLoadedNames().empty())
+  {
+    recovery_name = goal.behavior.empty() ? recovery_plugin_manager_.getLoadedNames().front() : goal.behavior;
+  }
+  else
+  {
+    mbf_msgs::RecoveryResult result;
+    result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
+    result.message = "No plugins loaded at all!";
+    goal_handle.setRejected(result, result.message);
+    return;
+  }
 
   if(!recovery_plugin_manager_.hasPlugin(recovery_name))
   {
     mbf_msgs::RecoveryResult result;
-    result.outcome = mbf_msgs::RecoveryResult::INVALID_NAME;
+    result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.behavior + "\"!";
     goal_handle.setRejected(result, result.message);
+    goal.
+    return;
   }
 
   mbf_abstract_core::AbstractRecovery::Ptr recovery_plugin = recovery_plugin_manager_.getPlugin(recovery_name);
