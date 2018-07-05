@@ -2,6 +2,7 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_H_
 
 #include <actionlib/server/action_server.h>
+#include <boost/bimap/bimap.hpp>
 #include "mbf_abstract_nav/robot_information.h"
 
 namespace mbf_abstract_nav{
@@ -11,6 +12,7 @@ template <typename Action, typename Execution>
 class AbstractAction
 {
  public:
+  typedef boost::bimaps::bimap<uint8_t, std::string> SlotGoalIdMap;
 
   typedef boost::shared_ptr<AbstractAction> Ptr;
 
@@ -28,8 +30,21 @@ class AbstractAction
       typename Execution::Ptr execution_ptr
   )
   {
+    typename SlotGoalIdMap::left_const_iterator slot
+        = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
+    if(slot != concurrency_slots_.left.end()) // if there is a plugin running on the same slot, cancel it // TODO make thread safe
+    {
+      typename std::map<const std::string, const typename Execution::Ptr>::const_iterator elem
+          = executions_.find(slot->second);
+      if(elem != executions_.end())
+      {
+        elem->second->cancel();
+      }
+      concurrency_slots_.left.erase(slot->first);
+    }
+    concurrency_slots_.insert(SlotGoalIdMap::value_type(goal_handle.getGoal()->concurrency_slot, goal_handle.getGoalID().id));
     executions_.insert(std::pair<const std::string, const typename Execution::Ptr>(goal_handle.getGoalID().id, execution_ptr));
-    threads_.create_thread(boost::bind(run_, boost::ref(goal_handle), boost::ref(*execution_ptr)));
+    threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, boost::ref(goal_handle), boost::ref(execution_ptr)));
   }
 
   void cancel(GoalHandle &goal_handle){
@@ -42,13 +57,20 @@ class AbstractAction
 
   }
 
+  void runAndCleanUp(GoalHandle goal_handle, typename Execution::Ptr execution_ptr){
+    run_(goal_handle, *execution_ptr);
+    executions_.erase(goal_handle.getGoalID().id);
+    concurrency_slots_.right.erase(goal_handle.getGoalID().id);
+  }
+
 
   const std::string &name_;
   const RobotInformation &robot_info_;
 
   RunMethod run_;
-  std::map<const std::string, const typename Execution::Ptr>executions_;
   boost::thread_group threads_;
+  std::map<const std::string, const typename Execution::Ptr> executions_;
+  SlotGoalIdMap concurrency_slots_;
 
 };
 
