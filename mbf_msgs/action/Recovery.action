@@ -2,6 +2,9 @@
 
 string behavior
 
+# use different slots for concurrency
+uint8 concurrency_slot
+
 ---
 
 # Predefined success codes:
@@ -11,7 +14,7 @@ uint8 SUCCESS        = 0
 uint8 FAILURE        = 150
 uint8 CANCELED       = 151
 uint8 PAT_EXCEEDED   = 152
-uint8 INVALID_NAME   = 153  # behavior name not recognized
+uint8 INVALID_PLUGIN = 153
 uint8 INTERNAL_ERROR = 154
 # 171..199 are reserved as plugin specific errors
 

@@ -5,6 +5,9 @@ nav_msgs/Path path
 # Controller to use; defaults to the first one specified on "controllers" parameter
 string controller
 
+# use different slots for concurrency
+uint8 concurrency_slot
+
 ---
 
 # Predefined success codes:
@@ -42,3 +45,4 @@ float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped  current_pose
 geometry_msgs/TwistStamped current_twist
+uint8 concurrency_slot

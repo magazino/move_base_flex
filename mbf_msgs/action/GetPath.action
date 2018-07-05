@@ -15,6 +15,9 @@ float64 tolerance
 # Planner to use; defaults to the first one specified on "planners" parameter
 string planner
 
+# use different slots for concurrency
+uint8 concurrency_slot
+
 ---
 
 # Predefined success codes:
