@@ -124,6 +124,10 @@ AbstractNavigationServer::~AbstractNavigationServer()
 void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle &goal_handle)
 {
   const mbf_msgs::GetPathGoal &goal = *(goal_handle.getGoal().get());
+  const geometry_msgs::Point &p = goal.target_pose.pose.position;
+  ROS_INFO_STREAM_NAMED("get_path", "called action get path with goal id \"" << goal_handle.getGoalID().id << "\", "
+      << "the planner \"" << goal.planner << "\", the concurrency slot \"" << static_cast<int>(goal.concurrency_slot) << "\", the goal"
+      << " position (" << p.x << ", " << p.y << ", " << p.z << ")");
 
   std::string planner_name;
   if(!planner_plugin_manager_.getLoadedNames().empty())
@@ -149,25 +153,30 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   }
 
   mbf_abstract_core::AbstractPlanner::Ptr planner_plugin = planner_plugin_manager_.getPlugin(planner_name);
-  ROS_INFO_STREAM("Using the planner \"" << planner_name << "\" of type \""
+  ROS_INFO_STREAM_NAMED("get_path", "Using the planner \"" << planner_name << "\" of type \""
                                          << planner_plugin_manager_.getType(planner_name) << "\"");
 
   // TODO check start and goal pose
   goal_handle.setAccepted();
 
-  if(!planner_plugin);
+  ROS_INFO_STREAM_NAMED("get_path", "Goal accepted!");
+  if(planner_plugin)
+  {
+    mbf_abstract_nav::AbstractPlannerExecution::Ptr planner_execution
+        = newPlannerExecution(planner_plugin);
+
+    //start another planning action
+    planner_action_.start(goal_handle, planner_execution);
+  }
+  else
   {
     mbf_msgs::GetPathResult result;
     result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"planner_plugin\" pointer should not be a null pointer!";
+    ROS_FATAL_STREAM_NAMED("get_path", result.message);
     goal_handle.setAborted(result, result.message);
   }
 
-  mbf_abstract_nav::AbstractPlannerExecution::Ptr planner_execution
-      = newPlannerExecution(planner_plugin);
-
-  //start another planning action
-  planner_action_.start(goal_handle, planner_execution);
 
 }
 
@@ -210,19 +219,22 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
   goal_handle.setAccepted();
 
-  if(!controller_plugin);
+  if(controller_plugin)
+  {
+    mbf_abstract_nav::AbstractControllerExecution::Ptr controller_execution
+        = newControllerExecution(controller_plugin);
+
+    // starts another controller action
+    controller_action_.start(goal_handle, controller_execution);
+  }
+  else
   {
     mbf_msgs::ExePathResult result;
     result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"controller_plugin\" pointer should not be a null pointer!";
+    ROS_FATAL_STREAM_NAMED("exe_path", result.message);
     goal_handle.setAborted(result, result.message);
   }
-
-  mbf_abstract_nav::AbstractControllerExecution::Ptr controller_execution
-      = newControllerExecution(controller_plugin);
-
-  // starts another controller action
-  controller_action_.start(goal_handle, controller_execution);
 }
 
 void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHandle &goal_handle)
@@ -264,20 +276,22 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 
   goal_handle.setAccepted();
 
-  if(!recovery_plugin);
+  if(recovery_plugin)
+  {
+    mbf_abstract_nav::AbstractRecoveryExecution::Ptr recovery_execution
+        = newRecoveryExecution(recovery_plugin);
+
+    // TODO start another recovery action
+    recovery_action_.start(goal_handle, recovery_execution);
+  }
+  else
   {
     mbf_msgs::RecoveryResult result;
     result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"recovery_plugin\" pointer should not be a null pointer!";
+    ROS_FATAL_STREAM_NAMED("recovery", result.message);
     goal_handle.setAborted(result, result.message);
   }
-
-  mbf_abstract_nav::AbstractRecoveryExecution::Ptr recovery_execution
-      = newRecoveryExecution(recovery_plugin);
-
-  // TODO start another recovery action
-  recovery_action_.start(goal_handle, recovery_execution);
-
 }
 
 void AbstractNavigationServer::cancelActionRecovery(ActionServerRecovery::GoalHandle &goal_handle)

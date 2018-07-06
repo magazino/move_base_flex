@@ -58,7 +58,10 @@ class AbstractAction
   }
 
   void runAndCleanUp(GoalHandle goal_handle, typename Execution::Ptr execution_ptr){
+    ROS_DEBUG_STREAM_NAMED("get_path", "New thread started for slot \""
+        << static_cast<int>(concurrency_slots_.right.find(goal_handle.getGoalID().id)->second) << "\".");
     run_(goal_handle, *execution_ptr);
+    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, cleanup maps...");
     executions_.erase(goal_handle.getGoalID().id);
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
   }

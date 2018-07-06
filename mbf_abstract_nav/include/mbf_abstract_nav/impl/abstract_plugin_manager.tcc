@@ -101,6 +101,7 @@ typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std:
       = plugins_.find(name);
   if(new_plugin != plugins_.end())
   {
+    ROS_INFO_STREAM("Found plugin with the name \"" << name << "\".");
     return new_plugin->second;
   }
   else

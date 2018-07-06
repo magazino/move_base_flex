@@ -19,7 +19,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
 {
   const mbf_msgs::GetPathGoal& goal = *(goal_handle.getGoal().get());
 
-  ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
+  ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_ << " for goal id \"" << goal_handle.getGoalID().id << "\".");
 
   mbf_msgs::GetPathResult result;
   geometry_msgs::PoseStamped start_pose;
@@ -58,7 +58,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
     }
   }
 
-  ROS_DEBUG_STREAM_NAMED(name_, "Starting the planning thread.");
+  ROS_INFO_STREAM_NAMED(name_, "Starting the planning thread.");
   if (!execution.startPlanning(start_pose, goal.target_pose, tolerance))
   {
     result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
