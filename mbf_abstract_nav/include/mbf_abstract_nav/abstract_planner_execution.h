@@ -277,7 +277,6 @@ namespace mbf_abstract_nav
      * @return An outcome number, see also the action definition in the GetPath.action file
      */
     virtual uint32_t makePlan(
-        const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
         const geometry_msgs::PoseStamped &start,
         const geometry_msgs::PoseStamped &goal,
         double tolerance,

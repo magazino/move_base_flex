@@ -294,15 +294,14 @@ namespace mbf_abstract_nav
     return planner_->cancel();
   }
 
-  uint32_t AbstractPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                                              const geometry_msgs::PoseStamped &start,
+  uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
                                               const geometry_msgs::PoseStamped &goal,
                                               double tolerance,
                                               std::vector<geometry_msgs::PoseStamped> &plan,
                                               double &cost,
                                               std::string &message)
   {
-    return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
   }
 
   void AbstractPlannerExecution::run()
@@ -362,7 +361,7 @@ namespace mbf_abstract_nav
         setState(PLANNING);
         if (make_plan)
         {
-          outcome_ = makePlan(planner_, current_start, current_goal, current_tolerance, plan, cost, message_);
+          outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
           success = outcome_ < 10;
 
           if (cancel_ && !isPatienceExceeded())

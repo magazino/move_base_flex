@@ -94,8 +94,7 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlug
 
 bool CostmapPlannerExecution::initPlugin(
     const std::string& name,
-    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
-)
+    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr)
 {
   mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
       = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
@@ -107,29 +106,27 @@ bool CostmapPlannerExecution::initPlugin(
     return false;
   }
 
+  ros::NodeHandle private_nh("~");
+  private_nh.param("planner_lock_costmap", lock_costmap_, true);
+
   costmap_planner_ptr->initialize(name, costmap_ptr_.get());
   ROS_INFO("Global planner plugin initialized.");
   return true;
 }
 
-uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                                           const geometry_msgs::PoseStamped start,
-                                           const geometry_msgs::PoseStamped goal,
+uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
+                                           const geometry_msgs::PoseStamped &goal,
                                            double tolerance,
                                            std::vector<geometry_msgs::PoseStamped> &plan,
                                            double &cost,
                                            std::string &message)
 {
-
-  ros::NodeHandle private_nh("~");
-  private_nh.param("planner_lock_costmap", lock_costmap_, true);
-
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
   }
-  return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */

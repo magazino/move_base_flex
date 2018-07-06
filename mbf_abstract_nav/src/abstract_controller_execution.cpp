@@ -267,11 +267,12 @@ namespace mbf_abstract_nav
   }
 
 
-  uint32_t AbstractControllerExecution::computeVelocityCmd(geometry_msgs::TwistStamped &vel_cmd, std::string& message)
+  uint32_t AbstractControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,
+                                                           const geometry_msgs::TwistStamped& robot_velocity,
+                                                           geometry_msgs::TwistStamped& vel_cmd,
+                                                           std::string& message)
   {
-    // TODO compute velocity
-    geometry_msgs::TwistStamped robot_velocity;
-    return controller_->computeVelocityCommands(robot_pose_, robot_velocity, vel_cmd, message);
+    return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
 
 
@@ -373,7 +374,6 @@ namespace mbf_abstract_nav
             moving_ = false;
             return;
           }
-
         }
 
         // compute robot pose and store it in robot_pose_
@@ -399,7 +399,8 @@ namespace mbf_abstract_nav
 
           // call plugin to compute the next velocity command
           geometry_msgs::TwistStamped cmd_vel_stamped;
-          outcome_ = computeVelocityCmd(cmd_vel_stamped, message_);
+          geometry_msgs::TwistStamped robot_velocity;   // TODO pass current velocity to the plugin!
+          outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_);
 
           if (outcome_ < 10)
           {
@@ -459,12 +460,13 @@ namespace mbf_abstract_nav
       // Controller thread interrupted; in most cases we have started a new plan
       // Can also be that robot is oscillating or we have exceeded planner patience
       ROS_DEBUG_STREAM("Controller thread interrupted!");
-      // publishZeroVelocity();  TODO comment this makes sense for continuous replanning
+      publishZeroVelocity();  // TODO this penalizes continuous replanning, so we must handle better (see #64)
       setState(STOPPED);
       condition_.notify_all();
       moving_ = false;
     }
-    catch (...){
+    catch (...)
+    {
       message_ = "Unknown error occurred: " + boost::current_exception_diagnostic_information();
       ROS_FATAL_STREAM(message_);
       setState(INTERNAL_ERROR);
