@@ -50,7 +50,7 @@ namespace mbf_abstract_nav
   AbstractRecoveryExecution::AbstractRecoveryExecution(
       mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED), canceled_(false)
+      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED), canceled_(false)
   {
   }
 
@@ -110,6 +110,7 @@ namespace mbf_abstract_nav
   {
     boost::lock_guard<boost::mutex> guard1(conf_mtx_);
     boost::lock_guard<boost::mutex> guard2(time_mtx_);
+    ROS_INFO_STREAM("Patience: " << patience_ << ", Start Time: " << start_time_ << " now: " << ros::Time::now());
     return (patience_ > ros::Duration(0)) && (ros::Time::now() - start_time_ > patience_);
   }
 

@@ -81,7 +81,11 @@ protected:
   /**
    * @brief Request plugin for a new velocity command. We override this method so we can lock the local costmap
    *        before calling the planner.
-   * @param vel_cmd_stamped current velocity command
+   * @param pose the current pose of the robot.
+   * @param velocity the current velocity of the robot.
+   * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
+   * @param message Optional more detailed outcome as a string.
+   * @return Result code as described on ExePath action result and plugin's header.
    */
   virtual uint32_t computeVelocityCmd(
       const geometry_msgs::PoseStamped& robot_pose,

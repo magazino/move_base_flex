@@ -57,17 +57,13 @@ CostmapPlannerExecution::~CostmapPlannerExecution()
 }
 
 uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                                           const geometry_msgs::PoseStamped start,
-                                           const geometry_msgs::PoseStamped goal,
+                                           const geometry_msgs::PoseStamped& start,
+                                           const geometry_msgs::PoseStamped& goal,
                                            double tolerance,
                                            std::vector<geometry_msgs::PoseStamped> &plan,
                                            double &cost,
                                            std::string &message)
 {
-
-  ros::NodeHandle private_nh("~");
-  private_nh.param("planner_lock_costmap", lock_costmap_, true);
-
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));

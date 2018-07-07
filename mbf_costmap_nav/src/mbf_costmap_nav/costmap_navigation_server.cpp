@@ -68,7 +68,7 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
   setup_reconfigure_(false), shutdown_costmaps_(false)
 {
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
-  // need it here to decide weather to start or not the costmaps on starting up
+  // need it here to decide whether to start or not the costmaps on starting up
   private_nh_.param("shutdown_costmaps", shutdown_costmaps_, false);
 
   // initialize costmaps (stopped if shutdown_costmaps is true)
