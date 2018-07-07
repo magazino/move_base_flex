@@ -76,7 +76,10 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
 
       default:
         result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown state in a move base flex recovery execution with the number: " + state_recovery_input;
+        std::stringstream ss;
+        ss << "Internal error: Unknown state in a move base flex recovery execution with the number: "
+           << static_cast<int>(state_recovery_input);
+        result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_, result.message);
         goal_handle.setAborted(result, result.message);
         recovery_active = false;

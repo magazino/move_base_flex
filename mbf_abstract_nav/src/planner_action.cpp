@@ -1,4 +1,5 @@
 #include "mbf_abstract_nav/planner_action.h"
+#include <sstream>
 
 namespace mbf_abstract_nav{
 
@@ -200,7 +201,10 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
 
       default:
         result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown state in a move base flex planner execution with the number: " + state_planning_input;
+        std::ostringstream ss;
+        ss << "Internal error: Unknown state in a move base flex planner execution with the number: "
+           << static_cast<int>(state_planning_input);
+        result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_, result.message);
         goal_handle.setAborted(result, result.message);
         planner_active = false;

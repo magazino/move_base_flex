@@ -39,6 +39,7 @@
  */
 
 #include <nav_msgs/Path.h>
+#include <sstream>
 #include "mbf_abstract_nav/abstract_navigation_server.h"
 
 namespace mbf_abstract_nav
