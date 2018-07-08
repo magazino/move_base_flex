@@ -361,14 +361,10 @@ void AbstractNavigationServer::reconfigure(
     config.restore_defaults = false;
   }
 
-  /* TODO reconfigure all executions
-  planning_ptr_->reconfigure(config);
-  controller_execution->reconfigure(config);
-  recovery_ptr_->reconfigure(config);
-  */
-  oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
-  oscillation_distance_ = config.oscillation_distance;
-  recovery_enabled_ = config.recovery_enabled;
+  planner_action_.reconfigureAll(config, level);
+  controller_action_.reconfigureAll(config, level);
+  recovery_action_.reconfigureAll(config, level);
+  move_base_action_.reconfigure(config, level);
 
   last_config_ = config;
 }

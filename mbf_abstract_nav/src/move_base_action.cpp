@@ -1,5 +1,6 @@
 #include "mbf_abstract_nav/move_base_action.h"
 #include <mbf_utility/navigation_utility.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 
 namespace mbf_abstract_nav{
 
@@ -20,6 +21,14 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
      replanning_rate_(private_nh_.param<double>("replanning_frequency", 1.0))
 {
 
+}
+
+void MoveBaseAction::reconfigure(
+    mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
+{
+  oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
+  oscillation_distance_ = config.oscillation_distance;
+  recovery_enabled_ = config.recovery_enabled;
 }
 
 void MoveBaseAction::cancel(GoalHandle &goal_handle)

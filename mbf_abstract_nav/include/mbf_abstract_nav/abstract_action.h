@@ -3,6 +3,7 @@
 
 #include <actionlib/server/action_server.h>
 #include <boost/bimap/bimap.hpp>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include "mbf_abstract_nav/robot_information.h"
 
 namespace mbf_abstract_nav{
@@ -66,6 +67,15 @@ class AbstractAction
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
   }
 
+  void reconfigureAll(
+      mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
+  {
+    typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
+    for(iter = executions_.begin(); iter != executions_.end(); ++iter)
+    {
+      iter->second->reconfigure(config);
+    }
+  }
 
   const std::string &name_;
   const RobotInformation &robot_info_;

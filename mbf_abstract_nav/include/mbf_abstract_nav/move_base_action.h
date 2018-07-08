@@ -7,6 +7,7 @@
 #include <mbf_msgs/GetPathAction.h>
 #include <mbf_msgs/ExePathAction.h>
 #include <mbf_msgs/RecoveryAction.h>
+#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include "mbf_abstract_nav/robot_information.h"
 
 
@@ -27,6 +28,9 @@ class MoveBaseAction{
   void start(GoalHandle &goal_handle);
 
   void cancel(GoalHandle &goal_handle);
+
+  void reconfigure(
+      mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level);
 
  protected:
 
