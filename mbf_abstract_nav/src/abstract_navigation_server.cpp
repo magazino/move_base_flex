@@ -160,7 +160,6 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   // TODO check start and goal pose
   goal_handle.setAccepted();
 
-  ROS_INFO_STREAM_NAMED("get_path", "Goal accepted!");
   if(planner_plugin)
   {
     mbf_abstract_nav::AbstractPlannerExecution::Ptr planner_execution
