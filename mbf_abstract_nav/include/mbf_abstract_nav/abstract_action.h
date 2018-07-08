@@ -62,7 +62,9 @@ class AbstractAction
     ROS_DEBUG_STREAM_NAMED("get_path", "New thread started for slot \""
         << static_cast<int>(concurrency_slots_.right.find(goal_handle.getGoalID().id)->second) << "\".");
     run_(goal_handle, *execution_ptr);
-    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, cleanup maps...");
+    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, wait for execution thread to stop.");
+    execution_ptr->join();
+    ROS_DEBUG_STREAM_NAMED("get_path", "Execution thread to stopped, cleaning up the execution object map and the slot map");
     executions_.erase(goal_handle.getGoalID().id);
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
   }

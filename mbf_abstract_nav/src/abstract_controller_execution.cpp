@@ -49,7 +49,7 @@ namespace mbf_abstract_nav
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
       controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
-      moving_(false), outcome_(255), cancel_(false)
+      moving_(false)
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -231,6 +231,19 @@ namespace mbf_abstract_nav
     return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
         && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
         && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
+  }
+
+  bool AbstractControllerExecution::cancel()
+  {
+    cancel_ = true;
+    // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
+    if(!controller_->cancel())
+    {
+      ROS_WARN_STREAM("Cancel controlling failed or is not supported by the plugin. "
+                          << "Wait until the current control cycle finished!");
+      return false;
+    }
+    return true;
   }
 
 

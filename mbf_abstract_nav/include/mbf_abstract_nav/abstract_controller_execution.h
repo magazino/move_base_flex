@@ -46,11 +46,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/chrono/duration.hpp>
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
@@ -59,6 +54,7 @@
 #include <mbf_abstract_core/abstract_controller.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
 
 namespace mbf_abstract_nav
 {
@@ -76,7 +72,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server controller_execution
  */
-  class AbstractControllerExecution
+  class AbstractControllerExecution : public AbstractExecutionBase
   {
   public:
 
@@ -115,6 +111,13 @@ namespace mbf_abstract_nav
     void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan);
 
     /**
+     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
+     * computation takes too much time.
+     * @return true, if the planner plugin tries / tried to cancel the planning step.
+     */
+    virtual bool cancel();
+
+    /**
      * @brief Internal states
      */
     enum ControllerState
@@ -140,16 +143,6 @@ namespace mbf_abstract_nav
      * @return current state, enum value of ControllerState
      */
     ControllerState getState();
-
-    /**
-     * @brief Gets the current plugin execution outcome
-     */
-    uint32_t getOutcome() { return outcome_; };
-
-    /**
-     * @brief Gets the current plugin execution message
-     */
-    std::string getMessage() { return message_; };
 
     /**
      * @brief Returns the time of the last plugin call
@@ -187,17 +180,6 @@ namespace mbf_abstract_nav
      * @return true, if the robot should normally move, false otherwise
      */
     bool isMoving();
-
-    void waitForStateUpdate(boost::chrono::microseconds const &duration)
-    {
-      boost::mutex mutex;
-      boost::unique_lock<boost::mutex> lock(mutex);
-      condition_.wait_for(lock, duration);
-    }
-
-    void cancel(){
-      cancel_ = true;
-    }
 
   protected:
 
@@ -242,13 +224,13 @@ namespace mbf_abstract_nav
     //! The time / duration of patience, before changing the state.
     ros::Duration patience_;
 
-  private:
-
-
     /**
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
     virtual void run();
+
+  private:
+
 
     /**
      * publishes a velocity command with zero values to stop the robot.
@@ -306,12 +288,6 @@ namespace mbf_abstract_nav
     //! the last set plan which is currently processed by the controller
     std::vector<geometry_msgs::PoseStamped> plan_;
 
-    //! condition variable to wake up control thread
-    boost::condition_variable condition_;
-
-    //! the controlling thread object
-    boost::thread thread_;
-
     //! the duration which corresponds with the controller frequency.
     boost::chrono::microseconds calling_duration_;
 
@@ -329,12 +305,6 @@ namespace mbf_abstract_nav
 
     //! the current controller state
     AbstractControllerExecution::ControllerState state_;
-
-    //! the last received plugin execution outcome
-    uint32_t outcome_;
-
-    //! the last received plugin execution message
-    std::string message_;
 
     //! time before a timeout used for tf requests
     double tf_timeout_;
@@ -357,8 +327,6 @@ namespace mbf_abstract_nav
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
 
-    //! flag for canceling controlling
-    bool cancel_;
   };
 
 } /* namespace mbf_abstract_nav */

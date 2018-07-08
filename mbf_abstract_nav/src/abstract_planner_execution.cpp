@@ -46,8 +46,7 @@ namespace mbf_abstract_nav
 
   AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr) :
       planner_(planner_ptr), state_(INITIALIZED), planning_(false),
-      has_new_start_(false), has_new_goal_(false), outcome_(255)
-  {
+      has_new_start_(false), has_new_goal_(false){
     ros::NodeHandle private_nh("~");
 
     // non-dynamically reconfigurable parameters
@@ -195,7 +194,7 @@ namespace mbf_abstract_nav
 
   bool AbstractPlannerExecution::cancel()
   {
-    cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
+    cancel_ = true; // force cancel immediately, as the call to cancel in the planner can take a while
 
     // returns false if cancel is not implemented or rejected by the planner (will run until completion)
     if(!planner_->cancel())

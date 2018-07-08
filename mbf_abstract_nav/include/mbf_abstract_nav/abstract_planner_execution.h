@@ -46,18 +46,13 @@
 #include <string>
 #include <vector>
 
-#include <boost/chrono/duration.hpp>
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_utility/navigation_utility.h>
 
-#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
 
 namespace mbf_abstract_nav
 {
@@ -76,7 +71,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server planner_execution
  */
-  class AbstractPlannerExecution
+  class AbstractPlannerExecution : public AbstractExecutionBase
   {
   public:
 
@@ -137,16 +132,6 @@ namespace mbf_abstract_nav
     PlanningState getState();
 
     /**
-     * @brief Gets the current plugin execution outcome
-     */
-    uint32_t getOutcome() { return outcome_; };
-
-    /**
-     * @brief Gets the current plugin execution message
-     */
-    std::string getMessage() { return message_; };
-
-    /**
      * @brief Gets planning frequency
      */
     double getFrequency() { return frequency_; };
@@ -162,7 +147,7 @@ namespace mbf_abstract_nav
      * computation takes too much time.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
      */
-    bool cancel();
+    virtual bool cancel();
 
     /**
      * @brief Sets a new goal pose for the planner execution
@@ -208,13 +193,6 @@ namespace mbf_abstract_nav
      */
     void reconfigure(const MoveBaseFlexConfig &config);
 
-    void waitForStateUpdate(boost::chrono::milliseconds const &duration)
-    {
-      boost::mutex mutex;
-      boost::unique_lock<boost::mutex> lock(mutex);
-      condition_.wait_for(lock, duration);
-    }
-
   protected:
 
     //! the local planer to calculate the velocity command
@@ -223,16 +201,12 @@ namespace mbf_abstract_nav
     //! the name of the loaded planner plugin
     std::string plugin_name_;
 
-    //! true, if the planner execution has been canceled.
-    bool cancel_;
-
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */
     virtual void run();
 
   private:
-
 
     /**
      * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
@@ -289,12 +263,6 @@ namespace mbf_abstract_nav
     //! current global plan cost
     double cost_;
 
-    //! the last received plugin execution outcome
-    uint32_t outcome_;
-
-    //! the last received plugin execution message
-    std::string message_;
-
     //! the current start pose used for planning
     geometry_msgs::PoseStamped start_;
 
@@ -315,12 +283,6 @@ namespace mbf_abstract_nav
 
     //! main cycle variable of the execution loop
     bool planning_;
-
-    //! condition variable to wake up server thread
-    boost::condition_variable condition_;
-
-    //! thread for planning
-    boost::thread thread_;
 
     //! robot frame used for computing the current robot pose
     std::string robot_frame_;

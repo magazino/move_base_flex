@@ -62,6 +62,7 @@ add_library(${MBF_ABSTRACT_SERVER_LIB}
   src/planner_action.cpp
   src/recovery_action.cpp
   src/move_base_action.cpp
+  src/abstract_execution_base.cpp
   src/abstract_navigation_server.cpp
   src/abstract_planner_execution.cpp
   src/abstract_controller_execution.cpp

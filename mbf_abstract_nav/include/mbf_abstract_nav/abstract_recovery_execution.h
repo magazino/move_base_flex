@@ -46,16 +46,14 @@
 #include <stdint.h>
 #include <vector>
 
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-
 #include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_recovery.h>
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
+
 
 namespace mbf_abstract_nav
 {
@@ -73,7 +71,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server recovery_execution
  */
-  class AbstractRecoveryExecution
+  class AbstractRecoveryExecution : public AbstractExecutionBase
   {
   public:
 
@@ -110,6 +108,13 @@ namespace mbf_abstract_nav
     bool isPatienceExceeded();
 
     /**
+     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
+     * computation takes too much time.
+     * @return true, if the planner plugin tries / tried to cancel the planning step.
+     */
+    virtual bool cancel();
+
+    /**
      * @brief internal state.
      */
     enum RecoveryState
@@ -136,19 +141,6 @@ namespace mbf_abstract_nav
      * @param config Current MoveBaseFlexConfig object. See the MoveBaseFlex.cfg definition.
      */
     void reconfigure(const MoveBaseFlexConfig &config);
-
-    /**
-     * @brief Tries to cancel the execution of the recovery behavior plugin.
-     * @return true, if the plugin tries or canceled the behavior, false otherwise.
-     */
-    bool cancel();
-
-    void waitForStateUpdate(boost::chrono::microseconds const &duration)
-    {
-      boost::mutex mutex;
-      boost::unique_lock<boost::mutex> lock(mutex);
-      condition_.wait_for(lock, duration);
-    }
 
   protected:
 
@@ -184,17 +176,8 @@ namespace mbf_abstract_nav
     //! recovery behavior start time
     ros::Time start_time_;
 
-    //! condition variable to wake up control thread
-    boost::condition_variable condition_;
-
-    //! thread for running recovery behaviors
-    boost::thread thread_;
-
     //! current internal state
     RecoveryState state_;
-
-    //! current canceled state
-    bool canceled_;
   };
 
 } /* namespace mbf_abstract_nav */

@@ -50,7 +50,7 @@ namespace mbf_abstract_nav
   AbstractRecoveryExecution::AbstractRecoveryExecution(
       mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED), canceled_(false)
+      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
   {
   }
 
@@ -98,12 +98,17 @@ namespace mbf_abstract_nav
     setState(STOPPED);
   }
 
-
   bool AbstractRecoveryExecution::cancel()
   {
-    canceled_ = true;
+    cancel_ = true;
     // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-    return behavior_->cancel();
+    if(!behavior_->cancel())
+    {
+      ROS_WARN_STREAM("Cancel recovering failed or is not supported by the plugin. "
+                          << "Wait until the current recovery behavior finished!");
+      return false;
+    }
+    return true;
   }
 
   bool AbstractRecoveryExecution::isPatienceExceeded()
@@ -116,7 +121,7 @@ namespace mbf_abstract_nav
 
   void AbstractRecoveryExecution::run()
   {
-    canceled_ = false; // (re)set the canceled state
+    cancel_ = false; // reset the canceled state
 
     time_mtx_.lock();
     start_time_ = ros::Time::now();
@@ -124,10 +129,8 @@ namespace mbf_abstract_nav
     setState(RECOVERING);
     try
     {
-      // TODO use outcome and message
-      std::string message;
-      uint32_t outcome = behavior_->runBehavior(message);
-      if (canceled_)
+      uint32_t outcome_ = behavior_->runBehavior(message_);
+      if (cancel_)
       {
         setState(CANCELED);
       }
