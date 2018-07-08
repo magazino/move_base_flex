@@ -20,6 +20,9 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
     state_recovery_input = execution.getState();
     switch (state_recovery_input)
     {
+      case AbstractRecoveryExecution::INITIALIZED:
+        execution.startRecovery();
+        break;
       case AbstractRecoveryExecution::STOPPED:
         // Recovery behavior doesn't support or didn't answered to cancel and has been ruthlessly stopped
         ROS_WARN_STREAM("Recovering \"" << goal.behavior << "\" exceeded the patience time and has been stopped!");

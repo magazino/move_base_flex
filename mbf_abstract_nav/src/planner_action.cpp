@@ -59,16 +59,6 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
     }
   }
 
-  ROS_INFO_STREAM_NAMED(name_, "Starting the planning thread.");
-  if (!execution.startPlanning(start_pose, goal.target_pose, tolerance))
-  {
-    result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
-    result.message = "Another thread is still planning!";
-    goal_handle.setAborted(result, result.message);
-    ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
-    return;
-  }
-
   AbstractPlannerExecution::PlanningState state_planning_input;
 
   std::vector<geometry_msgs::PoseStamped> plan, global_plan;
@@ -83,6 +73,14 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
     {
       case AbstractPlannerExecution::INITIALIZED:
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: initialized");
+        if (!execution.startPlanning(start_pose, goal.target_pose, tolerance))
+        {
+          result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
+          result.message = "Another thread is still planning!";
+          goal_handle.setAborted(result, result.message);
+          ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
+          planner_active = false;
+        }
         break;
 
       case AbstractPlannerExecution::STARTED:

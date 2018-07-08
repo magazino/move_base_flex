@@ -50,9 +50,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       << goal_pose.pose.position.y << ", "
       << goal_pose.pose.position.z << ")");
 
-  execution.setNewPlan(plan);
-  execution.startMoving();
-
   bool controller_active = true;
 
   geometry_msgs::PoseStamped oscillation_pose;
@@ -84,6 +81,11 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
     switch (state_moving_input)
     {
+      case AbstractControllerExecution::INITIALIZED:
+        execution.setNewPlan(plan);
+        execution.startMoving();
+        break;
+
       case AbstractControllerExecution::STOPPED:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been stopped!");
         controller_active = false;
