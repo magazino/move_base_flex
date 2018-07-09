@@ -14,6 +14,10 @@ class AbstractExecutionBase{
 
   AbstractExecutionBase();
 
+  virtual bool start();
+
+  virtual void stop();
+
   /**
    * @brief Cancel the plugin execution.
    * @return true, if the plugin tries / tried to cancel the computation.

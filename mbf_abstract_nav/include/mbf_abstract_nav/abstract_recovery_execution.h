@@ -91,17 +91,6 @@ namespace mbf_abstract_nav
     virtual ~AbstractRecoveryExecution();
 
     /**
-     * @brief starts the recovery behavior thread, which calls the recovery behavior plugin.
-     * @param name The name of the recovery behavior loaded.
-     */
-    void startRecovery();
-
-    /**
-     * @brief Tries to stop the recovery behavior thread by an interrupt
-     */
-    void stopRecovery();
-
-    /**
      * @brief Checks whether the patience was exceeded.
      * @return true, if the patience duration was exceeded.
      */

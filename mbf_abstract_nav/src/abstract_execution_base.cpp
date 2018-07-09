@@ -8,6 +8,20 @@ namespace mbf_abstract_nav{
 
   }
 
+  bool AbstractExecutionBase::start()
+  {
+    //setState(STARTED); // TODO
+    thread_ = boost::thread(&AbstractExecutionBase::run, this);
+    return true;
+  }
+
+  void AbstractExecutionBase::stop()
+  {
+    ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
+    thread_.interrupt();
+    //setState(STOPPED); // TODO
+  }
+
   void AbstractExecutionBase::join(){
     thread_.join();
   }

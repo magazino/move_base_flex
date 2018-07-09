@@ -157,9 +157,9 @@ namespace mbf_abstract_nav
   }
 
 
-  bool AbstractPlannerExecution::startPlanning(const geometry_msgs::PoseStamped &start,
-                                               const geometry_msgs::PoseStamped &goal,
-                                               double tolerance)
+  bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
+                                       const geometry_msgs::PoseStamped &goal,
+                                       double tolerance)
   {
     if (planning_)
     {
@@ -167,7 +167,6 @@ namespace mbf_abstract_nav
     }
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
     planning_ = true;
-    cancel_ = false;
     start_ = start;
     goal_ = goal;
     tolerance_ = tolerance;
@@ -178,17 +177,7 @@ namespace mbf_abstract_nav
     ROS_DEBUG_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
                                    << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
 
-    setState(STARTED);
-    thread_ = boost::thread(&AbstractPlannerExecution::run, this);
-    return true;
-  }
-
-
-  void AbstractPlannerExecution::stopPlanning()
-  {
-    // only useful if there are any interruption points in the global planner
-    ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
-    thread_.interrupt();
+    return AbstractExecutionBase::start();
   }
 
 

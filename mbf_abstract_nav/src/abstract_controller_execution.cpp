@@ -91,25 +91,15 @@ namespace mbf_abstract_nav
   }
 
 
-  bool AbstractControllerExecution::startMoving()
+  bool AbstractControllerExecution::start()
   {
     setState(STARTED);
     if (moving_)
     {
       return false; // thread is already running.
     }
-    outcome_ = 255;
-    message_ = "";
     moving_ = true;
-    cancel_ = false;
-    thread_ = boost::thread(&AbstractControllerExecution::run, this);
-    return true;
-  }
-
-
-  void AbstractControllerExecution::stopMoving()
-  {
-    thread_.interrupt();
+    return AbstractExecutionBase::start();
   }
 
 

@@ -20,8 +20,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
     state_recovery_input = execution.getState();
     switch (state_recovery_input)
     {
-      case AbstractRecoveryExecution::INITIALIZED:
-        execution.startRecovery();
+      case AbstractRecoveryExecution::INITIALIZED:execution.start();
         break;
       case AbstractRecoveryExecution::STOPPED:
         // Recovery behavior doesn't support or didn't answered to cancel and has been ruthlessly stopped
@@ -44,7 +43,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
           if (!execution.cancel())
           {
             ROS_WARN_STREAM("Cancel recovering \"" << goal.behavior << "\" failed or not supported; interrupt it!");
-            execution.stopRecovery();
+            execution.stop();
             //TODO goal_handle.setAborted
           }
         }

@@ -97,12 +97,7 @@ namespace mbf_abstract_nav
      * @brief Starts the controller, a valid plan should be given in advance.
      * @return false if the thread is already running, true if starting the controller succeeded!
      */
-    bool startMoving();
-
-    /**
-     * @brief Stopping the thread, by interrupting it
-     */
-    void stopMoving();
+    virtual bool start();
 
     /**
      * @brief Sets a new plan to the controller execution

@@ -84,20 +84,6 @@ namespace mbf_abstract_nav
     return state_;
   }
 
-
-  void AbstractRecoveryExecution::startRecovery()
-  {
-    setState(STARTED);
-    thread_ = boost::thread(&AbstractRecoveryExecution::run, this);
-  }
-
-
-  void AbstractRecoveryExecution::stopRecovery()
-  {
-    thread_.interrupt();
-    setState(STOPPED);
-  }
-
   bool AbstractRecoveryExecution::cancel()
   {
     cancel_ = true;

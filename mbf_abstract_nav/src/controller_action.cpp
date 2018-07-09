@@ -83,7 +83,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
     {
       case AbstractControllerExecution::INITIALIZED:
         execution.setNewPlan(plan);
-        execution.startMoving();
+        execution.start();
         break;
 
       case AbstractControllerExecution::STOPPED:
@@ -109,7 +109,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
           ROS_DEBUG_STREAM_NAMED(name_, "Local planner patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
           // We will try to stop the thread, but does nothing with DWA or TR controllers
-          execution.stopMoving();
+          execution.stop();
         }
         break;
 
@@ -170,7 +170,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
           {
             ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            execution.stopMoving();
+            execution.stop();
             controller_active = false;
             result.outcome = mbf_msgs::ExePathResult::OSCILLATION;
             result.message = "Oscillation detected!",

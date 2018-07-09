@@ -178,13 +178,8 @@ namespace mbf_abstract_nav
      * @param tolerance tolerance to the goal pose for the planning
      * @return true, if the planner thread has been started, false if the thread is already running.
      */
-    bool startPlanning(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                       double tolerance);
-
-    /**
-     * @brief Tries to stop the current planner execution by an thread interrupt.
-     */
-    void stopPlanning();
+    bool start(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
+               double tolerance);
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution, if a user uses dynamic reconfigure
