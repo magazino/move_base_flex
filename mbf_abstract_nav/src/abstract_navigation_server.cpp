@@ -124,6 +124,7 @@ AbstractNavigationServer::~AbstractNavigationServer()
 
 void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("get_path", "Start action \"get_path\"");
   const mbf_msgs::GetPathGoal &goal = *(goal_handle.getGoal().get());
   const geometry_msgs::Point &p = goal.target_pose.pose.position;
   ROS_INFO_STREAM_NAMED("get_path", "called action get path with goal id \"" << goal_handle.getGoalID().id << "\", "
@@ -140,6 +141,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
     mbf_msgs::GetPathResult result;
     result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
     result.message = "No plugins loaded at all!";
+    ROS_WARN_STREAM_NAMED("get_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -149,6 +151,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
     mbf_msgs::GetPathResult result;
     result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.planner + "\"!";
+    ROS_WARN_STREAM_NAMED("get_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -157,7 +160,6 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   ROS_INFO_STREAM_NAMED("get_path", "Using the planner \"" << planner_name << "\" of type \""
                                          << planner_plugin_manager_.getType(planner_name) << "\"");
 
-  // TODO check start and goal pose
   goal_handle.setAccepted();
 
   if(planner_plugin)
@@ -182,11 +184,13 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
 
 void AbstractNavigationServer::cancelActionGetPath(ActionServerGetPath::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
   planner_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Start action \"exe_path\"");
 
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
 
@@ -200,6 +204,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
     mbf_msgs::ExePathResult result;
     result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
     result.message = "No plugins loaded at all!";
+    ROS_WARN_STREAM_NAMED("exe_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -209,6 +214,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
     mbf_msgs::ExePathResult result;
     result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.controller + "\"!";
+    ROS_WARN_STREAM_NAMED("exe_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -239,11 +245,13 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
 void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
   controller_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("recovery", "Start action \"recovery\"");
   const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
 
   std::string recovery_name;
@@ -257,6 +265,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     mbf_msgs::RecoveryResult result;
     result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
     result.message = "No plugins loaded at all!";
+    ROS_WARN_STREAM_NAMED("recovery", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -266,6 +275,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     mbf_msgs::RecoveryResult result;
     result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.behavior + "\"!";
+    ROS_WARN_STREAM_NAMED("recovery", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -281,7 +291,6 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     mbf_abstract_nav::AbstractRecoveryExecution::Ptr recovery_execution
         = newRecoveryExecution(recovery_plugin);
 
-    // TODO start another recovery action
     recovery_action_.start(goal_handle, recovery_execution);
   }
   else
@@ -296,16 +305,19 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 
 void AbstractNavigationServer::cancelActionRecovery(ActionServerRecovery::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
   recovery_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("move_base", "Start action \"move_base\"");
   move_base_action_.start(goal_handle);
 }
 
 void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle)
 {
+  ROS_DEBUG_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
   move_base_action_.cancel(goal_handle);
 }
 

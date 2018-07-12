@@ -25,6 +25,8 @@ class MoveBaseAction{
 
   MoveBaseAction(const std::string &name, const RobotInformation &robot_info, const std::vector<std::string> &controllers);
 
+  ~MoveBaseAction();
+
   void start(GoalHandle &goal_handle);
 
   void cancel(GoalHandle &goal_handle);

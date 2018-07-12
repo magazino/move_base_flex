@@ -20,7 +20,10 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
      recovery_trigger_(NONE),
      replanning_rate_(private_nh_.param<double>("replanning_frequency", 1.0))
 {
+}
 
+MoveBaseAction::~MoveBaseAction()
+{
 }
 
 void MoveBaseAction::reconfigure(
@@ -55,6 +58,8 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
 {
   cancel_ = false;
 
+  goal_handle.setAccepted();
+
   goal_handle_ = goal_handle;
 
   ROS_DEBUG_STREAM_NAMED("move_base", "Start action "  << "move_base");
@@ -62,53 +67,11 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle.getGoal().get());
 
   mbf_msgs::MoveBaseResult move_base_result;
-  mbf_msgs::ExePathResult exe_path_result;
-  mbf_msgs::RecoveryResult recovery_result;
-
-  // TODO load default plugins
 
   oscillation_timeout_.fromSec(private_nh_.param<double>("osciallation_timeout", 0));
   private_nh_.param("osciallation_distance", oscillation_distance_, 0.3);
   private_nh_.param("recovery_enabled", recovery_enabled_, true);
 
-
-  /*
-  if(!goal.controller.empty() && !controller_plugin_manager_.hasPlugin(goal->controller))
-  {
-    std::stringstream ss;
-    ss << "No controller with the name \"" << goal->controller << "\" loaded! ";
-    ROS_ERROR_STREAM_NAMED("move_base", ss.str() << " Please load the controller before using it!");
-    move_base_result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
-    move_base_result.message = ss.str();
-    action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
-    return;
-  }
-
-  if(!goal->planner.empty() && !planner_plugin_manager_.hasPlugin(goal->planner)){
-    std::stringstream ss;
-    ss << "No planner with the name \"" << goal->planner << "\" loaded! ";
-    ROS_ERROR_STREAM_NAMED("move_base", ss.str() << " Please load the planner before using it!");
-    move_base_result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
-    move_base_result.message = ss.str();
-    action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
-    return;
-  }
-
-  for(std::vector<std::string>::const_iterator iter = goal->recovery_behaviors.begin();
-      iter != goal->recovery_behaviors.end(); ++iter)
-  {
-    if(!recovery_plugin_manager_.hasPlugin(*iter))
-    {
-      std::stringstream ss;
-      ss << "No recovery behavior with the name \"" << *iter << "\" loaded! ";
-      ROS_ERROR_STREAM_NAMED("move_base", ss.str() << " Please load the behaviors before using them!");
-      move_base_result.outcome = mbf_msgs::RecoveryResult::INVALID_NAME;
-      move_base_result.message = ss.str();
-      action_server_move_base_ptr_->setAborted(move_base_result, ss.str());
-      return;
-    }
-  }
-*/
   get_path_goal_.target_pose = goal.target_pose;
   get_path_goal_.use_start_pose = false; // use the robot pose
   get_path_goal_.planner = goal.planner;
@@ -124,7 +87,7 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
 
   geometry_msgs::PoseStamped robot_pose;
   // get the current robot pose only at the beginning, as exe_path will keep updating it as we move
-  if (robot_info_.getRobotPose(robot_pose))
+  if (!robot_info_.getRobotPose(robot_pose))
   {
     ROS_ERROR_STREAM_NAMED("move_base", "Could not get the current robot pose!");
     move_base_result.message = "Could not get the current robot pose!";
@@ -158,11 +121,18 @@ void MoveBaseAction::actionExePathActive()
   // we create a navigation-level oscillation detection independent of the exe_path action one,
   // as the later doesn't handle oscillations created by quickly failing repeated plans
 
-  ros::Time last_oscillation_reset = ros::Time::now();
-  bool canceled = false;
+  ROS_INFO_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
 
-  while(!action_client_exe_path_.getState().isDone() && !canceled)
+  ros::Time last_oscillation_reset = ros::Time::now();
+
+  bool canceled = false;
+  bool done = action_client_get_path_.getState().isDone();
+
+  while(!done && !canceled)
   {
+    ROS_INFO_STREAM_THROTTLE_NAMED(3, "move_base", "Action \"exe_path\" is active in state: \""
+        << action_client_get_path_.getState().toString() << "\"");
+
     geometry_msgs::PoseStamped oscillation_pose = robot_pose_;
 
     // if oscillation detection is enabled by osciallation_timeout != 0
@@ -223,6 +193,7 @@ void MoveBaseAction::actionExePathActive()
       current_recovery_behavior_ = recovery_behaviors_.begin();
       recovery_trigger_ = NONE;
     }
+    done = action_client_get_path_.getState().isDone();
   }
 }
 
@@ -264,7 +235,7 @@ void MoveBaseAction::actionGetPathDone(
 
       if (recovery_trigger_ == GET_PATH)
       {
-        ROS_INFO_NAMED("move_base", "Recovered from planner failure: restart recovery behaviors");
+        ROS_WARN_NAMED("move_base", "Recovered from planner failure: restart recovery behaviors");
         current_recovery_behavior_ = recovery_behaviors_.begin();
         recovery_trigger_ = NONE;
       }
@@ -275,12 +246,13 @@ void MoveBaseAction::actionGetPathDone(
           boost::bind(&MoveBaseAction::actionExePathActive, this),
           boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
 
+      ROS_DEBUG_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
       // replanning
       action_client_get_path_.sendGoal(
           get_path_goal_,
           boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
       );
-
+      
       action_state_ = EXE_PATH;
       break;
 
@@ -365,6 +337,8 @@ void MoveBaseAction::actionExePathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::ExePathResultConstPtr &result_ptr)
 {
+  ROS_INFO_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
+
   const mbf_msgs::ExePathResult& result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
@@ -585,6 +559,8 @@ void MoveBaseAction::actionGetPathReplanningDone(
   replanning_rate_.sleep(); // TODO is there a better way?
 
   if(cancel_) return;
+
+  ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
 
   action_client_get_path_.sendGoal(
       get_path_goal_,

@@ -45,7 +45,7 @@ class AbstractAction
     }
     concurrency_slots_.insert(SlotGoalIdMap::value_type(goal_handle.getGoal()->concurrency_slot, goal_handle.getGoalID().id));
     executions_.insert(std::pair<const std::string, const typename Execution::Ptr>(goal_handle.getGoalID().id, execution_ptr));
-    threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, boost::ref(goal_handle), boost::ref(execution_ptr)));
+    threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, goal_handle, execution_ptr));
   }
 
   void cancel(GoalHandle &goal_handle){
@@ -62,9 +62,9 @@ class AbstractAction
     ROS_DEBUG_STREAM_NAMED("get_path", "New thread started for slot \""
         << static_cast<int>(concurrency_slots_.right.find(goal_handle.getGoalID().id)->second) << "\".");
     run_(goal_handle, *execution_ptr);
-    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, wait for execution thread to stop.");
+    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, wait for execution thread to finish.");
     execution_ptr->join();
-    ROS_DEBUG_STREAM_NAMED("get_path", "Execution thread to stopped, cleaning up the execution object map and the slot map");
+    ROS_DEBUG_STREAM_NAMED("get_path", "Execution thread stopped, cleaning up the execution object map and the slot map");
     executions_.erase(goal_handle.getGoalID().id);
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
   }
