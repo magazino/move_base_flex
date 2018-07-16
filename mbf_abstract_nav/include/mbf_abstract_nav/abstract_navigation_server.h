@@ -134,6 +134,8 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      */
     virtual ~AbstractNavigationServer();
 
+    virtual void stop();
+
     //! shared pointer to a new @ref planner_execution "PlannerExecution"
     virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
         const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);

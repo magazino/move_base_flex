@@ -79,6 +79,8 @@ public:
 
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
 
+  typedef boost::shared_ptr<CostmapNavigationServer> Ptr;
+
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
@@ -89,6 +91,8 @@ public:
    * @brief Destructor
    */
   virtual ~CostmapNavigationServer();
+
+  virtual void stop();
 
 private:
 

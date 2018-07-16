@@ -15,6 +15,7 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
      oscillation_distance_(0),
      recovery_enabled_(true),
      cancel_(false),
+     exe_path_canceled_(false),
      behaviors_(behaviors),
      action_state_(NONE),
      recovery_trigger_(NONE),
@@ -34,7 +35,7 @@ void MoveBaseAction::reconfigure(
   recovery_enabled_ = config.recovery_enabled;
 }
 
-void MoveBaseAction::cancel(GoalHandle &goal_handle)
+void MoveBaseAction::cancel()
 {
   cancel_ = true;
 
@@ -125,13 +126,12 @@ void MoveBaseAction::actionExePathActive()
 
   ros::Time last_oscillation_reset = ros::Time::now();
 
-  bool canceled = false;
-  bool done = action_client_get_path_.getState().isDone();
+  bool done = action_client_exe_path_.getState().isDone();
 
-  while(!done && !canceled)
+  while(!done && !exe_path_canceled_)
   {
     ROS_INFO_STREAM_THROTTLE_NAMED(3, "move_base", "Action \"exe_path\" is active in state: \""
-        << action_client_get_path_.getState().toString() << "\"");
+        << action_client_exe_path_.getState().toString() << "\"");
 
     geometry_msgs::PoseStamped oscillation_pose = robot_pose_;
 
@@ -158,7 +158,7 @@ void MoveBaseAction::actionExePathActive()
         ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
         last_oscillation_reset = ros::Time::now();
         action_client_exe_path_.cancelGoal();
-        canceled = true;
+        exe_path_canceled_ = true;
 
         if(!recovery_behaviors_.empty() && recovery_enabled_)
         {
@@ -193,7 +193,7 @@ void MoveBaseAction::actionExePathActive()
       current_recovery_behavior_ = recovery_behaviors_.begin();
       recovery_trigger_ = NONE;
     }
-    done = action_client_get_path_.getState().isDone();
+    done = action_client_exe_path_.getState().isDone();
   }
 }
 
@@ -246,13 +246,16 @@ void MoveBaseAction::actionGetPathDone(
           boost::bind(&MoveBaseAction::actionExePathActive, this),
           boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
 
-      ROS_DEBUG_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+
+
+      ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
       // replanning
+
       action_client_get_path_.sendGoal(
           get_path_goal_,
           boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
       );
-      
+
       action_state_ = EXE_PATH;
       break;
 
@@ -337,7 +340,7 @@ void MoveBaseAction::actionExePathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::ExePathResultConstPtr &result_ptr)
 {
-  ROS_INFO_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
+  ROS_DEBUG_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
 
   const mbf_msgs::ExePathResult& result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
@@ -350,17 +353,14 @@ void MoveBaseAction::actionExePathDone(
   move_base_result.angle_to_goal = result.angle_to_goal;
   move_base_result.final_pose = result.final_pose;
 
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Current state:" << state.toString());
+
   switch (state.state_)
   {
-
     case actionlib::SimpleClientGoalState::SUCCEEDED:
-      ROS_DEBUG_STREAM_NAMED("move_base", "Action \""
-          << "move_base" << "\" received a result from \""
-          << "exe_path" << "\": " << state.getText());
-      ROS_DEBUG_STREAM_NAMED("move_base", "Action \"" << "move_base" << "\" succeeded.");
-
       move_base_result.outcome = mbf_msgs::MoveBaseResult::SUCCESS;
-      move_base_result.message = "MoveBase action succeeded!";
+      move_base_result.message = "Action \"move_base\" succeeded!";
+      ROS_INFO_STREAM_NAMED("move_base", move_base_result.message);
       goal_handle_.setSucceeded(move_base_result, move_base_result.message);
       action_state_ = SUCCEEDED;
       break;
@@ -546,21 +546,37 @@ void MoveBaseAction::actionGetPathReplanningDone(
 {
   if (action_state_ == SUCCEEDED) return; // finished move base action
 
+
   if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
-    exe_path_goal_.path = result.get()->path;
+
+    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded with a new plan.");
+    exe_path_goal_.path = result->path;
+
+    ROS_DEBUG_STREAM_NAMED("move_base", "Canceling the current \"exe_path\" goal!");
+    exe_path_canceled_ = true;
+    action_client_exe_path_.cancelGoal();
+
+    ROS_DEBUG_STREAM_NAMED("move_base", "Canceled the current \"exe_path\" goal!");
+
+    action_client_exe_path_.waitForResult(ros::Duration(2.0));
+
+    ROS_INFO_STREAM_NAMED("move_base", "Sending a new action goal to \"exe_path\" with the new plan, "
+        "because to replanning is active!");
+    mbf_msgs::ExePathGoal goal(exe_path_goal_);
     action_client_exe_path_.sendGoal(
-        exe_path_goal_,
+        goal,
         boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
         boost::bind(&MoveBaseAction::actionExePathActive, this),
         boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
+
   }
 
   replanning_rate_.sleep(); // TODO is there a better way?
 
   if(cancel_) return;
 
-  ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+  ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
 
   action_client_get_path_.sendGoal(
       get_path_goal_,

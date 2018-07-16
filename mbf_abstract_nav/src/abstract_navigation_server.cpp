@@ -124,12 +124,9 @@ AbstractNavigationServer::~AbstractNavigationServer()
 
 void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("get_path", "Start action \"get_path\"");
+  ROS_INFO_STREAM_NAMED("get_path", "Start action \"get_path\"");
   const mbf_msgs::GetPathGoal &goal = *(goal_handle.getGoal().get());
   const geometry_msgs::Point &p = goal.target_pose.pose.position;
-  ROS_INFO_STREAM_NAMED("get_path", "called action get path with goal id \"" << goal_handle.getGoalID().id << "\", "
-      << "the planner \"" << goal.planner << "\", the concurrency slot \"" << static_cast<int>(goal.concurrency_slot) << "\", the goal"
-      << " position (" << p.x << ", " << p.y << ", " << p.z << ")");
 
   std::string planner_name;
   if(!planner_plugin_manager_.getLoadedNames().empty())
@@ -184,13 +181,13 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
 
 void AbstractNavigationServer::cancelActionGetPath(ActionServerGetPath::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
+  ROS_INFO_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
   planner_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("exe_path", "Start action \"exe_path\"");
+  ROS_INFO_STREAM_NAMED("exe_path", "Start action \"exe_path\"");
 
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
 
@@ -245,13 +242,13 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
 void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
+  ROS_INFO_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
   controller_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("recovery", "Start action \"recovery\"");
+  ROS_INFO_STREAM_NAMED("recovery", "Start action \"recovery\"");
   const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
 
   std::string recovery_name;
@@ -305,20 +302,20 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 
 void AbstractNavigationServer::cancelActionRecovery(ActionServerRecovery::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
+  ROS_INFO_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
   recovery_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("move_base", "Start action \"move_base\"");
+  ROS_INFO_STREAM_NAMED("move_base", "Start action \"move_base\"");
   move_base_action_.start(goal_handle);
 }
 
 void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
-  move_base_action_.cancel(goal_handle);
+  ROS_INFO_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
+  move_base_action_.cancel();
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
@@ -379,6 +376,13 @@ void AbstractNavigationServer::reconfigure(
   move_base_action_.reconfigure(config, level);
 
   last_config_ = config;
+}
+
+void AbstractNavigationServer::stop(){
+  planner_action_.cancelAll();
+  controller_action_.cancelAll();
+  recovery_action_.cancelAll();
+  move_base_action_.cancel();
 }
 
 void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::string &message,

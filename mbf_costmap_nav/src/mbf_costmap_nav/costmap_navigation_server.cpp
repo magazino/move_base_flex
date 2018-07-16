@@ -85,12 +85,6 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
     global_costmap_active_ = false;
   }
 
-  // initialize all plugins
-  initializeServerComponents();
-
-  // start all action servers
-  startActionServers();
-
   // advertise services and current goal topic
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
                                                       &CostmapNavigationServer::callServiceCheckPoseCost, this);
@@ -100,6 +94,13 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
+
+  // initialize all plugins
+  initializeServerComponents();
+
+  // start all action servers
+  startActionServers();
+
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
@@ -288,10 +289,17 @@ bool CostmapNavigationServer::initializeRecoveryPlugin(
 }
 
 
-CostmapNavigationServer::~CostmapNavigationServer()
+void CostmapNavigationServer::stop()
 {
+  AbstractNavigationServer::stop();
+  ROS_INFO_STREAM_NAMED("mbf_costmap_nav", "Stopping local and global costmap for shutdown");
   local_costmap_ptr_->stop();
   global_costmap_ptr_->stop();
+}
+
+
+CostmapNavigationServer::~CostmapNavigationServer()
+{
 }
 
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)

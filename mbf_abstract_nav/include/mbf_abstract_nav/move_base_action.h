@@ -29,7 +29,7 @@ class MoveBaseAction{
 
   void start(GoalHandle &goal_handle);
 
-  void cancel(GoalHandle &goal_handle);
+  void cancel();
 
   void reconfigure(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level);
@@ -61,6 +61,8 @@ class MoveBaseAction{
   mbf_msgs::ExePathGoal exe_path_goal_;
   mbf_msgs::GetPathGoal get_path_goal_;
   mbf_msgs::RecoveryGoal recovery_goal_;
+
+  
 
   ros::Duration oscillation_timeout_;
 
@@ -111,6 +113,8 @@ class MoveBaseAction{
 
   MoveBaseActionState action_state_;
   MoveBaseActionState recovery_trigger_;
+
+  bool exe_path_canceled_;
 
 };
 

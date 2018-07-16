@@ -128,7 +128,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
         plan = execution.getPlan();
-        publishPath(result.path.poses);
+        publishPath(plan);
 
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << cost);
 

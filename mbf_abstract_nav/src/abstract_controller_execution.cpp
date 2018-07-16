@@ -300,6 +300,7 @@ namespace mbf_abstract_nav
         // ask planner if the goal is reached
         if (reachedGoalCheck())
         {
+          ROS_DEBUG_STREAM_NAMED("abstract_controller_execution", "Reached the goal!");
           setState(ARRIVED_GOAL);
           // goal reached, tell it the controller
           condition_.notify_all();

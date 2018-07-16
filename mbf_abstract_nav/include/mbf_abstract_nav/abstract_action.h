@@ -59,14 +59,16 @@ class AbstractAction
   }
 
   void runAndCleanUp(GoalHandle goal_handle, typename Execution::Ptr execution_ptr){
-    ROS_DEBUG_STREAM_NAMED("get_path", "New thread started for slot \""
+    ROS_DEBUG_STREAM("New thread started for slot \""
         << static_cast<int>(concurrency_slots_.right.find(goal_handle.getGoalID().id)->second) << "\".");
     run_(goal_handle, *execution_ptr);
-    ROS_DEBUG_STREAM_NAMED("get_path", "Finished action run method, wait for execution thread to finish.");
+    ROS_DEBUG_STREAM("Finished action run method, wait for execution thread to finish.");
     execution_ptr->join();
-    ROS_DEBUG_STREAM_NAMED("get_path", "Execution thread stopped, cleaning up the execution object map and the slot map");
+    ROS_DEBUG_STREAM("Execution thread stopped, cleaning up the execution object map and the slot map");
     executions_.erase(goal_handle.getGoalID().id);
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
+    ROS_DEBUG_STREAM("Exiting run method with goal status: " << goal_handle.getGoalStatus().text << " and code: "
+        << static_cast<int>(goal_handle.getGoalStatus().status));
   }
 
   void reconfigureAll(
@@ -77,6 +79,17 @@ class AbstractAction
     {
       iter->second->reconfigure(config);
     }
+  }
+
+  void cancelAll()
+  {
+    ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
+    typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
+    for(iter = executions_.begin(); iter != executions_.end(); ++iter)
+    {
+      iter->second->cancel();
+    }
+    threads_.join_all();
   }
 
   const std::string &name_;

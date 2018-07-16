@@ -96,6 +96,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         result.outcome = mbf_msgs::ExePathResult::CANCELED;
         result.message = "Local planner canceled";
         goal_handle.setCanceled(result, result.message);
+        controller_active = false;
         break;
 
       case AbstractControllerExecution::STARTED:
