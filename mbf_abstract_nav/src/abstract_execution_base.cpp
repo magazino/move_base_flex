@@ -17,7 +17,7 @@ namespace mbf_abstract_nav{
 
   void AbstractExecutionBase::stop()
   {
-    ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
+    ROS_WARN_STREAM("Trying to stop the planning rigorously by interrupting the thread!");
     thread_.interrupt();
     //setState(STOPPED); // TODO
   }

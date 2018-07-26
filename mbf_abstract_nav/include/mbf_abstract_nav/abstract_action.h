@@ -61,7 +61,7 @@ class AbstractAction
 
   void runAndCleanUp(GoalHandle goal_handle, typename Execution::Ptr execution_ptr){
     run_(goal_handle, *execution_ptr);
-    ROS_DEBUG_STREAM("Finished action run method, wait for execution thread to finish.");
+    ROS_DEBUG_STREAM("Finished action run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM("Execution thread stopped, cleaning up the execution object map and the slot map");
     boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
