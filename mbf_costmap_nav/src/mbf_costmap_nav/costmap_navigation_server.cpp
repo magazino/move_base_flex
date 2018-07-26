@@ -133,32 +133,29 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
 mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string& planner_type)
 {
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
-  // try to load and init global planner
-  ROS_DEBUG("Load global planner plugin.");
-
   try
   {
     planner_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractPlanner>(
         planner_plugin_loader_.createInstance(planner_type));
     std::string planner_name = planner_plugin_loader_.getName(planner_type);
-    ROS_INFO_STREAM("MBF_core-based global planner plugin " << planner_name << " loaded");
+    ROS_DEBUG_STREAM("mbf_costmap_core-based planner plugin " << planner_name << " loaded.");
   }
-  catch (const pluginlib::PluginlibException &ex)
+  catch (const pluginlib::PluginlibException &ex_mbf_core)
   {
-    ROS_INFO_STREAM("Failed to load the " << planner_type << " planner as a mbf_abstract_core-based plugin."
-                                          << " Try to load as a nav_core-based plugin. Exception: " << ex.what());
+    ROS_DEBUG_STREAM("Failed to load the " << planner_type << " planner as a mbf_costmap_core-based plugin."
+                                          << " Try to load as a nav_core-based plugin. " << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
       boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_planner_plugin_loader_.createInstance(planner_type);
       planner_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperGlobalPlanner>(nav_core_planner_ptr);
       std::string planner_name = nav_core_planner_plugin_loader_.getName(planner_type);
-      ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name << " loaded");
+      ROS_DEBUG_STREAM("nav_core-based planner plugin " << planner_name << " loaded");
     }
-    catch (const pluginlib::PluginlibException &ex)
+    catch (const pluginlib::PluginlibException &ex_nav_core)
     {
       ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it's properly registered"
-                                             << " and that the containing library is built? Exception: " << ex.what());
+          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
     }
   }
 
@@ -172,16 +169,16 @@ bool CostmapNavigationServer::initializePlannerPlugin(
 {
   mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
       = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
-  ROS_INFO_STREAM("Initialize planner \"" << name << "\".");
+  ROS_DEBUG_STREAM("Initialize planner \"" << name << "\".");
 
   if (!global_costmap_ptr_)
   {
-    ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
+    ROS_FATAL_STREAM("The costmap pointer has not been initialized!");
     return false;
   }
 
   costmap_planner_ptr->initialize(name, global_costmap_ptr_.get());
-  ROS_INFO("Global planner plugin initialized.");
+  ROS_DEBUG("Planner plugin initialized.");
   return true;
 }
 
@@ -189,18 +186,16 @@ bool CostmapNavigationServer::initializePlannerPlugin(
 mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string& controller_type)
 {
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
-  // try to load and init local planner
-  ROS_DEBUG("Load local planner plugin.");
   try
   {
     controller_ptr = controller_plugin_loader_.createInstance(controller_type);
     std::string controller_name = controller_plugin_loader_.getName(controller_type);
-    ROS_INFO_STREAM("MBF_core-based local planner plugin " << controller_name << " loaded");
+    ROS_DEBUG_STREAM("mbf_costmap_core-based controller plugin " << controller_name << " loaded.");
   }
-  catch (const pluginlib::PluginlibException &ex)
+  catch (const pluginlib::PluginlibException &ex_mbf_core)
   {
-    ROS_INFO_STREAM("Failed to load the " << controller_type << " local planner as a mbf_abstract_core-based plugin;"
-                                          << "  we will retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    ROS_DEBUG_STREAM("Failed to load the " << controller_type << " controller as a mbf_costmap_core-based plugin;"
+                                          << "  we will retry to load as a nav_core-based plugin. " << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
@@ -208,13 +203,12 @@ mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControll
           = nav_core_controller_plugin_loader_.createInstance(controller_type);
       controller_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperLocalPlanner>(nav_core_controller_ptr);
       std::string controller_name = nav_core_controller_plugin_loader_.getName(controller_type);
-      ROS_INFO_STREAM("Nav_core-based local planner plugin " << controller_name << " loaded");
+      ROS_DEBUG_STREAM("nav_core-based controller plugin " << controller_name << " loaded.");
     }
-    catch (const pluginlib::PluginlibException &ex)
+    catch (const pluginlib::PluginlibException &ex_nav_core)
     {
-      ROS_FATAL_STREAM("Failed to load the " << controller_type
-                                             << " local planner, are you sure it's properly registered"
-                                             << " and that the containing library is built? Exception: " << ex.what());
+      ROS_FATAL_STREAM("Failed to load the " << controller_type << " controller, are you sure it's properly registered"
+          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
     }
   }
   return controller_ptr;
@@ -224,24 +218,24 @@ bool CostmapNavigationServer::initializeControllerPlugin(
     const std::string& name,
     const mbf_abstract_core::AbstractController::Ptr& controller_ptr)
 {
-  ROS_INFO_STREAM("Initialize controller \"" << name << "\".");
+  ROS_DEBUG_STREAM("Initialize controller \"" << name << "\".");
 
   if (!tf_listener_ptr_)
   {
-    ROS_ERROR_STREAM("The tf listener pointer has not been initialized!");
+    ROS_FATAL_STREAM("The tf listener pointer has not been initialized!");
     return false;
   }
 
   if (!local_costmap_ptr_)
   {
-    ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
+    ROS_FATAL_STREAM("The costmap pointer has not been initialized!");
     return false;
   }
 
   mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr
       = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
   costmap_controller_ptr->initialize(name, tf_listener_ptr_.get(), local_costmap_ptr_.get());
-  ROS_INFO_STREAM("Controller plugin \"" << name << "\" initialized.");
+  ROS_DEBUG_STREAM("Controller plugin \"" << name << "\" initialized.");
   return true;
 }
 
@@ -254,11 +248,13 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
   {
     recovery_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractRecovery>(
         recovery_plugin_loader_.createInstance(recovery_type));
+    std::string recovery_name = recovery_plugin_loader_.getName(recovery_type);
+    ROS_DEBUG_STREAM("mbf_costmap_core-based recovery behavior plugin " << recovery_name << " loaded.");
   }
-  catch (pluginlib::PluginlibException &ex)
+  catch (pluginlib::PluginlibException &ex_mbf_core)
   {
-    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_abstract_core-based plugin;"
-                                           << " Retry to load as a nav_core-based plugin. Exception: " << ex.what());
+    ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_costmap_core-based plugin;"
+        << " Retry to load as a nav_core-based plugin. " << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
@@ -266,12 +262,14 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
           nav_core_recovery_plugin_loader_.createInstance(recovery_type);
 
       recovery_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
+      std::string recovery_name = recovery_plugin_loader_.getName(recovery_type);
+      ROS_DEBUG_STREAM("nav_core-based recovery behavior plugin " << recovery_name << " loaded.");
 
     }
-    catch (const pluginlib::PluginlibException &ex)
+    catch (const pluginlib::PluginlibException &ex_nav_core)
     {
       ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
-                                             << " and that the containing library is built? Exception: " << ex.what());
+          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
     }
   }
 
@@ -282,9 +280,30 @@ bool CostmapNavigationServer::initializeRecoveryPlugin(
     const std::string& name,
     const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr)
 {
+  ROS_DEBUG_STREAM("Initialize recovery behavior \"" << name << "\".");
+
+  if (!tf_listener_ptr_)
+  {
+    ROS_FATAL_STREAM("The tf listener pointer has not been initialized!");
+    return false;
+  }
+
+  if (!local_costmap_ptr_)
+  {
+    ROS_FATAL_STREAM("The local costmap pointer has not been initialized!");
+    return false;
+  }
+
+  if (!global_costmap_ptr_)
+  {
+    ROS_FATAL_STREAM("The global costmap pointer has not been initialized!");
+    return false;
+  }
+
   mbf_costmap_core::CostmapRecovery::Ptr behavior =
       boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(behavior_ptr);
   behavior->initialize(name, tf_listener_ptr_.get(), global_costmap_ptr_.get(), local_costmap_ptr_.get());
+  ROS_DEBUG_STREAM("Recovery behavior plugin \"" << name << "\" initialized.");
   return true;
 }
 
