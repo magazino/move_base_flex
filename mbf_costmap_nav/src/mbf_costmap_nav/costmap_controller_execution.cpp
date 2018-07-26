@@ -49,6 +49,8 @@ CostmapControllerExecution::CostmapControllerExecution(
       : AbstractControllerExecution(controller_ptr, tf_listener_ptr),
         costmap_ptr_(costmap_ptr)
 {
+  ros::NodeHandle private_nh("~");
+  private_nh.param("controller_lock_costmap", lock_costmap_, true);
 }
 
 CostmapControllerExecution::~CostmapControllerExecution()
@@ -61,13 +63,10 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(
     geometry_msgs::TwistStamped& vel_cmd,
     std::string& message)
 {
-  ros::NodeHandle private_nh("~");
-  private_nh.param("controller_lock_costmap", lock_costmap_, true);
-
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)
   {
-    boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
+    boost::lock_guard<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
     return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
   return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
