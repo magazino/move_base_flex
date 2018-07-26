@@ -44,12 +44,14 @@
 namespace mbf_abstract_nav
 {
 
+  const double AbstractControllerExecution::DEFAULT_CONTROLLER_FREQUENCY = 100.0; // 100 Hz
 
   AbstractControllerExecution::AbstractControllerExecution(
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
       controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
-      moving_(false)
+      moving_(false), max_retries_(0), patience_(0),
+      calling_duration_(boost::chrono::microseconds(static_cast<int>(1e6 / DEFAULT_CONTROLLER_FREQUENCY)))
   {
     ros::NodeHandle nh;
     ros::NodeHandle private_nh("~");
@@ -62,15 +64,31 @@ namespace mbf_abstract_nav
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
     private_nh.param("tf_timeout", tf_timeout_, 1.0);
 
+    private_nh.param("max_retries", max_retries_, 0);
+    patience_ = ros::Duration(private_nh.param("patience", 0.0));
+    setControllerFrequency(private_nh.param<double>("controller_frequency", DEFAULT_CONTROLLER_FREQUENCY));
+
     current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
     // init cmd_vel publisher for the robot velocity t
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   }
 
-
   AbstractControllerExecution::~AbstractControllerExecution()
   {
+
+  }
+
+  bool AbstractControllerExecution::setControllerFrequency(double frequency)
+  {
+    // set the calling duration by the moving frequency
+    if (frequency <= 0.0)
+    {
+      ROS_ERROR("Controller frequency must be greater than 0.0! No change of the frequency!");
+      return false;
+    }
+    calling_duration_ = boost::chrono::microseconds(static_cast<int>(1e6 / frequency));
+    return true;
   }
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
@@ -81,11 +99,9 @@ namespace mbf_abstract_nav
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
 
-    // set the calling duration by the moving frequency
-    if (config.controller_frequency > 0.0)
-      calling_duration_ = boost::chrono::microseconds((int)(1e6 / config.controller_frequency));
-    else
-      ROS_ERROR("Movement frequency must be greater than 0.0!");
+    if(setControllerFrequency(config.controller_frequency)){
+      ROS_INFO_STREAM("Set controller frequency to " << config.controller_frequency);
+    }
 
     max_retries_ = config.controller_max_retries;
   }

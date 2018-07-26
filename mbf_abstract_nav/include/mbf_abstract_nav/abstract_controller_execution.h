@@ -76,6 +76,8 @@ namespace mbf_abstract_nav
   {
   public:
 
+    static const double DEFAULT_CONTROLLER_FREQUENCY;
+
     typedef boost::shared_ptr<AbstractControllerExecution > Ptr;
 
     /**
@@ -162,6 +164,13 @@ namespace mbf_abstract_nav
      * @return true, if the patience has been exceeded.
      */
     bool isPatienceExceeded();
+
+    /**
+     * @brief Sets the controller frequency
+     * @param frequency The controller frequency
+     * @return true, if the controller frequency has been changed / set succesfully, false otherwise
+     */
+    bool setControllerFrequency(double frequency);
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution,
