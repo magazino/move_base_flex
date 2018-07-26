@@ -19,6 +19,7 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
      behaviors_(behaviors),
      action_state_(NONE),
      recovery_trigger_(NONE),
+     replanning_(private_nh_.param<bool>("replanning", false)),
      replanning_rate_(private_nh_.param<double>("replanning_frequency", 1.0))
 {
 }
@@ -122,7 +123,7 @@ void MoveBaseAction::actionExePathActive()
   // we create a navigation-level oscillation detection independent of the exe_path action one,
   // as the later doesn't handle oscillations created by quickly failing repeated plans
 
-  ROS_INFO_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
+  ROS_DEBUG_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
 
   ros::Time last_oscillation_reset = ros::Time::now();
 
@@ -130,7 +131,7 @@ void MoveBaseAction::actionExePathActive()
 
   while(!done && !exe_path_canceled_)
   {
-    ROS_INFO_STREAM_THROTTLE_NAMED(3, "move_base", "Action \"exe_path\" is active in state: \""
+    ROS_DEBUG_STREAM_THROTTLE_NAMED(3, "move_base", "Action \"exe_path\" is active in state: \""
         << action_client_exe_path_.getState().toString() << "\"");
 
     geometry_msgs::PoseStamped oscillation_pose = robot_pose_;
@@ -246,15 +247,14 @@ void MoveBaseAction::actionGetPathDone(
           boost::bind(&MoveBaseAction::actionExePathActive, this),
           boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
 
-
-
-      ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
-      // replanning
-
-      action_client_get_path_.sendGoal(
-          get_path_goal_,
-          boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
-      );
+      if(replanning_)
+      {
+        ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+        action_client_get_path_.sendGoal(
+            get_path_goal_,
+            boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
+        );
+      }
 
       action_state_ = EXE_PATH;
       break;

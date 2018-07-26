@@ -87,6 +87,8 @@ class MoveBaseAction{
   //! Action client used by the move_base action
   ActionClientRecovery action_client_recovery_;
 
+  bool replanning_;
+
   ros::Rate replanning_rate_;
 
   bool cancel_;
