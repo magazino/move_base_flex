@@ -46,7 +46,8 @@ class AbstractAction
     }
     concurrency_slots_.insert(SlotGoalIdMap::value_type(goal_handle.getGoal()->concurrency_slot, goal_handle.getGoalID().id));
     executions_.insert(std::pair<const std::string, const typename Execution::Ptr>(goal_handle.getGoalID().id, execution_ptr));
-    threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, goal_handle, execution_ptr));
+    threads_ptrs_.insert(std::pair<const std::string, boost::thread*>(goal_handle.getGoalID().id,
+                         threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, goal_handle, execution_ptr))));
   }
 
   void cancel(GoalHandle &goal_handle){
@@ -69,6 +70,8 @@ class AbstractAction
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
     ROS_DEBUG_STREAM("Exiting run method with goal status: " << goal_handle.getGoalStatus().text << " and code: "
         << static_cast<int>(goal_handle.getGoalStatus().status));
+    threads_.remove_thread(threads_ptrs_[goal_handle.getGoalID().id]);
+    threads_ptrs_.erase(goal_handle.getGoalID().id);
   }
 
   void reconfigureAll(
@@ -100,6 +103,7 @@ class AbstractAction
   RunMethod run_;
   boost::thread_group threads_;
   std::map<const std::string, const typename Execution::Ptr> executions_;
+  std::map<const std::string, boost::thread*> threads_ptrs_;
   SlotGoalIdMap concurrency_slots_;
 
   boost::mutex map_mtx_;
