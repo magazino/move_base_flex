@@ -50,6 +50,8 @@ CostmapPlannerExecution::CostmapPlannerExecution(
       : AbstractPlannerExecution(planner_ptr),
         costmap_ptr_(costmap_ptr)
 {
+  ros::NodeHandle private_nh("~");
+  private_nh.param("planner_lock_costmap", lock_costmap_, true);
 }
 
 CostmapPlannerExecution::~CostmapPlannerExecution()
