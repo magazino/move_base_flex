@@ -2,8 +2,9 @@
 
 namespace mbf_abstract_nav{
 
-  AbstractExecutionBase::AbstractExecutionBase()
-    : outcome_(255), cancel_(false)
+  AbstractExecutionBase::AbstractExecutionBase(boost::function<void()> setup_fn,
+                                               boost::function<void()> cleanup_fn)
+    : outcome_(255), cancel_(false), setup_fn_(setup_fn), cleanup_fn_(cleanup_fn)
   {
 
   }

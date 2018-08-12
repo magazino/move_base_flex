@@ -44,9 +44,13 @@ namespace mbf_abstract_nav
 {
 
 
-  AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr) :
+  AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+                                                     boost::function<void()> setup_fn,
+                                                     boost::function<void()> cleanup_fn) :
+    AbstractExecutionBase(setup_fn, cleanup_fn),
       planner_(planner_ptr), state_(INITIALIZED), planning_(false),
-      has_new_start_(false), has_new_goal_(false){
+      has_new_start_(false), has_new_goal_(false)
+  {
     ros::NodeHandle private_nh("~");
 
     // non-dynamically reconfigurable parameters

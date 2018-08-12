@@ -71,7 +71,9 @@ public:
       const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       CostmapPtr &global_costmap,
-      CostmapPtr &local_costmap);
+      CostmapPtr &local_costmap,
+      boost::function<void()> setup_fn,
+      boost::function<void()> cleanup_fn);
   /**
    * Destructor
    */
@@ -81,7 +83,7 @@ protected:
 
   //! Shared pointer to the global costmap
   CostmapPtr &global_costmap_;
-  
+
   //! Shared pointer to thr local costmap
   CostmapPtr &local_costmap_;
 

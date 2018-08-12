@@ -46,8 +46,10 @@ namespace mbf_costmap_nav
 
 CostmapPlannerExecution::CostmapPlannerExecution(
     const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-    CostmapPtr &costmap_ptr)
-      : AbstractPlannerExecution(planner_ptr),
+    CostmapPtr &costmap_ptr,
+    boost::function<void()> setup_fn,
+    boost::function<void()> cleanup_fn)
+      : AbstractPlannerExecution(planner_ptr, setup_fn, cleanup_fn),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");

@@ -100,7 +100,6 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
 
   // start all action servers
   startActionServers();
-
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
@@ -108,7 +107,9 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlan
 {
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
       boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr),
-      boost::ref(global_costmap_ptr_));
+      boost::ref(global_costmap_ptr_),
+      boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
+      boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
@@ -117,7 +118,9 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
       boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
       tf_listener_ptr_,
-      boost::ref(local_costmap_ptr_));
+      boost::ref(local_costmap_ptr_),
+      boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
+      boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
@@ -127,7 +130,9 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
       boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr),
       tf_listener_ptr_,
       boost::ref(global_costmap_ptr_),
-      boost::ref(local_costmap_ptr_));
+      boost::ref(local_costmap_ptr_),
+      boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
+      boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }
 
 mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string& planner_type)
@@ -506,7 +511,6 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request 
   return true;
 }
 
-//TODO enable checkActivateCostmap for multi thread planning, controlling, recovering
 void CostmapNavigationServer::checkActivateCostmaps()
 {
   shutdown_costmaps_timer_.stop();
@@ -527,15 +531,13 @@ void CostmapNavigationServer::checkActivateCostmaps()
   }
 }
 
-//TODO enable checkDeactivateCostmap for multi thread planning, controlling, recovering
 void CostmapNavigationServer::checkDeactivateCostmaps()
 {
   if (shutdown_costmaps_ &&
       ((local_costmap_active_ || global_costmap_active_)))
-      // && !(active_planning_ || active_moving_ || active_recovery_))) // TODO check if active thread
   {
     // Delay costmaps shutdown by shutdown_costmaps_delay so we don't need to enable at each step of a normal
-    // navigation sequence, what is terribly inneficient; the timer is stopped on costmaps re-activation and
+    // navigation sequence, what is terribly inefficient; the timer is stopped on costmaps re-activation and
     // reset after every new call to deactivate
     shutdown_costmaps_timer_ =
       private_nh_.createTimer(shutdown_costmaps_delay_, &CostmapNavigationServer::deactivateCostmaps, this, true);

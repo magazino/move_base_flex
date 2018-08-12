@@ -321,19 +321,25 @@ void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHa
 mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
     const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_ptr);
+  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_ptr,
+                                                                        boost::function<void()>(),
+                                                                        boost::function<void()>());
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::newControllerExecution(
     const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_ptr, tf_listener_ptr_);
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_ptr, tf_listener_ptr_,
+                                                                           boost::function<void()>(),
+                                                                           boost::function<void()>());
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(
     const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(plugin_ptr, tf_listener_ptr_);
+  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(plugin_ptr, tf_listener_ptr_,
+                                                                         boost::function<void()>(),
+                                                                         boost::function<void()>());
 }
 
 void AbstractNavigationServer::startActionServers()

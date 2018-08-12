@@ -82,7 +82,9 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      */
-    AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr);
+    AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+                             boost::function<void()> setup_fn,
+                             boost::function<void()> cleanup_fn);
 
     /**
      * @brief Destructor

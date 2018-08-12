@@ -45,8 +45,10 @@ namespace mbf_costmap_nav
 CostmapControllerExecution::CostmapControllerExecution(
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-    CostmapPtr &costmap_ptr)
-      : AbstractControllerExecution(controller_ptr, tf_listener_ptr),
+    CostmapPtr &costmap_ptr,
+    boost::function<void()> setup_fn,
+    boost::function<void()> cleanup_fn)
+      : AbstractControllerExecution(controller_ptr, tf_listener_ptr, setup_fn, cleanup_fn),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");

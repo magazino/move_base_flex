@@ -47,10 +47,11 @@ namespace mbf_costmap_nav
 CostmapRecoveryExecution::CostmapRecoveryExecution(
     const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-    CostmapPtr &global_costmap, CostmapPtr &local_costmap)
-      : AbstractRecoveryExecution(recovery_ptr, tf_listener_ptr),
-        global_costmap_(global_costmap),
-        local_costmap_(local_costmap)
+    CostmapPtr &global_costmap, CostmapPtr &local_costmap,
+    boost::function<void()> setup_fn,
+    boost::function<void()> cleanup_fn)
+      : AbstractRecoveryExecution(recovery_ptr, tf_listener_ptr, setup_fn, cleanup_fn),
+        global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }
 

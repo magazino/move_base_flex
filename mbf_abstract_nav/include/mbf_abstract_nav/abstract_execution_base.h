@@ -12,7 +12,8 @@ class AbstractExecutionBase{
 
  public:
 
-  AbstractExecutionBase();
+  AbstractExecutionBase(boost::function<void()> setup_fn,
+                        boost::function<void()> cleanup_fn);
 
   virtual bool start();
 
@@ -29,6 +30,16 @@ class AbstractExecutionBase{
   void waitForStateUpdate(boost::chrono::microseconds const &duration);
 
   virtual void reconfigure(const MoveBaseFlexConfig &config) = 0;
+
+  /**
+   * @brief Implementation-specific setup function called right before execution; empty on abstract server
+   */
+  boost::function<void()> setup_fn_;
+
+  /**
+   * @brief Implementation-specific cleanup function called right after execution; empty on abstract server
+   */
+  boost::function<void()> cleanup_fn_;
 
   /**
    * @brief Gets the current plugin execution outcome
@@ -58,7 +69,6 @@ class AbstractExecutionBase{
 
   //! the last received plugin execution message
   std::string message_;
-
 };
 } /* namespace mbf_abstract_nav */
 

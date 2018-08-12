@@ -69,7 +69,9 @@ public:
   CostmapControllerExecution(
       const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
-      CostmapPtr &costmap_ptr);
+      CostmapPtr &costmap_ptr,
+      boost::function<void()> setup_fn,
+      boost::function<void()> cleanup_fn);
 
   /**
    * @brief Destructor

@@ -65,7 +65,9 @@ public:
    */
   CostmapPlannerExecution(
       const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-      CostmapPtr &costmap);
+      CostmapPtr &costmap,
+      boost::function<void()> setup_fn,
+      boost::function<void()> cleanup_fn);
 
   /**
    * @brief Destructor

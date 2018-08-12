@@ -61,6 +61,8 @@ class AbstractAction
   }
 
   void runAndCleanUp(GoalHandle goal_handle, typename Execution::Ptr execution_ptr){
+    if (execution_ptr->setup_fn_)
+      execution_ptr->setup_fn_();
     run_(goal_handle, *execution_ptr);
     ROS_DEBUG_STREAM("Finished action run method, waiting for execution thread to finish.");
     execution_ptr->join();
@@ -72,6 +74,8 @@ class AbstractAction
         << static_cast<int>(goal_handle.getGoalStatus().status));
     threads_.remove_thread(threads_ptrs_[goal_handle.getGoalID().id]);
     threads_ptrs_.erase(goal_handle.getGoalID().id);
+    if (execution_ptr->cleanup_fn_)
+      execution_ptr->cleanup_fn_();
   }
 
   void reconfigureAll(
