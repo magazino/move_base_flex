@@ -422,9 +422,6 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   double y = pose.pose.position.y;
   double yaw = tf::getYaw(pose.pose.orientation);
 
-  // lock costmap so content doesn't change while adding cell costs
-  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getCostmap()->getMutex()));
-
   // ensure it's active so cost reflects latest sensor readings
   checkActivateCostmaps();
 
@@ -444,6 +441,9 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   }
   else
   {
+    // lock costmap so content doesn't change while adding cell costs
+    boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getCostmap()->getMutex()));
+
     // integrate the cost of all cells; state value precedence is UNKNOWN > LETHAL > INSCRIBED > FREE
     for (int i = 0; i < footprint_cells.size(); ++i)
     {
