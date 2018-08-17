@@ -47,9 +47,10 @@ namespace mbf_costmap_nav
 CostmapPlannerExecution::CostmapPlannerExecution(
     const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
     CostmapPtr &costmap_ptr,
+    const MoveBaseFlexConfig &config,
     boost::function<void()> setup_fn,
     boost::function<void()> cleanup_fn)
-      : AbstractPlannerExecution(planner_ptr, setup_fn, cleanup_fn),
+      : AbstractPlannerExecution(planner_ptr, toAbstract(config), setup_fn, cleanup_fn),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
@@ -58,6 +59,16 @@ CostmapPlannerExecution::CostmapPlannerExecution(
 
 CostmapPlannerExecution::~CostmapPlannerExecution()
 {
+}
+
+mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const MoveBaseFlexConfig &config)
+{
+  // copy the planner-related abstract configuration common to all MBF-based navigation
+  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
+  abstract_config.planner_frequency = config.planner_frequency;
+  abstract_config.planner_patience = config.planner_patience;
+  abstract_config.planner_max_retries = config.planner_max_retries;
+  return abstract_config;
 }
 
 uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,

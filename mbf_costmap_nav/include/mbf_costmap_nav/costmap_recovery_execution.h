@@ -42,6 +42,7 @@
 #define MBF_COSTMAP_NAV__COSTMAP_RECOVERY_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
+#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <mbf_costmap_core/costmap_recovery.h>
 #include <costmap_2d/costmap_2d_ros.h>
 
@@ -72,6 +73,7 @@ public:
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       CostmapPtr &global_costmap,
       CostmapPtr &local_costmap,
+      const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn);
   /**
@@ -89,6 +91,7 @@ protected:
 
 private:
 
+  mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 };
 
 } /* namespace mbf_costmap_nav */

@@ -49,6 +49,7 @@ namespace mbf_abstract_nav
   AbstractControllerExecution::AbstractControllerExecution(
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :
     AbstractExecutionBase(setup_fn, cleanup_fn),
@@ -67,9 +68,8 @@ namespace mbf_abstract_nav
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
     private_nh.param("tf_timeout", tf_timeout_, 1.0);
 
-    private_nh.param("max_retries", max_retries_, 0);
-    patience_ = ros::Duration(private_nh.param("patience", 0.0));
-    setControllerFrequency(private_nh.param<double>("controller_frequency", DEFAULT_CONTROLLER_FREQUENCY));
+    // dynamically reconfigurable parameters
+    reconfigure(config);
 
     current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
@@ -167,7 +167,7 @@ namespace mbf_abstract_nav
   bool AbstractControllerExecution::computeRobotPose()
   {
     bool tf_success = mbf_utility::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
-                                                     ros::Duration(tf_timeout_), robot_pose_);
+                                                ros::Duration(tf_timeout_), robot_pose_);
     // would be 0 if not, as we ask tf listener for the last pose available
     robot_pose_.header.stamp = ros::Time::now();
     if (!tf_success)

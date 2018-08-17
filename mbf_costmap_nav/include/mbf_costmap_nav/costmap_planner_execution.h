@@ -42,6 +42,7 @@
 #define MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_planner_execution.h>
+#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <mbf_costmap_core/costmap_planner.h>
 #include <costmap_2d/costmap_2d_ros.h>
 
@@ -66,6 +67,7 @@ public:
   CostmapPlannerExecution(
       const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
       CostmapPtr &costmap,
+      const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn);
 
@@ -75,6 +77,8 @@ public:
   virtual ~CostmapPlannerExecution();
 
 private:
+
+  mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   /**
    * @brief Calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,

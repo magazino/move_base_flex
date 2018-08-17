@@ -46,9 +46,10 @@ CostmapControllerExecution::CostmapControllerExecution(
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &costmap_ptr,
+    const MoveBaseFlexConfig &config,
     boost::function<void()> setup_fn,
     boost::function<void()> cleanup_fn)
-      : AbstractControllerExecution(controller_ptr, tf_listener_ptr, setup_fn, cleanup_fn),
+      : AbstractControllerExecution(controller_ptr, tf_listener_ptr, toAbstract(config), setup_fn, cleanup_fn),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
@@ -57,6 +58,18 @@ CostmapControllerExecution::CostmapControllerExecution(
 
 CostmapControllerExecution::~CostmapControllerExecution()
 {
+}
+
+mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(const MoveBaseFlexConfig &config)
+{
+  // copy the controller-related abstract configuration common to all MBF-based navigation
+  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
+  abstract_config.controller_frequency = config.controller_frequency;
+  abstract_config.controller_patience = config.controller_patience;
+  abstract_config.controller_max_retries = config.controller_max_retries;
+  abstract_config.oscillation_timeout = config.oscillation_timeout;
+  abstract_config.oscillation_distance = config.oscillation_distance;
+  return abstract_config;
 }
 
 uint32_t CostmapControllerExecution::computeVelocityCmd(

@@ -42,6 +42,7 @@
 #define MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_
 
 #include <costmap_2d/costmap_2d_ros.h>
+#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <mbf_costmap_core/costmap_controller.h>
 #include <mbf_abstract_nav/abstract_controller_execution.h>
 
@@ -70,6 +71,7 @@ public:
       const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       CostmapPtr &costmap_ptr,
+      const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn);
 
@@ -96,6 +98,8 @@ protected:
       std::string& message);
 
 private:
+
+  mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   //! costmap for 2d navigation planning
   CostmapPtr &costmap_ptr_;

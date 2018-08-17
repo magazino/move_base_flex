@@ -48,9 +48,10 @@ CostmapRecoveryExecution::CostmapRecoveryExecution(
     const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
     const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
     CostmapPtr &global_costmap, CostmapPtr &local_costmap,
+    const MoveBaseFlexConfig &config,
     boost::function<void()> setup_fn,
     boost::function<void()> cleanup_fn)
-      : AbstractRecoveryExecution(recovery_ptr, tf_listener_ptr, setup_fn, cleanup_fn),
+      : AbstractRecoveryExecution(recovery_ptr, tf_listener_ptr, toAbstract(config), setup_fn, cleanup_fn),
         global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }
@@ -59,5 +60,13 @@ CostmapRecoveryExecution::~CostmapRecoveryExecution()
 {
 }
 
+mbf_abstract_nav::MoveBaseFlexConfig CostmapRecoveryExecution::toAbstract(const MoveBaseFlexConfig &config)
+{
+  // copy the recovery-related abstract configuration common to all MBF-based navigation
+  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
+  abstract_config.recovery_enabled = config.recovery_enabled;
+  abstract_config.recovery_patience = config.recovery_patience;
+  return abstract_config;
+}
 
 } /* namespace mbf_costmap_nav */

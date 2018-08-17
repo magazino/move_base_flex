@@ -45,6 +45,7 @@ namespace mbf_abstract_nav
 
 
   AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+                                                     const MoveBaseFlexConfig &config,
                                                      boost::function<void()> setup_fn,
                                                      boost::function<void()> cleanup_fn) :
     AbstractExecutionBase(setup_fn, cleanup_fn),
@@ -56,7 +57,9 @@ namespace mbf_abstract_nav
     // non-dynamically reconfigurable parameters
     private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
-    patience_ = ros::Duration(private_nh.param("planner_patience", 5.0));
+
+    // dynamically reconfigurable parameters
+    reconfigure(config);
   }
 
   AbstractPlannerExecution::~AbstractPlannerExecution()

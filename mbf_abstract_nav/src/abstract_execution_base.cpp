@@ -6,7 +6,6 @@ namespace mbf_abstract_nav{
                                                boost::function<void()> cleanup_fn)
     : outcome_(255), cancel_(false), setup_fn_(setup_fn), cleanup_fn_(cleanup_fn)
   {
-
   }
 
   bool AbstractExecutionBase::start()

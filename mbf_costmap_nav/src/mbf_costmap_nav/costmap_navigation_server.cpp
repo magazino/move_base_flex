@@ -108,6 +108,7 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlan
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
       boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr),
       boost::ref(global_costmap_ptr_),
+      last_config_,
       boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
       boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }
@@ -119,6 +120,7 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
       boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
       tf_listener_ptr_,
       boost::ref(local_costmap_ptr_),
+      last_config_,
       boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
       boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }
@@ -131,6 +133,7 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
       tf_listener_ptr_,
       boost::ref(global_costmap_ptr_),
       boost::ref(local_costmap_ptr_),
+      last_config_,
       boost::bind(&CostmapNavigationServer::checkActivateCostmaps, this),
       boost::bind(&CostmapNavigationServer::checkDeactivateCostmaps, this));
 }

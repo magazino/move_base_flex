@@ -50,11 +50,14 @@ namespace mbf_abstract_nav
   AbstractRecoveryExecution::AbstractRecoveryExecution(
       mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :
     AbstractExecutionBase(setup_fn, cleanup_fn),
       behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
   {
+    // dynamically reconfigurable parameters
+    reconfigure(config);
   }
 
   AbstractRecoveryExecution::~AbstractRecoveryExecution()

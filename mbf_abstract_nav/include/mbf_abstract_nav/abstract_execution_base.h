@@ -6,10 +6,11 @@
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/thread_clock.hpp>
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
-class AbstractExecutionBase{
-
+class AbstractExecutionBase
+{
  public:
 
   AbstractExecutionBase(boost::function<void()> setup_fn,
@@ -28,8 +29,6 @@ class AbstractExecutionBase{
   void join();
 
   void waitForStateUpdate(boost::chrono::microseconds const &duration);
-
-  virtual void reconfigure(const MoveBaseFlexConfig &config) = 0;
 
   /**
    * @brief Implementation-specific setup function called right before execution; empty on abstract server
