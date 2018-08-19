@@ -3,17 +3,21 @@
 
 #include <actionlib/server/action_server.h>
 #include <actionlib/client/simple_action_client.h>
+
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_msgs/GetPathAction.h>
 #include <mbf_msgs/ExePathAction.h>
 #include <mbf_msgs/RecoveryAction.h>
-#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
+
+#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 #include "mbf_abstract_nav/robot_information.h"
 
 
-namespace mbf_abstract_nav{
-class MoveBaseAction{
+namespace mbf_abstract_nav
+{
 
+class MoveBaseAction
+{
  public:
 
   //! Action clients for the MoveBase action
@@ -56,13 +60,14 @@ class MoveBaseAction{
       const actionlib::SimpleClientGoalState &state,
       const mbf_msgs::RecoveryResultConstPtr &result);
 
-  bool has_new_goal_;
+  bool attemptRecovery();
 
   mbf_msgs::ExePathGoal exe_path_goal_;
   mbf_msgs::GetPathGoal get_path_goal_;
   mbf_msgs::RecoveryGoal recovery_goal_;
 
-  
+  geometry_msgs::PoseStamped last_oscillation_pose_;
+  ros::Time last_oscillation_reset_;
 
   ros::Duration oscillation_timeout_;
 
@@ -88,10 +93,8 @@ class MoveBaseAction{
   ActionClientRecovery action_client_recovery_;
 
   bool replanning_;
-
   ros::Rate replanning_rate_;
-
-  bool cancel_;
+  boost::mutex replanning_mtx_;
 
   bool recovery_enabled_;
 
@@ -110,14 +113,13 @@ class MoveBaseAction{
     EXE_PATH,
     RECOVERY,
     OSCILLATING,
-    SUCCEEDED
+    SUCCEEDED,
+    CANCELED,
+    FAILED
   };
 
   MoveBaseActionState action_state_;
   MoveBaseActionState recovery_trigger_;
-
-  bool exe_path_canceled_;
-
 };
 
 } /* mbf_abstract_nav */

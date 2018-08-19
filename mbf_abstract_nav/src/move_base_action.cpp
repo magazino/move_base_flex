@@ -1,8 +1,10 @@
-#include "mbf_abstract_nav/move_base_action.h"
 #include <mbf_utility/navigation_utility.h>
-#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 
-namespace mbf_abstract_nav{
+#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/move_base_action.h"
+
+namespace mbf_abstract_nav
+{
 
 MoveBaseAction::MoveBaseAction(const std::string &name,
                                const RobotInformation &robot_info,
@@ -14,13 +16,11 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
      oscillation_timeout_(0),
      oscillation_distance_(0),
      recovery_enabled_(true),
-     cancel_(false),
-     exe_path_canceled_(false),
      behaviors_(behaviors),
      action_state_(NONE),
      recovery_trigger_(NONE),
-     replanning_(private_nh_.param<bool>("replanning", false)),
-     replanning_rate_(private_nh_.param<double>("replanning_frequency", 1.0))
+     replanning_(false),
+     replanning_rate_(1.0)
 {
 }
 
@@ -31,6 +31,26 @@ MoveBaseAction::~MoveBaseAction()
 void MoveBaseAction::reconfigure(
     mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
+  if (config.planner_frequency > 0.0)
+  {
+    boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+    if (!replanning_)
+    {
+      replanning_ = true;
+      if (action_state_ == EXE_PATH)
+      {
+        // exe_path is running and user has enabled replanning
+        ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+        action_client_get_path_.sendGoal(
+            get_path_goal_,
+            boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
+        );
+      }
+    }
+    replanning_rate_ = ros::Rate(config.planner_frequency);
+  }
+  else
+    replanning_ = false;
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
   recovery_enabled_ = config.recovery_enabled;
@@ -38,7 +58,7 @@ void MoveBaseAction::reconfigure(
 
 void MoveBaseAction::cancel()
 {
-  cancel_ = true;
+  action_state_ = CANCELED;
 
   if(!action_client_get_path_.getState().isDone())
   {
@@ -58,7 +78,7 @@ void MoveBaseAction::cancel()
 
 void MoveBaseAction::start(GoalHandle &goal_handle)
 {
-  cancel_ = false;
+  action_state_ = GET_PATH;
 
   goal_handle.setAccepted();
 
@@ -70,10 +90,6 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
 
   mbf_msgs::MoveBaseResult move_base_result;
 
-  oscillation_timeout_.fromSec(private_nh_.param<double>("osciallation_timeout", 0));
-  private_nh_.param("osciallation_distance", oscillation_distance_, 0.3);
-  private_nh_.param("recovery_enabled", recovery_enabled_, true);
-
   get_path_goal_.target_pose = goal.target_pose;
   get_path_goal_.use_start_pose = false; // use the robot pose
   get_path_goal_.planner = goal.planner;
@@ -81,8 +97,10 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
 
   ros::Duration connection_timeout(1.0);
 
+  last_oscillation_reset_ = ros::Time::now();
+
   // start recovering with the first behavior, use the recovery behaviors from the action request, if specified,
-  // otherwise all loaded behaviors.
+  // otherwise, use all loaded behaviors.
 
   recovery_behaviors_ = goal.recovery_behaviors.empty() ? behaviors_ : goal.recovery_behaviors;
   current_recovery_behavior_ = recovery_behaviors_.begin();
@@ -115,89 +133,23 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   action_client_get_path_.sendGoal(
       get_path_goal_,
       boost::bind(&MoveBaseAction::actionGetPathDone, this, _1, _2));
-
 }
 
 void MoveBaseAction::actionExePathActive()
 {
-  // we create a navigation-level oscillation detection independent of the exe_path action one,
-  // as the later doesn't handle oscillations created by quickly failing repeated plans
-
   ROS_DEBUG_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
 
-  ros::Time last_oscillation_reset = ros::Time::now();
-
-  bool done = action_client_exe_path_.getState().isDone();
-
-  while(!done && !exe_path_canceled_)
+  if(replanning_)
   {
-    ROS_DEBUG_STREAM_THROTTLE_NAMED(3, "move_base", "Action \"exe_path\" is active in state: \""
-        << action_client_exe_path_.getState().toString() << "\"");
-
-    geometry_msgs::PoseStamped oscillation_pose = robot_pose_;
-
-    // if oscillation detection is enabled by osciallation_timeout != 0
-    if (!oscillation_timeout_.isZero())
-    {
-      // check if oscillating
-      // moved more than the minimum oscillation distance
-      if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance_)
-      {
-        last_oscillation_reset = ros::Time::now();
-        oscillation_pose = robot_pose_;
-
-        if (recovery_trigger_ == OSCILLATING)
-        {
-          ROS_INFO_NAMED("move_base", "Recovered from robot oscillation: restart recovery behaviors");
-          current_recovery_behavior_ = recovery_behaviors_.begin();
-          recovery_trigger_ = NONE;
-        }
-      } else if (last_oscillation_reset + oscillation_timeout_ < ros::Time::now())
-      {
-        std::stringstream oscillation_msgs;
-        oscillation_msgs << "Robot is oscillating for " << ((ros::Time::now() - last_oscillation_reset).toSec()) << "s!";
-        ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
-        last_oscillation_reset = ros::Time::now();
-        action_client_exe_path_.cancelGoal();
-        exe_path_canceled_ = true;
-
-        if(!recovery_behaviors_.empty() && recovery_enabled_)
-        {
-          recovery_trigger_ = OSCILLATING;
-          mbf_msgs::RecoveryGoal recovery_goal;
-          if (current_recovery_behavior_==recovery_behaviors_.end())
-            current_recovery_behavior_ = recovery_behaviors_.begin();
-          recovery_goal.behavior = *current_recovery_behavior_;
-          current_recovery_behavior_++;
-          action_client_recovery_.sendGoal(
-            recovery_goal,
-            boost::bind(&MoveBaseAction::actionRecoveryDone, this, _1, _2)
-          );
-        }else{
-          mbf_msgs::MoveBaseResult move_base_result;
-          move_base_result.outcome = OSCILLATING;
-          if(recovery_enabled_)
-            move_base_result.message = oscillation_msgs.str() + " No recovery behaviors for the move_base action are defined!";
-          else
-            move_base_result.message = oscillation_msgs.str() + " Recovery is disabled for the move_base action! use the param \"enable_recovery\"";
-          move_base_result.final_pose = robot_pose_;
-          move_base_result.angle_to_goal = move_base_feedback_.angle_to_goal;
-          move_base_result.dist_to_goal = move_base_feedback_.dist_to_goal;
-          goal_handle_.setAborted(move_base_result, move_base_result.message);
-        }
-      }
-    }
-
-    if (recovery_trigger_== EXE_PATH) // TODO check if moveing again
-    {
-      ROS_INFO_NAMED("move_base", "Recovered from controller failure: restart recovery behaviors");
-      current_recovery_behavior_ = recovery_behaviors_.begin();
-      recovery_trigger_ = NONE;
-    }
-    done = action_client_exe_path_.getState().isDone();
+    // exe_path started; time to start replanning
+    boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+    ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+    action_client_get_path_.sendGoal(
+        get_path_goal_,
+        boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
+    );
   }
 }
-
 
 void MoveBaseAction::actionExePathFeedback(
     const mbf_msgs::ExePathFeedbackConstPtr &feedback)
@@ -208,12 +160,61 @@ void MoveBaseAction::actionExePathFeedback(
   move_base_feedback_.current_twist = feedback->current_twist;
   robot_pose_ = feedback->current_pose;
   goal_handle_.publishFeedback(move_base_feedback_);
+
+  // we create a navigation-level oscillation detection using exe_path action's feedback,
+  // as the later doesn't handle oscillations created by quickly failing repeated plans
+
+  // if oscillation detection is enabled by osciallation_timeout != 0
+  if (!oscillation_timeout_.isZero())
+  {
+    // check if oscillating
+    // moved more than the minimum oscillation distance
+    if (mbf_utility::distance(robot_pose_, last_oscillation_pose_) >= oscillation_distance_)
+    {
+      last_oscillation_reset_ = ros::Time::now();
+      last_oscillation_pose_ = robot_pose_;
+
+      if (recovery_trigger_ == OSCILLATING)
+      {
+        ROS_INFO_NAMED("move_base", "Recovered from robot oscillation: restart recovery behaviors");
+        current_recovery_behavior_ = recovery_behaviors_.begin();
+        recovery_trigger_ = NONE;
+      }
+    }
+    else if (last_oscillation_reset_ + oscillation_timeout_ < ros::Time::now())
+    {
+      std::stringstream oscillation_msgs;
+      oscillation_msgs << "Robot is oscillating for " << ((ros::Time::now() - last_oscillation_reset_).toSec()) << "s!";
+      ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
+      action_client_exe_path_.cancelGoal();
+
+      if (attemptRecovery())
+      {
+        recovery_trigger_ = OSCILLATING;
+      }
+      else
+      {
+        mbf_msgs::MoveBaseResult move_base_result;
+        move_base_result.outcome = OSCILLATING;
+        if(recovery_enabled_)
+          move_base_result.message = oscillation_msgs.str() + " No recovery behaviors for the move_base action are defined!";
+        else
+          move_base_result.message = oscillation_msgs.str() + " Recovery is disabled for the move_base action! use the param \"enable_recovery\"";
+        move_base_result.final_pose = robot_pose_;
+        move_base_result.angle_to_goal = move_base_feedback_.angle_to_goal;
+        move_base_result.dist_to_goal = move_base_feedback_.dist_to_goal;
+        goal_handle_.setAborted(move_base_result, move_base_result.message);
+      }
+    }
+  }
 }
 
 void MoveBaseAction::actionGetPathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::GetPathResultConstPtr &result_ptr)
 {
+  action_state_ =  FAILED;
+
   const mbf_msgs::GetPathResult &result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
@@ -224,7 +225,6 @@ void MoveBaseAction::actionGetPathDone(
       break;
 
     case actionlib::SimpleClientGoalState::SUCCEEDED:
-
       ROS_DEBUG_STREAM_NAMED("move_base", "Action \""
           << "move_base\" received a path from \""
           << "get_path\": " << state.getText());
@@ -246,62 +246,26 @@ void MoveBaseAction::actionGetPathDone(
           boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
           boost::bind(&MoveBaseAction::actionExePathActive, this),
           boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
-
-      if(replanning_)
-      {
-        ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
-        action_client_get_path_.sendGoal(
-            get_path_goal_,
-            boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
-        );
-      }
-
       action_state_ = EXE_PATH;
       break;
 
     case actionlib::SimpleClientGoalState::ABORTED:
 
-      // copy result from get_path action
-      move_base_result.outcome = result.outcome;
-      move_base_result.message = result.message;
-      move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
-      move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
-      move_base_result.final_pose = robot_pose_;
-
-      if (!recovery_enabled_)
+      if (attemptRecovery())
       {
-        ROS_WARN_STREAM_NAMED("move_base", "Recovery behaviors are disabled!");
-        ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the planner: "
-            << result.message);
-        goal_handle_.setAborted(move_base_result, state.getText());
-        break;
-      }
-      else if (current_recovery_behavior_ == recovery_behaviors_.end())
-      {
-        if (recovery_behaviors_.empty())
-        {
-          ROS_WARN_STREAM_NAMED("move_base", "No Recovery Behaviors loaded! Abort controlling: "
-              << result.message);
-        }
-        else
-        {
-          ROS_WARN_STREAM_NAMED("move_base", "Executed all available recovery behaviors! "
-              << "Abort planning: " << result.message);
-        }
-        goal_handle_.setAborted(move_base_result, state.getText());
-        break;
+        recovery_trigger_ = GET_PATH;
       }
       else
       {
-        recovery_goal_.behavior = *current_recovery_behavior_;
-        ROS_DEBUG_STREAM_NAMED("move_base", "Start recovery behavior\""
-            << *current_recovery_behavior_ <<"\".");
-        action_client_recovery_.sendGoal(
-            recovery_goal_,
-            boost::bind(&MoveBaseAction::actionRecoveryDone, this, _1, _2)
-        );
-        recovery_trigger_ = GET_PATH;
-        action_state_ = RECOVERY;
+        // copy result from get_path action
+        move_base_result.outcome = result.outcome;
+        move_base_result.message = result.message;
+        move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
+        move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
+        move_base_result.final_pose = robot_pose_;
+
+        ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the planner: " << result.message);
+        goal_handle_.setAborted(move_base_result, state.getText());
       }
       break;
 
@@ -340,13 +304,15 @@ void MoveBaseAction::actionExePathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::ExePathResultConstPtr &result_ptr)
 {
+  action_state_ =  FAILED;
+
   ROS_DEBUG_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
 
   const mbf_msgs::ExePathResult& result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
-  // copy result from get_path action
 
+  // copy result from get_path action
   move_base_result.outcome = result.outcome;
   move_base_result.message = result.message;
   move_base_result.dist_to_goal = result.dist_to_goal;
@@ -379,42 +345,16 @@ void MoveBaseAction::actionExePathDone(
 
         default:
           // all the rest are, so we start calling the recovery behaviors in sequence
-          if (!recovery_enabled_)
+
+          if (attemptRecovery())
           {
-            ROS_WARN_STREAM_NAMED("move_base", "Recovery behaviors are disabled!");
-            ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the controller: "
-                << result.message);
-            goal_handle_.setAborted(move_base_result, state.getText());
-            break;
-          }
-          else if (current_recovery_behavior_ == recovery_behaviors_.end())
-          {
-            if (recovery_behaviors_.empty())
-            {
-              ROS_WARN_STREAM_NAMED("move_base", "No Recovery Behaviors loaded! Abort controlling: "
-                  << result.message);
-            }
-            else
-            {
-              ROS_WARN_STREAM_NAMED("move_base",
-                                    "Executed all available recovery behaviors! Abort controlling: "
-                                        << result.message);
-            }
-            goal_handle_.setAborted(move_base_result, state.getText());
-            break;
+            recovery_trigger_ = EXE_PATH;
           }
           else
           {
-            recovery_goal_.behavior = *current_recovery_behavior_;
-            ROS_DEBUG_STREAM_NAMED("move_base", "Start recovery behavior\""
-                << *current_recovery_behavior_ << "\".");
-            action_client_recovery_.sendGoal(
-                recovery_goal_,
-                boost::bind(&MoveBaseAction::actionRecoveryDone, this, _1, _2));
-            action_state_ = RECOVERY;
+            ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the controller: " << result.message);
+            goal_handle_.setAborted(move_base_result, state.getText());
           }
-          recovery_trigger_ = EXE_PATH;
-          //try_recovery = true; // TODO call recovery action
           break;
       }
       break;
@@ -450,23 +390,54 @@ void MoveBaseAction::actionExePathDone(
   }
 }
 
+bool MoveBaseAction::attemptRecovery()
+{
+  if (!recovery_enabled_)
+  {
+    ROS_WARN_STREAM_NAMED("move_base", "Recovery behaviors are disabled!");
+    return false;
+  }
+
+  if (current_recovery_behavior_ == recovery_behaviors_.end())
+  {
+    if (recovery_behaviors_.empty())
+    {
+      ROS_WARN_STREAM_NAMED("move_base", "No Recovery Behaviors loaded!");
+    }
+    else
+    {
+      ROS_WARN_STREAM_NAMED("move_base", "Executed all available recovery behaviors!");
+    }
+    return false;
+  }
+
+  recovery_goal_.behavior = *current_recovery_behavior_;
+  ROS_DEBUG_STREAM_NAMED("move_base", "Start recovery behavior\""
+      << *current_recovery_behavior_ <<"\".");
+  action_client_recovery_.sendGoal(
+      recovery_goal_,
+      boost::bind(&MoveBaseAction::actionRecoveryDone, this, _1, _2)
+  );
+  action_state_ = RECOVERY;
+  return true;
+}
 
 void MoveBaseAction::actionRecoveryDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::RecoveryResultConstPtr &result_ptr)
 {
+  action_state_ =  FAILED;  // unless recovery succeeds or gets canceled...
 
   const mbf_msgs::RecoveryResult& result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
-  // copy result from get_path action
 
+  // copy result from get_path action
   move_base_result.outcome = result.outcome;
   move_base_result.message = result.message;
   move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
   move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
   move_base_result.final_pose = robot_pose_;
-
 
   switch (state.state_)
   {
@@ -481,7 +452,7 @@ void MoveBaseAction::actionRecoveryDone(
       if (current_recovery_behavior_ == recovery_behaviors_.end())
       {
         ROS_DEBUG_STREAM_NAMED("move_base",
-                               "All recovery behaviours failed. Abort recovering and abort the move_base action");
+                               "All recovery behaviors failed. Abort recovering and abort the move_base action");
         goal_handle_.setAborted(move_base_result, "All recovery behaviors failed.");
       }
       else
@@ -512,14 +483,14 @@ void MoveBaseAction::actionRecoveryDone(
     case actionlib::SimpleClientGoalState::PREEMPTED:
       ROS_INFO_STREAM_NAMED("move_base",
                              "The recovery action has been preempted!");
-      if(cancel_)
+      if(action_state_ == CANCELED)
         goal_handle_.setCanceled();
       break;
 
     case actionlib::SimpleClientGoalState::RECALLED:
       ROS_INFO_STREAM_NAMED("move_base",
                             "The recovery action has been recalled!");
-      if(cancel_)
+      if(action_state_ == CANCELED)
         goal_handle_.setCanceled();
       break;
 
@@ -532,6 +503,7 @@ void MoveBaseAction::actionRecoveryDone(
       ROS_FATAL_STREAM_NAMED("move_base",
                              "The recovery action has lost the connection to the server!");
       goal_handle_.setAborted();
+      break;
     default:
       ROS_FATAL_STREAM_NAMED("move_base",
                              "Reached unreachable case! Unknown state!");
@@ -544,46 +516,33 @@ void MoveBaseAction::actionGetPathReplanningDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::GetPathResultConstPtr &result)
 {
-  if (action_state_ == SUCCEEDED) return; // finished move base action
-
+  if (!replanning_ || action_state_ != EXE_PATH)
+    return; // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
 
   if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
-
-    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded with a new plan.");
+    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"exe_path\" with the new plan");
     exe_path_goal_.path = result->path;
-
-    ROS_DEBUG_STREAM_NAMED("move_base", "Canceling the current \"exe_path\" goal!");
-    exe_path_canceled_ = true;
-    action_client_exe_path_.cancelGoal();
-
-    ROS_DEBUG_STREAM_NAMED("move_base", "Canceled the current \"exe_path\" goal!");
-
-    action_client_exe_path_.waitForResult(ros::Duration(2.0));
-
-    ROS_INFO_STREAM_NAMED("move_base", "Sending a new action goal to \"exe_path\" with the new plan, "
-        "because to replanning is active!");
     mbf_msgs::ExePathGoal goal(exe_path_goal_);
     action_client_exe_path_.sendGoal(
         goal,
         boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
         boost::bind(&MoveBaseAction::actionExePathActive, this),
         boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
-
   }
 
-  replanning_rate_.sleep(); // TODO is there a better way?
+  replanning_mtx_.lock();
+  replanning_rate_.sleep();
+  replanning_mtx_.unlock();
 
-  if(cancel_) return;
+  if (!replanning_ || action_state_ != EXE_PATH)
+    return; // another chance to stop replannings after waiting for replanning period
 
   ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
-
   action_client_get_path_.sendGoal(
       get_path_goal_,
       boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)); // replanning
 }
-
-
 
 
 } /* namespace mbf_abstract_nav */

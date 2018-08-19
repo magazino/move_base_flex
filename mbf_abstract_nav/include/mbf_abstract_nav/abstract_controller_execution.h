@@ -317,7 +317,7 @@ namespace mbf_abstract_nav
     double tf_timeout_;
 
     //! dynamic reconfigure config mutex, thread safe param reading and writing
-    boost::recursive_mutex configuration_mutex_;
+    boost::mutex configuration_mutex_;
 
     //! main controller loop variable, true if the controller is running, false otherwise
     bool moving_;

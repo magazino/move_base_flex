@@ -71,6 +71,7 @@ namespace mbf_abstract_nav
     // dynamically reconfigurable parameters
     reconfigure(config);
 
+    ROS_ERROR_STREAM("nex exec");
     current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
 
     // init cmd_vel publisher for the robot velocity t
@@ -89,21 +90,22 @@ namespace mbf_abstract_nav
       ROS_ERROR("Controller frequency must be greater than 0.0! No change of the frequency!");
       return false;
     }
+    ROS_ERROR_STREAM("Set controller frequency to " << frequency);
     calling_duration_ = boost::chrono::microseconds(static_cast<int>(1e6 / frequency));
     return true;
   }
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
-    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-
+//    boost::mutex::scoped_lock sl(configuration_mutex_);
+    ROS_ERROR_STREAM("AbstractControllerExecution::reconfigure lock...");
+    boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
+    ROS_ERROR_STREAM("AbstractControllerExecution::reconfigure locked!");
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
 
-    if(setControllerFrequency(config.controller_frequency)){
-      ROS_INFO_STREAM("Set controller frequency to " << config.controller_frequency);
-    }
+    setControllerFrequency(config.controller_frequency);
 
     max_retries_ = config.controller_max_retries;
   }
@@ -276,7 +278,8 @@ namespace mbf_abstract_nav
     {
       while (moving_ && ros::ok())
       {
-        boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+//        boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
+//        boost::mutex::scoped_lock sl(configuration_mutex_);
 
         boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
 
@@ -351,6 +354,7 @@ namespace mbf_abstract_nav
           }
           else
           {
+            boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
             if (++retries > max_retries_)
             {
               setState(MAX_RETRIES);
@@ -377,7 +381,9 @@ namespace mbf_abstract_nav
         boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
         boost::chrono::microseconds execution_duration =
             boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - loop_start_time);
+        configuration_mutex_.lock();
         boost::chrono::microseconds sleep_time = calling_duration_ - execution_duration;
+        configuration_mutex_.unlock();
         if (moving_ && ros::ok())
         {
           if (sleep_time > boost::chrono::microseconds(0))
