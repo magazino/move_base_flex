@@ -51,9 +51,6 @@ include_directories(
 
 add_library(${MBF_SIMPLE_SERVER_LIB}
   src/simple_navigation_server.cpp
-  src/simple_planner_execution.cpp
-  src/simple_controller_execution.cpp
-  src/simple_recovery_execution.cpp
 )
 
 add_dependencies(${MBF_SIMPLE_SERVER_LIB} ${catkin_EXPORTED_TARGETS})

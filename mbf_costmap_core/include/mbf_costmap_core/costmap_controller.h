@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_global_planner.h
+ *  mbf_costmap_core.h
  *
  *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
  *

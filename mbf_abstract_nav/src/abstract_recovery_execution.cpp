@@ -48,20 +48,20 @@ namespace mbf_abstract_nav
 
 
   AbstractRecoveryExecution::AbstractRecoveryExecution(
-      boost::condition_variable &condition,
-      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
-      condition_(condition), tf_listener_ptr_(tf_listener_ptr), state_(STOPPED), canceled_(false)
+      mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
+      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      const MoveBaseFlexConfig &config,
+      boost::function<void()> setup_fn,
+      boost::function<void()> cleanup_fn) :
+    AbstractExecutionBase(setup_fn, cleanup_fn),
+      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
   {
+    // dynamically reconfigurable parameters
+    reconfigure(config);
   }
 
   AbstractRecoveryExecution::~AbstractRecoveryExecution()
   {
-  }
-
-
-  bool AbstractRecoveryExecution::initialize()
-  {
-    return loadPlugins();
   }
 
 
@@ -74,65 +74,6 @@ namespace mbf_abstract_nav
     patience_ = ros::Duration(config.recovery_patience);
 
     // Nothing else to do here, as recovery_enabled is loaded and used in the navigation server
-  }
-
-
-  bool AbstractRecoveryExecution::loadPlugins()
-  {
-    ros::NodeHandle private_nh("~");
-
-    XmlRpc::XmlRpcValue recovery_behaviors_param_list;
-    if(!private_nh.getParam("recovery_behaviors", recovery_behaviors_param_list))
-    {
-      ROS_WARN_STREAM("No recovery bahaviors configured! - Use the param \"recovery_behaviors\", which must be a list of tuples with a name and a type.");
-      return true;
-    }
-
-    try
-    {
-      for (int i = 0; i < recovery_behaviors_param_list.size(); i++)
-      {
-        XmlRpc::XmlRpcValue elem = recovery_behaviors_param_list[i];
-
-        std::string name = elem["name"];
-        std::string type = elem["type"];
-
-        if (recovery_behaviors_.find(name) != recovery_behaviors_.end())
-        {
-          ROS_ERROR_STREAM("The recovery behavior \"" << name << "\" has already been loaded! Names must be unique!");
-          return false;
-        }
-        mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr = loadRecoveryPlugin(type);
-        if(recovery_ptr && initPlugin(name, recovery_ptr))
-        {
-          if(!current_behavior_)
-          {
-            current_behavior_ = recovery_ptr;
-            setState(INITIALIZED);
-          }
-          recovery_behaviors_.insert(
-              std::pair<std::string, mbf_abstract_core::AbstractRecovery::Ptr>(name, recovery_ptr));
-
-          recovery_behaviors_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
-
-          ROS_INFO_STREAM("The recovery behavior \"" << type << "\" has been loaded successfully under the name \""
-                          << name << "\".");
-        }
-        else
-        {
-          ROS_ERROR_STREAM("Could not load the plugin with the name \"" << name << "\" and the type \"" << type << "\"!");
-        }
-      }
-    }
-    catch (XmlRpc::XmlRpcException &e)
-    {
-      ROS_ERROR_STREAM("Invalid parameter structure. The recovery_behaviors parameter has to be a list of structs "
-                       << "with fields \"name\" and \"type\" of the recovery behavior!");
-      ROS_ERROR_STREAM(e.getMessage());
-      return false;
-    }
-    // Is there any recovery behavior initialized?
-    return current_behavior_ ? true : false;
   }
 
 
@@ -149,97 +90,39 @@ namespace mbf_abstract_nav
     return state_;
   }
 
-
-  void AbstractRecoveryExecution::startRecovery(const std::string &name)
-  {
-    requested_behavior_name_ = name;
-    setState(STARTED);
-    thread_ = boost::thread(&AbstractRecoveryExecution::run, this);
-  }
-
-
-  void AbstractRecoveryExecution::stopRecovery()
-  {
-    thread_.interrupt();
-    setState(STOPPED);
-  }
-
-
   bool AbstractRecoveryExecution::cancel()
   {
-    canceled_ = true;
-    if (current_behavior_)
+    cancel_ = true;
+    // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
+    if(!behavior_->cancel())
     {
-      // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-      return current_behavior_->cancel();
+      ROS_WARN_STREAM("Cancel recovering failed or is not supported by the plugin. "
+                          << "Wait until the current recovery behavior finished!");
+      return false;
     }
-    return false;
-  }
-
-
-  bool AbstractRecoveryExecution::hasRecoveryBehavior(const std::string &name)
-  {
-    return recovery_behaviors_.find(name) != recovery_behaviors_.end();
-  }
-
-
-  std::vector<std::string> AbstractRecoveryExecution::listRecoveryBehaviors()
-  {
-    std::vector<std::string> recovery_behaviors;
-    std::map<std::string, std::string>::iterator it = recovery_behaviors_type_.begin();
-    for (; it != recovery_behaviors_type_.end(); ++it)
-    {
-      recovery_behaviors.push_back(it->first);
-    }
-    return recovery_behaviors;
-  }
-
-
-  bool AbstractRecoveryExecution::getTypeOfBehavior(const std::string &name, std::string &type)
-  {
-    std::map<std::string, std::string>::iterator finder = recovery_behaviors_type_.find(name);
-    if (finder != recovery_behaviors_type_.end())
-    {
-      type = finder->second;
-      return true;
-    }
-    return false;
+    return true;
   }
 
   bool AbstractRecoveryExecution::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard1(conf_mtx_);
     boost::lock_guard<boost::mutex> guard2(time_mtx_);
+    ROS_INFO_STREAM("Patience: " << patience_ << ", Start Time: " << start_time_ << " now: " << ros::Time::now());
     return (patience_ > ros::Duration(0)) && (ros::Time::now() - start_time_ > patience_);
   }
 
   void AbstractRecoveryExecution::run()
   {
-    canceled_ = false; // (re)set the canceled state
-
-    typename std::map<std::string, boost::shared_ptr<mbf_abstract_core::AbstractRecovery> >::iterator find_iter;
-    find_iter = recovery_behaviors_.find(requested_behavior_name_);
-
-    if (find_iter == recovery_behaviors_.end())
-    {
-      // no such recovery behavior
-      ROS_ERROR_STREAM("No recovery behavior for the given name: \"" << requested_behavior_name_ << "\"!");
-      setState(WRONG_NAME);
-      condition_.notify_one();
-      return;
-    }
+    cancel_ = false; // reset the canceled state
 
     time_mtx_.lock();
     start_time_ = ros::Time::now();
     time_mtx_.unlock();
-    current_behavior_ = find_iter->second;
     setState(RECOVERING);
     try
     {
-      // TODO use outcome and message
-      std::string message;
-      uint32_t outcome = current_behavior_->runBehavior(message);
-      if (canceled_)
+      uint32_t outcome_ = behavior_->runBehavior(message_);
+      if (cancel_)
       {
         setState(CANCELED);
       }
@@ -257,6 +140,5 @@ namespace mbf_abstract_nav
       setState(INTERNAL_ERROR);
     }
     condition_.notify_one();
-    current_behavior_.reset();
   }
 } /* namespace mbf_abstract_nav */

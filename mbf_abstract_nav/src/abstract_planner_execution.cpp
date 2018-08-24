@@ -39,119 +39,33 @@
  */
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
-#include <XmlRpcException.h>
-#include <boost/exception/diagnostic_information.hpp>
 
 namespace mbf_abstract_nav
 {
 
 
-  AbstractPlannerExecution::AbstractPlannerExecution(boost::condition_variable &condition) :
-      condition_(condition), state_(STOPPED), planning_(false),
-      has_new_start_(false), has_new_goal_(false), outcome_(255)
+  AbstractPlannerExecution::AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+                                                     const MoveBaseFlexConfig &config,
+                                                     boost::function<void()> setup_fn,
+                                                     boost::function<void()> cleanup_fn) :
+    AbstractExecutionBase(setup_fn, cleanup_fn),
+      planner_(planner_ptr), state_(INITIALIZED), planning_(false),
+      has_new_start_(false), has_new_goal_(false)
   {
     ros::NodeHandle private_nh("~");
 
     // non-dynamically reconfigurable parameters
     private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
+
+    // dynamically reconfigurable parameters
+    reconfigure(config);
   }
 
   AbstractPlannerExecution::~AbstractPlannerExecution()
   {
   }
 
-
-  bool AbstractPlannerExecution::initialize()
-  {
-    return loadPlugins();
-  }
-
-  bool AbstractPlannerExecution::switchPlanner(const std::string& name){
-    if(name == plugin_name_)
-    {
-      ROS_DEBUG_STREAM("No planner switch necessary, \"" << name << "\" already set.");
-      return true;
-    }
-    std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr>::iterator new_planner
-        = planners_.find(name);
-    if(new_planner != planners_.end())
-    {
-      plugin_name_ = new_planner->first;
-      planner_ = new_planner->second;
-      ROS_INFO_STREAM("Switched the planner plugin to \"" << new_planner->first << "\" with "
-          << "the type \"" << planners_type_[new_planner->first] << "\"");
-      return true;
-    }
-    else
-    {
-      ROS_WARN_STREAM("The planner \"" << name << "\" has not yet been loaded!"
-          << " No switch of the planner!");
-      return false;
-    }
-  }
-
-  bool AbstractPlannerExecution::loadPlugins()
-  {
-    ros::NodeHandle private_nh("~");
-
-    XmlRpc::XmlRpcValue planners_param_list;
-    if(!private_nh.getParam("planners", planners_param_list))
-    {
-      ROS_WARN_STREAM("No planners configured! - Use the param \"planners\", which must be a list of tuples with a name and a type.");
-      return false;
-    }
-
-    try
-    {
-      for (int i = 0; i < planners_param_list.size(); i++)
-      {
-        XmlRpc::XmlRpcValue elem = planners_param_list[i];
-
-        std::string name = elem["name"];
-        std::string type = elem["type"];
-
-        if (planners_.find(name) != planners_.end())
-        {
-          ROS_ERROR_STREAM("The planner \"" << name << "\" has already been loaded! Names must be unique!");
-          return false;
-        }
-        mbf_abstract_core::AbstractPlanner::Ptr planner_ptr = loadPlannerPlugin(type);
-        if(planner_ptr && initPlugin(name, planner_ptr))
-        {
-          // set default planner to the first in the list
-          if(!planner_)
-          {
-            planner_ = planner_ptr;
-            plugin_name_ = name;
-            setState(INITIALIZED);
-          }
-
-          planners_.insert(
-              std::pair<std::string, mbf_abstract_core::AbstractPlanner::Ptr>(name, planner_ptr));
-
-          planners_type_.insert(std::pair<std::string, std::string>(name, type)); // save name to type mapping
-
-          ROS_INFO_STREAM("The planner with the type \"" << type << "\" has been loaded successfully under the name \""
-              << name << "\".");
-        }
-        else
-        {
-          ROS_ERROR_STREAM("Could not load the plugin with the name \""
-              << name << "\" and the type \"" << type << "\"!");
-        }
-      }
-    }
-    catch (XmlRpc::XmlRpcException &e)
-    {
-      ROS_ERROR_STREAM("Invalid parameter structure. The \"planners\" parameter has to be a list of structs "
-                           << "with fields \"name\" and \"type\" of !");
-      ROS_ERROR_STREAM(e.getMessage());
-      return false;
-    }
-    // is there any planner initialized?
-    return planner_ ? true : false;
-  }
 
   double AbstractPlannerExecution::getCost()
   {
@@ -251,9 +165,9 @@ namespace mbf_abstract_nav
   }
 
 
-  bool AbstractPlannerExecution::startPlanning(const geometry_msgs::PoseStamped &start,
-                                               const geometry_msgs::PoseStamped &goal,
-                                               double tolerance)
+  bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
+                                       const geometry_msgs::PoseStamped &goal,
+                                       double tolerance)
   {
     if (planning_)
     {
@@ -261,7 +175,6 @@ namespace mbf_abstract_nav
     }
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
     planning_ = true;
-    cancel_ = false;
     start_ = start;
     goal_ = goal;
     tolerance_ = tolerance;
@@ -272,26 +185,23 @@ namespace mbf_abstract_nav
     ROS_DEBUG_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
                                    << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
 
-    setState(STARTED);
-    thread_ = boost::thread(&AbstractPlannerExecution::run, this);
-    return true;
-  }
-
-
-  void AbstractPlannerExecution::stopPlanning()
-  {
-    // only useful if there are any interruption points in the global planner
-    ROS_WARN_STREAM("Try to stop the planning rigorously by interrupting the thread!");
-    thread_.interrupt();
+    return AbstractExecutionBase::start();
   }
 
 
   bool AbstractPlannerExecution::cancel()
   {
-    cancel_ = true;  // force cancel immediately, as the call to cancel in the planner can take a while
+    cancel_ = true; // force cancel immediately, as the call to cancel in the planner can take a while
 
     // returns false if cancel is not implemented or rejected by the planner (will run until completion)
-    return planner_->cancel();
+    if(!planner_->cancel())
+    {
+      ROS_WARN_STREAM("Cancel planning failed or is not supported by the plugin. "
+          << "Wait until the current planning finished!");
+
+      return false;
+    }
+    return true;
   }
 
   uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
