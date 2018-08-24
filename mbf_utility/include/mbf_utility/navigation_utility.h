@@ -41,6 +41,10 @@
 #ifndef MBF_UTILITY__NAVIGATION_UTILITY_H_
 #define MBF_UTILITY__NAVIGATION_UTILITY_H_
 
+#include <geometry_msgs/PoseStamped.h>
+#include <ros/duration.h>
+#include <ros/time.h>
+#include <string>
 #include <tf/transform_listener.h>
 
 namespace mbf_utility

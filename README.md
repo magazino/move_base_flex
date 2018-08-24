@@ -1,4 +1,4 @@
-# Move Base Flex; a more flexible navigation framework:
+# Move Base Flex: A Highly Flexible Navigation Framework:
 
 This repository contains Move Base Flex (MBF), a backwards-compatible replacement for move_base. MBF can use existing plugins for move_base, and provides an enhanced version of the same ROS interface. It exposes action servers for planning, controlling and recovering, providing detailed information of the current state and the plugin's feedback. An external executive logic can use MBF and its actions to perform smart and flexible navigation strategies. For example, at [Magazino](https://www.magazino.eu/?lang=en) we have successfully deployed MBF at customer facilities to control TORU robots in highly dynamical environments. Furthermore, MBF enables the use of other map representations, e.g. meshes. The core features are:
  
@@ -7,16 +7,7 @@ This repository contains Move Base Flex (MBF), a backwards-compatible replacemen
 * Comprehensive result and feedback information on all actions, including error codes and messages from the loaded plugins. For users still relying on a unique navigation interface, we have extended move_base action with detailed result and feedback information (though we still provide the current one).
 * Separation between an abstract navigation framework and concrete implementations, allowing faster development of new applications, e.g. 3D navigation.
 
-## Installation
-Required dependencies ROS Kinetic, navigation.
-
-#### ROS
-
-[See install instructions here.](http://wiki.ros.org/kinetic/Installation)
-
-#### Navigation
-
-`sudo apt-get install ros-kinetic-navigation`
+Please see the [Move Base Flex documentation](wiki.ros.org/move_base_flex) in the ROS wiki.
 
 ## Concepts & Architecture
 

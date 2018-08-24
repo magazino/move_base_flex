@@ -84,7 +84,7 @@ namespace mbf_costmap_core {
                                 std::string &message) = 0;
 
       /**
-       * @brief Requests the planner to cancel, e.g. if it takes to much time.
+       * @brief Requests the planner to cancel, e.g. if it takes too much time.
        * @remark New on MBF API
        * @return True if a cancel has been successfully requested, false if not implemented.
        */

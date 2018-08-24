@@ -41,16 +41,20 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_CONTROLLER_EXECUTION_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_CONTROLLER_EXECUTION_H_
 
-#include <pluginlib/class_loader.h>
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/chrono/duration.hpp>
+#include <map>
+#include <stdint.h>
+#include <string>
+#include <vector>
+
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <mbf_abstract_core/abstract_controller.h>
+
 #include <mbf_utility/navigation_utility.h>
+#include <mbf_abstract_core/abstract_controller.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
 
 namespace mbf_abstract_nav
 {
@@ -68,19 +72,26 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server controller_execution
  */
-  class AbstractControllerExecution
+  class AbstractControllerExecution : public AbstractExecutionBase
   {
   public:
+
+    static const double DEFAULT_CONTROLLER_FREQUENCY;
 
     typedef boost::shared_ptr<AbstractControllerExecution > Ptr;
 
     /**
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
+     * @param controller_plugin_type The plugin type associated with the plugin to load
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
-    AbstractControllerExecution(boost::condition_variable &condition,
-                                const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+    AbstractControllerExecution(
+        const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
+        const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+        const MoveBaseFlexConfig &config,
+        boost::function<void()> setup_fn,
+        boost::function<void()> cleanup_fn);
 
     /**
      * @brief Destructor
@@ -91,18 +102,20 @@ namespace mbf_abstract_nav
      * @brief Starts the controller, a valid plan should be given in advance.
      * @return false if the thread is already running, true if starting the controller succeeded!
      */
-    bool startMoving();
-
-    /**
-     * @brief Stopping the thread, by interrupting it
-     */
-    void stopMoving();
+    virtual bool start();
 
     /**
      * @brief Sets a new plan to the controller execution
      * @param plan A vector of stamped poses.
      */
     void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan);
+
+    /**
+     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
+     * computation takes too much time.
+     * @return true, if the planner plugin tries / tried to cancel the planning step.
+     */
+    virtual bool cancel();
 
     /**
      * @brief Internal states
@@ -120,25 +133,16 @@ namespace mbf_abstract_nav
       NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.
+      CANCELED,     ///< The controller has been canceled.
       STOPPED,      ///< The controller has been stopped!
       INTERNAL_ERROR///< An internal error occurred.
     };
 
     /**
-     * Return the current state of the controller execution. Thread communication safe.
+     * @brief Return the current state of the controller execution. Thread communication safe.
      * @return current state, enum value of ControllerState
      */
     ControllerState getState();
-
-    /**
-     * @brief Gets the current plugin execution outcome
-     */
-    uint32_t getOutcome() { return outcome_; };
-
-    /**
-     * @brief Gets the current plugin execution message
-     */
-    std::string getMessage() { return message_; };
 
     /**
      * @brief Returns the time of the last plugin call
@@ -154,9 +158,9 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Returns the last valid velocity command set by setVelocityCmd method
-     * @param vel_cmd_stamped Returns the last valid velocity command.
+     * @return The last valid velocity command.
      */
-    void getLastValidCmdVel(geometry_msgs::TwistStamped &vel_cmd_stamped);
+    geometry_msgs::TwistStamped getLastValidCmdVel();
 
     /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
@@ -165,50 +169,46 @@ namespace mbf_abstract_nav
     bool isPatienceExceeded();
 
     /**
-     * @brief Loads the plugin given by the parameter "local_planner"
+     * @brief Sets the controller frequency
+     * @param frequency The controller frequency
+     * @return true, if the controller frequency has been changed / set succesfully, false otherwise
      */
-    bool initialize();
+    bool setControllerFrequency(double frequency);
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution,
      *        if a user uses dynamic reconfigure to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
-    void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
+    void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
-     * @brief Returns weather the robot should normally move or not. True if the local planner seems to work properly.
+     * @brief Returns whether the robot should normally move or not. True if the local planner seems to work properly.
      * @return true, if the robot should normally move, false otherwise
      */
     bool isMoving();
 
-    /**
-     * @brief Switch to the controller with the given name in the controllers list
-     * @param name The name of the controller in the loaded controller list.
-     * @return true if the switch was successful, false otherwise
-     */
-    bool switchController(const std::string& name);
-
   protected:
 
     /**
-     * @brief Request plugin for a new velocity command. We use this virtual method to give concrete implementations
-     *        as move_base the chance to override it and do additional stuff, for example locking the costmap.
-     * @param vel_cmd_stamped current velocity command
+     * @brief Request plugin for a new velocity command, given the current position, orientation, and velocity of the
+     * robot. We use this virtual method to give concrete implementations as move_base the chance to override it and do
+     * additional stuff, for example locking the costmap.
+     * @param pose the current pose of the robot.
+     * @param velocity the current velocity of the robot.
+     * @param cmd_vel Will be filled with the velocity command to be passed to the robot base.
+     * @param message Optional more detailed outcome as a string.
+     * @return Result code as described on ExePath action result and plugin's header.
      */
-    virtual uint32_t computeVelocityCmd(geometry_msgs::TwistStamped& vel_cmd_stamped, std::string& message);
+    virtual uint32_t computeVelocityCmd(const geometry_msgs::PoseStamped& pose,
+                                        const geometry_msgs::TwistStamped& velocity,
+                                        geometry_msgs::TwistStamped& vel_cmd, std::string& message);
 
     /**
      * @brief Sets the velocity command, to make it available for another thread
      * @param vel_cmd_stamped current velocity command
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
-
-    //! map to store the controllers. Each controller can be accessed by its corresponding name
-    std::map<std::string, mbf_abstract_core::AbstractController::Ptr > controllers_;
-
-    //! map to store the type of the controllers as string
-    std::map<std::string, std::string> controllers_type_;
 
     //! the name of the loaded plugin
     std::string plugin_name_;
@@ -231,39 +231,13 @@ namespace mbf_abstract_nav
     //! The time / duration of patience, before changing the state.
     ros::Duration patience_;
 
-  private:
-
-
     /**
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
     virtual void run();
 
-    /**
-     * @brief Loads the plugin associated with the given controller type parameter
-     * @param controller_type The type of the controller plugin
-     * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
-     *         an empty pointer otherwise.
-     */
-    virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type) = 0;
+  private:
 
-    /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
-     * @param name The name of the controller
-     * @param controller_ptr pointer to the controller object which corresponds to the name param
-     * @return true if init succeeded, false otherwise
-     */
-    virtual bool initPlugin(
-        const std::string& name,
-        const mbf_abstract_core::AbstractController::Ptr& controller_ptr
-    ) = 0;
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all controllers have been loaded successfully.
-     */
-    bool loadPlugins();
 
     /**
      * publishes a velocity command with zero values to stop the robot.
@@ -311,21 +285,15 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Gets the new available plan. This method is thread safe.
-     * @param plan A reference to a plan which will then be filled with the new plan
+     * @return The plan
      */
-    void getNewPlan(std::vector<geometry_msgs::PoseStamped> &plan);
+    std::vector<geometry_msgs::PoseStamped> getNewPlan();
 
     //! the last calculated velocity command
     geometry_msgs::TwistStamped vel_cmd_stamped_;
 
     //! the last set plan which is currently processed by the controller
     std::vector<geometry_msgs::PoseStamped> plan_;
-
-    //! condition variable to wake up control thread
-    boost::condition_variable &condition_;
-
-    //! the controlling thread object
-    boost::thread thread_;
 
     //! the duration which corresponds with the controller frequency.
     boost::chrono::microseconds calling_duration_;
@@ -339,20 +307,17 @@ namespace mbf_abstract_nav
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;
 
+    //! publisher for the current goal
+    ros::Publisher current_goal_pub_;
+
     //! the current controller state
     AbstractControllerExecution::ControllerState state_;
-
-    //! the last received plugin execution outcome
-    uint32_t outcome_;
-
-    //! the last received plugin execution message
-    std::string message_;
 
     //! time before a timeout used for tf requests
     double tf_timeout_;
 
     //! dynamic reconfigure config mutex, thread safe param reading and writing
-    boost::recursive_mutex configuration_mutex_;
+    boost::mutex configuration_mutex_;
 
     //! main controller loop variable, true if the controller is running, false otherwise
     bool moving_;
@@ -368,6 +333,7 @@ namespace mbf_abstract_nav
 
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
+
   };
 
 } /* namespace mbf_abstract_nav */

@@ -37,7 +37,6 @@
  *    Jorge Santos Simón <santos@magazino.eu>
  *
  */
-#include <nav_core/base_global_planner.h>
 #include <nav_core_wrapper/wrapper_global_planner.h>
 
 #include "mbf_costmap_nav/costmap_planner_execution.h"
@@ -45,91 +44,46 @@
 namespace mbf_costmap_nav
 {
 
-CostmapPlannerExecution::CostmapPlannerExecution(boost::condition_variable &condition, CostmapPtr &costmap_ptr) :
-    AbstractPlannerExecution(condition), costmap_ptr_(costmap_ptr)
+CostmapPlannerExecution::CostmapPlannerExecution(
+    const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
+    CostmapPtr &costmap_ptr,
+    const MoveBaseFlexConfig &config,
+    boost::function<void()> setup_fn,
+    boost::function<void()> cleanup_fn)
+      : AbstractPlannerExecution(planner_ptr, toAbstract(config), setup_fn, cleanup_fn),
+        costmap_ptr_(costmap_ptr)
 {
+  ros::NodeHandle private_nh("~");
+  private_nh.param("planner_lock_costmap", lock_costmap_, true);
 }
 
 CostmapPlannerExecution::~CostmapPlannerExecution()
 {
 }
 
-mbf_abstract_core::AbstractPlanner::Ptr CostmapPlannerExecution::loadPlannerPlugin(const std::string& planner_type)
+mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const MoveBaseFlexConfig &config)
 {
-  static pluginlib::ClassLoader<mbf_costmap_core::CostmapPlanner>
-      class_loader("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner");
-  mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
-  // try to load and init global planner
-  ROS_DEBUG("Load global planner plugin.");
-  try
-  {
-    planner_ptr = boost::static_pointer_cast<mbf_abstract_core::AbstractPlanner>(
-        class_loader.createInstance(planner_type));
-    planner_name_ = class_loader.getName(planner_type);
-    ROS_INFO_STREAM("MBF_core-based global planner plugin " << planner_name_ << " loaded");
-  }
-  catch (const pluginlib::PluginlibException &ex)
-  {
-    ROS_INFO_STREAM("Failed to load the " << planner_type << " planner as a mbf_abstract_core-based plugin."
-                     << " Try to load as a nav_core-based plugin. Exception: " << ex.what());
-    try
-    {
-      // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-      static pluginlib::ClassLoader<nav_core::BaseGlobalPlanner>
-          nav_core_class_loader("nav_core", "nav_core::BaseGlobalPlanner");
-      boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_class_loader.createInstance(planner_type);
-      planner_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperGlobalPlanner>(nav_core_planner_ptr);
-      planner_name_ = nav_core_class_loader.getName(planner_type);
-      ROS_INFO_STREAM("Nav_core-based global planner plugin " << planner_name_ << " loaded");
-    }
-    catch (const pluginlib::PluginlibException &ex)
-    {
-      ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it's properly registered"
-                       << " and that the containing library is built? Exception: " << ex.what());
-    }
-  }
-
-  return planner_ptr;
+  // copy the planner-related abstract configuration common to all MBF-based navigation
+  mbf_abstract_nav::MoveBaseFlexConfig abstract_config;
+  abstract_config.planner_frequency = config.planner_frequency;
+  abstract_config.planner_patience = config.planner_patience;
+  abstract_config.planner_max_retries = config.planner_max_retries;
+  return abstract_config;
 }
 
-bool CostmapPlannerExecution::initPlugin(
-    const std::string& name,
-    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
-)
-{
-  mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
-  ROS_INFO_STREAM("Initialize planner \"" << name << "\".");
-
-  if (!costmap_ptr_)
-  {
-    ROS_ERROR_STREAM("The costmap pointer has not been initialized!");
-    return false;
-  }
-
-  costmap_planner_ptr->initialize(name, costmap_ptr_.get());
-  ROS_INFO("Global planner plugin initialized.");
-  return true;
-}
-
-uint32_t CostmapPlannerExecution::makePlan(const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                                           const geometry_msgs::PoseStamped start,
-                                           const geometry_msgs::PoseStamped goal,
+uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped& start,
+                                           const geometry_msgs::PoseStamped& goal,
                                            double tolerance,
                                            std::vector<geometry_msgs::PoseStamped> &plan,
                                            double &cost,
                                            std::string &message)
 {
-
-  ros::NodeHandle private_nh("~");
-  private_nh.param("planner_lock_costmap", lock_costmap_, true);
-
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
   }
-  return planner_ptr->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */

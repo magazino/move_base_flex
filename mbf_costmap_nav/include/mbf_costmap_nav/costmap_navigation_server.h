@@ -51,6 +51,10 @@
 #include <std_srvs/Empty.h>
 #include <mbf_msgs/CheckPose.h>
 
+#include <nav_core/base_global_planner.h>
+#include <nav_core/base_local_planner.h>
+#include <nav_core/recovery_behavior.h>
+
 namespace mbf_costmap_nav
 {
 /**
@@ -75,6 +79,8 @@ public:
 
   typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
 
+  typedef boost::shared_ptr<CostmapNavigationServer> Ptr;
+
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
@@ -86,7 +92,77 @@ public:
    */
   virtual ~CostmapNavigationServer();
 
+  virtual void stop();
+
 private:
+
+  //! shared pointer to a new @ref planner_execution "PlannerExecution"
+  virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
+      const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);
+
+  //! shared pointer to a new @ref controller_execution "ControllerExecution"
+  virtual mbf_abstract_nav::AbstractControllerExecution::Ptr newControllerExecution(
+      const mbf_abstract_core::AbstractController::Ptr plugin_ptr);
+
+  //! shared pointer to a new @ref recovery_execution "RecoveryExecution"
+  virtual mbf_abstract_nav::AbstractRecoveryExecution::Ptr newRecoveryExecution(
+      const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr);
+
+  /**
+   * @brief Loads the plugin associated with the given planner_type parameter.
+   * @param planner_type The type of the planner plugin to load.
+   * @return true, if the local planner plugin was successfully loaded.
+   */
+  virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type);
+
+  /**
+   * @brief Initializes the controller plugin with its name and pointer to the costmap
+   * @param name The name of the planner
+   * @param planner_ptr pointer to the planner object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
+   */
+  virtual bool initializePlannerPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+  );
+
+  /**
+   * @brief Loads the plugin associated with the given controller type parameter
+   * @param controller_type The type of the controller plugin
+   * @return A shared pointer to a new loaded controller, if the controller plugin was loaded successfully,
+   *         an empty pointer otherwise.
+   */
+  virtual mbf_abstract_core::AbstractController::Ptr loadControllerPlugin(const std::string& controller_type);
+
+  /**
+   * @brief Initializes the controller plugin with its name, a pointer to the TransformListener
+   *        and pointer to the costmap
+   * @param name The name of the controller
+   * @param controller_ptr pointer to the controller object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
+   */
+  virtual bool initializeControllerPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractController::Ptr& controller_ptr
+  );
+
+  /**
+   * @brief Loads a Recovery plugin associated with given recovery type parameter
+   * @param recovery_name The name of the Recovery plugin
+   * @return A shared pointer to a Recovery plugin, if the plugin was loaded successfully, an empty pointer otherwise.
+   */
+  virtual mbf_abstract_core::AbstractRecovery::Ptr loadRecoveryPlugin(const std::string& recovery_type);
+
+  /**
+   * @brief Initializes a recovery behavior plugin with its name and pointers to the global and local costmaps
+   * @param name The name of the recovery behavior
+   * @param behavior_ptr pointer to the recovery behavior object which corresponds to the name param
+   * @return true if init succeeded, false otherwise
+   */
+  virtual bool initializeRecoveryPlugin(
+      const std::string& name,
+      const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr);
+
 
   /**
    * @brief Check whether the costmaps should be activated.
@@ -121,35 +197,18 @@ private:
   bool callServiceClearCostmaps(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
 
   /**
-   * @brief GetPath action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionGetPath(const mbf_msgs::GetPathGoalConstPtr &goal);
-
-  /**
-   * @brief ExePath action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionExePath(const mbf_msgs::ExePathGoalConstPtr &goal);
-
-  /**
-   * @brief Recovery action execution method. This method will be called if the action server receives a goal. It
-   *        extends the base class method by calling the checkActivateCostmaps() and checkDeactivateCostmaps().
-   * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
-   *        definitions in mbf_msgs.
-   */
-  virtual void callActionRecovery(const mbf_msgs::RecoveryGoalConstPtr &goal);
-
-  /**
    * @brief Reconfiguration method called by dynamic reconfigure.
    * @param config Configuration parameters. See the MoveBaseFlexConfig definition.
    * @param level bit mask, which parameters are set.
    */
   void reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level);
+
+  pluginlib::ClassLoader<mbf_costmap_core::CostmapRecovery> recovery_plugin_loader_;
+  pluginlib::ClassLoader<nav_core::RecoveryBehavior> nav_core_recovery_plugin_loader_;
+  pluginlib::ClassLoader<mbf_costmap_core::CostmapController> controller_plugin_loader_;
+  pluginlib::ClassLoader<nav_core::BaseLocalPlanner> nav_core_controller_plugin_loader_;
+  pluginlib::ClassLoader<mbf_costmap_core::CostmapPlanner> planner_plugin_loader_;
+  pluginlib::ClassLoader<nav_core::BaseGlobalPlanner> nav_core_planner_plugin_loader_;
 
   //! Dynamic reconfigure server for the mbf_costmap2d_specific part
   DynamicReconfigureServerCostmapNav dsrv_costmap_;

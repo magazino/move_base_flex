@@ -41,15 +41,18 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 
-#include <pluginlib/class_loader.h>
-#include <boost/chrono/thread_clock.hpp>
-#include <boost/chrono/duration.hpp>
-#include <tf/transform_listener.h>
+#include <map>
+#include <stdint.h>
+#include <string>
+#include <vector>
+
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_listener.h>
+
 #include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_utility/navigation_utility.h>
 
-#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
 
 namespace mbf_abstract_nav
 {
@@ -68,7 +71,7 @@ namespace mbf_abstract_nav
  *
  * @ingroup abstract_server planner_execution
  */
-  class AbstractPlannerExecution
+  class AbstractPlannerExecution : public AbstractExecutionBase
   {
   public:
 
@@ -79,7 +82,10 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param condition Thread sleep condition variable, to wake up connected threads
      */
-    AbstractPlannerExecution(boost::condition_variable &condition);
+    AbstractPlannerExecution(const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+                             const MoveBaseFlexConfig &config,
+                             boost::function<void()> setup_fn,
+                             boost::function<void()> cleanup_fn);
 
     /**
      * @brief Destructor
@@ -129,16 +135,6 @@ namespace mbf_abstract_nav
     PlanningState getState();
 
     /**
-     * @brief Gets the current plugin execution outcome
-     */
-    uint32_t getOutcome() { return outcome_; };
-
-    /**
-     * @brief Gets the current plugin execution message
-     */
-    std::string getMessage() { return message_; };
-
-    /**
      * @brief Gets planning frequency
      */
     double getFrequency() { return frequency_; };
@@ -151,10 +147,10 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
-     * computation takes to much time.
+     * computation takes too much time.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
      */
-    bool cancel();
+    virtual bool cancel();
 
     /**
      * @brief Sets a new goal pose for the planner execution
@@ -185,76 +181,30 @@ namespace mbf_abstract_nav
      * @param tolerance tolerance to the goal pose for the planning
      * @return true, if the planner thread has been started, false if the thread is already running.
      */
-    bool startPlanning(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                       double tolerance);
-
-    /**
-     * @brief Tries to stop the current planner execution by an thread interrupt.
-     */
-    void stopPlanning();
-
-    /**
-     * @brief Loads the plugin given by the parameter "local_planner"
-     */
-    bool initialize();
+    bool start(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
+               double tolerance);
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution, if a user uses dynamic reconfigure
      *        to reconfigure the current state.
      * @param config MoveBaseFlexConfig object
      */
-    void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config);
-
-    /**
-     * @brief Switches the planner to planner with the given name
-     * @param name The name of the planner in the planners list
-     * @return true if the switch was successful, false otherwise.
-     */
-    bool switchPlanner(const std::string& name);
+    void reconfigure(const MoveBaseFlexConfig &config);
 
   protected:
 
     //! the local planer to calculate the velocity command
     mbf_abstract_core::AbstractPlanner::Ptr planner_;
 
-    //! map to store the planners. Each planner can be accessed by its corresponding name
-    std::map<std::string, mbf_abstract_core::AbstractPlanner::Ptr > planners_;
-
-    //! map to store the type of the planner as string
-    std::map<std::string, std::string> planners_type_;
-
     //! the name of the loaded planner plugin
     std::string plugin_name_;
-
-    //! true, if the planner execution has been canceled.
-    bool cancel_;
 
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */
     virtual void run();
 
-
   private:
-
-    /**
-     * @brief Loads the plugin associated with the given planner_type parameter.
-     * @param planner_type The type of the planner plugin to load.
-     * @return true, if the local planner plugin was successfully loaded.
-     */
-    virtual mbf_abstract_core::AbstractPlanner::Ptr loadPlannerPlugin(const std::string& planner_type) = 0;
-
-    /**
-     * @brief Pure virtual method, the derived class has to implement. Depending on the plugin base class,
-     *        some plugins need to be initialized!
-     * @param name The name of the planner
-     * @param planner_ptr pointer to the planner object which corresponds to the name param
-     * @return true if init succeeded, false otherwise
-     */
-    virtual bool initPlugin(
-        const std::string& name,
-        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
-    ) = 0;
 
     /**
      * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
@@ -268,19 +218,12 @@ namespace mbf_abstract_nav
      * @return An outcome number, see also the action definition in the GetPath.action file
      */
     virtual uint32_t makePlan(
-        const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
-        const geometry_msgs::PoseStamped start,
-        const geometry_msgs::PoseStamped goal,
+        const geometry_msgs::PoseStamped &start,
+        const geometry_msgs::PoseStamped &goal,
         double tolerance,
         std::vector<geometry_msgs::PoseStamped> &plan,
         double &cost,
         std::string &message);
-
-    /**
-     * @brief Loads the plugins defined in the parameter server
-     * @return true, if all planners have been loaded successfully.
-     */
-    bool loadPlugins();
 
     /**
      * @brief Sets the internal state, thread communication safe
@@ -318,12 +261,6 @@ namespace mbf_abstract_nav
     //! current global plan cost
     double cost_;
 
-    //! the last received plugin execution outcome
-    uint32_t outcome_;
-
-    //! the last received plugin execution message
-    std::string message_;
-
     //! the current start pose used for planning
     geometry_msgs::PoseStamped start_;
 
@@ -345,12 +282,6 @@ namespace mbf_abstract_nav
     //! main cycle variable of the execution loop
     bool planning_;
 
-    //! condition variable to wake up server thread
-    boost::condition_variable &condition_;
-
-    //! thread for planning
-    boost::thread thread_;
-
     //! robot frame used for computing the current robot pose
     std::string robot_frame_;
 
@@ -365,6 +296,7 @@ namespace mbf_abstract_nav
 
     //! dynamic reconfigure mutex for a thread safe communication
     boost::recursive_mutex configuration_mutex_;
+
   };
 
 } /* namespace mbf_abstract_nav */
