@@ -353,8 +353,6 @@ void AbstractNavigationServer::startDynamicReconfigureServer()
   // dynamic reconfigure server
   dsrv_ = boost::make_shared<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_->setCallback(boost::bind(&AbstractNavigationServer::reconfigure, this, _1, _2));
-
-  ROS_ERROR_STREAM_NAMED("move_base", "startDynamicReconfigureServer  ");
 }
 
 void AbstractNavigationServer::reconfigure(
@@ -375,13 +373,9 @@ void AbstractNavigationServer::reconfigure(
     // if someone sets restore defaults on the parameter server, prevent looping
     config.restore_defaults = false;
   }
-  ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 0");
   planner_action_.reconfigureAll(config, level);
-  ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 1");
   controller_action_.reconfigureAll(config, level);
-  ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 2 ");
   recovery_action_.reconfigureAll(config, level);
-  ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 3");
   move_base_action_.reconfigure(config, level);
 
   last_config_ = config;

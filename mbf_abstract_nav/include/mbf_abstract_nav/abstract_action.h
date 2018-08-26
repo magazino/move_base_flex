@@ -81,10 +81,8 @@ class AbstractAction
   void reconfigureAll(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
   {
-    ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 1   lock...");
     boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
 
-    ROS_ERROR_STREAM_NAMED("AbstractNavigationServer", "reconfigure 1   locked!  " << executions_.size());
     typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
     for(iter = executions_.begin(); iter != executions_.end(); ++iter)
     {
