@@ -460,15 +460,15 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
       {
         case costmap_2d::NO_INFORMATION:
           response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::UNKNOWN));
-          response.cost += cost;
+          response.cost += cost * (request.unknown_cost_mult ? request.unknown_cost_mult : 1.0);
           break;
         case costmap_2d::LETHAL_OBSTACLE:
           response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::LETHAL));
-          response.cost += cost;
+          response.cost += cost * (request.lethal_cost_mult ? request.lethal_cost_mult : 1.0);
           break;
         case costmap_2d::INSCRIBED_INFLATED_OBSTACLE:
           response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::INSCRIBED));
-          response.cost += cost;
+          response.cost += cost * (request.inscrib_cost_mult ? request.inscrib_cost_mult : 1.0);
           break;
         default:response.cost += cost;
           break;
