@@ -385,6 +385,8 @@ namespace mbf_abstract_nav
           }
           else
           {
+            // interruption point, even with 0 or negative sleep_time
+            boost::this_thread::sleep_for(boost::chrono::microseconds(1));
             ROS_WARN_THROTTLE(1.0, "Calculation needs too much time to stay in the moving frequency!");
           }
         }
