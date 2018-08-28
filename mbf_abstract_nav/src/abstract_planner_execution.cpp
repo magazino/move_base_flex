@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_planner_execution.tcc
+ *  abstract_planner_execution.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -233,8 +233,6 @@ namespace mbf_abstract_nav
     {
       while (planning_ && ros::ok())
       {
-        boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-
         boost::chrono::thread_clock::time_point start_time = boost::chrono::thread_clock::now();
 
         // call the planner
@@ -273,6 +271,8 @@ namespace mbf_abstract_nav
         {
           outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
           success = outcome_ < 10;
+
+          boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
 
           if (cancel_ && !isPatienceExceeded())
           {

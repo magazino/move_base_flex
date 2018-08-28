@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_controller_execution.tcc
+ *  abstract_controller_execution.cpp
  *
  *  authors:
  *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
@@ -254,7 +254,6 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::run()
   {
-
     start_time_ = ros::Time::now();
 
     // init plan
