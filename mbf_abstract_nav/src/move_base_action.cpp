@@ -37,10 +37,13 @@ void MoveBaseAction::reconfigure(
     if (!replanning_)
     {
       replanning_ = true;
-      if (action_state_ == EXE_PATH)
+      if (action_state_ == EXE_PATH &&
+          action_client_get_path_.getState() != actionlib::SimpleClientGoalState::PENDING &&
+          action_client_get_path_.getState() != actionlib::SimpleClientGoalState::ACTIVE)
       {
         // exe_path is running and user has enabled replanning
-        ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
+        ROS_INFO_STREAM_NAMED("move_base", "Planner frequency set to " << config.planner_frequency
+                              << ": start replanning, using the \"get_path\" action!");
         action_client_get_path_.sendGoal(
             get_path_goal_,
             boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
@@ -139,10 +142,15 @@ void MoveBaseAction::actionExePathActive()
 {
   ROS_DEBUG_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
 
-  if(replanning_)
+  if (replanning_ &&
+      action_client_get_path_.getState() != actionlib::SimpleClientGoalState::PENDING &&
+      action_client_get_path_.getState() != actionlib::SimpleClientGoalState::ACTIVE)
   {
-    // exe_path started; time to start replanning
+    // exe_path started; time to start replanning at replanning rate Hz we first reset the replan clock (in case
+    // we have been stopped for a while) and then make a fist sleep, so we don't replan just after start moving
     boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+    replanning_rate_.reset();
+    replanning_rate_.sleep();
     ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
     action_client_get_path_.sendGoal(
         get_path_goal_,
