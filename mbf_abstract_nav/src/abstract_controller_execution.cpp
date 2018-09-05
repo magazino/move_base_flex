@@ -47,12 +47,13 @@ namespace mbf_abstract_nav
   const double AbstractControllerExecution::DEFAULT_CONTROLLER_FREQUENCY = 100.0; // 100 Hz
 
   AbstractControllerExecution::AbstractControllerExecution(
+      const std::string name,
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :
-    AbstractExecutionBase(setup_fn, cleanup_fn),
+    AbstractExecutionBase(name, setup_fn, cleanup_fn),
       controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
       moving_(false), max_retries_(0), patience_(0),
       calling_duration_(boost::chrono::microseconds(static_cast<int>(1e6 / DEFAULT_CONTROLLER_FREQUENCY)))

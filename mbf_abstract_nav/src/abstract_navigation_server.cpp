@@ -162,7 +162,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   if(planner_plugin)
   {
     mbf_abstract_nav::AbstractPlannerExecution::Ptr planner_execution
-        = newPlannerExecution(planner_plugin);
+        = newPlannerExecution(planner_name, planner_plugin);
 
     //start another planning action
     planner_action_.start(goal_handle, planner_execution);
@@ -223,7 +223,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
   if(controller_plugin)
   {
     mbf_abstract_nav::AbstractControllerExecution::Ptr controller_execution
-        = newControllerExecution(controller_plugin);
+        = newControllerExecution(controller_name, controller_plugin);
 
     // starts another controller action
     controller_action_.start(goal_handle, controller_execution);
@@ -284,7 +284,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
   if(recovery_plugin)
   {
     mbf_abstract_nav::AbstractRecoveryExecution::Ptr recovery_execution
-        = newRecoveryExecution(recovery_plugin);
+        = newRecoveryExecution(recovery_name, recovery_plugin);
 
     recovery_action_.start(goal_handle, recovery_execution);
   }
@@ -317,25 +317,28 @@ void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHa
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
+    const std::string name,
     const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_ptr, last_config_,
+  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(name, plugin_ptr, last_config_,
                                                                         boost::function<void()>(),
                                                                         boost::function<void()>());
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::newControllerExecution(
+    const std::string name,
     const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_ptr, tf_listener_ptr_, last_config_,
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(name, plugin_ptr, tf_listener_ptr_, last_config_,
                                                                            boost::function<void()>(),
                                                                            boost::function<void()>());
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(
+    const std::string name,
     const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(plugin_ptr, tf_listener_ptr_, last_config_,
+  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(name, plugin_ptr, tf_listener_ptr_, last_config_,
                                                                          boost::function<void()>(),
                                                                          boost::function<void()>());
 }

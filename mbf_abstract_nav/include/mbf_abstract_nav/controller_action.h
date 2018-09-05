@@ -19,6 +19,11 @@ class ControllerAction :
   ControllerAction(const std::string &name,
                    const RobotInformation &robot_info);
 
+  void start(
+      GoalHandle goal_handle,
+      typename AbstractControllerExecution::Ptr execution_ptr
+  );
+
   void run(GoalHandle &goal_handle, AbstractControllerExecution &execution);
 
 };

@@ -69,6 +69,7 @@ public:
    * @param local_costmap Shared pointer to the local costmap.
    */
   CostmapRecoveryExecution(
+      const std::string name,
       const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
       const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
       CostmapPtr &global_costmap,

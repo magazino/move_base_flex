@@ -2,9 +2,10 @@
 
 namespace mbf_abstract_nav{
 
-  AbstractExecutionBase::AbstractExecutionBase(boost::function<void()> setup_fn,
+  AbstractExecutionBase::AbstractExecutionBase(std::string name,
+                                               boost::function<void()> setup_fn,
                                                boost::function<void()> cleanup_fn)
-    : outcome_(255), cancel_(false), setup_fn_(setup_fn), cleanup_fn_(cleanup_fn)
+    : outcome_(255), cancel_(false), name_(name), setup_fn_(setup_fn), cleanup_fn_(cleanup_fn)
   {
   }
 
@@ -41,6 +42,11 @@ namespace mbf_abstract_nav{
   std::string AbstractExecutionBase::getMessage()
   {
     return message_;
+  }
+
+  std::string AbstractExecutionBase::getName()
+  {
+    return name_;
   }
 
 
