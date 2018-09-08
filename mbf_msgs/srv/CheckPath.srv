@@ -1,0 +1,24 @@
+uint8                      LOCAL_COSTMAP  = 1
+uint8                      GLOBAL_COSTMAP = 2
+
+nav_msgs/Path              path              # the path to be checked after transforming to costmap frame
+float32                    safety_dist       # minimum distance allowed to the closest obstacle (footprint padding)
+float32                    lethal_cost_mult  # cost multiplier for cells marked as lethal obstacle (zero is ignored)
+float32                    inscrib_cost_mult # cost multiplier for cells marked as inscribed obstacle (zero is ignored)
+float32                    unknown_cost_mult # cost multiplier for cells marked as unknown space (zero is ignored)
+uint8                      costmap           # costmap in which to check the pose
+uint8                      return_on         # abort check on finding a pose with this state or worse (zero is ignored)
+uint8                      skip_poses        # skip this number of poses between checks, to speedup processing
+bool                       path_cells_only   # check only cells directly traversed by the path, ignoring robot footprint
+                                             # (if true, safety_dist is ignored)
+---
+uint8                      FREE      =  0    # robot is completely in traversable space
+uint8                      INSCRIBED =  1    # robot is partially in inscribed space
+uint8                      LETHAL    =  2    # robot is partially in collision
+uint8                      UNKNOWN   =  3    # robot is partially in unknown space
+uint8                      OUTSIDE   =  4    # robot is completely outside the map
+
+uint32                     last_checked      # index of the first pose along the path with return_on state or worse
+uint8                      state             # path worst state (until last_checked): FREE, INFLATED, LETHAL, UNKNOWN...
+uint32                     cost              # cost of all cells traversed by path within footprint padded by safety_dist
+                                             # or just by the path if path_cells_only is true

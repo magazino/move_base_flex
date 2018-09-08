@@ -50,6 +50,7 @@
 #include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <std_srvs/Empty.h>
 #include <mbf_msgs/CheckPose.h>
+#include <mbf_msgs/CheckPath.h>
 
 #include <nav_core/base_global_planner.h>
 #include <nav_core/base_local_planner.h>
@@ -189,6 +190,15 @@ private:
                                 mbf_msgs::CheckPose::Response &response);
 
   /**
+   * @brief Callback method for the check_path_cost service
+   * @param request Request object, see the mbf_msgs/CheckPath service definition file.
+   * @param response Response object, see the mbf_msgs/CheckPath service definition file.
+   * @return true, if the service completed successfully, false otherwise
+   */
+  bool callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
+                                mbf_msgs::CheckPath::Response &response);
+
+  /**
    * @brief Callback method for the make_plan service
    * @param request Empty request object.
    * @param response Empty response object.
@@ -236,6 +246,9 @@ private:
 
   //! Service Server for the check_pose_cost service
   ros::ServiceServer check_pose_cost_srv_;
+
+  //! Service Server for the check_path_cost service
+  ros::ServiceServer check_path_cost_srv_;
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;

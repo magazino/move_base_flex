@@ -17,6 +17,7 @@ add_service_files(
   srv
   FILES
   CheckPose.srv
+  CheckPath.srv
 )
 
 add_action_files(
