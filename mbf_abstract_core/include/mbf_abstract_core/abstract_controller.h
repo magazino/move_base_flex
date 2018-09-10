@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Sebastian Pütz
+ *  Copyright 2018, Sebastian Pütz
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  abstract_local_planner.h
+ *  abstract_planner.h
  *
  *  author: Sebastian Pütz <spuetz@uni-osnabrueck.de>
  *

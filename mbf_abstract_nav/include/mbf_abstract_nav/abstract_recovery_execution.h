@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
+ *  Copyright 2018, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
