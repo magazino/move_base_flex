@@ -88,6 +88,8 @@ CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::Tra
   // advertise services and current goal topic
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
                                                       &CostmapNavigationServer::callServiceCheckPoseCost, this);
+  check_path_cost_srv_ = private_nh_.advertiseService("check_path_cost",
+                                                      &CostmapNavigationServer::callServiceCheckPathCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
                                                      &CostmapNavigationServer::callServiceClearCostmaps, this);
 
@@ -425,7 +427,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   else
   {
     if (! mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, request.pose.header.stamp,
-                                          ros::Duration(0.5), request.pose, global_frame_, pose))
+                                     ros::Duration(0.5), request.pose, global_frame_, pose))
     {
       ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
       return false;
@@ -436,7 +438,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   double y = pose.pose.position.y;
   double yaw = tf::getYaw(pose.pose.orientation);
 
-  // ensure it's active so cost reflects latest sensor readings
+  // ensure costmaps are active so cost reflects latest sensor readings
   checkActivateCostmaps();
 
   // pad raw footprint to the requested safety distance; note that we discard footprint_padding parameter effect
@@ -508,7 +510,149 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   }
 
   checkDeactivateCostmaps();
+  return true;
+}
 
+bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
+                                                       mbf_msgs::CheckPath::Response &response)
+{
+  // selecting the requested costmap
+  CostmapPtr costmap;
+  std::string costmap_name;
+  switch (request.costmap)
+  {
+    case mbf_msgs::CheckPath::Request::LOCAL_COSTMAP:
+      costmap = local_costmap_ptr_;
+      costmap_name = "local costmap";
+      break;
+    case mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP:
+      costmap = global_costmap_ptr_;
+      costmap_name = "global costmap";
+      break;
+    default:ROS_ERROR_STREAM("No valid costmap provided; options are "
+                             << mbf_msgs::CheckPath::Request::LOCAL_COSTMAP << ": local costmap, "
+                             << mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP << ": global costmap");
+      return false;
+  }
+
+  // ensure costmaps are active so cost reflects latest sensor readings
+  checkActivateCostmaps();
+
+  // get target pose or current robot pose as x, y, yaw coordinates
+  std::string costmap_frame = costmap->getGlobalFrameID();
+
+  // use a footprint helper instance to get all the cells totally or partially within footprint polygon
+  base_local_planner::FootprintHelper fph;
+
+  std::vector<geometry_msgs::Point> footprint;
+  if (!request.path_cells_only)
+  {
+    // unless we want to check just the cells directly traversed by the path, pad raw footprint
+    // to the requested safety distance; note that we discard footprint_padding parameter effect
+    footprint = costmap->getUnpaddedRobotFootprint();
+    costmap_2d::padFootprint(footprint, request.safety_dist);
+  }
+
+  // lock costmap so content doesn't change while adding cell costs
+  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getCostmap()->getMutex()));
+
+  geometry_msgs::PoseStamped pose;
+
+  response.state = mbf_msgs::CheckPath::Response::FREE;
+
+  for (int i = 0; i < request.path.poses.size(); ++i)
+  {
+    response.last_checked = i;
+
+    if (! mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, request.path.header.stamp,
+                                     ros::Duration(0.5), request.path.poses[i], global_frame_, pose))
+    {
+      ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+
+    double x = pose.pose.position.x;
+    double y = pose.pose.position.y;
+    double yaw = tf::getYaw(pose.pose.orientation);
+    std::vector<base_local_planner::Position2DInt> cells_to_check;
+    if (request.path_cells_only)
+    {
+      base_local_planner::Position2DInt cell;
+      if (costmap->getCostmap()->worldToMap(x, y, (unsigned int&)cell.x, (unsigned int&)cell.y))
+        cells_to_check.push_back(cell);  // out of map if false; cells_to_check will be empty
+    }
+    else
+    {
+      cells_to_check = fph.getFootprintCells(Eigen::Vector3f(x, y, yaw), footprint, *costmap->getCostmap(), true);
+    }
+
+    if (cells_to_check.empty())
+    {
+      // if path_cells_only is true, this means that current path's pose is outside the map
+      // if not, no cells within footprint polygon means that robot is completely outside of the map
+      response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::OUTSIDE));
+    }
+    else
+    {
+      // integrate the cost of all cells; state value precedence is UNKNOWN > LETHAL > INSCRIBED > FREE
+      // we apply the requested cost multipliers if different from zero (default value)
+      for (int j = 0; j < cells_to_check.size(); ++j)
+      {
+        unsigned char cost = costmap->getCostmap()->getCost(cells_to_check[j].x, cells_to_check[j].y);
+        switch (cost)
+        {
+          case costmap_2d::NO_INFORMATION:
+            response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::UNKNOWN));
+            response.cost += cost * (request.unknown_cost_mult ? request.unknown_cost_mult : 1.0);
+            break;
+          case costmap_2d::LETHAL_OBSTACLE:
+            response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::LETHAL));
+            response.cost += cost * (request.lethal_cost_mult ? request.lethal_cost_mult : 1.0);
+            break;
+          case costmap_2d::INSCRIBED_INFLATED_OBSTACLE:
+            response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::INSCRIBED));
+            response.cost += cost * (request.inscrib_cost_mult ? request.inscrib_cost_mult : 1.0);
+            break;
+          default:response.cost += cost;
+            break;
+        }
+      }
+    }
+
+    if (request.return_on && response.state >= request.return_on)
+    {
+      // i-th pose state is bad enough for the client, so provide some details of the outcome and abort checking
+      switch (response.state)
+      {
+        case mbf_msgs::CheckPath::Response::OUTSIDE:
+          ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes outside the map "
+                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+          break;
+        case mbf_msgs::CheckPath::Response::UNKNOWN:
+          ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes in unknown space! "
+                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+          break;
+        case mbf_msgs::CheckPath::Response::LETHAL:
+          ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes in collision! "
+                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+          break;
+        case mbf_msgs::CheckPath::Response::INSCRIBED:
+          ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes near an obstacle "
+                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+          break;
+        case mbf_msgs::CheckPath::Response::FREE:
+          ROS_DEBUG_STREAM("Path is entirely free (maximum cost = "
+                           << response.cost << "; safety distance = " << request.safety_dist << ")");
+          break;
+      }
+
+      break;
+    }
+
+    i += request.skip_poses;  // skip some poses to speedup processing (disabled by default)
+  }
+
+  checkDeactivateCostmaps();
   return true;
 }
 
