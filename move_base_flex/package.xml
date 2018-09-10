@@ -14,22 +14,14 @@
   <author email="spuetz@uos.de">Sebastian Pütz</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>mbf_abstract_core</build_depend>
-  <build_depend>mbf_abstract_nav</build_depend>
-  <build_depend>mbf_costmap_core</build_depend>
-  <build_depend>mbf_costmap_nav</build_depend>
-  <build_depend>mbf_msgs</build_depend>
-  <build_depend>mbf_simple_nav</build_depend>
-  <build_export_depend>mbf_abstract_core</build_export_depend>
-  <build_export_depend>mbf_abstract_nav</build_export_depend>
-  <build_export_depend>mbf_costmap_core</build_export_depend>
-  <build_export_depend>mbf_costmap_nav</build_export_depend>
-  <build_export_depend>mbf_msgs</build_export_depend>
-  <build_export_depend>mbf_simple_nav</build_export_depend>
   <exec_depend>mbf_abstract_core</exec_depend>
   <exec_depend>mbf_abstract_nav</exec_depend>
   <exec_depend>mbf_costmap_core</exec_depend>
   <exec_depend>mbf_costmap_nav</exec_depend>
   <exec_depend>mbf_msgs</exec_depend>
   <exec_depend>mbf_simple_nav</exec_depend>
+
+  <export>
+    <metapackage/>
+  </export>
 </package>
