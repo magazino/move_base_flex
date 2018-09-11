@@ -2,8 +2,8 @@
 Changelog for package mbf_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2018-09-11)
+------------------
 * Concurrency for planners, controllers and recovery behaviors
 * Adds concurrency slots to actions
 

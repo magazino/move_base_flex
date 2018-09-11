@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2018-09-11)
+------------------
 * Concurrency for planners, controllers and recovery behaviors
 
 0.1.0 (2018-03-22)

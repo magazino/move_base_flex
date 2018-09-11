@@ -2,8 +2,8 @@
 Changelog for package mbf_simple_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2018-09-11)
+------------------
 * Update copyright and 3-clause-BSD license
 * Concurrency for planners, controllers and recovery behaviors
 
