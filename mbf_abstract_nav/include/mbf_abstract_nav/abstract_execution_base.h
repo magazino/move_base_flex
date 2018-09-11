@@ -51,7 +51,8 @@ class AbstractExecutionBase
 {
  public:
 
-  AbstractExecutionBase(boost::function<void()> setup_fn,
+  AbstractExecutionBase(std::string name,
+                        boost::function<void()> setup_fn,
                         boost::function<void()> cleanup_fn);
 
   virtual bool start();
@@ -88,6 +89,11 @@ class AbstractExecutionBase
    */
   std::string getMessage();
 
+  /**
+   * @brief Returns the name of the corresponding plugin
+   */
+  std::string getName();
+
  protected:
 
   virtual void run() = 0;
@@ -106,6 +112,9 @@ class AbstractExecutionBase
 
   //! the last received plugin execution message
   std::string message_;
+
+  //! the plugin name; not the plugin type!
+  std::string name_;
 };
 } /* namespace mbf_abstract_nav */
 

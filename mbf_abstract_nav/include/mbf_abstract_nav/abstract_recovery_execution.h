@@ -82,7 +82,8 @@ namespace mbf_abstract_nav
      * @param condition Thread sleep condition variable, to wake up connected threads
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
-    AbstractRecoveryExecution(const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
+    AbstractRecoveryExecution(const std::string name,
+                              const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
                               const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
                               const MoveBaseFlexConfig &config,
                               boost::function<void()> setup_fn,

@@ -50,6 +50,58 @@ ControllerAction::ControllerAction(
 {
 }
 
+void ControllerAction::start(
+    GoalHandle goal_handle,
+    typename AbstractControllerExecution::Ptr execution_ptr
+)
+{
+  bool new_plan = false;
+  boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+  typename SlotGoalIdMap::left_const_iterator slot
+      = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
+  if(slot != concurrency_slots_.left.end())
+  {
+
+    typename std::map<const std::string, const typename AbstractControllerExecution::Ptr>::const_iterator elem
+        = executions_.find(slot->second);
+    if(elem != executions_.end())
+    {
+      if(elem->second->getName() == goal_handle.getGoal()->controller || goal_handle.getGoal()->controller.empty())
+      {
+        execution_ptr = elem->second;
+        execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
+        new_plan = true;
+      }else{
+        elem->second->cancel();
+        concurrency_slots_.left.erase(slot->first);
+      }
+    }
+  }
+
+  executions_.insert(
+      std::pair<const std::string, const typename AbstractControllerExecution::Ptr>(
+          goal_handle.getGoalID().id,
+          execution_ptr
+      )
+  );
+
+  if(!new_plan){
+    concurrency_slots_.insert(
+        SlotGoalIdMap::value_type(
+            goal_handle.getGoal()->concurrency_slot,
+            goal_handle.getGoalID().id
+        )
+    );
+
+    threads_ptrs_.insert(
+        std::pair<const std::string, boost::thread*>(
+            goal_handle.getGoalID().id,
+            threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp, this, goal_handle, execution_ptr))
+        )
+    );
+  }
+}
+
 void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution &execution)
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
