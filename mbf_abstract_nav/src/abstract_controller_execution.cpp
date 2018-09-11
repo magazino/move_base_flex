@@ -398,7 +398,7 @@ namespace mbf_abstract_nav
       // Controller thread interrupted; in most cases we have started a new plan
       // Can also be that robot is oscillating or we have exceeded planner patience
       ROS_DEBUG_STREAM("Controller thread interrupted!");
-      publishZeroVelocity();  // TODO this penalizes continuous replanning, so we must handle better (see #64)
+      publishZeroVelocity();
       setState(STOPPED);
       condition_.notify_all();
       moving_ = false;
