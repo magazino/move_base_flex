@@ -110,7 +110,9 @@ class AbstractAction
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
     ROS_DEBUG_STREAM("Exiting run method with goal status: " << goal_handle.getGoalStatus().text << " and code: "
         << static_cast<int>(goal_handle.getGoalStatus().status));
-    threads_.remove_thread(threads_ptrs_[goal_handle.getGoalID().id]);
+    boost::thread* self = threads_ptrs_[goal_handle.getGoalID().id];
+    threads_.remove_thread(self);
+    self->detach();
     threads_ptrs_.erase(goal_handle.getGoalID().id);
     if (execution_ptr->cleanup_fn_)
       execution_ptr->cleanup_fn_();
