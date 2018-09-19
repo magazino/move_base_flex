@@ -39,12 +39,13 @@
  */
 
 #include "mbf_simple_nav/simple_navigation_server.h"
+#include <mbf_utility/types.h>
+#include <tf2_ros/transform_listener.h>
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "mbf_simple_server");
 
-  typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
   typedef boost::shared_ptr<mbf_simple_nav::SimpleNavigationServer> SimpleNavigationServerPtr;
 
   ros::NodeHandle nh;
@@ -53,9 +54,15 @@ int main(int argc, char **argv)
   double cache_time;
   private_nh.param("tf_cache_time", cache_time, 10.0);
 
-  TransformListenerPtr tf_listener_ptr(new tf::TransformListener(nh, ros::Duration(cache_time), true));
+#ifdef COSTMAP_HAS_TF2
+  TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
+  tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
+#else
+  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+#endif 
+  
   SimpleNavigationServerPtr controller_ptr(
-      new mbf_simple_nav::SimpleNavigationServer(TransformListenerPtr(tf_listener_ptr)));
+      new mbf_simple_nav::SimpleNavigationServer(tf_listener_ptr));
 
   ros::spin();
   return EXIT_SUCCESS;
