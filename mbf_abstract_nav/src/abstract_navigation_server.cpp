@@ -45,7 +45,7 @@
 namespace mbf_abstract_nav
 {
 
-AbstractNavigationServer::AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr)
+AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
     : tf_listener_ptr_(tf_listener_ptr), private_nh_("~"),
       planner_plugin_manager_("planners",
           boost::bind(&AbstractNavigationServer::loadPlannerPlugin, this, _1),

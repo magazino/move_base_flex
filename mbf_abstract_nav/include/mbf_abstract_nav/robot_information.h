@@ -46,6 +46,7 @@
 #include <string>
 #include <tf/transform_listener.h>
 
+#include <mbf_utility/types.h>
 
 namespace mbf_abstract_nav{
 
@@ -56,7 +57,7 @@ class RobotInformation{
   typedef boost::shared_ptr<RobotInformation> Ptr;
 
   RobotInformation(
-      tf::TransformListener &tf_listener,
+      TF &tf_listener,
       const std::string &global_frame,
       const std::string &robot_frame,
       const ros::Duration &tf_timeout);
@@ -69,12 +70,12 @@ class RobotInformation{
 
   const std::string& getRobotFrame() const;
 
-  const tf::TransformListener& getTransformListener() const;
+  const TF& getTransformListener() const;
 
   const ros::Duration& getTfTimeout() const;
 
  private:
-  const tf::TransformListener& tf_listener_;
+  const TF& tf_listener_;
 
   const std::string &global_frame_;
 

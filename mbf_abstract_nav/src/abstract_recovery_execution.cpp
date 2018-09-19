@@ -50,7 +50,7 @@ namespace mbf_abstract_nav
   AbstractRecoveryExecution::AbstractRecoveryExecution(
       const std::string name,
       mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
-      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      const TFPtr &tf_listener_ptr,
       const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :

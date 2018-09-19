@@ -128,7 +128,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @param moving_ptr shared pointer to an object of the concrete derived implementation of the AbstractControllerExecution
      * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
-    AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+    AbstractNavigationServer(const TFPtr &tf_listener_ptr);
     /**
      * @brief Destructor
      */
@@ -352,7 +352,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     ros::Duration tf_timeout_;
 
     //! shared pointer to the common TransformListener
-    const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
+    const TFPtr tf_listener_ptr_;
 
     //! current robot pose; moving controller is responsible to update it by calling getRobotPose
     geometry_msgs::PoseStamped robot_pose_;

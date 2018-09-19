@@ -50,6 +50,12 @@ catkin_package(
   DEPENDS Boost
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
+  add_definitions(-DCOSTMAP_HAS_TF2)
+  message("melodic compatible build")
+endif()
+
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
