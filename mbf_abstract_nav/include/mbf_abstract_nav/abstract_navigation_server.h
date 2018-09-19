@@ -215,36 +215,36 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionGetPath(ActionServerGetPath::GoalHandle &goal_handle);
+    virtual void callActionGetPath(ActionServerGetPath::GoalHandle goal_handle);
 
-    virtual void cancelActionGetPath(ActionServerGetPath::GoalHandle &goal_handle);
+    virtual void cancelActionGetPath(ActionServerGetPath::GoalHandle goal_handle);
 
     /**
      * @brief ExePath action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionExePath(ActionServerExePath::GoalHandle &goal_handle);
+    virtual void callActionExePath(ActionServerExePath::GoalHandle goal_handle);
 
-    virtual void cancelActionExePath(ActionServerExePath::GoalHandle &goal_handle);
+    virtual void cancelActionExePath(ActionServerExePath::GoalHandle goal_handle);
 
     /**
      * @brief Recovery action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionRecovery(ActionServerRecovery::GoalHandle &goal_handle);
+    virtual void callActionRecovery(ActionServerRecovery::GoalHandle goal_handle);
 
-    virtual void cancelActionRecovery(ActionServerRecovery::GoalHandle &goal_handle);
+    virtual void cancelActionRecovery(ActionServerRecovery::GoalHandle goal_handle);
 
     /**
      * @brief MoveBase action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle);
+    virtual void callActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle);
 
-    virtual void cancelActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle);
+    virtual void cancelActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle);
 
     /**
      * @brief starts all action server.
