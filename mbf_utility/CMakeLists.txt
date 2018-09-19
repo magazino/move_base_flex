@@ -5,13 +5,22 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   tf
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mbf_utility
-  CATKIN_DEPENDS geometry_msgs roscpp tf
+  CATKIN_DEPENDS geometry_msgs roscpp tf tf2 tf2_ros   tf2_geometry_msgs
+
 )
+
+if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
+  add_definitions(-DCOSTMAP_HAS_TF2)
+  message("melodic compatible build")
+endif()
 
 include_directories(
   include
