@@ -23,6 +23,10 @@ catkin_package(
             nav_core
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
+  add_definitions(-DCOSTMAP_HAS_TF2)
+  message("melodic compatible build")
+endif()
 
 ## Install project namespaced headers
 install(DIRECTORY include/${PROJECT_NAME}/
