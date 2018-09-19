@@ -44,6 +44,8 @@
 #include <nav_core/base_local_planner.h>
 #include "mbf_costmap_core/costmap_controller.h"
 
+#include <mbf_utility/types.h>
+
 namespace mbf_nav_core_wrapper {
   /**
    * @class LocalPlanner
@@ -104,7 +106,7 @@ namespace mbf_nav_core_wrapper {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void initialize(std::string name, tf::TransformListener *tf, costmap_2d::Costmap2DROS *costmap_ros);
+      virtual void initialize(std::string name, TF *tf, costmap_2d::Costmap2DROS *costmap_ros);
 
       /**
        * @brief Public constructor used for handling a nav_core-based plugin

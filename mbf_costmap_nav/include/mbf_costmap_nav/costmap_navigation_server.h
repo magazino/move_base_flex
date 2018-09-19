@@ -86,7 +86,7 @@ public:
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
    */
-  CostmapNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+  CostmapNavigationServer(const TFPtr &tf_listener_ptr);
 
   /**
    * @brief Destructor

@@ -58,6 +58,12 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
+  add_definitions(-DCOSTMAP_HAS_TF2)
+  message("melodic compatible build")
+endif()
+
+
 add_library(${MBF_NAV_CORE_WRAPPER_LIB}
   src/nav_core_wrapper/wrapper_global_planner.cpp
   src/nav_core_wrapper/wrapper_local_planner.cpp

@@ -40,6 +40,8 @@
 
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 #include <signal.h>
+#include <mbf_utility/types.h>
+#include <tf2_ros/transform_listener.h>
 
 typedef boost::shared_ptr<mbf_costmap_nav::CostmapNavigationServer> CostmapNavigationServerPtr;
 mbf_costmap_nav::CostmapNavigationServer::Ptr costmap_nav_srv_ptr;
@@ -58,8 +60,6 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "mbf_2d_nav_server", ros::init_options::NoSigintHandler);
 
-  typedef boost::shared_ptr<tf::TransformListener> TransformListenerPtr;
-
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
 
@@ -67,8 +67,13 @@ int main(int argc, char **argv)
   private_nh.param("tf_cache_time", cache_time, 10.0);
 
   signal(SIGINT, sigintHandler);
+#ifdef COSTMAP_HAS_TF2
+  TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
+  tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 
-  TransformListenerPtr tf_listener_ptr(new tf::TransformListener(nh, ros::Duration(cache_time), true));
+#else  
+  TransformListenerPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+#endif
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
   ros::MultiThreadedSpinner spinner;
   spinner.spin();
