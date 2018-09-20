@@ -16,6 +16,8 @@ find_package(catkin REQUIRED
   std_msgs
   std_srvs
   tf
+  tf2
+  tf2_ros
   )
 
 find_package(Boost COMPONENTS thread chrono REQUIRED)
@@ -40,8 +42,19 @@ catkin_package(
   std_msgs
   std_srvs
   tf
+  tf2
+  tf2_ros
   DEPENDS Boost
 )
+
+if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
+  add_definitions(-DUSE_OLD_TF)
+  message("kinetic compatible build")
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "lunar")
+  add_definitions(-DUSE_OLD_TF)
+  message("lunar compatible build")
+endif()
 
 include_directories(
   include

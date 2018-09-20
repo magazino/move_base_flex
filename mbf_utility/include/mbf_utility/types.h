@@ -1,5 +1,5 @@
 /*
- *  Copyright 2018, Magazino GmbH, Sebastian Pütz, Jorge Santos Simón
+ *  Copyright 2018, Sebastian Pütz
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -30,40 +30,25 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- *  simple_server_node.cpp
+ *  abstract_planner.h
  *
- *  authors:
- *    Sebastian Pütz <spuetz@uni-osnabrueck.de>
- *    Jorge Santos Simón <santos@magazino.eu>
+ *  author: Jannik Abbenseth <jba@ipa.fhg.de>
  *
  */
 
-#include "mbf_simple_nav/simple_navigation_server.h"
-#include <mbf_utility/types.h>
-#include <tf2_ros/transform_listener.h>
+#ifndef MBF_ABSTRACT_CORE__TYPES_H_
+#define MBF_ABSTRACT_CORE__TYPES_H_
 
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "mbf_simple_server");
-
-  typedef boost::shared_ptr<mbf_simple_nav::SimpleNavigationServer> SimpleNavigationServerPtr;
-
-  ros::NodeHandle nh;
-  ros::NodeHandle private_nh("~");
-
-  double cache_time;
-  private_nh.param("tf_cache_time", cache_time, 10.0);
+#include <boost/shared_ptr.hpp>
 
 #ifdef USE_OLD_TF
-  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+#include <tf/transform_listener.h>
+typedef boost::shared_ptr<tf::TransformListener> TFPtr;
+typedef tf::TransformListener TF;
 #else
-  TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
-  tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
-#endif 
-  
-  SimpleNavigationServerPtr controller_ptr(
-      new mbf_simple_nav::SimpleNavigationServer(tf_listener_ptr));
+#include <tf2_ros/buffer.h>
+typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
+typedef tf2_ros::Buffer TF;
+#endif
 
-  ros::spin();
-  return EXIT_SUCCESS;
-}
+#endif

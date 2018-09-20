@@ -47,7 +47,7 @@ namespace mbf_costmap_nav
 CostmapRecoveryExecution::CostmapRecoveryExecution(
     const std::string name,
     const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-    const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+    const TFPtr &tf_listener_ptr,
     CostmapPtr &global_costmap, CostmapPtr &local_costmap,
     const MoveBaseFlexConfig &config,
     boost::function<void()> setup_fn,

@@ -46,6 +46,11 @@
 #include <ros/time.h>
 #include <string>
 #include <tf/transform_listener.h>
+#include <tf2/convert.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <mbf_utility/types.h>
 
 namespace mbf_utility
 {
@@ -61,7 +66,7 @@ namespace mbf_utility
  * @param out Transformed pose.
  * @return true, if the transformation succeeded.
  */
-bool transformPose(const tf::TransformListener &tf_listener,
+bool transformPose(const TF &tf_listener,
                    const std::string &target_frame,
                    const ros::Time &target_time,
                    const ros::Duration &timeout,
@@ -78,7 +83,7 @@ bool transformPose(const tf::TransformListener &tf_listener,
  * @param robot_pose the computed rebot pose in the global frame.
  * @return true, if succeeded, false otherwise.
  */
-bool getRobotPose(const tf::TransformListener &tf_listener,
+bool getRobotPose(const TF &tf_listener,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,

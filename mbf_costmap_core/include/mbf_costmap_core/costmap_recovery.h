@@ -41,7 +41,7 @@
 
 #include <mbf_abstract_core/abstract_recovery.h>
 #include <costmap_2d/costmap_2d_ros.h>
-#include <tf/transform_listener.h>
+#include <mbf_utility/types.h>
 
 namespace mbf_costmap_core
 {
@@ -62,7 +62,7 @@ class CostmapRecovery : public mbf_abstract_core::AbstractRecovery{
    * @param global_costmap A pointer to the global_costmap used by the navigation stack
    * @param local_costmap A pointer to the local_costmap used by the navigation stack
    */
-  virtual void initialize(std::string name, tf::TransformListener* tf,
+  virtual void initialize(std::string name, TF* tf,
                           costmap_2d::Costmap2DROS* global_costmap,
                           costmap_2d::Costmap2DROS* local_costmap) = 0;
 

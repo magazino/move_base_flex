@@ -43,7 +43,7 @@
 namespace mbf_simple_nav
 {
 
-SimpleNavigationServer::SimpleNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+SimpleNavigationServer::SimpleNavigationServer(const TFPtr &tf_listener_ptr) :
     mbf_abstract_nav::AbstractNavigationServer(tf_listener_ptr),
     planner_plugin_loader_("mbf_abstract_core", "mbf_abstract_core::AbstractPlanner"),
     controller_plugin_loader_("mbf_abstract_core", "mbf_abstract_core::AbstractController"),

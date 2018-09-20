@@ -49,6 +49,8 @@
 #include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_recovery.h>
+#include <mbf_utility/types.h>
+
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -84,7 +86,7 @@ namespace mbf_abstract_nav
      */
     AbstractRecoveryExecution(const std::string name,
                               const mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
-                              const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+                              const TFPtr &tf_listener_ptr,
                               const MoveBaseFlexConfig &config,
                               boost::function<void()> setup_fn,
                               boost::function<void()> cleanup_fn);
@@ -146,7 +148,7 @@ namespace mbf_abstract_nav
     mbf_abstract_core::AbstractRecovery::Ptr behavior_;
 
     //! shared pointer to common TransformListener
-    const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
+    const TFPtr tf_listener_ptr_;
 
   private:
 

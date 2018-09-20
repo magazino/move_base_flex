@@ -41,7 +41,7 @@
 
 #include <mbf_abstract_core/abstract_controller.h>
 #include <costmap_2d/costmap_2d_ros.h>
-#include <tf/transform_listener.h>
+#include <mbf_utility/types.h>
 
 namespace mbf_costmap_core {
   /**
@@ -116,7 +116,7 @@ namespace mbf_costmap_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void initialize(std::string name, tf::TransformListener *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
+      virtual void initialize(std::string name, TF *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
 
       /**
        * @brief  Virtual destructor for the interface

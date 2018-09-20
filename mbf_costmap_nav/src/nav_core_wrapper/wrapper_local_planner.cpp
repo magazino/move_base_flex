@@ -75,7 +75,7 @@ bool WrapperLocalPlanner::cancel()
 }
 
 void WrapperLocalPlanner::initialize(std::string name,
-                                     tf::TransformListener *tf,
+                                     TF *tf,
                                      costmap_2d::Costmap2DROS *costmap_ros)
 {
   nav_core_plugin_->initialize(name, tf, costmap_ros);

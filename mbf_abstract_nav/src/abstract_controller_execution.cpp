@@ -49,7 +49,7 @@ namespace mbf_abstract_nav
   AbstractControllerExecution::AbstractControllerExecution(
       const std::string name,
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
-      const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+      const TFPtr &tf_listener_ptr,
       const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :
