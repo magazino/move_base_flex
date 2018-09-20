@@ -128,7 +128,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @param moving_ptr shared pointer to an object of the concrete derived implementation of the AbstractControllerExecution
      * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
-    AbstractNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr);
+    AbstractNavigationServer(const TFPtr &tf_listener_ptr);
     /**
      * @brief Destructor
      */
@@ -215,36 +215,36 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionGetPath(ActionServerGetPath::GoalHandle &goal_handle);
+    virtual void callActionGetPath(ActionServerGetPath::GoalHandle goal_handle);
 
-    virtual void cancelActionGetPath(ActionServerGetPath::GoalHandle &goal_handle);
+    virtual void cancelActionGetPath(ActionServerGetPath::GoalHandle goal_handle);
 
     /**
      * @brief ExePath action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionExePath(ActionServerExePath::GoalHandle &goal_handle);
+    virtual void callActionExePath(ActionServerExePath::GoalHandle goal_handle);
 
-    virtual void cancelActionExePath(ActionServerExePath::GoalHandle &goal_handle);
+    virtual void cancelActionExePath(ActionServerExePath::GoalHandle goal_handle);
 
     /**
      * @brief Recovery action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionRecovery(ActionServerRecovery::GoalHandle &goal_handle);
+    virtual void callActionRecovery(ActionServerRecovery::GoalHandle goal_handle);
 
-    virtual void cancelActionRecovery(ActionServerRecovery::GoalHandle &goal_handle);
+    virtual void cancelActionRecovery(ActionServerRecovery::GoalHandle goal_handle);
 
     /**
      * @brief MoveBase action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
      *        definitions in mbf_msgs.
      */
-    virtual void callActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle);
+    virtual void callActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle);
 
-    virtual void cancelActionMoveBase(ActionServerMoveBase::GoalHandle &goal_handle);
+    virtual void cancelActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle);
 
     /**
      * @brief starts all action server.
@@ -352,7 +352,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     ros::Duration tf_timeout_;
 
     //! shared pointer to the common TransformListener
-    const boost::shared_ptr<tf::TransformListener> tf_listener_ptr_;
+    const TFPtr tf_listener_ptr_;
 
     //! current robot pose; moving controller is responsible to update it by calling getRobotPose
     geometry_msgs::PoseStamped robot_pose_;

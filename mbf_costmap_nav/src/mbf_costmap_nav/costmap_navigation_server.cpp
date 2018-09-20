@@ -55,7 +55,7 @@ namespace mbf_costmap_nav
 {
 
 
-CostmapNavigationServer::CostmapNavigationServer(const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr) :
+CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   AbstractNavigationServer(tf_listener_ptr),
   recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
   nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),

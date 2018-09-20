@@ -62,6 +62,14 @@ if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
   add_definitions(-DROSDISTRO_IS_INDIGO)
   message("indigo compatible build")
 endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
+  add_definitions(-DUSE_OLD_TF)
+  message("kinetic compatible build")
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "lunar")
+  add_definitions(-DUSE_OLD_TF)
+  message("lunar compatible build")
+endif()
 
 add_library(${MBF_NAV_CORE_WRAPPER_LIB}
   src/nav_core_wrapper/wrapper_global_planner.cpp

@@ -23,6 +23,14 @@ catkin_package(
             nav_core
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
+  add_definitions(-DUSE_OLD_TF)
+  message("kinetic compatible build")
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "lunar")
+  add_definitions(-DUSE_OLD_TF)
+  message("lunar compatible build")
+endif()
 
 ## Install project namespaced headers
 install(DIRECTORY include/${PROJECT_NAME}/

@@ -52,6 +52,7 @@
 
 #include <mbf_utility/navigation_utility.h>
 #include <mbf_abstract_core/abstract_controller.h>
+#include <mbf_utility/types.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 #include "mbf_abstract_nav/abstract_execution_base.h"
@@ -89,7 +90,7 @@ namespace mbf_abstract_nav
     AbstractControllerExecution(
         const std::string name,
         const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
-        const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr,
+        const TFPtr &tf_listener_ptr,
         const MoveBaseFlexConfig &config,
         boost::function<void()> setup_fn,
         boost::function<void()> cleanup_fn);
@@ -218,7 +219,7 @@ namespace mbf_abstract_nav
     mbf_abstract_core::AbstractController::Ptr controller_;
 
     //! shared pointer to the shared tf listener
-    const boost::shared_ptr<tf::TransformListener> &tf_listener_ptr;
+    const TFPtr &tf_listener_ptr;
 
     //! The current cycle start time of the last cycle run. Will by updated each cycle.
     ros::Time last_call_time_;

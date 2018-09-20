@@ -41,7 +41,7 @@
 
 namespace mbf_abstract_nav{
 
-RobotInformation::RobotInformation(tf::TransformListener &tf_listener,
+RobotInformation::RobotInformation(TF &tf_listener,
                                    const std::string &global_frame,
                                    const std::string &robot_frame,
                                    const ros::Duration &tf_timeout)
@@ -76,7 +76,7 @@ const std::string& RobotInformation::getGlobalFrame() const {return global_frame
 
 const std::string& RobotInformation::getRobotFrame() const {return robot_frame_;};
 
-const tf::TransformListener& RobotInformation::getTransformListener() const {return tf_listener_;};
+const TF& RobotInformation::getTransformListener() const {return tf_listener_;};
 
 const ros::Duration& RobotInformation::getTfTimeout() const {return tf_timeout_;}
 
