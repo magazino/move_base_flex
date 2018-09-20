@@ -72,7 +72,7 @@ int main(int argc, char **argv)
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 
 #else  
-  TransformListenerPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
 #endif
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
   ros::MultiThreadedSpinner spinner;
