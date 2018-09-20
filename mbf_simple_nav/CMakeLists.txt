@@ -47,6 +47,10 @@ catkin_package(
   DEPENDS Boost
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
+  add_definitions(-DUSE_OLD_TF)
+  message("indigo compatible build")
+endif()
 if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
   add_definitions(-DUSE_OLD_TF)
   message("kinetic compatible build")
