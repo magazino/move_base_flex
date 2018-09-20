@@ -58,6 +58,11 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
+  add_definitions(-DUSE_OLD_TF)
+  add_definitions(-DUSE_OLD_NAV_CORE)
+  message("indigo compatible build")
+endif()
 if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
   add_definitions(-DUSE_OLD_TF)
   message("kinetic compatible build")
