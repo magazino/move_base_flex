@@ -58,6 +58,11 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
+  add_definitions(-DROSDISTRO_IS_INDIGO)
+  message("indigo compatible build")
+endif()
+
 add_library(${MBF_NAV_CORE_WRAPPER_LIB}
   src/nav_core_wrapper/wrapper_global_planner.cpp
   src/nav_core_wrapper/wrapper_local_planner.cpp
