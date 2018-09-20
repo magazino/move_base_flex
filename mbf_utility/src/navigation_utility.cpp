@@ -74,20 +74,18 @@ bool transformPose(const TF &tf_listener,
 {
   std::string error_msg;
 
-#ifdef COSTMAP_HAS_TF2
-  bool success = tf_listener.canTransform(target_frame,
-                                              in.header.frame_id,
-                                              in.header.stamp,
-                                              timeout,
-                                              &error_msg);
-#else
-
-
+#ifdef USE_OLD_TF
   bool success = tf_listener.waitForTransform(target_frame,
                                               in.header.frame_id,
                                               in.header.stamp,
                                               timeout,
                                               ros::Duration(0.01),
+                                              &error_msg);
+#else
+  bool success = tf_listener.canTransform(target_frame,
+                                              in.header.frame_id,
+                                              in.header.stamp,
+                                              timeout,
                                               &error_msg);
 #endif
 
@@ -100,11 +98,11 @@ bool transformPose(const TF &tf_listener,
 
   try
   {
-#ifdef COSTMAP_HAS_TF2
+#ifdef USE_OLD_TF
+    tf_listener.transformPose(target_frame, target_time, in, fixed_frame, out);
+#else
     geometry_msgs::TransformStamped transform = tf_listener.lookupTransform(target_frame, fixed_frame, ros::Time::now(), timeout);
     tf2::doTransform(in, out, transform);
-#else
-    tf_listener.transformPose(target_frame, target_time, in, fixed_frame, out);
 #endif  
   }
   catch (tf::TransformException &ex)

@@ -67,12 +67,11 @@ int main(int argc, char **argv)
   private_nh.param("tf_cache_time", cache_time, 10.0);
 
   signal(SIGINT, sigintHandler);
-#ifdef COSTMAP_HAS_TF2
+#ifdef USE_OLD_TF
+  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+#else  
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
-
-#else  
-  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
 #endif
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
   ros::MultiThreadedSpinner spinner;

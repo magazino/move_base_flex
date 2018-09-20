@@ -50,9 +50,13 @@ catkin_package(
   DEPENDS Boost
 )
 
-if("$ENV{ROS_DISTRO}" STREQUAL "melodic")
-  add_definitions(-DCOSTMAP_HAS_TF2)
-  message("melodic compatible build")
+if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
+  add_definitions(-DUSE_OLD_TF)
+  message("kinetic compatible build")
+endif()
+if("$ENV{ROS_DISTRO}" STREQUAL "lunar")
+  add_definitions(-DUSE_OLD_TF)
+  message("lunar compatible build")
 endif()
 
 

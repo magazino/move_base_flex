@@ -41,14 +41,14 @@
 
 #include <boost/shared_ptr.hpp>
 
-#ifdef COSTMAP_HAS_TF2
-#include <tf2_ros/buffer.h>
-typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
-typedef tf2_ros::Buffer TF;
-#else
+#ifdef USE_OLD_TF
 #include <tf/transform_listener.h>
 typedef boost::shared_ptr<tf::TransformListener> TFPtr;
 typedef tf::TransformListener TF;
+#else
+#include <tf2_ros/buffer.h>
+typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
+typedef tf2_ros::Buffer TF;
 #endif
 
 #endif

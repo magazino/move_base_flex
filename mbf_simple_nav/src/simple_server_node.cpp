@@ -54,11 +54,11 @@ int main(int argc, char **argv)
   double cache_time;
   private_nh.param("tf_cache_time", cache_time, 10.0);
 
-#ifdef COSTMAP_HAS_TF2
+#ifdef USE_OLD_TF
+  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
+#else
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
-#else
-  TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
 #endif 
   
   SimpleNavigationServerPtr controller_ptr(
