@@ -50,7 +50,12 @@ uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
                                         double &cost,
                                         std::string &message)
 {
+#ifdef ROSDISTRO_IS_INDIGO
+  bool success = nav_core_plugin_->makePlan(start, goal, plan);
+  cost = 0;
+#else
   bool success = nav_core_plugin_->makePlan(start, goal, plan, cost);
+#endif
   message = success ? "Plan found" : "Planner failed";
   return success ? 0 : 50;  // SUCCESS | FAILURE
 }
