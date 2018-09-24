@@ -100,7 +100,6 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
   AbstractPlannerExecution::PlanningState state_planning_input;
 
   std::vector<geometry_msgs::PoseStamped> plan, global_plan;
-  double cost;
 
   while (planner_active && ros::ok())
   {
@@ -170,7 +169,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         plan = execution.getPlan();
         publishPath(plan);
 
-        ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << cost);
+        ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << execution.getCost());
 
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
