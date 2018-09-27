@@ -18,6 +18,7 @@
     <depend>costmap_2d</depend>
     <depend>geometry_msgs</depend>
     <depend>mbf_abstract_core</depend>
+    <depend>mbf_utility</depend>
     <depend>nav_core</depend>
     <depend>std_msgs</depend>
     <depend>tf</depend>

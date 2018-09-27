@@ -6,6 +6,7 @@ find_package(catkin REQUIRED
             std_msgs
             geometry_msgs
             mbf_abstract_core
+            mbf_utility
             tf
             costmap_2d
             nav_core
@@ -18,6 +19,7 @@ catkin_package(
             std_msgs
             geometry_msgs
             mbf_abstract_core
+            mbf_utility
             tf
             costmap_2d
             nav_core
