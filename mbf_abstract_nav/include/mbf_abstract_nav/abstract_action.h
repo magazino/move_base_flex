@@ -69,18 +69,31 @@ class AbstractAction
       typename Execution::Ptr execution_ptr
   )
   {
-    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
-    typename SlotGoalIdMap::left_const_iterator slot
-        = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
-    if(slot != concurrency_slots_.left.end()) // if there is a plugin running on the same slot, cancel it // TODO make thread safe
+    boost::unique_lock<boost::mutex> lock(map_mtx_);
+    while(true)
     {
-      typename std::map<const std::string, const typename Execution::Ptr>::const_iterator elem
-          = executions_.find(slot->second);
-      if(elem != executions_.end())
+      typename SlotGoalIdMap::left_const_iterator slot
+          = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
+      if(slot != concurrency_slots_.left.end())
       {
-        elem->second->cancel();
+        typename std::map<const std::string, const typename Execution::Ptr>::const_iterator elem
+            = executions_.find(slot->second);
+        if(elem != executions_.end())
+        {
+          // A plugin is already running in this concurrency slot.
+          // Cancel it and wait for it to exit.
+          elem->second->cancel();
+          map_condition_.wait(lock);
+        }
+        else
+        {
+          concurrency_slots_.left.erase(slot->first);
+        }
       }
-      concurrency_slots_.left.erase(slot->first);
+      else
+      {
+        break;
+      }
     }
     concurrency_slots_.insert(SlotGoalIdMap::value_type(goal_handle.getGoal()->concurrency_slot, goal_handle.getGoalID().id));
     executions_.insert(std::pair<const std::string, const typename Execution::Ptr>(goal_handle.getGoalID().id, execution_ptr));
@@ -115,6 +128,7 @@ class AbstractAction
     threads_ptrs_.erase(goal_handle.getGoalID().id);
     if (execution_ptr->cleanup_fn_)
       execution_ptr->cleanup_fn_();
+    map_condition_.notify_all();
   }
 
   void reconfigureAll(
@@ -151,6 +165,7 @@ class AbstractAction
   SlotGoalIdMap concurrency_slots_;
 
   boost::mutex map_mtx_;
+  boost::condition_variable map_condition_;
 
 };
 
