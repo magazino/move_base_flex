@@ -111,6 +111,7 @@ class AbstractAction
     ROS_DEBUG_STREAM("Exiting run method with goal status: " << goal_handle.getGoalStatus().text << " and code: "
         << static_cast<int>(goal_handle.getGoalStatus().status));
     threads_.remove_thread(threads_ptrs_[goal_handle.getGoalID().id]);
+    delete threads_ptrs_[goal_handle.getGoalID().id];
     threads_ptrs_.erase(goal_handle.getGoalID().id);
     if (execution_ptr->cleanup_fn_)
       execution_ptr->cleanup_fn_();
