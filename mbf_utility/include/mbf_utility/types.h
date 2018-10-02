@@ -41,14 +41,17 @@
 
 #include <boost/shared_ptr.hpp>
 
-#ifdef USE_OLD_TF
-#include <tf/transform_listener.h>
-typedef boost::shared_ptr<tf::TransformListener> TFPtr;
-typedef tf::TransformListener TF;
+#if ROS_VERSION_MINIMUM(1, 14, 0) // if current ros version is >= 1.14.0
+  // Melodic uses TF2
+  #include <tf2_ros/buffer.h>
+  typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
+  typedef tf2_ros::Buffer TF;
 #else
-#include <tf2_ros/buffer.h>
-typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
-typedef tf2_ros::Buffer TF;
+  // Previous versions still using TF
+  #define USE_OLD_TF
+  #include <tf/transform_listener.h>
+  typedef boost::shared_ptr<tf::TransformListener> TFPtr;
+  typedef tf::TransformListener TF;
 #endif
 
 #endif
