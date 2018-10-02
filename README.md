@@ -6,8 +6,10 @@ This repository contains Move Base Flex (MBF), a backwards-compatible replacemen
 * Actions for the submodules planning, controlling and recovering, and services to query the costmaps are provided. This interface allows external executives, e.g. SMACH, or Behavior Trees, to run highly flexible and complex navigation strategies.
 * Comprehensive result and feedback information on all actions, including error codes and messages from the loaded plugins. For users still relying on a unique navigation interface, we have extended move_base action with detailed result and feedback information (though we still provide the current one).
 * Separation between an abstract navigation framework and concrete implementations, allowing faster development of new applications, e.g. 3D navigation.
+* Load multiple planners and controllers, selectable at runtime by setting one of the loaded plugin names in the action goal. 
+* Concurrency: Parallel planning, recovering, controlling by selecting different concurrency slots when defining the action goal. Only different plugins instances can run in parallel.
 
-Please see the [Move Base Flex documentation](wiki.ros.org/move_base_flex) in the ROS wiki.
+Please see also the [Move Base Flex Documentation and Tutorials](https://wiki.ros.org/move_base_flex) in the ROS wiki.
 
 ## Concepts & Architecture
 
@@ -19,11 +21,12 @@ MBF architecture:
 ## Future Work
 MBF is an ongoing project; some of the improvements we we have planned for the near future are:
 
-* Replace costmap_2d by grid_map in the MoveBase implementation.
-* Allow multiple planners and controllers, selectable at runtime
+* Auto select the active controller when having concurrently running controllers
+* Add Ackermann steering API
+* Multi Goal API + Action
+* Add new navigation server and core packages using [grid_map](https://wiki.ros.org/grid_map).
 * Add pause/resume interface for the controller, for example to recover from a bumper, or an emergency stop button hit
-
-But of course your are welcome to propose new fancy features and help make them a reality! Some possibilites:
-
-* Concurrently running recovery behaviors
 * Constraints-based goal (see issue #8)
+
+But of course your are welcome to propose new fancy features and help make them a reality! Pull Requests are always welcome!
+
