@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2018-10-03)
+------------------
 * Fix memory leak
 * Fix uninitialized value for cost
 * Make MBF melodic and indigo compatible
