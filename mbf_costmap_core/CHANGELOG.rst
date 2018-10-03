@@ -2,6 +2,11 @@
 Changelog for package mbf_costmap_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make MBF melodic and indigo compatible
+* Fix GoalHandle references bug in callbacks
+
 0.2.0 (2018-09-11)
 ------------------
 * Concurrency for planners, controllers and recovery behaviors

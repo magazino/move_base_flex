@@ -2,6 +2,11 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make MBF melodic and indigo compatible
+* Fix GoalHandle references bug in callbacks
+
 0.2.0 (2018-09-11)
 ------------------
 * Update copyright and 3-clause-BSD license
