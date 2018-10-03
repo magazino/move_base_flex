@@ -70,6 +70,7 @@ class AbstractAction
   )
   {
     boost::unique_lock<boost::mutex> lock(map_mtx_);
+    insertOrReplacePendingGoalForSlot(goal_handle);
     while(true)
     {
       typename SlotGoalIdMap::left_const_iterator slot
@@ -95,6 +96,10 @@ class AbstractAction
         break;
       }
     }
+
+    if (!checkAndRemovePendingGoal(goal_handle))
+      return;
+
     concurrency_slots_.insert(SlotGoalIdMap::value_type(goal_handle.getGoal()->concurrency_slot, goal_handle.getGoalID().id));
     executions_.insert(std::pair<const std::string, const typename Execution::Ptr>(goal_handle.getGoalID().id, execution_ptr));
     threads_ptrs_.insert(std::pair<const std::string, boost::thread*>(goal_handle.getGoalID().id,
@@ -102,12 +107,21 @@ class AbstractAction
   }
 
   void cancel(GoalHandle &goal_handle){
+    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
     typename std::map<const std::string, const typename Execution::Ptr>::const_iterator
         elem = executions_.find(goal_handle.getGoalID().id);
     if(elem != executions_.end())
     {
-      boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
       elem->second->cancel();
+    }
+    else
+    {
+      if (checkAndRemovePendingGoal(goal_handle))
+      {
+        ROS_INFO_STREAM("Canceled goal was not yet started: "
+                    << goal_handle.getGoalID().id);
+        map_condition_.notify_all();
+      }
     }
   }
 
@@ -147,6 +161,13 @@ class AbstractAction
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
     boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+
+    if (!pending_goals_.empty())
+    {
+      pending_goals_.clear();
+      map_condition_.notify_all();  // release threads blocked on pending goals
+    }
+
     typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
     for(iter = executions_.begin(); iter != executions_.end(); ++iter)
     {
@@ -154,6 +175,51 @@ class AbstractAction
     }
     threads_.join_all();
   }
+
+ protected:
+  typedef std::map<uint8_t, GoalHandle> PendingGoals;
+
+  bool insertOrReplacePendingGoalForSlot(GoalHandle goal_handle)
+  {
+    // Called with map_mtx_ held
+    uint8_t slot_num = goal_handle.getGoal()->concurrency_slot;
+    typename PendingGoals::iterator pending = pending_goals_.find(slot_num);
+    if (pending != pending_goals_.end())
+    {
+      ROS_WARN_STREAM("Replacing already pending goal: " << pending->second.getGoalID().id);
+      pending->second.setCanceled();
+      pending_goals_[slot_num] = goal_handle;
+      map_condition_.notify_all();
+      return true;
+    }
+    else
+    {
+      pending_goals_[slot_num] = goal_handle;
+      return false;
+    }
+  }
+
+  bool checkAndRemovePendingGoal(GoalHandle goal_handle)
+  {
+    uint8_t slot_num = goal_handle.getGoal()->concurrency_slot;
+    typename PendingGoals::iterator pending = pending_goals_.find(slot_num);
+    if (pending == pending_goals_.end())
+    {
+      // This goal is no longer pending, so don't run it
+      return false;
+    }
+
+    if (pending->second.getGoalID().id == goal_handle.getGoalID().id)
+    {
+      // The pending goal for this slot matches my goal ID, so it's no longer
+      // pending and will run now.
+      pending_goals_.erase(pending);
+      return true;
+    }
+    // This goal is no longer pending (a different one is), so don't run it
+    return false;
+  }
+
 
   const std::string &name_;
   const RobotInformation &robot_info_;
@@ -163,6 +229,7 @@ class AbstractAction
   std::map<const std::string, const typename Execution::Ptr> executions_;
   std::map<const std::string, boost::thread*> threads_ptrs_;
   SlotGoalIdMap concurrency_slots_;
+  PendingGoals pending_goals_;
 
   boost::mutex map_mtx_;
   boost::condition_variable map_condition_;
