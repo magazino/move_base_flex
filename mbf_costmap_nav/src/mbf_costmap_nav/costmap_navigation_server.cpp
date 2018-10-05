@@ -666,9 +666,12 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request 
 
 void CostmapNavigationServer::checkActivateCostmaps()
 {
+  boost::mutex::scoped_lock sl(check_costmaps_mutex_);
+
   shutdown_costmaps_timer_.stop();
 
-  // Activate costmaps if we shutdown them when not moving and they are not already active
+  // Activate costmaps if we shutdown them when not moving and they are not already active. This method must be
+  // synchronized because start costmap can take up to 1/update freq., and concurrent calls to it can lead to segfaults
   if (shutdown_costmaps_ && !local_costmap_active_)
   {
     local_costmap_ptr_->start();
@@ -699,6 +702,8 @@ void CostmapNavigationServer::checkDeactivateCostmaps()
 
 void CostmapNavigationServer::deactivateCostmaps(const ros::TimerEvent &event)
 {
+  boost::mutex::scoped_lock sl(check_costmaps_mutex_);
+
   local_costmap_ptr_->stop();
   local_costmap_active_ = false;
   ROS_DEBUG_STREAM("Local costmap deactivated.");

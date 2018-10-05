@@ -232,7 +232,7 @@ private:
   //! the default parameter configuration save
   mbf_costmap_nav::MoveBaseFlexConfig default_config_;
 
-  //! true, if the dynamic reconfigure has been setup.
+  //! true, if the dynamic reconfigure has been setup
   bool setup_reconfigure_;
 
   //! Shared pointer to the common local costmap
@@ -261,6 +261,8 @@ private:
   ros::Timer shutdown_costmaps_timer_;    //!< delayed shutdown timer
   ros::Duration shutdown_costmaps_delay_; //!< delayed shutdown delay
 
+  //! Start/stop costmaps mutex; concurrent calls to start can lead to segfault
+  boost::mutex check_costmaps_mutex_;
 };
 
 } /* namespace mbf_costmap_nav */
