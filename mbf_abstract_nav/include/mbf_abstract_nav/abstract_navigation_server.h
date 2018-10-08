@@ -296,24 +296,12 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      */
     virtual void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level);
 
-    /**
-     * @brief Continuous replanning thread. Keeps calling get_path action server at planner_frequency Hz to
-     * get updated plans
-     * @param cond Condition variable used to retain/release planning
-     * @param lock Lock used in conjuntion with the condition variable
-     * @param goal GetPath action goal; remains the same during navigation
-     * @param result GetPath result, containing the updated plans
-     * @param has_new_plan Flag signaling when a new plan is available
-     */
-    void plannerThread(boost::condition_variable &cond, boost::unique_lock<boost::mutex> &lock,
-                       const mbf_msgs::GetPathGoal &goal, mbf_msgs::GetPathResult &result, bool &has_new_plan);
-
     //! Private node handle
     ros::NodeHandle private_nh_;
 
-    AbstractPluginManager<mbf_abstract_core::AbstractPlanner>planner_plugin_manager_;
-    AbstractPluginManager<mbf_abstract_core::AbstractController>controller_plugin_manager_;
-    AbstractPluginManager<mbf_abstract_core::AbstractRecovery>recovery_plugin_manager_;
+    AbstractPluginManager<mbf_abstract_core::AbstractPlanner> planner_plugin_manager_;
+    AbstractPluginManager<mbf_abstract_core::AbstractController> controller_plugin_manager_;
+    AbstractPluginManager<mbf_abstract_core::AbstractRecovery> recovery_plugin_manager_;
 
     //! shared pointer to the Recovery action server
     ActionServerRecoveryPtr action_server_recovery_ptr_;
