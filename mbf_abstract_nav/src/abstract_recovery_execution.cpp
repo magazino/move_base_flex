@@ -122,7 +122,7 @@ namespace mbf_abstract_nav
     setState(RECOVERING);
     try
     {
-      uint32_t outcome_ = behavior_->runBehavior(message_);
+      outcome_ = behavior_->runBehavior(message_);
       if (cancel_)
       {
         setState(CANCELED);

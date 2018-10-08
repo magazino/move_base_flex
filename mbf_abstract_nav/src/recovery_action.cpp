@@ -102,8 +102,16 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
 
       case AbstractRecoveryExecution::RECOVERY_DONE:
         recovery_active = false; // stopping the action
-        result.outcome = mbf_msgs::RecoveryResult::SUCCESS;
-        result.message = "Recovery \"" + goal.behavior + "\" done!";
+        result.outcome = execution.getOutcome();
+        result.message = execution.getMessage();
+        if (result.message.empty())
+        {
+          if (result.outcome < 10)
+            result.message = "Recovery \"" + goal.behavior + "\" done";
+          else
+            result.message = "Recovery \"" + goal.behavior + "\" FAILED";
+        }
+
         ROS_DEBUG_STREAM_NAMED(name_, result.message);
         goal_handle.setSucceeded(result, result.message);
         break;

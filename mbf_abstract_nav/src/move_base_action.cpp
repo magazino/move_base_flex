@@ -186,6 +186,8 @@ void MoveBaseAction::actionExePathActive()
 void MoveBaseAction::actionExePathFeedback(
     const mbf_msgs::ExePathFeedbackConstPtr &feedback)
 {
+  move_base_feedback_.outcome = feedback->outcome;
+  move_base_feedback_.message = feedback->message;
   move_base_feedback_.angle_to_goal = feedback->angle_to_goal;
   move_base_feedback_.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback_.current_pose = feedback->current_pose;

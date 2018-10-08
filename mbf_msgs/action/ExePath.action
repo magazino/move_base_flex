@@ -41,6 +41,10 @@ float32 angle_to_goal
 
 ---
 
+# Outcome of most recent controller cycle. Same values as in result
+uint32 outcome
+string message
+
 float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped  current_pose
