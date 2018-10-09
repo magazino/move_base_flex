@@ -69,12 +69,11 @@ int main(int argc, char **argv)
   signal(SIGINT, sigintHandler);
 #ifdef USE_OLD_TF
   TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
-#else  
+#else
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 #endif
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
-  ros::MultiThreadedSpinner spinner;
-  spinner.spin();
+  ros::spin();
   return EXIT_SUCCESS;
 }
