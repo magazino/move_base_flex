@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.2 (2018-10-10)
+------------------
 * Do not use MultiThreadedSpinner, as costmap updates can crash when combining laser scans and point clouds
 * Make start/stop costmaps mutexed, since concurrent calls to start can lead to segfaults
 
