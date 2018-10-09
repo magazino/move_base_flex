@@ -2,6 +2,9 @@
 Changelog for package mbf_abstract_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.1 (2018-10-03)
 ------------------
 

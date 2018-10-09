@@ -2,6 +2,9 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.1 (2018-10-03)
 ------------------
 * Make MBF melodic and indigo compatible
