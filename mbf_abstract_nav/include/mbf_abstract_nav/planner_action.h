@@ -66,12 +66,6 @@ class PlannerAction : public AbstractAction<mbf_msgs::GetPathAction, AbstractPla
  protected:
 
   /**
-   * @brief Publishes the given path / plan
-   * @param plan The plan, a list of stamped poses, to be published
-   */
-  void publishPath(std::vector<geometry_msgs::PoseStamped> &plan);
-
-  /**
    * @brief Transforms a plan to the global frame (global_frame_) coord system.
    * @param plan Input plan to be transformed.
    * @param global_plan Output plan, which is then transformed to the global frame.
@@ -85,9 +79,6 @@ class PlannerAction : public AbstractAction<mbf_msgs::GetPathAction, AbstractPla
 
   //! Publisher to publish the current goal pose, which is used for path planning
   ros::Publisher current_goal_pub_;
-
-  //! Publisher to publish the current computed path
-  ros::Publisher path_pub_;
 
   //! Path sequence counter
   unsigned int path_seq_count_;
