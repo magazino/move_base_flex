@@ -49,13 +49,15 @@ namespace mbf_abstract_nav
   AbstractControllerExecution::AbstractControllerExecution(
       const std::string name,
       const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
+      const ros::Publisher& vel_pub,
+      const ros::Publisher& goal_pub,
       const TFPtr &tf_listener_ptr,
       const MoveBaseFlexConfig &config,
       boost::function<void()> setup_fn,
       boost::function<void()> cleanup_fn) :
     AbstractExecutionBase(name, setup_fn, cleanup_fn),
       controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
-      moving_(false), max_retries_(0), patience_(0),
+      moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
       calling_duration_(boost::chrono::microseconds(static_cast<int>(1e6 / DEFAULT_CONTROLLER_FREQUENCY)))
   {
     ros::NodeHandle nh;
@@ -71,11 +73,6 @@ namespace mbf_abstract_nav
 
     // dynamically reconfigurable parameters
     reconfigure(config);
-
-    current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0);
-
-    // init cmd_vel publisher for the robot velocity t
-    vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   }
 
   AbstractControllerExecution::~AbstractControllerExecution()

@@ -73,6 +73,11 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
   oscillation_timeout_ = ros::Duration(oscillation_timeout);
   private_nh_.param("oscillation_distance", oscillation_distance_, 0.02);
 
+  goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
+
+  // init cmd_vel publisher for the robot velocity
+  vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+
   action_server_get_path_ptr_ = ActionServerGetPathPtr(
     new ActionServerGetPath(
       private_nh_,
@@ -329,9 +334,8 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::new
     const std::string name,
     const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(name, plugin_ptr, tf_listener_ptr_, last_config_,
-                                                                           boost::function<void()>(),
-                                                                           boost::function<void()>());
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(name, plugin_ptr, vel_pub_, goal_pub_,
+      tf_listener_ptr_, last_config_, boost::function<void()>(), boost::function<void()>());
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(

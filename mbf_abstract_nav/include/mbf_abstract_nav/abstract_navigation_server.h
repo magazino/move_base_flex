@@ -360,6 +360,11 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! true, if clearing rotate is allowed.
     bool clearing_rotation_allowed_;
 
+    //! cmd_vel publisher for all controller execution objects
+    ros::Publisher vel_pub_;
+
+    //! current_goal publisher for all controller execution objects
+    ros::Publisher goal_pub_;
 
     RobotInformation robot_info_;
 

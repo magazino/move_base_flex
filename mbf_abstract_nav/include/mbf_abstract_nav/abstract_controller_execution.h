@@ -90,6 +90,8 @@ namespace mbf_abstract_nav
     AbstractControllerExecution(
         const std::string name,
         const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
+        const ros::Publisher& vel_pub,
+        const ros::Publisher& goal_pub,
         const TFPtr &tf_listener_ptr,
         const MoveBaseFlexConfig &config,
         boost::function<void()> setup_fn,

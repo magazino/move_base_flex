@@ -124,6 +124,8 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
       name,
       boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
+      vel_pub_,
+      goal_pub_,
       tf_listener_ptr_,
       boost::ref(local_costmap_ptr_),
       last_config_,

@@ -70,6 +70,8 @@ public:
   CostmapControllerExecution(
       const std::string name,
       const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
+      const ros::Publisher& vel_pub,
+      const ros::Publisher& goal_pub,
       const TFPtr &tf_listener_ptr,
       CostmapPtr &costmap_ptr,
       const MoveBaseFlexConfig &config,
