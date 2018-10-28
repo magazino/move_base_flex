@@ -344,13 +344,13 @@ namespace mbf_abstract_nav
           else
           {
             boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
-            if (++retries > max_retries_)
+            if (max_retries_ >= 0 && ++retries > max_retries_)
             {
               setState(MAX_RETRIES);
               moving_ = false;
               condition_.notify_all();
             }
-            else if (ros::Time::now() - getLastValidCmdVelTime() > patience_
+            else if (patience_ > ros::Duration(0) && ros::Time::now() - getLastValidCmdVelTime() > patience_
                 && ros::Time::now() - start_time_ > patience_)  // why not isPatienceExceeded() ?
             {
               setState(PAT_EXCEEDED);
