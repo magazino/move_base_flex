@@ -46,12 +46,14 @@
   #include <tf2_ros/buffer.h>
   typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;
   typedef tf2_ros::Buffer TF;
+  typedef tf2::TransformException TFException;
 #else
   // Previous versions still using TF
   #define USE_OLD_TF
   #include <tf/transform_listener.h>
   typedef boost::shared_ptr<tf::TransformListener> TFPtr;
   typedef tf::TransformListener TF;
+  typedef tf::TransformException TFException;
 #endif
 
 #endif

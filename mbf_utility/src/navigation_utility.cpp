@@ -60,7 +60,7 @@ bool getRobotPose(const TF &tf_listener,
                        local_pose.stamp_,
                        timeout,
                        local_pose_msg,
-                       global_frame,
+                       robot_frame,
                        robot_pose);
 }
 
@@ -76,23 +76,23 @@ bool transformPose(const TF &tf_listener,
 
 #ifdef USE_OLD_TF
   bool success = tf_listener.waitForTransform(target_frame,
-                                              in.header.frame_id,
-                                              in.header.stamp,
+                                              fixed_frame,
+                                              target_time,
                                               timeout,
                                               ros::Duration(0.01),
                                               &error_msg);
 #else
   bool success = tf_listener.canTransform(target_frame,
-                                              in.header.frame_id,
-                                              in.header.stamp,
-                                              timeout,
-                                              &error_msg);
+                                          fixed_frame,
+                                          target_time,
+                                          timeout,
+                                          &error_msg);
 #endif
 
   if (!success)
   {
-    ROS_WARN("Failed to look up transform from %s into the %s frame: %s", in.header.frame_id.c_str(),
-             target_frame.c_str(), error_msg.c_str());
+    ROS_WARN_STREAM("Failed to look up transform from frame '" << fixed_frame << "' into frame '" << target_frame
+                    << "': " << error_msg);
     return false;
   }
 
@@ -101,14 +101,13 @@ bool transformPose(const TF &tf_listener,
 #ifdef USE_OLD_TF
     tf_listener.transformPose(target_frame, target_time, in, fixed_frame, out);
 #else
-    geometry_msgs::TransformStamped transform = tf_listener.lookupTransform(target_frame, fixed_frame, ros::Time::now(), timeout);
-    tf2::doTransform(in, out, transform);
-#endif  
+    tf_listener.transform(in, out, target_frame, target_time, fixed_frame, timeout);
+#endif
   }
-  catch (tf::TransformException &ex)
+  catch (const TFException &ex)
   {
-    ROS_WARN("Failed to transform pose from %s into the %s frame: %s", in.header.frame_id.c_str(), target_frame.c_str(),
-             ex.what());
+    ROS_WARN_STREAM("Failed to transform pose from frame '" <<  in.header.frame_id << " ' into frame '"
+                    << target_frame << "' with exception: " << ex.what());
     return false;
   }
   return true;
