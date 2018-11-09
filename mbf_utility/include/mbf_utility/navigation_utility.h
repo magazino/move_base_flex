@@ -94,7 +94,7 @@ bool getRobotPose(const TF &tf_listener,
  * @param pose2 pose 2
  * @return Euclidean distance between pose 1 and pose 2.
  */
-double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
+double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
 /**
  * @brief computes the smallest angle between two poses.
@@ -102,7 +102,7 @@ double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::Pos
  * @param pose2 pose 2
  * @return smallest angle between pose 1 and pose 2.
  */
-double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
+double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
 } /* namespace mbf_utility */
 

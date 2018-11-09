@@ -113,20 +113,20 @@ bool transformPose(const TF &tf_listener,
   return true;
 }
 
-double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2)
+double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2)
 {
-  const geometry_msgs::Point p1 = pose1.pose.position;
-  const geometry_msgs::Point p2 = pose2.pose.position;
+  const geometry_msgs::Point &p1 = pose1.pose.position;
+  const geometry_msgs::Point &p2 = pose2.pose.position;
   const double dx = p1.x - p2.x;
   const double dy = p1.y - p2.y;
   const double dz = p1.z - p2.z;
   return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2)
+double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2)
 {
-  const geometry_msgs::Quaternion q1 = pose1.pose.orientation;
-  const geometry_msgs::Quaternion q2 = pose2.pose.orientation;
+  const geometry_msgs::Quaternion &q1 = pose1.pose.orientation;
+  const geometry_msgs::Quaternion &q2 = pose2.pose.orientation;
   tf::Quaternion rot1, rot2;
   tf::quaternionMsgToTF(q1, rot1);
   tf::quaternionMsgToTF(q2, rot2);
