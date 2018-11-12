@@ -43,7 +43,7 @@
 namespace mbf_utility
 {
 
-bool getRobotPose(const TF &tf_listener,
+bool getRobotPose(const TF &tf,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
@@ -52,19 +52,18 @@ bool getRobotPose(const TF &tf_listener,
   tf::Stamped<tf::Pose> local_pose;
   local_pose.setIdentity();
   local_pose.frame_id_ = robot_frame;
-  local_pose.stamp_ = ros::Time(0.0);  // most recent available
   geometry_msgs::PoseStamped local_pose_msg;
   tf::poseStampedTFToMsg(local_pose, local_pose_msg);
-  return transformPose(tf_listener,
+  return transformPose(tf,
                        global_frame,
-                       local_pose.stamp_,
+                       ros::Time(0), // most recent available
                        timeout,
                        local_pose_msg,
-                       robot_frame,
+                       global_frame,
                        robot_pose);
 }
 
-bool transformPose(const TF &tf_listener,
+bool transformPose(const TF &tf,
                    const std::string &target_frame,
                    const ros::Time &target_time,
                    const ros::Duration &timeout,
@@ -75,23 +74,27 @@ bool transformPose(const TF &tf_listener,
   std::string error_msg;
 
 #ifdef USE_OLD_TF
-  bool success = tf_listener.waitForTransform(target_frame,
-                                              fixed_frame,
-                                              target_time,
-                                              timeout,
-                                              ros::Duration(0.01),
-                                              &error_msg);
+  bool success = tf.waitForTransform(target_frame,
+                                     target_time,
+                                     in.header.frame_id,
+                                     in.header.stamp,
+                                     fixed_frame,
+                                     timeout,
+                                     ros::Duration(0.01),
+                                     &error_msg);
 #else
-  bool success = tf_listener.canTransform(target_frame,
-                                          fixed_frame,
-                                          target_time,
-                                          timeout,
-                                          &error_msg);
+  bool success = tf.canTransform(target_frame,
+                                 target_time,
+                                 in.header.frame_id,
+                                 in.header.stamp,
+                                 fixed_frame,
+                                 timeout,
+                                 &error_msg);
 #endif
 
   if (!success)
   {
-    ROS_WARN_STREAM("Failed to look up transform from frame '" << fixed_frame << "' into frame '" << target_frame
+    ROS_WARN_STREAM("Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
                     << "': " << error_msg);
     return false;
   }
@@ -99,9 +102,9 @@ bool transformPose(const TF &tf_listener,
   try
   {
 #ifdef USE_OLD_TF
-    tf_listener.transformPose(target_frame, target_time, in, fixed_frame, out);
+    tf.transformPose(target_frame, target_time, in, fixed_frame, out);
 #else
-    tf_listener.transform(in, out, target_frame, target_time, fixed_frame, timeout);
+    tf.transform(in, out, target_frame, target_time, fixed_frame);
 #endif
   }
   catch (const TFException &ex)

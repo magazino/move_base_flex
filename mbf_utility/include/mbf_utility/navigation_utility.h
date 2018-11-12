@@ -66,7 +66,7 @@ namespace mbf_utility
  * @param out Transformed pose.
  * @return true, if the transformation succeeded.
  */
-bool transformPose(const TF &tf_listener,
+bool transformPose(const TF &tf,
                    const std::string &target_frame,
                    const ros::Time &target_time,
                    const ros::Duration &timeout,
@@ -83,7 +83,7 @@ bool transformPose(const TF &tf_listener,
  * @param robot_pose the computed rebot pose in the global frame.
  * @return true, if succeeded, false otherwise.
  */
-bool getRobotPose(const TF &tf_listener,
+bool getRobotPose(const TF &tf,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
