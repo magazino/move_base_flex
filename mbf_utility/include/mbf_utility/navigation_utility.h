@@ -66,7 +66,7 @@ namespace mbf_utility
  * @param out Transformed pose.
  * @return true, if the transformation succeeded.
  */
-bool transformPose(const TF &tf_listener,
+bool transformPose(const TF &tf,
                    const std::string &target_frame,
                    const ros::Time &target_time,
                    const ros::Duration &timeout,
@@ -83,7 +83,7 @@ bool transformPose(const TF &tf_listener,
  * @param robot_pose the computed rebot pose in the global frame.
  * @return true, if succeeded, false otherwise.
  */
-bool getRobotPose(const TF &tf_listener,
+bool getRobotPose(const TF &tf,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
@@ -94,7 +94,7 @@ bool getRobotPose(const TF &tf_listener,
  * @param pose2 pose 2
  * @return Euclidean distance between pose 1 and pose 2.
  */
-double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
+double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
 /**
  * @brief computes the smallest angle between two poses.
@@ -102,7 +102,7 @@ double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::Pos
  * @param pose2 pose 2
  * @return smallest angle between pose 1 and pose 2.
  */
-double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2);
+double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
 } /* namespace mbf_utility */
 

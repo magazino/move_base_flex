@@ -43,7 +43,7 @@
 namespace mbf_utility
 {
 
-bool getRobotPose(const TF &tf_listener,
+bool getRobotPose(const TF &tf,
                   const std::string &robot_frame,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
@@ -52,19 +52,18 @@ bool getRobotPose(const TF &tf_listener,
   tf::Stamped<tf::Pose> local_pose;
   local_pose.setIdentity();
   local_pose.frame_id_ = robot_frame;
-  local_pose.stamp_ = ros::Time(0.0);  // most recent available
   geometry_msgs::PoseStamped local_pose_msg;
   tf::poseStampedTFToMsg(local_pose, local_pose_msg);
-  return transformPose(tf_listener,
+  return transformPose(tf,
                        global_frame,
-                       local_pose.stamp_,
+                       ros::Time(0), // most recent available
                        timeout,
                        local_pose_msg,
                        global_frame,
                        robot_pose);
 }
 
-bool transformPose(const TF &tf_listener,
+bool transformPose(const TF &tf,
                    const std::string &target_frame,
                    const ros::Time &target_time,
                    const ros::Duration &timeout,
@@ -75,59 +74,62 @@ bool transformPose(const TF &tf_listener,
   std::string error_msg;
 
 #ifdef USE_OLD_TF
-  bool success = tf_listener.waitForTransform(target_frame,
-                                              in.header.frame_id,
-                                              in.header.stamp,
-                                              timeout,
-                                              ros::Duration(0.01),
-                                              &error_msg);
+  bool success = tf.waitForTransform(target_frame,
+                                     target_time,
+                                     in.header.frame_id,
+                                     in.header.stamp,
+                                     fixed_frame,
+                                     timeout,
+                                     ros::Duration(0.01),
+                                     &error_msg);
 #else
-  bool success = tf_listener.canTransform(target_frame,
-                                              in.header.frame_id,
-                                              in.header.stamp,
-                                              timeout,
-                                              &error_msg);
+  bool success = tf.canTransform(target_frame,
+                                 target_time,
+                                 in.header.frame_id,
+                                 in.header.stamp,
+                                 fixed_frame,
+                                 timeout,
+                                 &error_msg);
 #endif
 
   if (!success)
   {
-    ROS_WARN("Failed to look up transform from %s into the %s frame: %s", in.header.frame_id.c_str(),
-             target_frame.c_str(), error_msg.c_str());
+    ROS_WARN_STREAM("Failed to look up transform from frame '" << in.header.frame_id << "' into frame '" << target_frame
+                    << "': " << error_msg);
     return false;
   }
 
   try
   {
 #ifdef USE_OLD_TF
-    tf_listener.transformPose(target_frame, target_time, in, fixed_frame, out);
+    tf.transformPose(target_frame, target_time, in, fixed_frame, out);
 #else
-    geometry_msgs::TransformStamped transform = tf_listener.lookupTransform(target_frame, fixed_frame, ros::Time::now(), timeout);
-    tf2::doTransform(in, out, transform);
-#endif  
+    tf.transform(in, out, target_frame, target_time, fixed_frame);
+#endif
   }
-  catch (tf::TransformException &ex)
+  catch (const TFException &ex)
   {
-    ROS_WARN("Failed to transform pose from %s into the %s frame: %s", in.header.frame_id.c_str(), target_frame.c_str(),
-             ex.what());
+    ROS_WARN_STREAM("Failed to transform pose from frame '" <<  in.header.frame_id << " ' into frame '"
+                    << target_frame << "' with exception: " << ex.what());
     return false;
   }
   return true;
 }
 
-double distance(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2)
+double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2)
 {
-  const geometry_msgs::Point p1 = pose1.pose.position;
-  const geometry_msgs::Point p2 = pose2.pose.position;
+  const geometry_msgs::Point &p1 = pose1.pose.position;
+  const geometry_msgs::Point &p2 = pose2.pose.position;
   const double dx = p1.x - p2.x;
   const double dy = p1.y - p2.y;
   const double dz = p1.z - p2.z;
   return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-double angle(const geometry_msgs::PoseStamped pose1, const geometry_msgs::PoseStamped pose2)
+double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2)
 {
-  const geometry_msgs::Quaternion q1 = pose1.pose.orientation;
-  const geometry_msgs::Quaternion q2 = pose2.pose.orientation;
+  const geometry_msgs::Quaternion &q1 = pose1.pose.orientation;
+  const geometry_msgs::Quaternion &q2 = pose2.pose.orientation;
   tf::Quaternion rot1, rot2;
   tf::quaternionMsgToTF(q1, rot1);
   tf::quaternionMsgToTF(q2, rot2);
