@@ -38,8 +38,9 @@
  *
  */
 
-#include "mbf_abstract_nav/planner_action.h"
 #include <sstream>
+
+#include "mbf_abstract_nav/planner_action.h"
 
 namespace mbf_abstract_nav{
 
@@ -48,12 +49,9 @@ PlannerAction::PlannerAction(
     const RobotInformation &robot_info)
   : AbstractAction(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
 {
-
-  ros::NodeHandle nh;
-  // informative topics: current goal and global path
-  path_pub_ = nh.advertise<nav_msgs::Path>("global_path", 1);
-  current_goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
-
+  ros::NodeHandle private_nh("~");
+  // informative topics: current navigation goal
+  current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
 }
 
 void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execution)
@@ -167,7 +165,6 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
         plan = execution.getPlan();
-        publishPath(plan);
 
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << execution.getCost());
 
@@ -266,20 +263,6 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
   {
     ROS_ERROR_STREAM_NAMED(name_, "\"" << name_ << "\" action has been stopped!");
   }
-}
-
-void PlannerAction::publishPath(
-    std::vector<geometry_msgs::PoseStamped> &plan)
-{
-  if (plan.empty())
-  {
-    return;
-  }
-  nav_msgs::Path path;
-  path.poses = plan;
-  path.header.frame_id = plan.front().header.frame_id;
-  path.header.stamp = plan.front().header.stamp;
-  path_pub_.publish(path);
 }
 
 bool PlannerAction::transformPlanToGlobalFrame(
