@@ -1,0 +1,33 @@
+sudo: required
+language: generic
+
+notifications:
+  email:
+    recipients:
+      - spuetz@uos.de
+    on_success: change
+    on_failure: change
+
+matrix:
+  include:
+  - name: "Trusty Indigo"
+    dist: trusty
+    env: ROS_DISTRO=indigo
+
+  - name: "Xenial Kinetic"
+    dist: xenial
+    env: ROS_DISTRO=kinetic
+
+  - name: "Zesty Lunar"
+    dist: zesty
+    env: ROS_DISTRO=lunar
+
+  - name: "Beonic Melodic"
+    dist: beonic
+    env: ROS_DISTRO=melodic
+
+install:
+  - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+
+script:
+  - .ci_config/travis.sh
