@@ -2,6 +2,9 @@
 Changelog for package mbf_costmap_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.2 (2018-10-10)
 ------------------
 

@@ -2,6 +2,10 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* single publisher for controller execution objects
+
 0.2.2 (2018-10-10)
 ------------------
 * Do not use MultiThreadedSpinner, as costmap updates can crash when combining laser scans and point clouds

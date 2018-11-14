@@ -2,6 +2,10 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix getRobotPose in melodic
+
 0.2.2 (2018-10-10)
 ------------------
 

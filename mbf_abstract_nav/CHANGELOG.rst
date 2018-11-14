@@ -2,6 +2,13 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not publish path from MBF
+* Single publisher for controller execution objects
+* Ignore max_retries if value is negative and patience if 0
+* Avoid annoying INFO log msg on recovery
+
 0.2.2 (2018-10-10)
 ------------------
 * Add outcome and message to the action's feedback in ExePath and MoveBase
