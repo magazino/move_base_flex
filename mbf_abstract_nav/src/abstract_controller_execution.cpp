@@ -329,7 +329,7 @@ namespace mbf_abstract_nav
           // call plugin to compute the next velocity command
           geometry_msgs::TwistStamped cmd_vel_stamped;
           geometry_msgs::TwistStamped robot_velocity;   // TODO pass current velocity to the plugin!
-          outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_);
+          outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
 
           if (outcome_ < 10)
           {

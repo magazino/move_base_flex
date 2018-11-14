@@ -223,7 +223,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::NO_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The local planner has been started without any plan!");
+        ROS_WARN_STREAM_NAMED(name_, "The local planner has been started without a plan!");
         controller_active = false;
         result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
         result.message = "Controller started without a path";
@@ -247,7 +247,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
-        ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller!");
+        ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
+            << execution.getMessage());
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
                                execution.getOutcome(), execution.getMessage(),
                                execution.getLastValidCmdVel());
@@ -275,7 +276,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
           }
         }
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
-                               mbf_msgs::ExePathResult::SUCCESS, std::string(""),
+                               execution.getOutcome(), execution.getMessage(),
                                execution.getLastValidCmdVel());
         break;
 
@@ -288,7 +289,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::INTERNAL_ERROR:
-        ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin!"); // TODO getMessage from controller
+        ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: " << execution.getMessage());
         controller_active = false;
         result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
         result.message = "Internal error: Unknown error thrown by the plugin!";
