@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.3 (2018-11-14)
+------------------
 * Do not publish path from MBF
 * Single publisher for controller execution objects
 * Ignore max_retries if value is negative and patience if 0
