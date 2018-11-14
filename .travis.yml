@@ -1,5 +1,6 @@
 sudo: required
 language: generic
+dist: trusty
 
 notifications:
   email:
@@ -10,20 +11,16 @@ notifications:
 
 matrix:
   include:
-  - name: "Trusty Indigo"
-    dist: trusty
+  - name: "Indigo"
     env: ROS_DISTRO=indigo
 
-  - name: "Xenial Kinetic"
-    dist: xenial
+  - name: "Kinetic"
     env: ROS_DISTRO=kinetic
 
-  - name: "Zesty Lunar"
-    dist: zesty
+  - name: "Lunar"
     env: ROS_DISTRO=lunar
 
-  - name: "Beonic Melodic"
-    dist: beonic
+  - name: "Melodic"
     env: ROS_DISTRO=melodic
 
 install:
