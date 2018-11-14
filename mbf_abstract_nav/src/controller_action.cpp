@@ -66,7 +66,7 @@ void ControllerAction::start(
         = executions_.find(slot->second);
     if(elem != executions_.end())
     {
-      if(elem->second->getName() == goal_handle.getGoal()->controller || goal_handle.getGoal()->controller.empty())
+      if(elem->second->getName() == goal_handle.getGoal()->controller)
       {
         execution_ptr = elem->second;
         execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
