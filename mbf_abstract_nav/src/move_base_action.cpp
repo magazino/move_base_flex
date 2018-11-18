@@ -121,6 +121,15 @@ void MoveBaseAction::cancel()
 
 void MoveBaseAction::start(GoalHandle &goal_handle)
 {
+  if (action_state_ == GET_PATH)
+    action_client_get_path_.cancelAllGoals();
+
+  if (action_state_ == EXE_PATH)
+    action_client_exe_path_.cancelAllGoals();
+
+  if (action_state_ == RECOVERY)
+    action_client_recovery_.cancelAllGoals();
+
   action_state_ = GET_PATH;
 
   goal_handle.setAccepted();
@@ -229,7 +238,7 @@ void MoveBaseAction::actionExePathFeedback(
       else
       {
         mbf_msgs::MoveBaseResult move_base_result;
-        move_base_result.outcome = OSCILLATING;
+        move_base_result.outcome = mbf_msgs::MoveBaseResult::OSCILLATION;
         if(recovery_enabled_)
           move_base_result.message = oscillation_msgs.str() + " No recovery behaviors for the move_base action are defined!";
         else
