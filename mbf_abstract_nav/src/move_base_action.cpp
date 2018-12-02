@@ -73,7 +73,7 @@ void MoveBaseAction::reconfigure(
 {
   if (config.planner_frequency > 0.0)
   {
-    boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+    boost::lock_guard<boost::mutex> guard(replanning_mtx_);
     if (!replanning_)
     {
       replanning_ = true;
@@ -338,7 +338,7 @@ void MoveBaseAction::actionGetPathDone(
 
   // we reset the replan clock (we can have been stopped for a while) and make a fist sleep, so we don't replan
   // just after start moving
-  boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+  boost::lock_guard<boost::mutex> guard(replanning_mtx_);
   replanning_rate_.reset();
   replanning_rate_.sleep();
   if (!replanning_ || action_state_ != EXE_PATH ||

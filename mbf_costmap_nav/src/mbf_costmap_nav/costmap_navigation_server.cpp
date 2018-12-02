@@ -341,8 +341,6 @@ CostmapNavigationServer::~CostmapNavigationServer()
 
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
-  boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-
   // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
   {
