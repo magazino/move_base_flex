@@ -45,12 +45,11 @@ geometry_msgs/PoseStamped final_pose
 
 ---
 
-# Outcome of most recent controller cycle.
-# Same values as in MoveBase or ExePath result.
+# Outcome of most recent controller cycle. Same values as in MoveBase or ExePath result.
 uint32 outcome
 string message
 
 float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped current_pose
-geometry_msgs/TwistStamped current_twist
+geometry_msgs/TwistStamped last_cmd_vel  # last command calculated by the controller
