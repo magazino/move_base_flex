@@ -93,7 +93,7 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
-    boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
+    boost::lock_guard<boost::mutex> guard(configuration_mutex_);
     // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
@@ -341,7 +341,7 @@ namespace mbf_abstract_nav
           }
           else
           {
-            boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
+            boost::lock_guard<boost::mutex> guard(configuration_mutex_);
             if (max_retries_ >= 0 && ++retries > max_retries_)
             {
               setState(MAX_RETRIES);

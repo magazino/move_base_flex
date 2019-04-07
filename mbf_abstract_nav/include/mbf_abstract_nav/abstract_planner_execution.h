@@ -298,7 +298,7 @@ namespace mbf_abstract_nav
     PlanningState state_;
 
     //! dynamic reconfigure mutex for a thread safe communication
-    boost::recursive_mutex configuration_mutex_;
+    boost::mutex configuration_mutex_;
 
   };
 

@@ -319,7 +319,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     DynamicReconfigureServer dsrv_;
 
     //! configuration mutex for derived classes and other threads.
-    boost::recursive_mutex configuration_mutex_;
+    boost::mutex configuration_mutex_;
 
     //! last configuration save
     mbf_abstract_nav::MoveBaseFlexConfig last_config_;

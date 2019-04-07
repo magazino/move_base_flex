@@ -56,7 +56,7 @@ void ControllerAction::start(
 )
 {
   bool new_plan = false;
-  boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+  boost::lock_guard<boost::mutex> guard(map_mtx_);
   typename SlotGoalIdMap::left_const_iterator slot
       = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
   if(slot != concurrency_slots_.left.end())
