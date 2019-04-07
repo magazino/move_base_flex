@@ -340,9 +340,9 @@ void ControllerAction::publishExePathFeedback(
   feedback.outcome = outcome;
   feedback.message = message;
 
-  feedback.current_twist = current_twist;
-  if (feedback.current_twist.header.stamp.isZero())
-    feedback.current_twist.header.stamp = ros::Time::now();
+  feedback.last_cmd_vel = current_twist;
+  if (feedback.last_cmd_vel.header.stamp.isZero())
+    feedback.last_cmd_vel.header.stamp = ros::Time::now();
 
   feedback.current_pose = robot_pose;
   feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose, goal_pose));

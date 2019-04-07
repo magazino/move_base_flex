@@ -191,7 +191,7 @@ void MoveBaseAction::actionExePathFeedback(
   move_base_feedback_.angle_to_goal = feedback->angle_to_goal;
   move_base_feedback_.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback_.current_pose = feedback->current_pose;
-  move_base_feedback_.current_twist = feedback->current_twist;
+  move_base_feedback_.last_cmd_vel = feedback->last_cmd_vel;
   robot_pose_ = feedback->current_pose;
   goal_handle_.publishFeedback(move_base_feedback_);
 
