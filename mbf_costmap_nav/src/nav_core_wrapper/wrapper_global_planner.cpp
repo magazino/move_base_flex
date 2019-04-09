@@ -50,7 +50,7 @@ uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
                                         double &cost,
                                         std::string &message)
 {
-#if ROS_VERSION_MINIMUM(1, 12, 0) // if current ros version is >= 1.12.0
+#if ROS_VERSION_MINIMUM(1, 13, 0) // if current ros version is >= 1.12.0
   // Kinetic and beyond
   bool success = nav_core_plugin_->makePlan(start, goal, plan, cost);
 #else

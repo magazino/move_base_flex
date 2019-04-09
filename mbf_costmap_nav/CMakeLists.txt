@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mbf_costmap_nav)
 
+set (CMAKE_CXX_STANDARD 11)
+
 find_package(catkin REQUIRED
   COMPONENTS
   base_local_planner
