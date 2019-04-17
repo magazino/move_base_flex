@@ -126,6 +126,6 @@ if __name__ == '__main__':
     mb_mps = rospy.Service('~make_plan', nav_srvs.GetPlan, make_plan_cb)
 
     # move_base dynamic reconfigure server
-    //mb_drs = Server(MoveBaseConfig, mb_reconf_cb)
+    #mb_drs = Server(MoveBaseConfig, mb_reconf_cb)
 
     rospy.spin()
