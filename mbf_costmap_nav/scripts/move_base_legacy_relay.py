@@ -25,7 +25,7 @@ calls (note that some parameters have changed names; see http://wiki.ros.org/mov
 
 
 def simple_goal_cb(msg):
-    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg))
+    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg, controller="default"))
     rospy.logdebug("Relaying move_base_simple/goal pose to mbf")
 
 
@@ -103,7 +103,7 @@ def mb_reconf_cb(config, level):
 
 
 if __name__ == '__main__':
-    rospy.init_node("move_base")
+    rospy.init_node("move_base",log_level=rospy.DEBUG)
 
     # TODO what happens with malformed target goal???  FAILURE  or INVALID_POSE
     # txt must be:  "Aborting on goal because it was sent with an invalid quaternion"   
