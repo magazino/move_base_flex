@@ -334,6 +334,9 @@ namespace mbf_abstract_nav
 
           if (outcome_ < 10)
           {
+            // set stamped values; timestamp and frame_id should be set by the plugin; otherwise setVelocityCmd will do
+            cmd_vel_stamped.header.seq = seq++; // sequence number
+            setVelocityCmd(cmd_vel_stamped);
             setState(GOT_LOCAL_CMD);
             vel_pub_.publish(cmd_vel_stamped.twist);
             condition_.notify_all();
@@ -363,10 +366,6 @@ namespace mbf_abstract_nav
             // could not compute a valid velocity command -> stop moving the robot
             publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
           }
-
-          // set stamped values; timestamp and frame_id should be set by the plugin; otherwise setVelocityCmd will do
-          cmd_vel_stamped.header.seq = seq++; // sequence number
-          setVelocityCmd(cmd_vel_stamped);
         }
 
         boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
