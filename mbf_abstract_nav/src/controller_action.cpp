@@ -125,7 +125,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   if (plan.empty())
   {
     result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-    result.message = "Local planner started with an empty plan!";
+    result.message = "Controller started with an empty plan!";
 
     goal_handle.setAborted(result, result.message);
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
@@ -186,7 +186,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::CANCELED:
         ROS_INFO_STREAM("Action \"ExePath\" canceled");
         result.outcome = mbf_msgs::ExePathResult::CANCELED;
-        result.message = "Local planner canceled";
+        result.message = "Controller canceled";
         goal_handle.setCanceled(result, result.message);
         controller_active = false;
         break;
@@ -199,15 +199,19 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_DEBUG_STREAM_NAMED(name_, "Local planner patience has been exceeded! Stopping controller...");
+          ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
           // We will try to stop the thread, but does nothing with DWA or TR controllers
+          // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
+          // as there is the controller itself reporting that it cannot find a valid command after trying
+          // for more than patience seconds. But after stopping controller execution, it should ideally
+          // report PAT_EXCEEDED as his state on next iteration.
           execution.stop();
         }
         break;
 
       case AbstractControllerExecution::MAX_RETRIES:
-        ROS_WARN_STREAM_NAMED(name_, "The local planner has been aborted after it exceeded the maximum number of retries!");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
         result.outcome = execution.getOutcome();
         result.message = execution.getMessage();
@@ -215,15 +219,15 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::PAT_EXCEEDED:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time ");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
         controller_active = false;
         result.outcome = mbf_msgs::ExePathResult::PAT_EXCEEDED;
-        result.message = "Controller exceeded allocated time";
+        result.message = execution.getMessage();
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::NO_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The local planner has been started without a plan!");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been started without a plan!");
         controller_active = false;
         result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
         result.message = "Controller started without a path";
@@ -234,7 +238,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         ROS_WARN_STREAM_NAMED(name_, "The controller has received an empty plan");
         controller_active = false;
         result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-        result.message = "Local planner started with an empty plan";
+        result.message = "Controller started with an empty plan";
         goal_handle.setAborted(result, result.message);
         break;
 
@@ -251,7 +255,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
             << execution.getMessage());
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
                                execution.getOutcome(), execution.getMessage(),
-                               execution.getLastValidCmdVel());
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -277,7 +281,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         }
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
                                execution.getOutcome(), execution.getMessage(),
-                               execution.getLastValidCmdVel());
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:

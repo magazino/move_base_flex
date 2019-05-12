@@ -94,7 +94,7 @@ namespace mbf_abstract_nav
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
     boost::lock_guard<boost::mutex> guard(configuration_mutex_);
-    // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
+    // Timeout granted to the controller. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
 
@@ -196,7 +196,7 @@ namespace mbf_abstract_nav
   }
 
 
-  geometry_msgs::TwistStamped AbstractControllerExecution::getLastValidCmdVel()
+  geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd()
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     return vel_cmd_stamped_;
@@ -210,23 +210,16 @@ namespace mbf_abstract_nav
   }
 
 
-  ros::Time AbstractControllerExecution::getLastValidCmdVelTime()
-  {
-    boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
-    return vel_cmd_stamped_.header.stamp;
-  }
-
-
   bool AbstractControllerExecution::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_call_time_ > patience_);
+    return !patience_.isZero() && (ros::Time::now() - last_call_time_ > patience_);
   }
 
 
   bool AbstractControllerExecution::isMoving()
   {
-    return moving_ && start_time_ < getLastValidCmdVelTime() && !isPatienceExceeded();
+    return moving_;
   }
 
   bool AbstractControllerExecution::reachedGoalCheck()
@@ -264,6 +257,7 @@ namespace mbf_abstract_nav
       ROS_ERROR("robot navigation moving has no plan!");
     }
 
+    ros::Time last_valid_cmd_time = ros::Time();
     int retries = 0;
     int seq = 0;
 
@@ -336,6 +330,7 @@ namespace mbf_abstract_nav
           {
             setState(GOT_LOCAL_CMD);
             vel_pub_.publish(cmd_vel_stamped.twist);
+            last_valid_cmd_time = ros::Time::now();
             condition_.notify_all();
             retries = 0;
           }
@@ -348,9 +343,10 @@ namespace mbf_abstract_nav
               moving_ = false;
               condition_.notify_all();
             }
-            else if (patience_ > ros::Duration(0) && ros::Time::now() - getLastValidCmdVelTime() > patience_
-                && ros::Time::now() - start_time_ > patience_)  // why not isPatienceExceeded() ?
+            else if (!patience_.isZero() && ros::Time::now() - last_valid_cmd_time > patience_
+                     && ros::Time::now() - start_time_ > patience_)
             {
+              // patience limit enabled and running controller for more than patience without valid commands
               setState(PAT_EXCEEDED);
               moving_ = false;
               condition_.notify_all();
