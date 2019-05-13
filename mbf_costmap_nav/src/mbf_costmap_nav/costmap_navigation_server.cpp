@@ -659,8 +659,14 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
 bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
                                                        std_srvs::Empty::Response &response)
 {
+  //clear both costmaps
+  local_costmap_ptr_->getCostmap()->getMutex()->lock();
   local_costmap_ptr_->resetLayers();
+  local_costmap_ptr_->getCostmap()->getMutex()->unlock();
+
+  global_costmap_ptr_->getCostmap()->getMutex()->lock();
   global_costmap_ptr_->resetLayers();
+  global_costmap_ptr_->getCostmap()->getMutex()->unlock();
   return true;
 }
 
