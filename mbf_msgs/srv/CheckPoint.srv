@@ -1,0 +1,14 @@
+uint8                      LOCAL_COSTMAP  = 1
+uint8                      GLOBAL_COSTMAP = 2
+
+geometry_msgs/PointStamped point             # the point to be checked after transforming to costmap frame
+uint8                      costmap           # costmap in which to check the point
+---
+uint8                      FREE      =  0    # point is in traversable space
+uint8                      INSCRIBED =  1    # point is in inscribed space
+uint8                      LETHAL    =  2    # point is in collision
+uint8                      UNKNOWN   =  3    # point is in unknown space
+uint8                      OUTSIDE   =  4    # point is outside the map
+
+uint8                      state             # point state: FREE, INFLATED, LETHAL, UNKNOWN or OUTSIDE
+uint32                     cost              # cost of the cell at point
