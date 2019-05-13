@@ -66,10 +66,10 @@ namespace mbf_abstract_nav
  */
 
 /**
- * @brief The AbstractControllerExecution class loads and binds the local planner plugin. It contains a thread
- *        running the plugin in a cycle to move the robot. An internal state is saved and will be pulled by server,
- *        which controls the local planner execution. Due to a state change it wakes up all threads connected to the
- *        condition variable.
+ * @brief The AbstractControllerExecution class loads and binds the controller plugin. It contains a thread
+ *        running the plugin in a cycle to move the robot. An internal state is saved and will be pulled by
+ *        server, to monitor controller execution. Due to a state change it wakes up all threads connected
+ *        to the condition variable.
  *
  * @ingroup abstract_server controller_execution
  */
@@ -133,7 +133,7 @@ namespace mbf_abstract_nav
       MAX_RETRIES,  ///< Exceeded the maximum number of retries without a valid command.
       PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
       EMPTY_PLAN,   ///< Received an empty plan.
-      INVALID_PLAN, ///< Received an invalid plan that the local planner rejected.
+      INVALID_PLAN, ///< Received an invalid plan that the controller plugin rejected.
       NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
       GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
       ARRIVED_GOAL, ///< The robot arrived the goal.
@@ -155,16 +155,12 @@ namespace mbf_abstract_nav
     ros::Time getLastPluginCallTime();
 
     /**
-     * @brief Returns the time, the last time a valid velocity command has been received
-     * @return Time, the last time a valid cmd_vel has been received.
-     */
-    ros::Time getLastValidCmdVelTime();
-
-    /**
-     * @brief Returns the last valid velocity command set by setVelocityCmd method
+     * @brief Returns the last velocity command calculated by the plugin. Set by setVelocityCmd method.
+     * Note that it doesn't need to be a valid command sent to the robot, as we report also failed calls
+     * to the plugin on controller action feedback.
      * @return The last valid velocity command.
      */
-    geometry_msgs::TwistStamped getLastValidCmdVel();
+    geometry_msgs::TwistStamped getVelocityCmd();
 
     /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
@@ -187,7 +183,7 @@ namespace mbf_abstract_nav
     void reconfigure(const MoveBaseFlexConfig &config);
 
     /**
-     * @brief Returns whether the robot should normally move or not. True if the local planner seems to work properly.
+     * @brief Returns whether the robot should normally move or not. True if the controller seems to work properly.
      * @return true, if the robot should normally move, false otherwise
      */
     bool isMoving();
