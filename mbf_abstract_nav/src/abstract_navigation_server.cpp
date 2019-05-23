@@ -395,15 +395,4 @@ void AbstractNavigationServer::stop(){
   move_base_action_.cancel();
 }
 
-void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::string &message,
-                                                 mbf_msgs::ExePathResult &result)
-{
-  result.outcome = outcome;
-  result.message = message;
-  result.final_pose = robot_pose_;
-  result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
-  result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
-}
-
-
 } /* namespace mbf_abstract_nav */
