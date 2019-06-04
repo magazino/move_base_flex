@@ -16,6 +16,7 @@ add_service_files(
   DIRECTORY
   srv
   FILES
+  CheckPoint.srv
   CheckPose.srv
   CheckPath.srv
 )
