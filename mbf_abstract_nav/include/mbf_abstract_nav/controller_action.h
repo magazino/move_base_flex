@@ -59,8 +59,14 @@ class ControllerAction :
   ControllerAction(const std::string &name,
                    const RobotInformation &robot_info);
 
+  /**
+   * @brief Start controller action.
+   * Override abstract action version to allow updating current plan without stopping execution.
+   * @param goal_handle Reference to the goal handle received on action execution callback.
+   * @param execution_ptr Pointer to the execution descriptor.
+   */
   void start(
-      GoalHandle goal_handle,
+      GoalHandle &goal_handle,
       typename AbstractControllerExecution::Ptr execution_ptr
   );
 
