@@ -25,7 +25,7 @@ calls (note that some parameters have changed names; see http://wiki.ros.org/mov
 
 
 def simple_goal_cb(msg):
-    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg, controller="default"))
+    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg))
     rospy.logdebug("Relaying move_base_simple/goal pose to mbf")
 
 

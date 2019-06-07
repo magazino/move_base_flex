@@ -56,6 +56,12 @@
 #include <nav_core/base_local_planner.h>
 #include <nav_core/recovery_behavior.h>
 
+#include <base_local_planner/SpeedLimitManagerConfig.h>
+#include <base_local_planner/ObstacleSpeedLimiterConfig.h>
+#include <base_local_planner/ExternalSpeedLimiterConfig.h>
+#include <base_local_planner/PathSpeedLimiterConfig.h>
+#include <base_local_planner/ShadowSpeedLimiterConfig.h>
+
 namespace mbf_costmap_nav
 {
 /**
@@ -234,6 +240,12 @@ private:
 
   //! true, if the dynamic reconfigure has been setup
   bool setup_reconfigure_;
+
+  boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::SpeedLimitManagerConfig>> speedLimiterConfigServer_;
+  boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::ObstacleSpeedLimiterConfig>> speedLimiterObstacleConfigServer_;
+  boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::PathSpeedLimiterConfig>> speedLimiterPathConfigServer_;
+  boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::ExternalSpeedLimiterConfig>> speedLimiterExternalConfigServer_;
+  boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::ShadowSpeedLimiterConfig>> speedLimiterShadowConfigServer_;
 
   //! Shared pointer to the common local costmap
   CostmapPtr local_costmap_ptr_;

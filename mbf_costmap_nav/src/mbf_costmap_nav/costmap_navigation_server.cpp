@@ -102,6 +102,18 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
 
   // start all action servers
   startActionServers();
+
+  // start speed limiter
+  ros::NodeHandle speedLimiter_nh("~/speed_limiters");
+  speedLimiterConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::SpeedLimitManagerConfig>>(speedLimiter_nh);
+  ros::NodeHandle speedLimiterObstacle_nh("~/speed_limiters/obstacle");
+  speedLimiterObstacleConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::ObstacleSpeedLimiterConfig>>(speedLimiterObstacle_nh);
+  ros::NodeHandle speedLimiterPath_nh("~/speed_limiters/path");
+  speedLimiterPathConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::PathSpeedLimiterConfig>>(speedLimiterPath_nh);
+  ros::NodeHandle speedLimiterExternal_nh("~/speed_limiters/external");
+  speedLimiterExternalConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::ExternalSpeedLimiterConfig>>(speedLimiterExternal_nh);
+  ros::NodeHandle speedLimiterShadow_nh("~/speed_limiters/shadow");
+  speedLimiterShadowConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::ShadowSpeedLimiterConfig>>(speedLimiterShadow_nh);
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
