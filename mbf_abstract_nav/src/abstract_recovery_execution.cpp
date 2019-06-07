@@ -109,7 +109,7 @@ namespace mbf_abstract_nav
     boost::lock_guard<boost::mutex> guard1(conf_mtx_);
     boost::lock_guard<boost::mutex> guard2(time_mtx_);
     ROS_DEBUG_STREAM("Patience: " << patience_ << ", start time: " << start_time_ << " now: " << ros::Time::now());
-    return (patience_ > ros::Duration(0)) && (ros::Time::now() - start_time_ > patience_);
+    return !patience_.isZero() && (ros::Time::now() - start_time_ > patience_);
   }
 
   void AbstractRecoveryExecution::run()

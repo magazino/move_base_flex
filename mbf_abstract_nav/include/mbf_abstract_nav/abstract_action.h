@@ -69,7 +69,7 @@ class AbstractAction
       typename Execution::Ptr execution_ptr
   )
   {
-    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+    boost::lock_guard<boost::mutex> guard(map_mtx_);
     typename SlotGoalIdMap::left_const_iterator slot
         = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
     if(slot != concurrency_slots_.left.end()) // if there is a plugin running on the same slot, cancel it // TODO make thread safe
@@ -93,7 +93,7 @@ class AbstractAction
         elem = executions_.find(goal_handle.getGoalID().id);
     if(elem != executions_.end())
     {
-      boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+      boost::lock_guard<boost::mutex> guard(map_mtx_);
       elem->second->cancel();
     }
   }
@@ -105,7 +105,7 @@ class AbstractAction
     ROS_DEBUG_STREAM("Finished action run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM("Execution thread stopped, cleaning up the execution object map and the slot map");
-    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+    boost::lock_guard<boost::mutex> guard(map_mtx_);
     executions_.erase(goal_handle.getGoalID().id);
     concurrency_slots_.right.erase(goal_handle.getGoalID().id);
     ROS_DEBUG_STREAM("Exiting run method with goal status: " << goal_handle.getGoalStatus().text << " and code: "
@@ -120,7 +120,7 @@ class AbstractAction
   void reconfigureAll(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
   {
-    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+    boost::lock_guard<boost::mutex> guard(map_mtx_);
 
     typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
     for(iter = executions_.begin(); iter != executions_.end(); ++iter)
@@ -132,7 +132,7 @@ class AbstractAction
   void cancelAll()
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
-    boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+    boost::lock_guard<boost::mutex> guard(map_mtx_);
     typename std::map<const std::string, const typename Execution::Ptr>::iterator iter;
     for(iter = executions_.begin(); iter != executions_.end(); ++iter)
     {

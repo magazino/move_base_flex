@@ -56,7 +56,7 @@ void ControllerAction::start(
 )
 {
   bool new_plan = false;
-  boost::lock_guard<boost::mutex> lock_guard(map_mtx_);
+  boost::lock_guard<boost::mutex> guard(map_mtx_);
   typename SlotGoalIdMap::left_const_iterator slot
       = concurrency_slots_.left.find(goal_handle.getGoal()->concurrency_slot);
   if(slot != concurrency_slots_.left.end())
@@ -124,9 +124,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
   if (plan.empty())
   {
-    result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-    result.message = "Local planner started with an empty plan!";
-
+    fillExePathResult(geometry_msgs::PoseStamped(), geometry_msgs::PoseStamped(),
+                      mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan!", result);
     goal_handle.setAborted(result, result.message);
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
     return;
@@ -156,8 +155,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
     if (!robot_info_.getRobotPose(robot_pose))
     {
       controller_active = false;
-      result.outcome = mbf_msgs::ExePathResult::TF_ERROR;
-      result.message = "Could not get the robot pose!";
+      fillExePathResult(robot_pose, goal_pose,
+                        mbf_msgs::ExePathResult::TF_ERROR, "Could not get the robot pose!", result);
       goal_handle.setAborted(result, result.message);
       ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
       break;
@@ -185,8 +184,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
       case AbstractControllerExecution::CANCELED:
         ROS_INFO_STREAM("Action \"ExePath\" canceled");
-        result.outcome = mbf_msgs::ExePathResult::CANCELED;
-        result.message = "Local planner canceled";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
         goal_handle.setCanceled(result, result.message);
         controller_active = false;
         break;
@@ -199,58 +198,61 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_DEBUG_STREAM_NAMED(name_, "Local planner patience has been exceeded! Stopping controller...");
+          ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
           // We will try to stop the thread, but does nothing with DWA or TR controllers
+          // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
+          // as there is the controller itself reporting that it cannot find a valid command after trying
+          // for more than patience seconds. But after stopping controller execution, it should ideally
+          // report PAT_EXCEEDED as his state on next iteration.
           execution.stop();
         }
         break;
 
       case AbstractControllerExecution::MAX_RETRIES:
-        ROS_WARN_STREAM_NAMED(name_, "The local planner has been aborted after it exceeded the maximum number of retries!");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
-        result.outcome = execution.getOutcome();
-        result.message = execution.getMessage();
+        fillExePathResult(robot_pose, goal_pose, execution.getOutcome(), execution.getMessage(), result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::PAT_EXCEEDED:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time ");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::PAT_EXCEEDED;
-        result.message = "Controller exceeded allocated time";
+        fillExePathResult(robot_pose, goal_pose,mbf_msgs::ExePathResult::PAT_EXCEEDED, execution.getMessage(), result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::NO_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The local planner has been started without any plan!");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been started without a plan!");
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-        result.message = "Controller started without a path";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started without a path", result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::EMPTY_PLAN:
         ROS_WARN_STREAM_NAMED(name_, "The controller has received an empty plan");
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-        result.message = "Local planner started with an empty plan";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan", result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::INVALID_PLAN:
         ROS_WARN_STREAM_NAMED(name_, "The controller has received an invalid plan");
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
-        result.message = "Controller started with an invalid plan";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an invalid plan", result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
-        ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller!");
+        ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
+            << execution.getMessage());
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
                                execution.getOutcome(), execution.getMessage(),
-                               execution.getLastValidCmdVel());
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -268,39 +270,39 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
             execution.stop();
             controller_active = false;
-            result.outcome = mbf_msgs::ExePathResult::OSCILLATION;
-            result.message = "Oscillation detected!",
+            fillExePathResult(robot_pose, goal_pose,
+                              mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
             goal_handle.setAborted(result, result.message);
             break;
           }
         }
         publishExePathFeedback(goal_handle, robot_pose, goal_pose,
-                               mbf_msgs::ExePathResult::SUCCESS, std::string(""),
-                               execution.getLastValidCmdVel());
+                               execution.getOutcome(), execution.getMessage(),
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:
         ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived to goal");
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::SUCCESS;
-        result.message = "Controller succeeded; arrived to goal!";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
         goal_handle.setSucceeded(result, result.message);
         break;
 
       case AbstractControllerExecution::INTERNAL_ERROR:
-        ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin!"); // TODO getMessage from controller
+        ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: " << execution.getMessage());
         controller_active = false;
-        result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
-        result.message = "Internal error: Unknown error thrown by the plugin!";
+        fillExePathResult(robot_pose, goal_pose,
+                          mbf_msgs::ExePathResult::INTERNAL_ERROR, "Internal error: Unknown error thrown by the plugin!", result);
         goal_handle.setAborted(result, result.message);
         break;
 
       default:
-        result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
         std::stringstream ss;
         ss << "Internal error: Unknown state in a move base flex controller execution with the number: "
            << static_cast<int>(state_moving_input);
-        result.message = ss.str();
+           fillExePathResult(robot_pose, goal_pose,
+                             mbf_msgs::ExePathResult::INTERNAL_ERROR, ss.str(), result);
         ROS_FATAL_STREAM_NAMED(name_, result.message);
         goal_handle.setAborted(result, result.message);
         controller_active = false;
@@ -339,14 +341,27 @@ void ControllerAction::publishExePathFeedback(
   feedback.outcome = outcome;
   feedback.message = message;
 
-  feedback.current_twist = current_twist;
-  if (feedback.current_twist.header.stamp.isZero())
-    feedback.current_twist.header.stamp = ros::Time::now();
+  feedback.last_cmd_vel = current_twist;
+  if (feedback.last_cmd_vel.header.stamp.isZero())
+    feedback.last_cmd_vel.header.stamp = ros::Time::now();
 
   feedback.current_pose = robot_pose;
   feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose, goal_pose));
   feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose, goal_pose));
   goal_handle.publishFeedback(feedback);
+}
+
+void ControllerAction::fillExePathResult(
+        const geometry_msgs::PoseStamped& robot_pose,
+        const geometry_msgs::PoseStamped& goal_pose,
+        uint32_t outcome, const std::string &message,
+        mbf_msgs::ExePathResult &result)
+{
+  result.outcome = outcome;
+  result.message = message;
+  result.final_pose = robot_pose;
+  result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose, goal_pose));
+  result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose, goal_pose));
 }
 
 }

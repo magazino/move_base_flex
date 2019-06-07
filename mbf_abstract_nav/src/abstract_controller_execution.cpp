@@ -93,8 +93,8 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
-    boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
-    // Timeout granted to the local planner. We keep calling it up to this time or up to max_retries times
+    boost::lock_guard<boost::mutex> guard(configuration_mutex_);
+    // Timeout granted to the controller. We keep calling it up to this time or up to max_retries times
     // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
     patience_ = ros::Duration(config.controller_patience);
 
@@ -192,10 +192,11 @@ namespace mbf_abstract_nav
     vel_cmd_stamped_ = vel_cmd;
     if (vel_cmd_stamped_.header.stamp.isZero())
       vel_cmd_stamped_.header.stamp = ros::Time::now();
+    // TODO what happen with frame id?
   }
 
 
-  geometry_msgs::TwistStamped AbstractControllerExecution::getLastValidCmdVel()
+  geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd()
   {
     boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
     return vel_cmd_stamped_;
@@ -209,23 +210,16 @@ namespace mbf_abstract_nav
   }
 
 
-  ros::Time AbstractControllerExecution::getLastValidCmdVelTime()
-  {
-    boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
-    return vel_cmd_stamped_.header.stamp;
-  }
-
-
   bool AbstractControllerExecution::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return (patience_ > ros::Duration(0)) && (ros::Time::now() - last_call_time_ > patience_);
+    return !patience_.isZero() && (ros::Time::now() - last_call_time_ > patience_);
   }
 
 
   bool AbstractControllerExecution::isMoving()
   {
-    return moving_ && start_time_ < getLastValidCmdVelTime() && !isPatienceExceeded();
+    return moving_;
   }
 
   bool AbstractControllerExecution::reachedGoalCheck()
@@ -263,6 +257,7 @@ namespace mbf_abstract_nav
       ROS_ERROR("robot navigation moving has no plan!");
     }
 
+    ros::Time last_valid_cmd_time = ros::Time();
     int retries = 0;
     int seq = 0;
 
@@ -329,30 +324,29 @@ namespace mbf_abstract_nav
           // call plugin to compute the next velocity command
           geometry_msgs::TwistStamped cmd_vel_stamped;
           geometry_msgs::TwistStamped robot_velocity;   // TODO pass current velocity to the plugin!
-          outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_);
+          outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
 
           if (outcome_ < 10)
           {
-            // set stamped values: frame id, time stamp and sequence number
-            cmd_vel_stamped.header.seq = seq++;
-            setVelocityCmd(cmd_vel_stamped);
             setState(GOT_LOCAL_CMD);
             vel_pub_.publish(cmd_vel_stamped.twist);
+            last_valid_cmd_time = ros::Time::now();
             condition_.notify_all();
             retries = 0;
           }
           else
           {
-            boost::lock_guard<boost::mutex> lock_guard(configuration_mutex_);
+            boost::lock_guard<boost::mutex> guard(configuration_mutex_);
             if (max_retries_ >= 0 && ++retries > max_retries_)
             {
               setState(MAX_RETRIES);
               moving_ = false;
               condition_.notify_all();
             }
-            else if (patience_ > ros::Duration(0) && ros::Time::now() - getLastValidCmdVelTime() > patience_
-                && ros::Time::now() - start_time_ > patience_)  // why not isPatienceExceeded() ?
+            else if (!patience_.isZero() && ros::Time::now() - last_valid_cmd_time > patience_
+                     && ros::Time::now() - start_time_ > patience_)
             {
+              // patience limit enabled and running controller for more than patience without valid commands
               setState(PAT_EXCEEDED);
               moving_ = false;
               condition_.notify_all();
@@ -363,8 +357,12 @@ namespace mbf_abstract_nav
               condition_.notify_all();
             }
             // could not compute a valid velocity command -> stop moving the robot
-            publishZeroVelocity(); // command the robot to stop
+            publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
           }
+
+          // set stamped values; timestamp and frame_id should be set by the plugin; otherwise setVelocityCmd will do
+          cmd_vel_stamped.header.seq = seq++; // sequence number
+          setVelocityCmd(cmd_vel_stamped);
         }
 
         boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();

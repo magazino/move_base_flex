@@ -276,14 +276,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
                                     std::vector<geometry_msgs::PoseStamped> &global_plan);
 
     /**
-     * @brief Utility method to fill the ExePath action result in a single line
-     * @param outcome ExePath action outcome
-     * @param message ExePath action message
-     * @param result The action result to fill
-     */
-    void fillExePathResult(uint32_t outcome, const std::string &message, mbf_msgs::ExePathResult &result);
-
-    /**
      * @brief Start a dynamic reconfigure server.
      * This must be called only if the extending doesn't create its own.
      */
@@ -319,7 +311,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     DynamicReconfigureServer dsrv_;
 
     //! configuration mutex for derived classes and other threads.
-    boost::recursive_mutex configuration_mutex_;
+    boost::mutex configuration_mutex_;
 
     //! last configuration save
     mbf_abstract_nav::MoveBaseFlexConfig last_config_;
