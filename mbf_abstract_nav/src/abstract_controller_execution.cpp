@@ -333,7 +333,6 @@ namespace mbf_abstract_nav
             setState(GOT_LOCAL_CMD);
             vel_pub_.publish(cmd_vel_stamped.twist);
             last_valid_cmd_time = ros::Time::now();
-            condition_.notify_all();
             retries = 0;
           }
           else
@@ -343,7 +342,6 @@ namespace mbf_abstract_nav
             {
               setState(MAX_RETRIES);
               moving_ = false;
-              condition_.notify_all();
             }
             else if (!patience_.isZero() && ros::Time::now() - last_valid_cmd_time > patience_
                      && ros::Time::now() - start_time_ > patience_)
@@ -351,12 +349,10 @@ namespace mbf_abstract_nav
               // patience limit enabled and running controller for more than patience without valid commands
               setState(PAT_EXCEEDED);
               moving_ = false;
-              condition_.notify_all();
             }
             else
             {
               setState(NO_LOCAL_CMD); // useful for server feedback
-              condition_.notify_all();
             }
             // could not compute a valid velocity command -> stop moving the robot
             publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
@@ -365,6 +361,7 @@ namespace mbf_abstract_nav
           // set stamped values; timestamp and frame_id should be set by the plugin; otherwise setVelocityCmd will do
           cmd_vel_stamped.header.seq = seq++; // sequence number
           setVelocityCmd(cmd_vel_stamped);
+          condition_.notify_all();
         }
 
         boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
