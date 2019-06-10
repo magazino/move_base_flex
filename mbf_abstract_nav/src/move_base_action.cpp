@@ -73,7 +73,7 @@ void MoveBaseAction::reconfigure(
 {
   if (config.planner_frequency > 0.0)
   {
-    boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+    boost::lock_guard<boost::mutex> guard(replanning_mtx_);
     if (!replanning_)
     {
       replanning_ = true;
@@ -191,7 +191,7 @@ void MoveBaseAction::actionExePathFeedback(
   move_base_feedback_.angle_to_goal = feedback->angle_to_goal;
   move_base_feedback_.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback_.current_pose = feedback->current_pose;
-  move_base_feedback_.current_twist = feedback->current_twist;
+  move_base_feedback_.last_cmd_vel = feedback->last_cmd_vel;
   robot_pose_ = feedback->current_pose;
   goal_handle_.publishFeedback(move_base_feedback_);
 
@@ -338,7 +338,7 @@ void MoveBaseAction::actionGetPathDone(
 
   // we reset the replan clock (we can have been stopped for a while) and make a fist sleep, so we don't replan
   // just after start moving
-  boost::lock_guard<boost::mutex> lock_guard(replanning_mtx_);
+  boost::lock_guard<boost::mutex> guard(replanning_mtx_);
   replanning_rate_.reset();
   replanning_rate_.sleep();
   if (!replanning_ || action_state_ != EXE_PATH ||

@@ -86,6 +86,8 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   }
 
   // advertise services and current goal topic
+  check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
+                                                       &CostmapNavigationServer::callServiceCheckPointCost, this);
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
                                                       &CostmapNavigationServer::callServiceCheckPoseCost, this);
   check_path_cost_srv_ = private_nh_.advertiseService("check_path_cost",
@@ -341,8 +343,6 @@ CostmapNavigationServer::~CostmapNavigationServer()
 
 void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
-  boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
-
   // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
   {
@@ -389,6 +389,84 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   }
 
   last_config_ = config;
+}
+
+bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Request &request,
+                                                        mbf_msgs::CheckPoint::Response &response)
+{
+  // selecting the requested costmap
+  CostmapPtr costmap;
+  std::string costmap_name;
+  switch (request.costmap)
+  {
+    case mbf_msgs::CheckPoint::Request::LOCAL_COSTMAP:
+      costmap = local_costmap_ptr_;
+      costmap_name = "local costmap";
+      break;
+    case mbf_msgs::CheckPoint::Request::GLOBAL_COSTMAP:
+      costmap = global_costmap_ptr_;
+      costmap_name = "global costmap";
+      break;
+    default:
+      ROS_ERROR_STREAM("No valid costmap provided; options are "
+                           << mbf_msgs::CheckPoint::Request::LOCAL_COSTMAP << ": local costmap, "
+                           << mbf_msgs::CheckPoint::Request::GLOBAL_COSTMAP << ": global costmap");
+      return false;
+  }
+
+  // get target point as x, y coordinates
+  std::string costmap_frame = costmap->getGlobalFrameID();
+
+  geometry_msgs::PointStamped point;
+  if (! mbf_utility::transformPoint(*tf_listener_ptr_, costmap_frame, request.point.header.stamp,
+                                     ros::Duration(0.5), request.point, global_frame_, point))
+  {
+    ROS_ERROR_STREAM("Transform target point to " << costmap_name << " frame '" << costmap_frame << "' failed");
+    return false;
+  }
+
+  double x = point.point.x;
+  double y = point.point.y;
+
+  // ensure costmaps are active so cost reflects latest sensor readings
+  checkActivateCostmaps();
+  unsigned int mx, my;
+  if (!costmap->getCostmap()->worldToMap(x, y, mx, my))
+  {
+    // point is outside of the map
+    response.state = static_cast<uint8_t>(mbf_msgs::CheckPoint::Response::OUTSIDE);
+    ROS_DEBUG_STREAM("Point [" << x << ", " << y << "] is outside the map (cost = " << response.cost << ")");
+  }
+  else
+  {
+    // lock costmap so content doesn't change while checking cell costs
+    boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getCostmap()->getMutex()));
+
+    // get cost of cell under point and classify as one of the states: UNKNOWN, LETHAL, INSCRIBED, FREE
+    response.cost = costmap->getCostmap()->getCost(mx, my);
+    switch (response.cost)
+    {
+      case costmap_2d::NO_INFORMATION:
+        response.state = static_cast<uint8_t>(mbf_msgs::CheckPoint::Response::UNKNOWN);
+        ROS_DEBUG_STREAM("Point [" << x << ", " << y << "] is in unknown space! (cost = " << response.cost << ")");
+        break;
+      case costmap_2d::LETHAL_OBSTACLE:
+        response.state = static_cast<uint8_t>(mbf_msgs::CheckPoint::Response::LETHAL);
+        ROS_DEBUG_STREAM("Point [" << x << ", " << y << "] is in collision! (cost = " << response.cost << ")");
+        break;
+      case costmap_2d::INSCRIBED_INFLATED_OBSTACLE:
+        response.state = static_cast<uint8_t>(mbf_msgs::CheckPoint::Response::INSCRIBED);
+        ROS_DEBUG_STREAM("Point [" << x << ", " << y << "] is near an obstacle (cost = " << response.cost << ")");
+        break;
+      default:
+        response.state = static_cast<uint8_t>(mbf_msgs::CheckPoint::Response::FREE);
+        ROS_DEBUG_STREAM("Point [" << x << ", " << y << "] is free (cost = " << response.cost << ")");
+        break;
+    }
+  }
+
+  checkDeactivateCostmaps();
+  return true;
 }
 
 bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
@@ -661,8 +739,14 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
 bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
                                                        std_srvs::Empty::Response &response)
 {
+  //clear both costmaps
+  local_costmap_ptr_->getCostmap()->getMutex()->lock();
   local_costmap_ptr_->resetLayers();
+  local_costmap_ptr_->getCostmap()->getMutex()->unlock();
+
+  global_costmap_ptr_->getCostmap()->getMutex()->lock();
   global_costmap_ptr_->resetLayers();
+  global_costmap_ptr_->getCostmap()->getMutex()->unlock();
   return true;
 }
 

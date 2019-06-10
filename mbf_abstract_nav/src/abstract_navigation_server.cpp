@@ -365,7 +365,7 @@ void AbstractNavigationServer::startDynamicReconfigureServer()
 void AbstractNavigationServer::reconfigure(
   mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
-  boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+  boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
   // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
@@ -394,16 +394,5 @@ void AbstractNavigationServer::stop(){
   recovery_action_.cancelAll();
   move_base_action_.cancel();
 }
-
-void AbstractNavigationServer::fillExePathResult(uint32_t outcome, const std::string &message,
-                                                 mbf_msgs::ExePathResult &result)
-{
-  result.outcome = outcome;
-  result.message = message;
-  result.final_pose = robot_pose_;
-  result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
-  result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
-}
-
 
 } /* namespace mbf_abstract_nav */

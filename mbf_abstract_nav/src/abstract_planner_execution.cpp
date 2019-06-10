@@ -91,7 +91,7 @@ namespace mbf_abstract_nav
 
   void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
-    boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+    boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
     max_retries_ = config.planner_max_retries;
     frequency_ = config.planner_frequency;
@@ -273,7 +273,7 @@ namespace mbf_abstract_nav
           outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
           success = outcome_ < 10;
 
-          boost::recursive_mutex::scoped_lock sl(configuration_mutex_);
+          boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
           if (cancel_ && !isPatienceExceeded())
           {
