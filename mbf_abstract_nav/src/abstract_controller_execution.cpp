@@ -334,6 +334,9 @@ namespace mbf_abstract_nav
           if (outcome_ < 10)
           {
             // set stamped values: frame id, time stamp and sequence number
+            // TODO Add a queue here for handling the outcome, message and cmd_vel values bundled,
+            // TODO so there should be no loss of information in the feedback stream
+
             cmd_vel_stamped.header.seq = seq++;
             setVelocityCmd(cmd_vel_stamped);
             setState(GOT_LOCAL_CMD);
