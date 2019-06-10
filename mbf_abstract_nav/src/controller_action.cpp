@@ -103,6 +103,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
   if (plan.empty())
   {
+    boost::lock_guard<boost::mutex> guard(slots_mtx_);
+
     fillExePathResult(geometry_msgs::PoseStamped(), geometry_msgs::PoseStamped(),
                       mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan!", result);
     concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
@@ -131,160 +133,164 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
   while (controller_active && ros::ok())
   {
-    if (!robot_info_.getRobotPose(robot_pose))
     {
-      controller_active = false;
-      fillExePathResult(robot_pose, goal_pose,
-                        mbf_msgs::ExePathResult::TF_ERROR, "Could not get the robot pose!", result);
-      concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-      ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
-      break;
-    }
+      boost::lock_guard<boost::mutex> guard(slots_mtx_);
 
-    if (first_cycle)
-    {
-      // init oscillation pose
-      oscillation_pose = robot_pose;
-    }
-
-    state_moving_input = execution.getState();
-
-    switch (state_moving_input)
-    {
-      case AbstractControllerExecution::INITIALIZED:
-        execution.setNewPlan(plan);
-        execution.start();
-        break;
-
-      case AbstractControllerExecution::STOPPED:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been stopped!");
-        controller_active = false;
-        break;
-
-      case AbstractControllerExecution::CANCELED:
-        ROS_INFO_STREAM("Action \"ExePath\" canceled");
-        fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
-        concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
-        controller_active = false;
-        break;
-
-      case AbstractControllerExecution::STARTED:
-        ROS_DEBUG_STREAM_NAMED(name_, "The moving has been started!");
-        break;
-
-        // in progress
-      case AbstractControllerExecution::PLANNING:
-        if (execution.isPatienceExceeded())
-        {
-          ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
-          // TODO planner is stuck, but we don't have currently any way to cancel it!
-          // We will try to stop the thread, but does nothing with DWA or TR controllers
-          // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
-          // as there is the controller itself reporting that it cannot find a valid command after trying
-          // for more than patience seconds. But after stopping controller execution, it should ideally
-          // report PAT_EXCEEDED as his state on next iteration.
-          execution.stop();
-        }
-        break;
-
-      case AbstractControllerExecution::MAX_RETRIES:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose, execution.getOutcome(), execution.getMessage(), result);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        break;
-
-      case AbstractControllerExecution::PAT_EXCEEDED:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose,mbf_msgs::ExePathResult::PAT_EXCEEDED, execution.getMessage(), result);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        break;
-
-      case AbstractControllerExecution::NO_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been started without a plan!");
+      if (!robot_info_.getRobotPose(robot_pose))
+      {
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started without a path", result);
+                          mbf_msgs::ExePathResult::TF_ERROR, "Could not get the robot pose!", result);
         concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+        ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
         break;
+      }
 
-      case AbstractControllerExecution::EMPTY_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has received an empty plan");
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan", result);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        break;
+      if (first_cycle)
+      {
+        // init oscillation pose
+        oscillation_pose = robot_pose;
+      }
 
-      case AbstractControllerExecution::INVALID_PLAN:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has received an invalid plan");
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an invalid plan", result);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        break;
+      state_moving_input = execution.getState();
 
-      case AbstractControllerExecution::NO_LOCAL_CMD:
-        ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
-            << execution.getMessage());
-        publishExePathFeedback(concurrency_slots_[slot].goal_handle, robot_pose, goal_pose,
-                               execution.getOutcome(), execution.getMessage(),
-                               execution.getVelocityCmd());
-        break;
+      switch (state_moving_input)
+      {
+        case AbstractControllerExecution::INITIALIZED:
+          execution.setNewPlan(plan);
+          execution.start();
+          break;
 
-      case AbstractControllerExecution::GOT_LOCAL_CMD:
-        if (!oscillation_timeout.isZero())
-        {
-          // check if oscillating
-          if (mbf_utility::distance(robot_pose, oscillation_pose) >= oscillation_distance)
+        case AbstractControllerExecution::STOPPED:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has been stopped!");
+          controller_active = false;
+          break;
+
+        case AbstractControllerExecution::CANCELED:
+          ROS_INFO_STREAM("Action \"ExePath\" canceled");
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
+          concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
+          controller_active = false;
+          break;
+
+        case AbstractControllerExecution::STARTED:
+          ROS_DEBUG_STREAM_NAMED(name_, "The moving has been started!");
+          break;
+
+          // in progress
+        case AbstractControllerExecution::PLANNING:
+          if (execution.isPatienceExceeded())
           {
-            last_oscillation_reset = ros::Time::now();
-            oscillation_pose = robot_pose;
-          }
-          else if (last_oscillation_reset + oscillation_timeout < ros::Time::now())
-          {
-            ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
-                << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
+            ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
+            // TODO planner is stuck, but we don't have currently any way to cancel it!
+            // We will try to stop the thread, but does nothing with DWA or TR controllers
+            // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
+            // as there is the controller itself reporting that it cannot find a valid command after trying
+            // for more than patience seconds. But after stopping controller execution, it should ideally
+            // report PAT_EXCEEDED as his state on next iteration.
             execution.stop();
-            controller_active = false;
-            fillExePathResult(robot_pose, goal_pose,
-                              mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
-            concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-            break;
           }
-        }
-        publishExePathFeedback(concurrency_slots_[slot].goal_handle, robot_pose, goal_pose,
-                               execution.getOutcome(), execution.getMessage(),
-                               execution.getVelocityCmd());
-        break;
+          break;
 
-      case AbstractControllerExecution::ARRIVED_GOAL:
-        ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived to goal");
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
-        concurrency_slots_[slot].goal_handle.setSucceeded(result, result.message);
-        break;
+        case AbstractControllerExecution::MAX_RETRIES:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose, execution.getOutcome(), execution.getMessage(), result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
 
-      case AbstractControllerExecution::INTERNAL_ERROR:
-        ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: " << execution.getMessage());
-        controller_active = false;
-        fillExePathResult(robot_pose, goal_pose,
-                          mbf_msgs::ExePathResult::INTERNAL_ERROR, "Internal error: Unknown error thrown by the plugin!", result);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        break;
+        case AbstractControllerExecution::PAT_EXCEEDED:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,mbf_msgs::ExePathResult::PAT_EXCEEDED, execution.getMessage(), result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
 
-      default:
-        std::stringstream ss;
-        ss << "Internal error: Unknown state in a move base flex controller execution with the number: "
-           << static_cast<int>(state_moving_input);
-           fillExePathResult(robot_pose, goal_pose,
-                             mbf_msgs::ExePathResult::INTERNAL_ERROR, ss.str(), result);
-        ROS_FATAL_STREAM_NAMED(name_, result.message);
-        concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
-        controller_active = false;
+        case AbstractControllerExecution::NO_PLAN:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has been started without a plan!");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::INVALID_PATH, "Controller started without a path", result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
+
+        case AbstractControllerExecution::EMPTY_PLAN:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has received an empty plan");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan", result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
+
+        case AbstractControllerExecution::INVALID_PLAN:
+          ROS_WARN_STREAM_NAMED(name_, "The controller has received an invalid plan");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an invalid plan", result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
+
+        case AbstractControllerExecution::NO_LOCAL_CMD:
+          ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
+              << execution.getMessage());
+          publishExePathFeedback(concurrency_slots_[slot].goal_handle, robot_pose, goal_pose,
+                                 execution.getOutcome(), execution.getMessage(),
+                                 execution.getVelocityCmd());
+          break;
+
+        case AbstractControllerExecution::GOT_LOCAL_CMD:
+          if (!oscillation_timeout.isZero())
+          {
+            // check if oscillating
+            if (mbf_utility::distance(robot_pose, oscillation_pose) >= oscillation_distance)
+            {
+              last_oscillation_reset = ros::Time::now();
+              oscillation_pose = robot_pose;
+            }
+            else if (last_oscillation_reset + oscillation_timeout < ros::Time::now())
+            {
+              ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
+                  << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
+              execution.stop();
+              controller_active = false;
+              fillExePathResult(robot_pose, goal_pose,
+                                mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
+              concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+              break;
+            }
+          }
+          publishExePathFeedback(concurrency_slots_[slot].goal_handle, robot_pose, goal_pose,
+                                 execution.getOutcome(), execution.getMessage(),
+                                 execution.getVelocityCmd());
+          break;
+
+        case AbstractControllerExecution::ARRIVED_GOAL:
+          ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived to goal");
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
+          concurrency_slots_[slot].goal_handle.setSucceeded(result, result.message);
+          break;
+
+        case AbstractControllerExecution::INTERNAL_ERROR:
+          ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: " << execution.getMessage());
+          controller_active = false;
+          fillExePathResult(robot_pose, goal_pose,
+                            mbf_msgs::ExePathResult::INTERNAL_ERROR, "Internal error: Unknown error thrown by the plugin!", result);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          break;
+
+        default:
+          std::stringstream ss;
+          ss << "Internal error: Unknown state in a move base flex controller execution with the number: "
+             << static_cast<int>(state_moving_input);
+             fillExePathResult(robot_pose, goal_pose,
+                               mbf_msgs::ExePathResult::INTERNAL_ERROR, ss.str(), result);
+          ROS_FATAL_STREAM_NAMED(name_, result.message);
+          concurrency_slots_[slot].goal_handle.setAborted(result, result.message);
+          controller_active = false;
+      }
     }
 
     if (controller_active)
