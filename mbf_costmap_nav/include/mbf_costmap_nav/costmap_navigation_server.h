@@ -251,12 +251,6 @@ private:
   //! Shared pointer to the common global costmap
   CostmapPtr global_costmap_ptr_;
 
-  //! true, if the local costmap is active
-  bool local_costmap_active_;
-
-  //! true, if the global costmap is active
-  bool global_costmap_active_;
-
   //! Service Server for the check_point_cost service
   ros::ServiceServer check_point_cost_srv_;
 
@@ -271,8 +265,9 @@ private:
 
   //! Stop updating costmaps when not planning or controlling, if true
   bool shutdown_costmaps_;
-  ros::Timer shutdown_costmaps_timer_;    //!< delayed shutdown timer
-  ros::Duration shutdown_costmaps_delay_; //!< delayed shutdown delay
+  uint16_t costmaps_users_;               //!< keep track of plugins using costmaps
+  ros::Timer shutdown_costmaps_timer_;    //!< costmpas delayed shutdown timer
+  ros::Duration shutdown_costmaps_delay_; //!< costmpas delayed shutdown delay
 
   //! Start/stop costmaps mutex; concurrent calls to start can lead to segfault
   boost::mutex check_costmaps_mutex_;

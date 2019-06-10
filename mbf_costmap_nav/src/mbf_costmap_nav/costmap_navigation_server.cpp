@@ -65,24 +65,17 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
   global_costmap_ptr_(new costmap_2d::Costmap2DROS("global_costmap", *tf_listener_ptr_)),
   local_costmap_ptr_(new costmap_2d::Costmap2DROS("local_costmap", *tf_listener_ptr_)),
-  setup_reconfigure_(false), shutdown_costmaps_(false)
+  setup_reconfigure_(false), shutdown_costmaps_(false), costmaps_users_(0)
 {
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
   // need it here to decide whether to start or not the costmaps on starting up
   private_nh_.param("shutdown_costmaps", shutdown_costmaps_, false);
 
-  // initialize costmaps (stopped if shutdown_costmaps is true)
-  if (!shutdown_costmaps_)
-  {
-    local_costmap_active_ = true;
-    global_costmap_active_ = true;
-  }
-  else
+  // initialize costmaps stopped if shutdown_costmaps is true
+  if (shutdown_costmaps_)
   {
     local_costmap_ptr_->stop();
     global_costmap_ptr_->stop();
-    local_costmap_active_ = false;
-    global_costmap_active_ = false;
   }
 
   // advertise services and current goal topic
@@ -758,25 +751,19 @@ void CostmapNavigationServer::checkActivateCostmaps()
 
   // Activate costmaps if we shutdown them when not moving and they are not already active. This method must be
   // synchronized because start costmap can take up to 1/update freq., and concurrent calls to it can lead to segfaults
-  if (shutdown_costmaps_ && !local_costmap_active_)
+  if (shutdown_costmaps_ && !costmaps_users_)
   {
     local_costmap_ptr_->start();
-    local_costmap_active_ = true;
-    ROS_DEBUG_STREAM("Local costmap activated.");
-  }
-
-  if (shutdown_costmaps_ && !global_costmap_active_)
-  {
     global_costmap_ptr_->start();
-    global_costmap_active_ = true;
-    ROS_DEBUG_STREAM("Global costmap activated.");
+    ROS_DEBUG_STREAM("Costmaps activated.");
   }
+  ++costmaps_users_;
 }
 
 void CostmapNavigationServer::checkDeactivateCostmaps()
 {
-  if (shutdown_costmaps_ &&
-      ((local_costmap_active_ || global_costmap_active_)))
+  --costmaps_users_;
+  if (shutdown_costmaps_ && !costmaps_users_)
   {
     // Delay costmaps shutdown by shutdown_costmaps_delay so we don't need to enable at each step of a normal
     // navigation sequence, what is terribly inefficient; the timer is stopped on costmaps re-activation and
@@ -790,12 +777,10 @@ void CostmapNavigationServer::deactivateCostmaps(const ros::TimerEvent &event)
 {
   boost::mutex::scoped_lock sl(check_costmaps_mutex_);
 
+  ROS_ASSERT_MSG(!costmaps_users_, "Deactivating costmaps with %u active users!", costmaps_users_);
   local_costmap_ptr_->stop();
-  local_costmap_active_ = false;
-  ROS_DEBUG_STREAM("Local costmap deactivated.");
   global_costmap_ptr_->stop();
-  global_costmap_active_ = false;
-  ROS_DEBUG_STREAM("Global costmap deactivated.");
+  ROS_DEBUG_STREAM("Costmaps deactivated.");
 }
 
 } /* namespace mbf_costmap_nav */
