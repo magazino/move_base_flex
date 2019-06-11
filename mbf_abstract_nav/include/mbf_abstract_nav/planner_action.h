@@ -61,7 +61,7 @@ class PlannerAction : public AbstractAction<mbf_msgs::GetPathAction, AbstractPla
       const RobotInformation &robot_info
   );
 
-  void run(GoalHandle &goal_handle, AbstractPlannerExecution &execution);
+  void run(uint8_t concurrency_slot);
 
  protected:
 

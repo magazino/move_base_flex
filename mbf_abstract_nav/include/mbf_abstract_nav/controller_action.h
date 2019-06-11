@@ -70,11 +70,11 @@ class ControllerAction :
       typename AbstractControllerExecution::Ptr execution_ptr
   );
 
-  void run(GoalHandle &goal_handle, AbstractControllerExecution &execution);
+  void run(uint8_t concurrency_slot);
 
 protected:
   void publishExePathFeedback(
-          GoalHandle& goal_handle,
+          uint8_t concurrency_slot,
           const geometry_msgs::PoseStamped& robot_pose,
           const geometry_msgs::PoseStamped& goal_pose,
           uint32_t outcome, const std::string &message,

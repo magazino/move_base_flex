@@ -58,7 +58,7 @@ class RecoveryAction : public AbstractAction<mbf_msgs::RecoveryAction, AbstractR
 
   RecoveryAction(const std::string& name, const RobotInformation &robot_info);
 
-  void run(GoalHandle &goal_handle, AbstractRecoveryExecution &execution);
+  void run(uint8_t concurrency_slot);
 
 };
 

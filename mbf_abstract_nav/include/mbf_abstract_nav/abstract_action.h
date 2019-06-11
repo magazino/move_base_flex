@@ -53,7 +53,7 @@ class AbstractAction
   typedef boost::shared_ptr<AbstractAction> Ptr;
 
   typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
-  typedef boost::function<void (GoalHandle &goal_handle, Execution &execution)> RunMethod;
+  typedef boost::function<void (uint8_t concurrency_slot)> RunMethod;
 
   typedef struct
   {
@@ -105,7 +105,7 @@ class AbstractAction
 
     if (execution_ptr->setup_fn_)
       execution_ptr->setup_fn_();
-    run_(concurrency_slots_[slot].goal_handle, *execution_ptr);
+    run_(slot);
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution thread for action \"" << name_ << "\" stopped, cleaning up execution leftovers.");
@@ -145,10 +145,30 @@ class AbstractAction
   }
 
 protected:
+  GoalHandle getGoalHandle(uint8_t slot)
+  {
+    boost::lock_guard<boost::mutex> guard(slots_mtx_);
+    return concurrency_slots_.at(slot).goal_handle;
+  }
+
+  void setGoalHandle(uint8_t slot, GoalHandle &goal_handle)
+  {
+    boost::lock_guard<boost::mutex> guard(slots_mtx_);
+    concurrency_slots_.at(slot).goal_handle = goal_handle;
+  }
+
+  typename Execution::Ptr getExecution(uint8_t slot)
+  {
+    boost::lock_guard<boost::mutex> guard(slots_mtx_);
+    return concurrency_slots_.at(slot).execution;
+  }
+
   const std::string &name_;
   const RobotInformation &robot_info_;
 
+private:
   RunMethod run_;
+
   boost::thread_group threads_;
   std::map<uint8_t, ConcurrencySlot> concurrency_slots_;
 

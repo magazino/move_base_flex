@@ -47,16 +47,16 @@ namespace mbf_abstract_nav{
 PlannerAction::PlannerAction(
     const std::string &name,
     const RobotInformation &robot_info)
-  : AbstractAction(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
+  : AbstractAction(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1)), path_seq_count_(0)
 {
   ros::NodeHandle private_nh("~");
   // informative topics: current navigation goal
   current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
 }
 
-void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execution)
+void PlannerAction::run(uint8_t concurrency_slot)
 {
-  const mbf_msgs::GetPathGoal& goal = *(goal_handle.getGoal().get());
+  const mbf_msgs::GetPathGoal& goal = *(getGoalHandle(concurrency_slot).getGoal().get());
 
   mbf_msgs::GetPathResult result;
   geometry_msgs::PoseStamped start_pose;
@@ -83,7 +83,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
     {
       result.outcome = mbf_msgs::GetPathResult::TF_ERROR;
       result.message = "Could not get the current robot pose!";
-      goal_handle.setAborted(result, result.message);
+      getGoalHandle(concurrency_slot).setAborted(result, result.message);
       ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
       return;
     }
@@ -102,17 +102,17 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
   while (planner_active && ros::ok())
   {
     // get the current state of the planning thread
-    state_planning_input = execution.getState();
+    state_planning_input = getExecution(concurrency_slot)->getState();
 
     switch (state_planning_input)
     {
       case AbstractPlannerExecution::INITIALIZED:
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: initialized");
-        if (!execution.start(start_pose, goal.target_pose, tolerance))
+        if (!getExecution(concurrency_slot)->start(start_pose, goal.target_pose, tolerance))
         {
           result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
           result.message = "Another thread is still planning!";
-          goal_handle.setAborted(result, result.message);
+          getGoalHandle(concurrency_slot).setAborted(result, result.message);
           ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
           planner_active = false;
         }
@@ -127,7 +127,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         ROS_WARN_STREAM_NAMED(name_, "Planning has been stopped rigorously!");
         result.outcome = mbf_msgs::GetPathResult::STOPPED;
         result.message = "Global planner has been stopped!";
-        goal_handle.setAborted(result, result.message);
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         planner_active = false;
         break;
 
@@ -137,21 +137,21 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         result.path.header.stamp = ros::Time::now();
         result.outcome = mbf_msgs::GetPathResult::CANCELED;
         result.message = "Global planner has been canceled!";
-        goal_handle.setCanceled(result, result.message);
+        getGoalHandle(concurrency_slot).setCanceled(result, result.message);
         planner_active = false;
         break;
 
         // in progress
       case AbstractPlannerExecution::PLANNING:
-        if (execution.isPatienceExceeded())
+        if (getExecution(concurrency_slot)->isPatienceExceeded())
         {
           ROS_INFO_STREAM_NAMED(name_, "Global planner patience has been exceeded! "
               << "Cancel planning...");
-          if (!execution.cancel())
+          if (!getExecution(concurrency_slot)->cancel())
           {
             ROS_WARN_STREAM_THROTTLE_NAMED(2.0, name_, "Cancel planning failed or is not supported; "
                 "must wait until current plan finish!");
-            execution.stop(); // try to interrupt planning.
+            getExecution(concurrency_slot)->stop(); // try to interrupt planning.
           }
         }
         else
@@ -164,9 +164,9 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
       case AbstractPlannerExecution::FOUND_PLAN:
         // set time stamp to now
         result.path.header.stamp = ros::Time::now();
-        plan = execution.getPlan();
+        plan = getExecution(concurrency_slot)->getPlan();
 
-        ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << execution.getCost());
+        ROS_DEBUG_STREAM_NAMED(name_, "planner state: found plan with cost: " << getExecution(concurrency_slot)->getCost());
 
         if (!transformPlanToGlobalFrame(plan, global_plan))
         {
@@ -174,7 +174,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
           result.message = "Could not transform the plan to the global frame!";
 
           ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
-          goal_handle.setAborted(result, result.message);
+          getGoalHandle(concurrency_slot).setAborted(result, result.message);
           planner_active = false;
           break;
         }
@@ -185,16 +185,16 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
           result.message = "Global planner returned an empty path!";
 
           ROS_ERROR_STREAM_NAMED(name_, result.message);
-          goal_handle.setAborted(result, result.message);
+          getGoalHandle(concurrency_slot).setAborted(result, result.message);
           planner_active = false;
           break;
         }
 
         result.path.poses = global_plan;
-        result.cost = execution.getCost();
-        result.outcome = execution.getOutcome();
-        result.message = execution.getMessage();
-        goal_handle.setSucceeded(result, result.message);
+        result.cost = getExecution(concurrency_slot)->getCost();
+        result.outcome = getExecution(concurrency_slot)->getOutcome();
+        result.message = getExecution(concurrency_slot)->getMessage();
+        getGoalHandle(concurrency_slot).setSucceeded(result, result.message);
 
         planner_active = false;
         break;
@@ -202,17 +202,17 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         // no plan found
       case AbstractPlannerExecution::NO_PLAN_FOUND:
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: no plan found");
-        result.outcome = execution.getOutcome();
-        result.message = execution.getMessage();
-        goal_handle.setAborted(result, result.message);
+        result.outcome = getExecution(concurrency_slot)->getOutcome();
+        result.message = getExecution(concurrency_slot)->getMessage();
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         planner_active = false;
         break;
 
       case AbstractPlannerExecution::MAX_RETRIES:
         ROS_DEBUG_STREAM_NAMED(name_, "Global planner reached the maximum number of retries");
-        result.outcome = execution.getOutcome();
-        result.message = execution.getMessage();
-        goal_handle.setAborted(result, result.message);
+        result.outcome = getExecution(concurrency_slot)->getOutcome();
+        result.message = getExecution(concurrency_slot)->getMessage();
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         planner_active = false;
         break;
 
@@ -220,7 +220,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         ROS_DEBUG_STREAM_NAMED(name_, "Global planner exceeded the patience time");
         result.outcome = mbf_msgs::GetPathResult::PAT_EXCEEDED;
         result.message = "Global planner exceeded the patience time";
-        goal_handle.setAborted(result, result.message);
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         planner_active = false;
         break;
 
@@ -229,7 +229,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
         planner_active = false;
         result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
         result.message = "Internal error: Unknown error thrown by the plugin!";
-        goal_handle.setAborted(result, result.message);
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         break;
 
       default:
@@ -239,7 +239,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
            << static_cast<int>(state_planning_input);
         result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_, result.message);
-        goal_handle.setAborted(result, result.message);
+        getGoalHandle(concurrency_slot).setAborted(result, result.message);
         planner_active = false;
     }
 
@@ -251,7 +251,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
       // in order to transfer the results to the controller.
       boost::mutex mutex;
       boost::unique_lock<boost::mutex> lock(mutex);
-      execution.waitForStateUpdate(boost::chrono::milliseconds(500));
+      getExecution(concurrency_slot)->waitForStateUpdate(boost::chrono::milliseconds(500));
     }
   }  // while (planner_active && ros::ok())
 
