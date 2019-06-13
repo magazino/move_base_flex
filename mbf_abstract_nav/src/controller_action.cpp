@@ -55,6 +55,12 @@ void ControllerAction::start(
     typename AbstractControllerExecution::Ptr execution_ptr
 )
 {
+  if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
+  {
+    goal_handle.setCanceled();
+    return;
+  }
+
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
   bool update_plan = false;
@@ -74,9 +80,10 @@ void ControllerAction::start(
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
-      goal_handle.setCanceled(result, result.message);
+      concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
       concurrency_slots_[slot].goal_handle = goal_handle;
       ROS_INFO_STREAM("2.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
+      concurrency_slots_[slot].goal_handle.setAccepted();
     }
   }
   slot_map_mtx_.unlock();

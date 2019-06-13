@@ -162,7 +162,6 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   ROS_INFO_STREAM_NAMED("get_path", "Using the planner \"" << planner_name << "\" of type \""
                                          << planner_plugin_manager_.getType(planner_name) << "\"");
 
-  goal_handle.setAccepted();
 
   if(planner_plugin)
   {
@@ -178,7 +177,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
     result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"planner_plugin\" pointer should not be a null pointer!";
     ROS_FATAL_STREAM_NAMED("get_path", result.message);
-    goal_handle.setAborted(result, result.message);
+    goal_handle.setRejected(result, result.message);
   }
 }
 
@@ -223,7 +222,6 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
   ROS_INFO_STREAM("Using the controller \"" << controller_name
                                             << "\" of type \"" << controller_plugin_manager_.getType(controller_name) << "\"");
 
-  goal_handle.setAccepted();
 
   if(controller_plugin)
   {
@@ -239,7 +237,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
     result.outcome = mbf_msgs::ExePathResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"controller_plugin\" pointer should not be a null pointer!";
     ROS_FATAL_STREAM_NAMED("exe_path", result.message);
-    goal_handle.setAborted(result, result.message);
+    goal_handle.setRejected(result, result.message);
   }
 }
 
@@ -284,7 +282,6 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
   ROS_INFO_STREAM("Using the recovery \"" << recovery_name
                                             << "\" of type \"" << recovery_plugin_manager_.getType(recovery_name) << "\"");
 
-  goal_handle.setAccepted();
 
   if(recovery_plugin)
   {
@@ -299,7 +296,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
     result.message = "Internal Error: \"recovery_plugin\" pointer should not be a null pointer!";
     ROS_FATAL_STREAM_NAMED("recovery", result.message);
-    goal_handle.setAborted(result, result.message);
+    goal_handle.setRejected(result, result.message);
   }
 }
 

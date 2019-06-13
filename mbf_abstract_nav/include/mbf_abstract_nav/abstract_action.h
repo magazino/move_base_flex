@@ -72,24 +72,31 @@ class AbstractAction
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    slot_map_mtx_.lock();
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
-    slot_map_mtx_.unlock();
-    if(slot_it != concurrency_slots_.end())
+    if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
     {
-      // if there is a plugin running on the same slot, cancel it
-      slot_it->second.execution->cancel();
-      if (slot_it->second.thread_ptr->joinable())
-      {
-        slot_it->second.thread_ptr->join();
-      }
+      goal_handle.setCanceled();
     }
-    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-    // fill concurrency slot with the new goal handle, execution, and working thread
-    concurrency_slots_[slot].goal_handle = goal_handle;
-    concurrency_slots_[slot].execution = execution_ptr;
-    concurrency_slots_[slot].thread_ptr = threads_.create_thread(
-        boost::bind(&AbstractAction::runAndCleanUp, this, boost::ref(concurrency_slots_[slot].goal_handle), execution_ptr));
+    else {
+      slot_map_mtx_.lock();
+      typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it =
+          concurrency_slots_.find(slot);
+      slot_map_mtx_.unlock();
+      if (slot_it != concurrency_slots_.end()) {
+        // if there is a plugin running on the same slot, cancel it
+        slot_it->second.execution->cancel();
+        if (slot_it->second.thread_ptr->joinable()) {
+          slot_it->second.thread_ptr->join();
+        }
+      }
+      boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+      // fill concurrency slot with the new goal handle, execution, and working thread
+      concurrency_slots_[slot].goal_handle = goal_handle;
+      concurrency_slots_[slot].goal_handle.setAccepted();
+      concurrency_slots_[slot].execution = execution_ptr;
+      concurrency_slots_[slot].thread_ptr = threads_.create_thread(boost::bind(
+          &AbstractAction::runAndCleanUp, this,
+          boost::ref(concurrency_slots_[slot].goal_handle), execution_ptr));
+    }
   }
 
   virtual void cancel(GoalHandle &goal_handle){
@@ -159,8 +166,6 @@ protected:
 
 };
 
-
 }
-
 
 #endif //MBF_ABSTRACT_NAV__ABSTRACT_ACTION_H_
