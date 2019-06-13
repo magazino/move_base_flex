@@ -56,15 +56,16 @@ void ControllerAction::start(
 )
 {
   uint8_t concurrency_slot = goal_handle.getGoal()->concurrency_slot;
+  lockSlot(concurrency_slot);
   try
   {
-    AbstractControllerExecution::Ptr execution_ptr = getExecution(concurrency_slot);
+    AbstractControllerExecution& execution = *getExecution(concurrency_slot);
     if(goal_handle.getGoal()->controller == execution_ptr->getName() ||
        goal_handle.getGoal()->controller.empty())
     {
       // Goal requests to run the same controller on the same concurrency slot; to allow smooth replanning,
       // we update the goal handle and pass the new plan to the execution without stopping it
-      execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
+      execution.setNewPlan(goal_handle.getGoal()->path.poses);
 
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
@@ -74,6 +75,7 @@ void ControllerAction::start(
     }
   }
   catch (std::out_of_range &e) { /* concurrency slot not in use */ }
+  unlockSlot(concurrency_slot);
 
   // Otherwise run parent version of this method
   AbstractAction::start(goal_handle, execution_ptr);
@@ -82,6 +84,8 @@ void ControllerAction::start(
 void ControllerAction::run(uint8_t concurrency_slot)
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
+
+  AbstractControllerExecution& execution = *getExecution(concurrency_slot);
 
   // ensure we don't provide values from previous execution on case of error before filling both poses
   goal_pose_ = geometry_msgs::PoseStamped();
@@ -131,6 +135,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
   while (controller_active && ros::ok())
   {
+    lockSlot(concurrency_slot);
     // goal_handle could change between the loop cycles due to adapting the plan
     // with a new goal received for the same concurrency slot
     goal_handle = getGoalHandle(concurrency_slot);
@@ -148,14 +153,13 @@ void ControllerAction::run(uint8_t concurrency_slot)
       // init oscillation pose
       oscillation_pose = robot_pose_;
     }
-    AbstractControllerExecution::Ptr execution_ptr = getExecution(concurrency_slot);
-    state_moving_input = execution_ptr->getState();
+    state_moving_input = execution.getState();
 
     switch (state_moving_input)
     {
       case AbstractControllerExecution::INITIALIZED:
-        execution_ptr->setNewPlan(plan);
-        execution_ptr->start();
+        execution.setNewPlan(plan);
+        execution.start();
         break;
 
       case AbstractControllerExecution::STOPPED:
@@ -176,7 +180,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
         // in progress
       case AbstractControllerExecution::PLANNING:
-        if (execution_ptr->isPatienceExceeded())
+        if (execution.isPatienceExceeded())
         {
           ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
@@ -185,21 +189,21 @@ void ControllerAction::run(uint8_t concurrency_slot)
           // as there is the controller itself reporting that it cannot find a valid command after trying
           // for more than patience seconds. But after stopping controller execution, it should ideally
           // report PAT_EXCEEDED as his state on next iteration.
-          execution_ptr->stop();
+          execution.stop();
         }
         break;
 
       case AbstractControllerExecution::MAX_RETRIES:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
-        fillExePathResult(execution_ptr->getOutcome(), execution_ptr->getMessage(), result);
+        fillExePathResult(execution.getOutcome(), execution.getMessage(), result);
         goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::PAT_EXCEEDED:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
         controller_active = false;
-        fillExePathResult(mbf_msgs::ExePathResult::PAT_EXCEEDED, execution_ptr->getMessage(), result);
+        fillExePathResult(mbf_msgs::ExePathResult::PAT_EXCEEDED, execution.getMessage(), result);
         goal_handle.setAborted(result, result.message);
         break;
 
@@ -226,11 +230,11 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
         ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
-            << execution_ptr->getMessage());
+            << execution.getMessage());
         publishExePathFeedback(goal_handle,
-                               execution_ptr->getOutcome(),
-                               execution_ptr->getMessage(),
-                               execution_ptr->getVelocityCmd());
+                               execution.getOutcome(),
+                               execution.getMessage(),
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -246,7 +250,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
           {
             ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            execution_ptr->stop();
+            execution.stop();
             controller_active = false;
             fillExePathResult(mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
             goal_handle.setAborted(result, result.message);
@@ -254,9 +258,9 @@ void ControllerAction::run(uint8_t concurrency_slot)
           }
         }
         publishExePathFeedback(goal_handle,
-                               execution_ptr->getOutcome(),
-                               execution_ptr->getMessage(),
-                               execution_ptr->getVelocityCmd());
+                               execution.getOutcome(),
+                               execution.getMessage(),
+                               execution.getVelocityCmd());
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:
@@ -268,7 +272,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
       case AbstractControllerExecution::INTERNAL_ERROR:
         ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: "
-                               << execution_ptr->getMessage());
+                               << execution.getMessage());
         controller_active = false;
         fillExePathResult(mbf_msgs::ExePathResult::INTERNAL_ERROR,
                           "Internal error: Unknown error thrown by the plugin!", result);
@@ -285,12 +289,13 @@ void ControllerAction::run(uint8_t concurrency_slot)
         controller_active = false;
     }
 
+    unlockSlot(concurrency_slot);
     if (controller_active)
     {
       // try to sleep a bit
       // normally this thread should be woken up from the controller execution thread
       // in order to transfer the results to the controller
-      execution_ptr->waitForStateUpdate(boost::chrono::milliseconds(500));
+      execution.waitForStateUpdate(boost::chrono::milliseconds(500));
     }
 
     first_cycle = false;

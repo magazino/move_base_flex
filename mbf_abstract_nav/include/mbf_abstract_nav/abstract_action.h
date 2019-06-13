@@ -60,6 +60,7 @@ class AbstractAction
     typename Execution::Ptr execution;
     boost::thread* thread_ptr;
     GoalHandle goal_handle;
+    boost::mutex slot_mtx;
   } ConcurrencySlot;
 
   AbstractAction(
@@ -80,7 +81,9 @@ class AbstractAction
     if(slot_it != concurrency_slots_.end())
     {
       // if there is a plugin running on the same slot, cancel it
-      slot_it->second.execution->cancel(); // TODO make thread safe
+      slot_it->second.execution->cancel();
+      // and wait for it to be finished
+      slot_it->second.thread_ptr->join();
     }
     // fill concurrency slot with the new goal handle, execution, and working thread
     concurrency_slots_[slot].goal_handle = goal_handle;
@@ -145,6 +148,17 @@ class AbstractAction
   }
 
 protected:
+
+  void lockSlot(uint8_t slot)
+  {
+    concurrency_slots_.at(slot).slot_mtx.lock();
+  }
+
+  void unlockSlot(uint8_t slot)
+  {
+    concurrency_slots_.at(slot).slot_mtx.unlock();
+  }
+
   GoalHandle getGoalHandle(uint8_t slot)
   {
     boost::lock_guard<boost::mutex> guard(slots_mtx_);

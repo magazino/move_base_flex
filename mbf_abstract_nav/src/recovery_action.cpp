@@ -49,7 +49,10 @@ void RecoveryAction::run(uint8_t concurrency_slot)
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
 
-  const mbf_msgs::RecoveryGoal &goal = *(getGoalHandle(concurrency_slot).getGoal().get());
+  GoalHandle goal_handle = getGoalHandle(concurrency_slot);
+  AbstractRecoveryExecution& execution = *getExecution(concurrency_slot);
+
+  const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
   mbf_msgs::RecoveryResult result;
   bool recovery_active = true;
 
@@ -57,11 +60,11 @@ void RecoveryAction::run(uint8_t concurrency_slot)
 
   while (recovery_active && ros::ok())
   {
-    state_recovery_input = getExecution(concurrency_slot)->getState();
+    state_recovery_input = execution.getState();
     switch (state_recovery_input)
     {
       case AbstractRecoveryExecution::INITIALIZED:
-        getExecution(concurrency_slot)->start();
+        execution.start();
         break;
       case AbstractRecoveryExecution::STOPPED:
         // Recovery behavior doesn't support or didn't answered to cancel and has been ruthlessly stopped
@@ -69,7 +72,7 @@ void RecoveryAction::run(uint8_t concurrency_slot)
         recovery_active = false; // stopping the action
         result.outcome = mbf_msgs::RecoveryResult::CANCELED;
         result.message = "Recovery \"" + goal.behavior + "\" exceeded the patience time";
-        getGoalHandle(concurrency_slot).setSucceeded(result, result.message);
+        goal_handle.setSucceeded(result, result.message);
         break;
 
       case AbstractRecoveryExecution::STARTED:
@@ -78,14 +81,14 @@ void RecoveryAction::run(uint8_t concurrency_slot)
 
       case AbstractRecoveryExecution::RECOVERING:
 
-        if (getExecution(concurrency_slot)->isPatienceExceeded())
+        if (execution.isPatienceExceeded())
         {
           ROS_INFO_STREAM("Recovery behavior \"" << goal.behavior << "\" patience exceeded! Cancel recovering...");
-          if (!getExecution(concurrency_slot)->cancel())
+          if (!execution.cancel())
           {
             ROS_WARN_STREAM("Cancel recovering \"" << goal.behavior << "\" failed or not supported; interrupt it!");
-            getExecution(concurrency_slot)->stop();
-            //TODO getGoalHandle(concurrency_slot).setAborted
+            execution.stop();
+            //TODO goal_handle.setAborted
           }
         }
 
@@ -97,14 +100,14 @@ void RecoveryAction::run(uint8_t concurrency_slot)
         recovery_active = false; // stopping the action
         result.outcome = mbf_msgs::RecoveryResult::CANCELED;
         result.message = "Recovering \"" + goal.behavior + "\" preempted!";
-        getGoalHandle(concurrency_slot).setCanceled(result, result.message);
+        goal_handle.setCanceled(result, result.message);
         ROS_DEBUG_STREAM_NAMED(name_, result.message);
         break;
 
       case AbstractRecoveryExecution::RECOVERY_DONE:
         recovery_active = false; // stopping the action
-        result.outcome = getExecution(concurrency_slot)->getOutcome();
-        result.message = getExecution(concurrency_slot)->getMessage();
+        result.outcome = execution.getOutcome();
+        result.message = execution.getMessage();
         if (result.message.empty())
         {
           if (result.outcome < 10)
@@ -114,7 +117,7 @@ void RecoveryAction::run(uint8_t concurrency_slot)
         }
 
         ROS_DEBUG_STREAM_NAMED(name_, result.message);
-        getGoalHandle(concurrency_slot).setSucceeded(result, result.message);
+        goal_handle.setSucceeded(result, result.message);
         break;
 
       case AbstractRecoveryExecution::INTERNAL_ERROR:
@@ -122,7 +125,7 @@ void RecoveryAction::run(uint8_t concurrency_slot)
         recovery_active = false;
         result.outcome = mbf_msgs::RecoveryResult::INTERNAL_ERROR;
         result.message = "Internal error: Unknown error thrown by the plugin!";
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         break;
 
       default:
@@ -132,7 +135,7 @@ void RecoveryAction::run(uint8_t concurrency_slot)
            << static_cast<int>(state_recovery_input);
         result.message = ss.str();
         ROS_FATAL_STREAM_NAMED(name_, result.message);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         recovery_active = false;
     }
 
@@ -141,7 +144,7 @@ void RecoveryAction::run(uint8_t concurrency_slot)
       // try to sleep a bit
       // normally the thread should be woken up from the recovery unit
       // in order to transfer the results to the controller
-      getExecution(concurrency_slot)->waitForStateUpdate(boost::chrono::milliseconds(500));
+      execution.waitForStateUpdate(boost::chrono::milliseconds(500));
     }
   }  // while (recovery_active && ros::ok())
 
