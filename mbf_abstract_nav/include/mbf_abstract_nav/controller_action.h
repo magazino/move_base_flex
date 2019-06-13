@@ -75,27 +75,23 @@ class ControllerAction :
 protected:
   void publishExePathFeedback(
           GoalHandle& goal_handle,
-          const geometry_msgs::PoseStamped& robot_pose,
-          const geometry_msgs::PoseStamped& goal_pose,
           uint32_t outcome, const std::string &message,
           const geometry_msgs::TwistStamped& current_twist);
 
   /**
    * @brief Utility method to fill the ExePath action result in a single line
-   * @param robot_pose Current pose of the robot
-   * @param goal_pose Robot's goal pose
    * @param outcome ExePath action outcome
    * @param message ExePath action message
    * @param result The action result to fill
    */
   void fillExePathResult(
-        const geometry_msgs::PoseStamped& robot_pose,
-        const geometry_msgs::PoseStamped& goal_pose,
         uint32_t outcome, const std::string &message,
         mbf_msgs::ExePathResult &result);
 
+  boost::mutex goal_mtx_; ///< lock goal handle for updating it while running
+  geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose
+  geometry_msgs::PoseStamped goal_pose_;  ///< Current goal pose
 
-  boost::mutex goal_mtx_;
 };
 }
 
