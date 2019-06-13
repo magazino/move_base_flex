@@ -74,7 +74,7 @@ class ControllerAction :
 
 protected:
   void publishExePathFeedback(
-          uint8_t concurrency_slot,
+          GoalHandle goal_handle,
           const geometry_msgs::PoseStamped& robot_pose,
           const geometry_msgs::PoseStamped& goal_pose,
           uint32_t outcome, const std::string &message,

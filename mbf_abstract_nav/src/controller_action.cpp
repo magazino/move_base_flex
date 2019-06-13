@@ -58,12 +58,13 @@ void ControllerAction::start(
   uint8_t concurrency_slot = goal_handle.getGoal()->concurrency_slot;
   try
   {
-    if(goal_handle.getGoal()->controller == getExecution(concurrency_slot)->getName() ||
+    AbstractControllerExecution::Ptr execution_ptr = getExecution(concurrency_slot);
+    if(goal_handle.getGoal()->controller == execution_ptr->getName() ||
        goal_handle.getGoal()->controller.empty())
     {
       // Goal requests to run the same controller on the same concurrency slot; to allow smooth replanning,
       // we update the goal handle and pass the new plan to the execution without stopping it
-      getExecution(concurrency_slot)->setNewPlan(goal_handle.getGoal()->path.poses);
+      execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       setGoalHandle(concurrency_slot, goal_handle);
       return;
     }
@@ -92,13 +93,14 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
   typename AbstractControllerExecution::ControllerState state_moving_input;
 
-  const mbf_msgs::ExePathGoal &goal = *(getGoalHandle(concurrency_slot).getGoal().get());
+  GoalHandle goal_handle = getGoalHandle(concurrency_slot);
+  const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
   if (plan.empty())
   {
     fillExePathResult(geometry_msgs::PoseStamped(), geometry_msgs::PoseStamped(),
                       mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan!", result);
-    getGoalHandle(concurrency_slot).setAborted(result, result.message);
+    goal_handle.setAborted(result, result.message);
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
     return;
   }
@@ -124,12 +126,15 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
   while (controller_active && ros::ok())
   {
+    // goal_handle could change between the loop cycles due to adapting the plan
+    // with a new goal received for the same concurrency slot
+    goal_handle = getGoalHandle(concurrency_slot);
     if (!robot_info_.getRobotPose(robot_pose))
     {
       controller_active = false;
       fillExePathResult(robot_pose, goal_pose,
                         mbf_msgs::ExePathResult::TF_ERROR, "Could not get the robot pose!", result);
-      getGoalHandle(concurrency_slot).setAborted(result, result.message);
+      goal_handle.setAborted(result, result.message);
       ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
       break;
     }
@@ -139,14 +144,14 @@ void ControllerAction::run(uint8_t concurrency_slot)
       // init oscillation pose
       oscillation_pose = robot_pose;
     }
-
-    state_moving_input = getExecution(concurrency_slot)->getState();
+    AbstractControllerExecution::Ptr execution_ptr = getExecution(concurrency_slot);
+    state_moving_input = execution_ptr->getState();
 
     switch (state_moving_input)
     {
       case AbstractControllerExecution::INITIALIZED:
-        getExecution(concurrency_slot)->setNewPlan(plan);
-        getExecution(concurrency_slot)->start();
+        execution_ptr->setNewPlan(plan);
+        execution_ptr->start();
         break;
 
       case AbstractControllerExecution::STOPPED:
@@ -158,7 +163,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
         ROS_INFO_STREAM("Action \"ExePath\" canceled");
         fillExePathResult(robot_pose, goal_pose,
                           mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
-        getGoalHandle(concurrency_slot).setCanceled(result, result.message);
+        goal_handle.setCanceled(result, result.message);
         controller_active = false;
         break;
 
@@ -168,7 +173,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
 
         // in progress
       case AbstractControllerExecution::PLANNING:
-        if (getExecution(concurrency_slot)->isPatienceExceeded())
+        if (execution_ptr->isPatienceExceeded())
         {
           ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
@@ -177,7 +182,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
           // as there is the controller itself reporting that it cannot find a valid command after trying
           // for more than patience seconds. But after stopping controller execution, it should ideally
           // report PAT_EXCEEDED as his state on next iteration.
-          getExecution(concurrency_slot)->stop();
+          execution_ptr->stop();
         }
         break;
 
@@ -185,17 +190,17 @@ void ControllerAction::run(uint8_t concurrency_slot)
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose,
-                          getExecution(concurrency_slot)->getOutcome(),
-                          getExecution(concurrency_slot)->getMessage(), result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+                          execution_ptr->getOutcome(),
+                          execution_ptr->getMessage(), result);
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::PAT_EXCEEDED:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::PAT_EXCEEDED,
-                          getExecution(concurrency_slot)->getMessage(), result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+                          execution_ptr->getMessage(), result);
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::NO_PLAN:
@@ -203,7 +208,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::INVALID_PATH,
                           "Controller started without a path", result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::EMPTY_PLAN:
@@ -211,7 +216,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::INVALID_PATH,
                           "Controller started with an empty plan", result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::INVALID_PLAN:
@@ -219,16 +224,16 @@ void ControllerAction::run(uint8_t concurrency_slot)
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::INVALID_PATH,
                           "Controller started with an invalid plan", result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
         ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
-            << getExecution(concurrency_slot)->getMessage());
-        publishExePathFeedback(concurrency_slot, robot_pose, goal_pose,
-                               getExecution(concurrency_slot)->getOutcome(),
-                               getExecution(concurrency_slot)->getMessage(),
-                               getExecution(concurrency_slot)->getVelocityCmd());
+            << execution_ptr->getMessage());
+        publishExePathFeedback(goal_handle, robot_pose, goal_pose,
+                               execution_ptr->getOutcome(),
+                               execution_ptr->getMessage(),
+                               execution_ptr->getVelocityCmd());
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
@@ -244,18 +249,18 @@ void ControllerAction::run(uint8_t concurrency_slot)
           {
             ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            getExecution(concurrency_slot)->stop();
+            execution_ptr->stop();
             controller_active = false;
             fillExePathResult(robot_pose, goal_pose,
                               mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
-            getGoalHandle(concurrency_slot).setAborted(result, result.message);
+            goal_handle.setAborted(result, result.message);
             break;
           }
         }
-        publishExePathFeedback(concurrency_slot, robot_pose, goal_pose,
-                               getExecution(concurrency_slot)->getOutcome(),
-                               getExecution(concurrency_slot)->getMessage(),
-                               getExecution(concurrency_slot)->getVelocityCmd());
+        publishExePathFeedback(goal_handle, robot_pose, goal_pose,
+                               execution_ptr->getOutcome(),
+                               execution_ptr->getMessage(),
+                               execution_ptr->getVelocityCmd());
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:
@@ -263,16 +268,16 @@ void ControllerAction::run(uint8_t concurrency_slot)
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose,
                           mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
-        getGoalHandle(concurrency_slot).setSucceeded(result, result.message);
+        goal_handle.setSucceeded(result, result.message);
         break;
 
       case AbstractControllerExecution::INTERNAL_ERROR:
         ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: "
-                               << getExecution(concurrency_slot)->getMessage());
+                               << execution_ptr->getMessage());
         controller_active = false;
         fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::INTERNAL_ERROR,
                           "Internal error: Unknown error thrown by the plugin!", result);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         break;
 
       default:
@@ -281,7 +286,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
            << static_cast<int>(state_moving_input);
            fillExePathResult(robot_pose, goal_pose, mbf_msgs::ExePathResult::INTERNAL_ERROR, ss.str(), result);
         ROS_FATAL_STREAM_NAMED(name_, result.message);
-        getGoalHandle(concurrency_slot).setAborted(result, result.message);
+        goal_handle.setAborted(result, result.message);
         controller_active = false;
     }
 
@@ -290,7 +295,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
       // try to sleep a bit
       // normally this thread should be woken up from the controller execution thread
       // in order to transfer the results to the controller
-      getExecution(concurrency_slot)->waitForStateUpdate(boost::chrono::milliseconds(500));
+      execution_ptr->waitForStateUpdate(boost::chrono::milliseconds(500));
     }
 
     first_cycle = false;
@@ -308,7 +313,7 @@ void ControllerAction::run(uint8_t concurrency_slot)
 }
 
 void ControllerAction::publishExePathFeedback(
-        uint8_t concurrency_slot,
+        GoalHandle goal_handle,
         const geometry_msgs::PoseStamped& robot_pose,
         const geometry_msgs::PoseStamped& goal_pose,
         uint32_t outcome, const std::string &message,
@@ -325,7 +330,7 @@ void ControllerAction::publishExePathFeedback(
   feedback.current_pose = robot_pose;
   feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose, goal_pose));
   feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose, goal_pose));
-  getGoalHandle(concurrency_slot).publishFeedback(feedback);
+  goal_handle.publishFeedback(feedback);
 }
 
 void ControllerAction::fillExePathResult(
