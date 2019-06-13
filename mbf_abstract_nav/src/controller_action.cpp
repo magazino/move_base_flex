@@ -55,6 +55,12 @@ void ControllerAction::start(
     typename AbstractControllerExecution::Ptr execution_ptr
 )
 {
+  if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
+  {
+    goal_handle.setCanceled();
+    return;
+  }
+
   uint8_t concurrency_slot = goal_handle.getGoal()->concurrency_slot;
   lockSlot(concurrency_slot);
   try
@@ -71,6 +77,7 @@ void ControllerAction::start(
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
       getGoalHandle(concurrency_slot).setCanceled(result, result.message);
       setGoalHandle(concurrency_slot, goal_handle);
+      goal_handle.setAccepted();
       return;
     }
   }

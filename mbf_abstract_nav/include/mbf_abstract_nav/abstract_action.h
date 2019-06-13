@@ -77,19 +77,27 @@ class AbstractAction
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
-    if(slot_it != concurrency_slots_.end())
+    if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
     {
-      // if there is a plugin running on the same slot, cancel it
-      slot_it->second.execution->cancel();
-      // and wait for it to be finished
-      slot_it->second.thread_ptr->join();
+      goal_handle.setCanceled();
     }
-    // fill concurrency slot with the new goal handle, execution, and working thread
-    concurrency_slots_[slot].goal_handle = goal_handle;
-    concurrency_slots_[slot].execution = execution_ptr;
-    concurrency_slots_[slot].thread_ptr = threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp,
-                                                                             this, goal_handle, execution_ptr));
+    else
+    {
+      goal_handle.setAccepted();
+      typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+      if(slot_it != concurrency_slots_.end())
+      {
+        // if there is a plugin running on the same slot, cancel it
+        slot_it->second.execution->cancel();
+        // and wait for it to be finished
+        slot_it->second.thread_ptr->join();
+      }
+      // fill concurrency slot with the new goal handle, execution, and working thread
+      concurrency_slots_[slot].goal_handle = goal_handle;
+      concurrency_slots_[slot].execution = execution_ptr;
+      concurrency_slots_[slot].thread_ptr = threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp,
+                                                                               this, goal_handle, execution_ptr));
+    }
   }
 
   virtual void cancel(GoalHandle &goal_handle){
