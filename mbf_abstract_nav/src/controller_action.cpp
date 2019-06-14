@@ -76,13 +76,11 @@ void ControllerAction::start(
       // Goal requests to run the same controller on the same concurrency slot:
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
-      ROS_INFO_STREAM("1.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
       concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
       concurrency_slots_[slot].goal_handle = goal_handle;
-      ROS_INFO_STREAM("2.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
       concurrency_slots_[slot].goal_handle.setAccepted();
     }
   }
@@ -100,7 +98,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   // Note that we always use the goal handle stored on the concurrency slots map, as it can change when replanning
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
   goal_mtx_.unlock();
-  ROS_INFO_STREAM("3.) Goal Address:" << &goal_handle);
 
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
 
@@ -157,7 +154,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   {
     // goal_handle could change between the loop cycles due to adapting the plan
     // with a new goal received for the same concurrency slot
-    ROS_INFO_STREAM("Loop: Goal Address:" << &(concurrency_slots_[slot].goal_handle));
     if (!robot_info_.getRobotPose(robot_pose_))
     {
       controller_active = false;
