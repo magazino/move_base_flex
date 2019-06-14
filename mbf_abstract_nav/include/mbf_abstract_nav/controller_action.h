@@ -94,6 +94,8 @@ protected:
         uint32_t outcome, const std::string &message,
         mbf_msgs::ExePathResult &result);
 
+
+  boost::mutex goal_mtx_;
 };
 }
 

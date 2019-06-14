@@ -57,10 +57,11 @@ void ControllerAction::start(
 {
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
+  slot_mtx_.lock();
   std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
   if(slot_it != concurrency_slots_.end())
   {
-    boost::lock_guard<boost::mutex> map_guard(slot_mtx_);
+    boost::lock_guard<boost::mutex> goal_guard(goal_mtx_);
     if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
        goal_handle.getGoal()->controller.empty())
     {
@@ -71,20 +72,22 @@ void ControllerAction::start(
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       concurrency_slots_[slot].goal_handle = goal_handle;
       ROS_INFO_STREAM("2.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
-      return;
     }
   }
-
-  // Otherwise run parent version of this method
-  AbstractAction::start(goal_handle, execution_ptr);
+  slot_mtx_.unlock();
+  if(slot_it == concurrency_slots_.end())
+  {
+      // Otherwise run parent version of this method
+      AbstractAction::start(goal_handle, execution_ptr);
+  }
 }
 
 void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution &execution)
 {
-  slot_mtx_.lock();
+  goal_mtx_.lock();
   // Note that we always use the goal handle stored on the concurrency slots map, as it can change when replanning
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
-  slot_mtx_.unlock();
+  goal_mtx_.unlock();
   ROS_INFO_STREAM("3.) Goal Address:" << &goal_handle);
 
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
@@ -102,18 +105,19 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   mbf_msgs::ExePathFeedback feedback;
 
   typename AbstractControllerExecution::ControllerState state_moving_input;
+  bool controller_active = true;
 
+  goal_mtx_.lock();
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
+
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
   if (plan.empty())
   {
     fillExePathResult(geometry_msgs::PoseStamped(), geometry_msgs::PoseStamped(),
                       mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan!", result);
-    slot_mtx_.lock();
     goal_handle.setAborted(result, result.message);
-    slot_mtx_.unlock();
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
-    return;
+    controller_active = false;
   }
 
   geometry_msgs::PoseStamped goal_pose = plan.back();
@@ -126,7 +130,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       << goal_pose.pose.position.y << ", "
       << goal_pose.pose.position.z << ")");
 
-  bool controller_active = true;
+  goal_mtx_.unlock();
+
 
   geometry_msgs::PoseStamped oscillation_pose;
   ros::Time last_oscillation_reset = ros::Time::now();
@@ -143,9 +148,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       controller_active = false;
       fillExePathResult(robot_pose, goal_pose,
                         mbf_msgs::ExePathResult::TF_ERROR, "Could not get the robot pose!", result);
-      slot_mtx_.lock();
+      goal_mtx_.lock();
       goal_handle.setAborted(result, result.message);
-      slot_mtx_.unlock();
+      goal_mtx_.unlock();
       ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
       break;
     }
@@ -156,7 +161,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       oscillation_pose = robot_pose;
     }
 
-    slot_mtx_.lock();
+    goal_mtx_.lock();
     state_moving_input = execution.getState();
 
     switch (state_moving_input)
@@ -296,7 +301,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         goal_handle.setAborted(result, result.message);
         controller_active = false;
     }
-    slot_mtx_.unlock();
+    goal_mtx_.unlock();
 
     if (controller_active)
     {
