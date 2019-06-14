@@ -72,14 +72,19 @@ class AbstractAction
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    boost::lock_guard<boost::mutex> guard(slot_mtx_);
+    slot_map_mtx_.lock();
     typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+    slot_map_mtx_.unlock();
     if(slot_it != concurrency_slots_.end())
     {
       // if there is a plugin running on the same slot, cancel it
       slot_it->second.execution->cancel();
-      slot_it->second.thread_ptr->join();
+      if (slot_it->second.thread_ptr->joinable())
+      {
+        slot_it->second.thread_ptr->join();
+      }
     }
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
     // fill concurrency slot with the new goal handle, execution, and working thread
     concurrency_slots_[slot].goal_handle = goal_handle;
     concurrency_slots_[slot].execution = execution_ptr;
@@ -90,7 +95,7 @@ class AbstractAction
   virtual void cancel(GoalHandle &goal_handle){
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    boost::lock_guard<boost::mutex> guard(slot_mtx_);
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
     typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
     if(slot_it != concurrency_slots_.end())
     {
@@ -107,7 +112,7 @@ class AbstractAction
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution thread for action \"" << name_ << "\" stopped, cleaning up execution leftovers.");
-    boost::lock_guard<boost::mutex> guard(slot_mtx_);
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
     ROS_DEBUG_STREAM_NAMED(name_, "Exiting run method with goal status: "
                            << concurrency_slots_[slot].goal_handle.getGoalStatus().text
                            << " and code: " << concurrency_slots_[slot].goal_handle.getGoalStatus().status);
@@ -121,7 +126,7 @@ class AbstractAction
   virtual void reconfigureAll(
       mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
   {
-    boost::lock_guard<boost::mutex> guard(slot_mtx_);
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
 
     typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
@@ -133,7 +138,7 @@ class AbstractAction
   virtual void cancelAll()
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
-    boost::lock_guard<boost::mutex> guard(slot_mtx_);
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
     typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
@@ -150,7 +155,7 @@ protected:
   boost::thread_group threads_;
   std::map<uint8_t, ConcurrencySlot> concurrency_slots_;
 
-  boost::mutex slot_mtx_;
+  boost::mutex slot_map_mtx_;
 
 };
 
