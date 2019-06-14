@@ -47,6 +47,20 @@ namespace mbf_abstract_nav{
 
 
 template <typename Action, typename Execution>
+class ConcurrencySlot
+
+{
+public:
+  typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
+  typedef boost::function<void (GoalHandle &goal_handle, Execution &execution)> RunMethod;
+
+  typename Execution::Ptr execution;
+  boost::thread* thread_ptr;
+  GoalHandle goal_handle;
+};
+
+
+template <typename Action, typename Execution>
 class AbstractAction
 {
  public:
@@ -54,13 +68,7 @@ class AbstractAction
 
   typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef boost::function<void (GoalHandle &goal_handle, Execution &execution)> RunMethod;
-
-  typedef struct
-  {
-    typename Execution::Ptr execution;
-    boost::thread* thread_ptr;
-    GoalHandle goal_handle;
-  } ConcurrencySlot;
+  typedef ConcurrencySlot<Action, Execution> Slot;
 
   AbstractAction(
       const std::string& name,
@@ -76,24 +84,25 @@ class AbstractAction
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+    typename std::map<uint8_t, Slot>::iterator slot_it = concurrency_slots_.find(slot);
     if(slot_it != concurrency_slots_.end())
     {
       // if there is a plugin running on the same slot, cancel it
-      slot_it->second.execution->cancel(); // TODO make thread safe
+      slot_it->second.execution->cancel();
+      slot_it->second.thread_ptr->join();
     }
     // fill concurrency slot with the new goal handle, execution, and working thread
     concurrency_slots_[slot].goal_handle = goal_handle;
     concurrency_slots_[slot].execution = execution_ptr;
-    concurrency_slots_[slot].thread_ptr = threads_.create_thread(boost::bind(&AbstractAction::runAndCleanUp,
-                                                                             this, goal_handle, execution_ptr));
+    concurrency_slots_[slot].thread_ptr = threads_.create_thread(
+        boost::bind(&AbstractAction::runAndCleanUp, this, boost::ref(concurrency_slots_[slot].goal_handle), execution_ptr));
   }
 
   virtual void cancel(GoalHandle &goal_handle){
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+    typename std::map<uint8_t, Slot>::iterator slot_it = concurrency_slots_.find(slot);
     if(slot_it != concurrency_slots_.end())
     {
       concurrency_slots_[slot].execution->cancel();
@@ -105,7 +114,7 @@ class AbstractAction
 
     if (execution_ptr->setup_fn_)
       execution_ptr->setup_fn_();
-    run_(concurrency_slots_[slot].goal_handle, *execution_ptr);
+    run_(goal_handle, *execution_ptr);
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution thread for action \"" << name_ << "\" stopped, cleaning up execution leftovers.");
@@ -125,7 +134,7 @@ class AbstractAction
   {
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
 
-    typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
+    typename std::map<uint8_t, Slot>::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->reconfigure(config);
@@ -136,7 +145,7 @@ class AbstractAction
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
+    typename std::map<uint8_t, Slot>::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->cancel();
@@ -150,7 +159,7 @@ protected:
 
   RunMethod run_;
   boost::thread_group threads_;
-  std::map<uint8_t, ConcurrencySlot> concurrency_slots_;
+  std::map<uint8_t, Slot> concurrency_slots_;
 
   boost::mutex slots_mtx_;
 
