@@ -61,10 +61,10 @@ void ControllerAction::start(
   if(slot_it != concurrency_slots_.end())
   {
     boost::lock_guard<boost::mutex> map_guard(slot_map_mtx_);
-    slot_mtx_map_[slot].lock();
     if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
        goal_handle.getGoal()->controller.empty())
     {
+      concurrency_slots_[slot].mtx.lock();
       // Goal requests to run the same controller on the same concurrency slot:
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
@@ -72,9 +72,9 @@ void ControllerAction::start(
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       concurrency_slots_[slot].goal_handle = goal_handle;
       ROS_INFO_STREAM("2.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
+      concurrency_slots_[slot].mtx.unlock();
       return;
     }
-    slot_mtx_map_[slot].unlock();
   }
 
   // Otherwise run parent version of this method
@@ -111,9 +111,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   {
     fillExePathResult(geometry_msgs::PoseStamped(), geometry_msgs::PoseStamped(),
                       mbf_msgs::ExePathResult::INVALID_PATH, "Controller started with an empty plan!", result);
-    slot_mtx_map_[slot].lock();
     goal_handle.setAborted(result, result.message);
-    slot_mtx_map_[slot].unlock();
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
     return;
   }
@@ -139,7 +137,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
   while (controller_active && ros::ok())
   {
-    slot_mtx_map_[slot].lock();
+    ROS_INFO_STREAM("Loop: Goal Address:" << &(concurrency_slots_[slot].goal_handle));
     if (!robot_info_.getRobotPose(robot_pose))
     {
       controller_active = false;
@@ -295,8 +293,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         goal_handle.setAborted(result, result.message);
         controller_active = false;
     }
-
-    slot_mtx_map_[slot].unlock();
 
     if (controller_active)
     {

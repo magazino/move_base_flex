@@ -57,6 +57,7 @@ public:
   typename Execution::Ptr execution;
   boost::thread* thread_ptr;
   GoalHandle goal_handle;
+  boost::mutex mtx;
 };
 
 
