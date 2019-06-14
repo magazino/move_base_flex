@@ -57,7 +57,7 @@ void ControllerAction::start(
 {
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-  std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+  std::map<uint8_t, Slot>::iterator slot_it = concurrency_slots_.find(slot);
   if(slot_it != concurrency_slots_.end())
   {
     boost::lock_guard<boost::mutex> guard(slots_mtx_);
@@ -65,11 +65,15 @@ void ControllerAction::start(
     if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
        goal_handle.getGoal()->controller.empty())
     {
+      concurrency_slots_[slot].mtx.lock();
       // Goal requests to run the same controller on the same concurrency slot:
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
+      ROS_INFO_STREAM("1.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
       concurrency_slots_[slot].goal_handle = goal_handle;
+      ROS_INFO_STREAM("2.) Goal Address:" << &(concurrency_slots_[slot].goal_handle));
+      concurrency_slots_[slot].mtx.unlock();
       return;
     }
   }
@@ -131,6 +135,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
   while (controller_active && ros::ok())
   {
+    ROS_INFO_STREAM("Loop: Goal Address:" << &(concurrency_slots_[slot].goal_handle));
     if (!robot_info_.getRobotPose(robot_pose))
     {
       controller_active = false;
