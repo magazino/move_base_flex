@@ -94,6 +94,8 @@ protected:
         uint32_t outcome, const std::string &message,
         mbf_msgs::ExePathResult &result);
 
+
+  std::map<uint8_t, boost::mutex> slot_mtx_map_;
 };
 }
 
