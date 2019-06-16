@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.4 (2019-06-16)
+------------------
 * Reduce log verbosity by combining lines and using more DEBUG
 * Concurrency container refactoring
 * Prevent LOST goals when replanning

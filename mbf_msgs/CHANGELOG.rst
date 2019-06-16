@@ -2,8 +2,8 @@
 Changelog for package mbf_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.4 (2019-06-16)
+------------------
 * Add check_point_cost service
 * Change current_twist for last_cmd_vel on exe_path/feedback
 

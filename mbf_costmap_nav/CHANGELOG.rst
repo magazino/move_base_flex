@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.4 (2019-06-16)
+------------------
 * Add check_point_cost service
 * Lock costmaps on clear_costmaps service
 * Replace recursive mutexes with normal ones when not needed
