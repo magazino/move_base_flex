@@ -187,7 +187,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::CANCELED:
-        ROS_INFO_STREAM("Action \"ExePath\" canceled");
+        ROS_INFO_STREAM("Action \"exe_path\" canceled");
         fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
         goal_handle.setCanceled(result, result.message);
         controller_active = false;
