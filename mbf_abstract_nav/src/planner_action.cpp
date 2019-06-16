@@ -74,7 +74,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
   {
     start_pose = goal.start_pose;
     const geometry_msgs::Point& p = start_pose.pose.position;
-    ROS_INFO_STREAM_NAMED(name_, "Use the given start pose (" << p.x << ", " << p.y << ", " << p.z << ").");
+    ROS_DEBUG_STREAM_NAMED(name_, "Use the given start pose (" << p.x << ", " << p.y << ", " << p.z << ").");
   }
   else
   {
