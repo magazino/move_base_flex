@@ -2,6 +2,12 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add check_point_cost service
+* Lock costmaps on clear_costmaps service
+* Replace recursive mutexes with normal ones when not needed
+
 0.2.3 (2018-11-14)
 ------------------
 * single publisher for controller execution objects

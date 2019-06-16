@@ -2,6 +2,11 @@
 Changelog for package mbf_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add check_point_cost service
+* Change current_twist for last_cmd_vel on exe_path/feedback
+
 0.2.3 (2018-11-14)
 ------------------
 * Add outcome and message to the action's feedback in ExePath and MoveBase

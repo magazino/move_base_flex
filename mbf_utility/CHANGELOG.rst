@@ -2,6 +2,10 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add check_point_cost service
+
 0.2.3 (2018-11-14)
 ------------------
 * Fix getRobotPose in melodic
