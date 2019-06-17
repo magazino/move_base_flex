@@ -91,4 +91,15 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(
   return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
 }
 
+bool CostmapControllerExecution::isSafeToDrive()
+{
+  // Check that the observation buffers for the costmap are current, we don't want to drive blind
+  if (!costmap_ptr_->isCurrent())
+  {
+    ROS_WARN("Sensor data is out of date, we're not going to allow commanding of the base for safety");
+    return false;
+  }
+  return true;
+}
+
 } /* namespace mbf_costmap_nav */

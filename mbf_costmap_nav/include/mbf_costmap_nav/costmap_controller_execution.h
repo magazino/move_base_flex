@@ -86,6 +86,14 @@ public:
 protected:
 
   /**
+   * @brief Check if its safe to drive.
+   * This method overrides abstract execution empty implementation with underlying map specific check,
+   * more precisely if controller costmap is current.
+   * @return True if costmap is current, false otherwise.
+   */
+  bool isSafeToDrive();
+
+  /**
    * @brief Request plugin for a new velocity command. We override this method so we can lock the local costmap
    *        before calling the planner.
    * @param pose the current pose of the robot.

@@ -236,11 +236,20 @@ namespace mbf_abstract_nav
      */
     virtual void run();
 
+    /**
+     * @brief Check if its safe to drive.
+     * This method gets called at every controller cycle, stopping the robot if its not. When overridden by
+     * child class, gives a chance to the specific execution implementation to stop the robot if it detects
+     * something wrong on the underlying map.
+     * @return Always true, unless overridden by child class.
+     */
+    virtual bool isSafeToDrive() { return true; };
+
   private:
 
 
     /**
-     * publishes a velocity command with zero values to stop the robot.
+     * @brief Publishes a velocity command with zero values to stop the robot.
      */
     void publishZeroVelocity();
 

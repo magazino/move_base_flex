@@ -269,11 +269,20 @@ namespace mbf_abstract_nav
       {
         boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
 
-        if(cancel_){
+        if (cancel_)
+        {
           setState(CANCELED);
           condition_.notify_all();
           moving_ = false;
           return;
+        }
+
+        if (!isSafeToDrive())
+        {
+          // the specific implementation must have detected a risk situation; at this abstract level, we
+          // cannot tell what the problem is, but anyway we command the robot to stop to avoid crashes
+          publishZeroVelocity();   // note that we still feedback command calculated by the plugin
+          boost::this_thread::sleep_for(calling_duration_);
         }
 
         // update plan dynamically
@@ -291,7 +300,7 @@ namespace mbf_abstract_nav
           }
 
           // check if plan could be set
-          if(!controller_->setPlan(plan))
+          if (!controller_->setPlan(plan))
           {
             setState(INVALID_PLAN);
             condition_.notify_all();
