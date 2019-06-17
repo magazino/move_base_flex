@@ -229,7 +229,7 @@ void MoveBaseAction::actionExePathFeedback(
       else
       {
         mbf_msgs::MoveBaseResult move_base_result;
-        move_base_result.outcome = OSCILLATING;
+        move_base_result.outcome = mbf_msgs::MoveBaseResult::OSCILLATION;
         if(recovery_enabled_)
           move_base_result.message = oscillation_msgs.str() + " No recovery behaviors for the move_base action are defined!";
         else
