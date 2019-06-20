@@ -191,6 +191,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
         goal_handle.setCanceled(result, result.message);
         controller_active = false;
+        execution.stop();
+        execution.publishZeroVelocity();
         break;
 
       case AbstractControllerExecution::STARTED:
