@@ -41,17 +41,19 @@
 #ifndef MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_
 #define MBF_COSTMAP_NAV__COSTMAP_CONTROLLER_EXECUTION_H_
 
-#include <costmap_2d/costmap_2d_ros.h>
-#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
-#include <mbf_costmap_core/costmap_controller.h>
 #include <mbf_abstract_nav/abstract_controller_execution.h>
+#include <mbf_costmap_core/costmap_controller.h>
+
+#include "mbf_costmap_nav/MoveBaseFlexConfig.h"
+#include "mbf_costmap_nav/costmap_wrapper.h"
+
 
 namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapControllerExecution binds a local costmap to the AbstractControllerExecution and uses the
- *        nav_core/BaseLocalPlanner class as base plugin interface. This class makes move_base_flex compatible to
- *        the old move_base.
+ *        nav_core/BaseLocalPlanner class as base plugin interface.
+ * This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup controller_execution move_base_server
  */
@@ -59,24 +61,24 @@ class CostmapControllerExecution : public mbf_abstract_nav::AbstractControllerEx
 {
 public:
 
-  typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
-
   /**
-   * @brief Constructor
-   * @param condition Thread sleep condition variable, to wake up connected threads
-   * @param tf_listener_ptr Shared pointer to a common tf listener
-   * @param costmap_ptr Shared pointer to the costmap.
+   * @brief Constructor.
+   * @param controller_name Name of the controller to use.
+   * @param controller_ptr Shared pointer to the plugin to use.
+   * @param vel_pub Velocity commands publisher.
+   * @param goal_pub Goal pose publisher (just vor visualization).
+   * @param tf_listener_ptr Shared pointer to a common tf listener.
+   * @param costmap_ptr Shared pointer to the local costmap.
+   * @param config Current server configuration (dynamic).
    */
   CostmapControllerExecution(
-      const std::string name,
+      const std::string &controller_name,
       const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
-      const ros::Publisher& vel_pub,
-      const ros::Publisher& goal_pub,
+      const ros::Publisher &vel_pub,
+      const ros::Publisher &goal_pub,
       const TFPtr &tf_listener_ptr,
-      CostmapPtr &costmap_ptr,
-      const MoveBaseFlexConfig &config,
-      boost::function<void()> setup_fn,
-      boost::function<void()> cleanup_fn);
+      const CostmapWrapper::Ptr &costmap_ptr,
+      const MoveBaseFlexConfig &config);
 
   /**
    * @brief Destructor
@@ -86,12 +88,32 @@ public:
 protected:
 
   /**
-   * @brief Check if its safe to drive.
-   * This method overrides abstract execution empty implementation with underlying map specific check,
+   * @brief Implementation-specific setup function, called right before execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific setup code.
+   */
+  void preRun()
+  {
+    ROS_WARN("OK  pre run  %s", name_.c_str());
+    costmap_ptr_->checkActivate();
+  };
+
+  /**
+   * @brief Implementation-specific cleanup function, called right after execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific cleanup code.
+   */
+  void postRun()
+  {
+    ROS_WARN("OK  post run  %s", name_.c_str());
+    costmap_ptr_->checkDeactivate();
+  };
+
+  /**
+   * @brief Implementation-specific safety check, called during execution to ensure it's safe to drive.
+   * This method overrides abstract execution empty implementation with underlying map-specific checks,
    * more precisely if controller costmap is current.
    * @return True if costmap is current, false otherwise.
    */
-  bool isSafeToDrive();
+  bool safetyCheck();
 
   /**
    * @brief Request plugin for a new velocity command. We override this method so we can lock the local costmap
@@ -112,8 +134,8 @@ private:
 
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
-  //! costmap for 2d navigation planning
-  CostmapPtr &costmap_ptr_;
+  //! Shared pointer to thr local costmap
+  const CostmapWrapper::Ptr &costmap_ptr_;
 
   //! Whether to lock costmap before calling the controller (see issue #4 for details)
   bool lock_costmap_;

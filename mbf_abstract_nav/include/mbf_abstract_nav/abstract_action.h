@@ -113,8 +113,7 @@ class AbstractAction
   virtual void runAndCleanUp(GoalHandle &goal_handle, typename Execution::Ptr execution_ptr){
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    if (execution_ptr->setup_fn_)
-      execution_ptr->setup_fn_();
+    execution_ptr->preRun();
     run_(goal_handle, *execution_ptr);
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     execution_ptr->join();
@@ -126,8 +125,7 @@ class AbstractAction
     threads_.remove_thread(concurrency_slots_[slot].thread_ptr);
     delete concurrency_slots_[slot].thread_ptr;
     concurrency_slots_.erase(slot);
-    if (execution_ptr->cleanup_fn_)
-      execution_ptr->cleanup_fn_();
+    execution_ptr->postRun();
   }
 
   virtual void reconfigureAll(

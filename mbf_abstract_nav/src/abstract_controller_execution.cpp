@@ -52,10 +52,8 @@ namespace mbf_abstract_nav
       const ros::Publisher& vel_pub,
       const ros::Publisher& goal_pub,
       const TFPtr &tf_listener_ptr,
-      const MoveBaseFlexConfig &config,
-      boost::function<void()> setup_fn,
-      boost::function<void()> cleanup_fn) :
-    AbstractExecutionBase(name, setup_fn, cleanup_fn),
+      const MoveBaseFlexConfig &config) :
+    AbstractExecutionBase(name),
       controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
       moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
       calling_duration_(boost::chrono::microseconds(static_cast<int>(1e6 / DEFAULT_CONTROLLER_FREQUENCY)))
@@ -277,7 +275,7 @@ namespace mbf_abstract_nav
           return;
         }
 
-        if (!isSafeToDrive())
+        if (!safetyCheck())
         {
           // the specific implementation must have detected a risk situation; at this abstract level, we
           // cannot tell what the problem is, but anyway we command the robot to stop to avoid crashes

@@ -42,42 +42,64 @@
 #define MBF_COSTMAP_NAV__COSTMAP_PLANNER_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_planner_execution.h>
-#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <mbf_costmap_core/costmap_planner.h>
-#include <costmap_2d/costmap_2d_ros.h>
+
+#include "mbf_costmap_nav/MoveBaseFlexConfig.h"
+#include "mbf_costmap_nav/costmap_wrapper.h"
+
 
 namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapPlannerExecution binds a global costmap to the AbstractPlannerExecution and uses the
- *        nav_core/BaseCostmapPlanner class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *        nav_core/BaseCostmapPlanner class as base plugin interface.
+ * This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup planner_execution move_base_server
  */
 class CostmapPlannerExecution : public mbf_abstract_nav::AbstractPlannerExecution
 {
 public:
-  typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
 
   /**
-   * @brief Constructor
-   * @param condition Thread sleep condition variable, to wake up connected threads
-   * @param costmap Shared pointer to the costmap.
+   * @brief Constructor.
+   * @param planner_name Name of the planner to use.
+   * @param planner_ptr Shared pointer to the plugin to use.
+   * @param costmap_ptr Shared pointer to the global costmap.
+   * @param config Current server configuration (dynamic).
    */
   CostmapPlannerExecution(
-      const std::string name,
+      const std::string &planner_name,
       const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-      CostmapPtr &costmap,
-      const MoveBaseFlexConfig &config,
-      boost::function<void()> setup_fn,
-      boost::function<void()> cleanup_fn);
+      const CostmapWrapper::Ptr &costmap_ptr,
+      const MoveBaseFlexConfig &config);
 
   /**
    * @brief Destructor
    */
   virtual ~CostmapPlannerExecution();
 
+
 private:
+  /**
+   * @brief Implementation-specific setup function, called right before execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific setup code.
+   */
+  void preRun()
+  {
+    ROS_WARN("OK  pre run  %s", name_.c_str());
+    costmap_ptr_->checkActivate();
+  };
+
+  /**
+   * @brief Implementation-specific cleanup function, called right after execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific cleanup code.
+   */
+  void postRun()
+  {
+    ROS_WARN("OK  post run  %s", name_.c_str());
+    costmap_ptr_->checkDeactivate();
+  };
 
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
@@ -101,7 +123,7 @@ private:
       std::string &message);
 
   //! Shared pointer to the global planner costmap
-  CostmapPtr &costmap_ptr_;
+  const CostmapWrapper::Ptr &costmap_ptr_;
 
   //! Whether to lock costmap before calling the planner (see issue #4 for details)
   bool lock_costmap_;

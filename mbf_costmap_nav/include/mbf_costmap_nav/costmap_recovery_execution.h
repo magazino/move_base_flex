@@ -42,16 +42,18 @@
 #define MBF_COSTMAP_NAV__COSTMAP_RECOVERY_EXECUTION_H_
 
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
-#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <mbf_costmap_core/costmap_recovery.h>
-#include <costmap_2d/costmap_2d_ros.h>
+
+#include "mbf_costmap_nav/MoveBaseFlexConfig.h"
+#include "mbf_costmap_nav/costmap_wrapper.h"
 
 
 namespace mbf_costmap_nav
 {
 /**
  * @brief The CostmapRecoveryExecution binds a local and a global costmap to the AbstractRecoveryExecution and uses the
- *        nav_core/CostmapRecovery class as base plugin interface. This class makes move_base_flex compatible to the old move_base.
+ *        nav_core/CostmapRecovery class as base plugin interface.
+ * This class makes move_base_flex compatible to the old move_base.
  *
  * @ingroup recovery_execution move_base_server
  */
@@ -59,38 +61,58 @@ class CostmapRecoveryExecution : public mbf_abstract_nav::AbstractRecoveryExecut
 {
 
 public:
-  typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
   typedef boost::shared_ptr<CostmapRecoveryExecution> Ptr;
 
   /**
-   * @brief Constructor
+   * @brief Constructor.
+   * @param recovery_name Name of the recovery behavior to run.
+   * @param recovery_ptr Shared pointer to the plugin to use.
    * @param tf_listener_ptr Shared pointer to a common tf listener
    * @param global_costmap Shared pointer to the global costmap.
    * @param local_costmap Shared pointer to the local costmap.
+   * @param config Current server configuration (dynamic).
    */
   CostmapRecoveryExecution(
-      const std::string name,
+      const std::string &recovery_name,
       const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
       const TFPtr &tf_listener_ptr,
-      CostmapPtr &global_costmap,
-      CostmapPtr &local_costmap,
-      const MoveBaseFlexConfig &config,
-      boost::function<void()> setup_fn,
-      boost::function<void()> cleanup_fn);
+      const CostmapWrapper::Ptr &global_costmap,
+      const CostmapWrapper::Ptr &local_costmap,
+      const MoveBaseFlexConfig &config);
+
   /**
    * Destructor
    */
   virtual ~CostmapRecoveryExecution();
 
-protected:
+private:
+  /**
+   * @brief Implementation-specific setup function, called right before execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific setup code.
+   */
+  void preRun()
+  {
+    ROS_WARN("OK  pre run  %s", name_.c_str());
+    local_costmap_->checkActivate();
+    global_costmap_->checkActivate();
+  };
+
+  /**
+   * @brief Implementation-specific cleanup function, called right after execution.
+   * This method overrides abstract execution empty implementation with underlying map-specific cleanup code.
+   */
+  void postRun()
+  {
+    ROS_WARN("OK  post run  %s", name_.c_str());
+    local_costmap_->checkDeactivate();
+    global_costmap_->checkDeactivate();
+  };
 
   //! Shared pointer to the global costmap
-  CostmapPtr &global_costmap_;
+  const CostmapWrapper::Ptr &global_costmap_;
 
   //! Shared pointer to thr local costmap
-  CostmapPtr &local_costmap_;
-
-private:
+  const CostmapWrapper::Ptr &local_costmap_;
 
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 };

@@ -51,9 +51,7 @@ class AbstractExecutionBase
 {
  public:
 
-  AbstractExecutionBase(std::string name,
-                        boost::function<void()> setup_fn,
-                        boost::function<void()> cleanup_fn);
+  AbstractExecutionBase(std::string name);
 
   virtual bool start();
 
@@ -70,16 +68,6 @@ class AbstractExecutionBase
   void waitForStateUpdate(boost::chrono::microseconds const &duration);
 
   /**
-   * @brief Implementation-specific setup function called right before execution; empty on abstract server
-   */
-  boost::function<void()> setup_fn_;
-
-  /**
-   * @brief Implementation-specific cleanup function called right after execution; empty on abstract server
-   */
-  boost::function<void()> cleanup_fn_;
-
-  /**
    * @brief Gets the current plugin execution outcome
    */
   uint32_t getOutcome();
@@ -94,8 +82,17 @@ class AbstractExecutionBase
    */
   std::string getName();
 
- protected:
+  /**
+   * @brief Optional implementation-specific setup function, called right before execution.
+   */
+  virtual void preRun() { ROS_ERROR("PARENT pre run"); };
 
+  /**
+   * @brief Optional implementation-specific cleanup function, called right after execution.
+   */
+  virtual void postRun() { ROS_ERROR("PARENT post run"); };
+
+protected:
   virtual void run() = 0;
 
   //! condition variable to wake up control thread

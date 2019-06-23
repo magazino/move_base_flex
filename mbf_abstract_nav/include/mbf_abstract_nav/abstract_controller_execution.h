@@ -93,9 +93,7 @@ namespace mbf_abstract_nav
         const ros::Publisher& vel_pub,
         const ros::Publisher& goal_pub,
         const TFPtr &tf_listener_ptr,
-        const MoveBaseFlexConfig &config,
-        boost::function<void()> setup_fn,
-        boost::function<void()> cleanup_fn);
+        const MoveBaseFlexConfig &config);
 
     /**
      * @brief Destructor
@@ -243,7 +241,7 @@ namespace mbf_abstract_nav
      * something wrong on the underlying map.
      * @return Always true, unless overridden by child class.
      */
-    virtual bool isSafeToDrive() { return true; };
+    virtual bool safetyCheck() { return true; };
 
   private:
 

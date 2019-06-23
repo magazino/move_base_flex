@@ -315,29 +315,26 @@ void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHa
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
-    const std::string name,
+    const std::string &plugin_name,
     const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(name, plugin_ptr, last_config_,
-                                                                        boost::function<void()>(),
-                                                                        boost::function<void()>());
+  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_name, plugin_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::newControllerExecution(
-    const std::string name,
+    const std::string &plugin_name,
     const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(name, plugin_ptr, vel_pub_, goal_pub_,
-      tf_listener_ptr_, last_config_, boost::function<void()>(), boost::function<void()>());
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_name, plugin_ptr, vel_pub_, goal_pub_,
+                                                                           tf_listener_ptr_, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(
-    const std::string name,
+    const std::string &plugin_name,
     const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(name, plugin_ptr, tf_listener_ptr_, last_config_,
-                                                                         boost::function<void()>(),
-                                                                         boost::function<void()>());
+  return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(plugin_name, plugin_ptr,
+                                                                         tf_listener_ptr_, last_config_);
 }
 
 void AbstractNavigationServer::startActionServers()
