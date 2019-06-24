@@ -71,7 +71,7 @@ bool WrapperLocalPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped> 
 
 bool WrapperLocalPlanner::cancel()
 {
-  return true;
+  return false;
 }
 
 void WrapperLocalPlanner::initialize(std::string name,
