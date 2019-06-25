@@ -87,7 +87,6 @@ private:
    */
   void preRun()
   {
-    ROS_WARN("OK  pre run  %s", name_.c_str());
     costmap_ptr_->checkActivate();
   };
 
@@ -97,7 +96,6 @@ private:
    */
   void postRun()
   {
-    ROS_WARN("OK  post run  %s", name_.c_str());
     costmap_ptr_->checkDeactivate();
   };
 

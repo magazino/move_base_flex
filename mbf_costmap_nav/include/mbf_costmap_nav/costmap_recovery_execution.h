@@ -92,7 +92,6 @@ private:
    */
   void preRun()
   {
-    ROS_WARN("OK  pre run  %s", name_.c_str());
     local_costmap_->checkActivate();
     global_costmap_->checkActivate();
   };
@@ -103,18 +102,17 @@ private:
    */
   void postRun()
   {
-    ROS_WARN("OK  post run  %s", name_.c_str());
     local_costmap_->checkDeactivate();
     global_costmap_->checkDeactivate();
   };
+
+  mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   //! Shared pointer to the global costmap
   const CostmapWrapper::Ptr &global_costmap_;
 
   //! Shared pointer to thr local costmap
   const CostmapWrapper::Ptr &local_costmap_;
-
-  mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 };
 
 } /* namespace mbf_costmap_nav */

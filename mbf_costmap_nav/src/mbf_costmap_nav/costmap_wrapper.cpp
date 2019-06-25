@@ -102,7 +102,7 @@ void CostmapWrapper::checkActivate()
   if (shutdown_costmap_ && !costmap_users_)
   {
     start();
-    ROS_INFO_STREAM("" << name_ << " activated");
+    ROS_DEBUG_STREAM("" << name_ << " activated");
   }
   ++costmap_users_;
 }
@@ -129,7 +129,7 @@ void CostmapWrapper::deactivate(const ros::TimerEvent &event)
 
   ROS_ASSERT_MSG(!costmap_users_, "Deactivating costmap with %d active users!", costmap_users_);
   stop();
-  ROS_INFO_STREAM("" << name_ << " deactivated");
+  ROS_DEBUG_STREAM("" << name_ << " deactivated");
 }
 
 } /* namespace mbf_costmap_nav */

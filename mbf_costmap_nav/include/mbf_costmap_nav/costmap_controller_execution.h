@@ -85,7 +85,7 @@ public:
    */
   virtual ~CostmapControllerExecution();
 
-protected:
+private:
 
   /**
    * @brief Implementation-specific setup function, called right before execution.
@@ -93,7 +93,6 @@ protected:
    */
   void preRun()
   {
-    ROS_WARN("OK  pre run  %s", name_.c_str());
     costmap_ptr_->checkActivate();
   };
 
@@ -103,7 +102,6 @@ protected:
    */
   void postRun()
   {
-    ROS_WARN("OK  post run  %s", name_.c_str());
     costmap_ptr_->checkDeactivate();
   };
 
@@ -129,8 +127,6 @@ protected:
       const geometry_msgs::TwistStamped& robot_velocity,
       geometry_msgs::TwistStamped& vel_cmd,
       std::string& message);
-
-private:
 
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 

@@ -85,12 +85,12 @@ class AbstractExecutionBase
   /**
    * @brief Optional implementation-specific setup function, called right before execution.
    */
-  virtual void preRun() { ROS_ERROR("PARENT pre run"); };
+  virtual void preRun() { };
 
   /**
    * @brief Optional implementation-specific cleanup function, called right after execution.
    */
-  virtual void postRun() { ROS_ERROR("PARENT post run"); };
+  virtual void postRun() { };
 
 protected:
   virtual void run() = 0;
