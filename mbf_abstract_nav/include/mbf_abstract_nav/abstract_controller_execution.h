@@ -93,9 +93,7 @@ namespace mbf_abstract_nav
         const ros::Publisher& vel_pub,
         const ros::Publisher& goal_pub,
         const TFPtr &tf_listener_ptr,
-        const MoveBaseFlexConfig &config,
-        boost::function<void()> setup_fn,
-        boost::function<void()> cleanup_fn);
+        const MoveBaseFlexConfig &config);
 
     /**
      * @brief Destructor
@@ -236,11 +234,20 @@ namespace mbf_abstract_nav
      */
     virtual void run();
 
+    /**
+     * @brief Check if its safe to drive.
+     * This method gets called at every controller cycle, stopping the robot if its not. When overridden by
+     * child class, gives a chance to the specific execution implementation to stop the robot if it detects
+     * something wrong on the underlying map.
+     * @return Always true, unless overridden by child class.
+     */
+    virtual bool safetyCheck() { return true; };
+
   private:
 
 
     /**
-     * publishes a velocity command with zero values to stop the robot.
+     * @brief Publishes a velocity command with zero values to stop the robot.
      */
     void publishZeroVelocity();
 
