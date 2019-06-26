@@ -158,7 +158,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   }
 
   mbf_abstract_core::AbstractPlanner::Ptr planner_plugin = planner_plugin_manager_.getPlugin(planner_name);
-  ROS_INFO_STREAM_NAMED("get_path", "Start action \"get_path\" using planner \"" << planner_name
+  ROS_DEBUG_STREAM_NAMED("get_path", "Start action \"get_path\" using planner \"" << planner_name
                         << "\" of type \"" << planner_plugin_manager_.getType(planner_name) << "\"");
 
 
@@ -216,7 +216,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
   }
 
   mbf_abstract_core::AbstractController::Ptr controller_plugin = controller_plugin_manager_.getPlugin(controller_name);
-  ROS_INFO_STREAM_NAMED("exe_path", "Start action \"exe_path\" using controller \"" << controller_name
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Start action \"exe_path\" using controller \"" << controller_name
                         << "\" of type \"" << controller_plugin_manager_.getType(controller_name) << "\"");
 
 
