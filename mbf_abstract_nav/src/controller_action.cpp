@@ -201,9 +201,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_DEBUG_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
+          ROS_INFO_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
           // TODO planner is stuck, but we don't have currently any way to cancel it!
-          // We will try to stop the thread, but does nothing with DWA or TR controllers
+          // We will try to stop the thread, but does nothing with DWA, TR or TEB controllers
           // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
           // as there is the controller itself reporting that it cannot find a valid command after trying
           // for more than patience seconds. But after stopping controller execution, it should ideally
