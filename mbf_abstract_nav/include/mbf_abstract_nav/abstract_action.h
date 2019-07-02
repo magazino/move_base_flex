@@ -119,9 +119,9 @@ class AbstractAction
     execution_ptr->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution thread for action \"" << name_ << "\" stopped, cleaning up execution leftovers.");
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-    ROS_DEBUG_STREAM_NAMED(name_, "Exiting run method with goal status: "
-                           << concurrency_slots_[slot].goal_handle.getGoalStatus().text
-                           << " and code: " << concurrency_slots_[slot].goal_handle.getGoalStatus().status);
+    ROS_DEBUG_STREAM_NAMED(name_, "Exiting run method with goal status "
+                           << (int)concurrency_slots_[slot].goal_handle.getGoalStatus().status
+                           << ": "<< concurrency_slots_[slot].goal_handle.getGoalStatus().text);
     threads_.remove_thread(concurrency_slots_[slot].thread_ptr);
     delete concurrency_slots_[slot].thread_ptr;
     concurrency_slots_.erase(slot);
