@@ -269,7 +269,6 @@ namespace mbf_abstract_nav
       }
     }
 
-
     start_time_ = ros::Time::now();
 
     // init plan

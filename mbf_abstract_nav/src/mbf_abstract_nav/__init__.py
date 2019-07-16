@@ -21,6 +21,10 @@ def add_mbf_abstract_nav_params(gen):
             "How long the planner will wait in seconds in an attempt to find a valid plan before giving up.", 5.0, 0, 100)
     gen.add("planner_max_retries", int_t, 0,
             "How many times we will recall the planner in an attempt to find a valid plan before giving up", -1, -1, 1000)
+    gen.add("plannerer_thread_affinity", int_t, 0,
+            "The processor on which to run the planner loop.  -1 means no processor affinity.", -1, -1, 10)
+    gen.add("planner_thread_nice", int_t, 0,
+            "The niceness of planner loop.", 0, -100, 100)
 
     gen.add("controller_frequency", double_t, 0,
             "The rate in Hz at which to run the control loop and send velocity commands to the base.", 20, 0, 100)
