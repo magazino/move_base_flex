@@ -2,8 +2,10 @@
  * (c) Copyright 2015-2016 6 River Systems, all rights reserved.
  *
  * This is proprietary software, unauthorized distribution is not permitted.
- */
-#pragma once
+*/
+#ifndef MBF_UTILITY__THREAD_AFFINITY_H_
+#define MBF_UTILITY__THREAD_AFFINITY_H_
+
 
 #include <unistd.h>
 #include <sched.h>
@@ -19,7 +21,7 @@
 	#define _GNU_SOURCE
 #endif
 
-bool setThreadAffinity(int core_id)
+static bool setThreadAffinity(int core_id)
 {
    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
    if (core_id < 0 || core_id >= num_cores)
@@ -39,7 +41,7 @@ bool setThreadAffinity(int core_id)
    return res == 0;
 }
 
-void niceThread(std::string name, int priority)
+static void niceThread(std::string name, int priority)
 {
     pid_t tid = syscall(SYS_gettid);
 
@@ -50,3 +52,5 @@ void niceThread(std::string name, int priority)
         ROS_ERROR("Could not set %s thread nice value to %d", name.c_str(), priority);
     }
 }
+
+#endif
