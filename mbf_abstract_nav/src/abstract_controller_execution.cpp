@@ -40,8 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 #include <mbf_msgs/ExePathResult.h>
-#include <mbf_utility/thread_affinity.hpp>
-
+#include <mbf_utility/thread_affinity.h>
 
 namespace mbf_abstract_nav
 {
