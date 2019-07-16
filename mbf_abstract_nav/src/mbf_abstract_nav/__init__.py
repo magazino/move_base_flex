@@ -28,6 +28,10 @@ def add_mbf_abstract_nav_params(gen):
             "How long the controller will wait in seconds without receiving a valid control before giving up.", 5.0, 0, 100)
     gen.add("controller_max_retries", int_t, 0,
             "How many times we will recall the controller in an attempt to find a valid comand before giving up", -1, -1, 1000)
+    gen.add("controller_thread_affinity", int_t, 0,
+            "The processor on which to run the control loop.  -1 means no processor affinity.", -1, -1, 10)
+    gen.add("controller_thread_nice", int_t, 0,
+            "The niceness of control loop.", 0, -100, 100)
 
     gen.add("recovery_enabled", bool_t, 0,
             "Whether or not to enable the move_base_flex recovery behaviors to attempt to clear out space.", True)
