@@ -69,6 +69,8 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const M
   abstract_config.planner_frequency = config.planner_frequency;
   abstract_config.planner_patience = config.planner_patience;
   abstract_config.planner_max_retries = config.planner_max_retries;
+  abstract_config.planner_thread_affinity = config.planner_thread_affinity;
+  abstract_config.planner_thread_nice = config.planner_thread_nice;
   return abstract_config;
 }
 

@@ -367,9 +367,13 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   abstract_config.planner_frequency = config.planner_frequency;
   abstract_config.planner_patience = config.planner_patience;
   abstract_config.planner_max_retries = config.planner_max_retries;
+  abstract_config.planner_thread_affinity = config.planner_thread_affinity;
+  abstract_config.planner_thread_nice = config.planner_thread_nice;
   abstract_config.controller_frequency = config.controller_frequency;
   abstract_config.controller_patience = config.controller_patience;
   abstract_config.controller_max_retries = config.controller_max_retries;
+  abstract_config.controller_thread_affinity = config.controller_thread_affinity;
+  abstract_config.controller_thread_nice = config.controller_thread_nice;
   abstract_config.recovery_enabled = config.recovery_enabled;
   abstract_config.recovery_patience = config.recovery_patience;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
