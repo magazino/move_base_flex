@@ -300,6 +300,11 @@ namespace mbf_abstract_nav
     //! dynamic reconfigure mutex for a thread safe communication
     boost::mutex configuration_mutex_;
 
+    //! desired processor affinity of the thread
+    int thread_affinity_;
+
+    //! desired processor niceness of the thread
+    int thread_nice_;
   };
 
 } /* namespace mbf_abstract_nav */

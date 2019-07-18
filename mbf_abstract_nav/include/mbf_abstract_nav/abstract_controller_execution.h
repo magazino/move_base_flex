@@ -333,6 +333,12 @@ namespace mbf_abstract_nav
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
 
+    //! desired processor affinity of the thread
+    int thread_affinity_;
+
+    //! desired processor niceness of the thread
+    int thread_nice_;
+
   };
 
 } /* namespace mbf_abstract_nav */

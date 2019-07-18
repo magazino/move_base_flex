@@ -40,6 +40,7 @@
 
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 #include <mbf_msgs/ExePathResult.h>
+#include <mbf_utility/thread_affinity.h>
 
 namespace mbf_abstract_nav
 {
@@ -101,6 +102,10 @@ namespace mbf_abstract_nav
     setControllerFrequency(config.controller_frequency);
 
     max_retries_ = config.controller_max_retries;
+
+    thread_affinity_ = config.controller_thread_affinity;
+   
+    thread_nice_ = config.controller_thread_nice;
   }
 
 
@@ -248,6 +253,21 @@ namespace mbf_abstract_nav
 
   void AbstractControllerExecution::run()
   {
+    // Set the affinitiy for this thread
+    niceThread("controller", thread_nice_);
+
+    if (thread_affinity_ >= 0)
+    {
+      if (setThreadAffinity(thread_affinity_))
+      {
+        ROS_INFO("Set controller thread affinity to %d", thread_affinity_);
+      }
+      else
+      {
+        ROS_WARN("Could not set controller thread affinity to %d", thread_affinity_);
+      }
+    }
+
     start_time_ = ros::Time::now();
 
     // init plan
