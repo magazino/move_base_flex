@@ -33,7 +33,7 @@ static bool setThreadAffinity(int core_id)
    CPU_ZERO(&cpuset);
    CPU_SET(core_id, &cpuset);
 
-   ROS_INFO_STREAM("Setting core: " << core_id << " for thread " <<  syscall(SYS_gettid));
+   ROS_DEBUG_STREAM("Setting core: " << core_id << " for thread " <<  syscall(SYS_gettid));
 
    pthread_t current_thread = pthread_self();
 
@@ -45,7 +45,7 @@ static void niceThread(std::string name, int priority)
 {
     pid_t tid = syscall(SYS_gettid);
 
-    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << tid);
+    ROS_DEBUG_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << tid);
 
     if (::setpriority(PRIO_PROCESS, tid, priority))
     {
