@@ -363,7 +363,7 @@ float ControllerAction::calculateGlobalPathLength(
   float plan_distance = 0;
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
-  for(int i = 0; i < plan.size() - 1; i++){
+  for(int i = 0; i < plan.size() - 2; i++){
     plan_distance += static_cast<float>(mbf_utility::distance(plan[i], plan[i+1]));
   }
   return plan_distance;
