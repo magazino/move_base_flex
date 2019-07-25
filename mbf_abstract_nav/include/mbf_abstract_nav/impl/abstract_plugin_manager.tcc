@@ -93,6 +93,7 @@ bool AbstractPluginManager<PluginType>::loadPlugins()
 
         ROS_INFO_STREAM("The plugin with the type \"" << type << "\" has been loaded successfully under the name \""
                                                        << name << "\".");
+        private_nh.setParam(name + "/type", type);
       }
       else
       {
