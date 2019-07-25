@@ -88,6 +88,9 @@ protected:
         uint32_t outcome, const std::string &message,
         mbf_msgs::ExePathResult &result);
 
+  float calculateGlobalPathLengthLeft(
+        GoalHandle& goal_handle); 
+
   boost::mutex goal_mtx_; ///< lock goal handle for updating it while running
   geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose
   geometry_msgs::PoseStamped goal_pose_;  ///< Current goal pose

@@ -339,7 +339,7 @@ void ControllerAction::publishExePathFeedback(
     feedback.last_cmd_vel.header.stamp = ros::Time::now();
 
   feedback.current_pose = robot_pose_;
-  feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+  feedback.dist_to_goal = calculateGlobalPathLengthLeft(goal_handle);
   feedback.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
   goal_handle.publishFeedback(feedback);
 }
@@ -353,6 +353,31 @@ void ControllerAction::fillExePathResult(
   result.final_pose = robot_pose_;
   result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
   result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
+}
+
+float ControllerAction::calculateGlobalPathLengthLeft(
+  GoalHandle& goal_handle)
+{
+
+  const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
+  const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
+
+  unsigned int clostest_point_index = 0;
+  float closest_distance_to_robot = std::numeric_limits<float>::max(); //max distance
+  
+  //find closest point
+  for(unsigned int i = 0; i < plan.size() - 1; i++){
+    float distance_to_robot = static_cast<float>(mbf_utility::distance(plan[i], robot_pose_));
+    if(distance_to_robot < closest_distance_to_robot){
+      closest_distance_to_robot = distance_to_robot;
+      clostest_point_index = i;
+    }
+  }
+  float plan_distance = 0;
+  for(unsigned int i = clostest_point_index; i < plan.size() - 2; i++){
+    plan_distance += static_cast<float>(mbf_utility::distance(plan[i], plan[i+1]));
+  }
+  return plan_distance;
 }
 
 }
