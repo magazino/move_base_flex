@@ -367,7 +367,7 @@ float ControllerAction::calculateGlobalPathLengthLeft(
   
   //find closest point
   
-  for(int i = 0; i < plan.size() - 1; i++){
+  for(int i = 0; i < static_cast<int>(plan.size()) - 1; i++){
     float distance_to_robot = static_cast<float>(mbf_utility::distance(plan[i], robot_pose_));
     if(distance_to_robot < closest_distance_to_robot){
       closest_distance_to_robot = distance_to_robot;
@@ -375,7 +375,7 @@ float ControllerAction::calculateGlobalPathLengthLeft(
     }
   }
   float plan_distance = 0;
-  for(int i = closest_point_index; i <  static_cast<int>(plan.size()) - 2; i++){
+  for(int i = closest_point_index; i < static_cast<int>(plan.size()) - 2; i++){
     plan_distance += static_cast<float>(mbf_utility::distance(plan[i], plan[i+1]));
   }
   return 0;
