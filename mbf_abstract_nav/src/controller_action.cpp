@@ -362,22 +362,23 @@ float ControllerAction::calculateGlobalPathLengthLeft(
   const mbf_msgs::ExePathGoal &goal = *(goal_handle.getGoal().get());
   const std::vector<geometry_msgs::PoseStamped> &plan = goal.path.poses;
 
-  unsigned int clostest_point_index = 0;
+  int closest_point_index = 0;
   float closest_distance_to_robot = std::numeric_limits<float>::max(); //max distance
   
   //find closest point
-  for(unsigned int i = 0; i < plan.size() - 1; i++){
+  
+  for(int i = 0; i < plan.size() - 1; i++){
     float distance_to_robot = static_cast<float>(mbf_utility::distance(plan[i], robot_pose_));
     if(distance_to_robot < closest_distance_to_robot){
       closest_distance_to_robot = distance_to_robot;
-      clostest_point_index = i;
+      closest_point_index = i;
     }
   }
   float plan_distance = 0;
-  for(unsigned int i = clostest_point_index; i < plan.size() - 2; i++){
+  for(int i = closest_point_index; i <  static_cast<int>(plan.size()) - 2; i++){
     plan_distance += static_cast<float>(mbf_utility::distance(plan[i], plan[i+1]));
   }
-  return plan_distance;
+  return 0;
 }
 
 }
