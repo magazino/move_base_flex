@@ -478,6 +478,9 @@ void MoveBaseAction::actionRecoveryDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::RecoveryResultConstPtr &result_ptr)
 {
+  // give the robot some time to stop oscillating after executing the recovery behavior
+  last_oscillation_reset_ = ros::Time::now();
+
   action_state_ =  FAILED;  // unless recovery succeeds or gets canceled...
 
   const mbf_msgs::RecoveryResult& result = *(result_ptr.get());
