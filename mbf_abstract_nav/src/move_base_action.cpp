@@ -218,7 +218,7 @@ void MoveBaseAction::actionExePathFeedback(
     else if (last_oscillation_reset_ + oscillation_timeout_ < ros::Time::now())
     {
       std::stringstream oscillation_msgs;
-      oscillation_msgs << "Robot is oscillating for " << ((ros::Time::now() - last_oscillation_reset_).toSec()) << "s!";
+      oscillation_msgs << "Robot is oscillating for " << (ros::Time::now() - last_oscillation_reset_).toSec() << "s!";
       ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
       action_client_exe_path_.cancelGoal();
 
@@ -230,10 +230,7 @@ void MoveBaseAction::actionExePathFeedback(
       {
         mbf_msgs::MoveBaseResult move_base_result;
         move_base_result.outcome = mbf_msgs::MoveBaseResult::OSCILLATION;
-        if(recovery_enabled_)
-          move_base_result.message = oscillation_msgs.str() + " No recovery behaviors for the move_base action are defined!";
-        else
-          move_base_result.message = oscillation_msgs.str() + " Recovery is disabled for the move_base action! use the param \"enable_recovery\"";
+        move_base_result.message = oscillation_msgs.str();
         move_base_result.final_pose = robot_pose_;
         move_base_result.angle_to_goal = move_base_feedback_.angle_to_goal;
         move_base_result.dist_to_goal = move_base_feedback_.dist_to_goal;
