@@ -378,7 +378,7 @@ float ControllerAction::calculateGlobalPathLengthLeft(
   for(int i = closest_point_index; i < static_cast<int>(plan.size()) - 2; i++){
     plan_distance += static_cast<float>(mbf_utility::distance(plan[i], plan[i+1]));
   }
-  return 0;
+  return plan_distance;
 }
 
 }
