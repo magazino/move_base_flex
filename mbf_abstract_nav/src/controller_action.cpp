@@ -365,7 +365,7 @@ float ControllerAction::calculateGlobalPathLengthLeft(
   if (planSize == 0) {
     return 0;
   }
-  else if (planSize == 1)) {
+  else if (planSize == 1) {
     return static_cast<float>(mbf_utility::distance(plan[0], robot_pose_));
   }
   else {
