@@ -277,9 +277,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:
-        ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived to goal");
+        ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived at goal");
         controller_active = false;
-        fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
+        fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived at goal!", result);
         goal_handle.setSucceeded(result, result.message);
         break;
 
