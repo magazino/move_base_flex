@@ -52,6 +52,7 @@ CostmapWrapper::CostmapWrapper(const std::string &name, const TFPtr &tf_listener
   // even if shutdown_costmaps is a dynamically reconfigurable parameter, we
   // need it here to decide whether to start or not the costmap on starting up
   private_nh_.param("shutdown_costmaps", shutdown_costmap_, false);
+  private_nh_.param("clear_on_shutdown", clear_on_shutdown_, false);
 
   if (shutdown_costmap_)
     // initialize costmap stopped if shutdown_costmaps parameter is true
@@ -130,6 +131,8 @@ void CostmapWrapper::deactivate(const ros::TimerEvent &event)
   ROS_ASSERT_MSG(!costmap_users_, "Deactivating costmap with %d active users!", costmap_users_);
   stop();
   ROS_DEBUG_STREAM("" << name_ << " deactivated");
+  if(clear_on_shutdown_)
+    clear();
 }
 
 } /* namespace mbf_costmap_nav */
