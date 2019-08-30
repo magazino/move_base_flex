@@ -59,7 +59,8 @@ uint32_t WrapperRecoveryBehavior::runBehavior(std::string& message)
 
 bool WrapperRecoveryBehavior::cancel()
 {
-  return false;
+  nav_core_plugin_->cancel();
+  return true;
 }
 
 WrapperRecoveryBehavior::WrapperRecoveryBehavior(boost::shared_ptr<nav_core::RecoveryBehavior> plugin)
