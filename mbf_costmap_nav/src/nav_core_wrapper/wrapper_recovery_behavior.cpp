@@ -43,6 +43,7 @@
 
 namespace mbf_nav_core_wrapper
 {
+
 void WrapperRecoveryBehavior::initialize(std::string name, TF *tf,
                                          costmap_2d::Costmap2DROS *global_costmap,
                                          costmap_2d::Costmap2DROS *local_costmap)
@@ -59,7 +60,7 @@ uint32_t WrapperRecoveryBehavior::runBehavior(std::string& message)
 
 bool WrapperRecoveryBehavior::cancel()
 {
-  return false;
+  return nav_core_plugin_->cancel();
 }
 
 WrapperRecoveryBehavior::WrapperRecoveryBehavior(boost::shared_ptr<nav_core::RecoveryBehavior> plugin)
