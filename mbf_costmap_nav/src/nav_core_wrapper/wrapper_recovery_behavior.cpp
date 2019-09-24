@@ -43,6 +43,7 @@
 
 namespace mbf_nav_core_wrapper
 {
+
 void WrapperRecoveryBehavior::initialize(std::string name, TF *tf,
                                          costmap_2d::Costmap2DROS *global_costmap,
                                          costmap_2d::Costmap2DROS *local_costmap)
