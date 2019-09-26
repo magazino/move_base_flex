@@ -250,12 +250,6 @@ namespace mbf_abstract_nav
 
   private:
 
-
-    /**
-     * @brief Publishes a velocity command with zero values to stop the robot.
-     */
-    void publishZeroVelocity();
-
     /**
      * @brief Checks whether the goal has been reached in the range of tolerance or not
      * @return true if the goal has been reached, false otherwise
