@@ -43,11 +43,6 @@
 
 #include <mbf_abstract_nav/abstract_navigation_server.h>
 
-#include "costmap_planner_execution.h"
-#include "costmap_controller_execution.h"
-#include "costmap_recovery_execution.h"
-
-#include <mbf_costmap_nav/MoveBaseFlexConfig.h>
 #include <std_srvs/Empty.h>
 #include <mbf_msgs/CheckPath.h>
 #include <mbf_msgs/CheckPose.h>
@@ -62,6 +57,12 @@
 #include <base_local_planner/ExternalSpeedLimiterConfig.h>
 #include <base_local_planner/PathSpeedLimiterConfig.h>
 #include <base_local_planner/ShadowSpeedLimiterConfig.h>
+#include "mbf_costmap_nav/MoveBaseFlexConfig.h"
+#include "mbf_costmap_nav/costmap_planner_execution.h"
+#include "mbf_costmap_nav/costmap_controller_execution.h"
+#include "mbf_costmap_nav/costmap_recovery_execution.h"
+#include "mbf_costmap_nav/costmap_wrapper.h"
+
 
 namespace mbf_costmap_nav
 {
@@ -85,8 +86,6 @@ class CostmapNavigationServer : public mbf_abstract_nav::AbstractNavigationServe
 {
 public:
 
-  typedef boost::shared_ptr<costmap_2d::Costmap2DROS> CostmapPtr;
-
   typedef boost::shared_ptr<CostmapNavigationServer> Ptr;
 
   /**
@@ -104,19 +103,34 @@ public:
 
 private:
 
-  //! shared pointer to a new @ref planner_execution "PlannerExecution"
+  /**
+   * @brief Create a new planner execution.
+   * @param plugin_name Name of the planner to use.
+   * @param plugin_ptr Shared pointer to the plugin to use.
+   * @return Shared pointer to a new @ref planner_execution "PlannerExecution".
+   */
   virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
-      const std::string name,
+      const std::string &plugin_name,
       const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);
 
-  //! shared pointer to a new @ref controller_execution "ControllerExecution"
+  /**
+   * @brief Create a new controller execution.
+   * @param plugin_name Name of the controller to use.
+   * @param plugin_ptr Shared pointer to the plugin to use.
+   * @return Shared pointer to a new @ref controller_execution "ControllerExecution".
+   */
   virtual mbf_abstract_nav::AbstractControllerExecution::Ptr newControllerExecution(
-      const std::string name,
+      const std::string &plugin_name,
       const mbf_abstract_core::AbstractController::Ptr plugin_ptr);
 
-  //! shared pointer to a new @ref recovery_execution "RecoveryExecution"
+  /**
+   * @brief Create a new recovery behavior execution.
+   * @param plugin_name Name of the recovery behavior to run.
+   * @param plugin_ptr Shared pointer to the plugin to use
+   * @return Shared pointer to a new @ref recovery_execution "RecoveryExecution".
+   */
   virtual mbf_abstract_nav::AbstractRecoveryExecution::Ptr newRecoveryExecution(
-      const std::string name,
+      const std::string &plugin_name,
       const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr);
 
   /**
@@ -173,22 +187,6 @@ private:
   virtual bool initializeRecoveryPlugin(
       const std::string& name,
       const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr);
-
-
-  /**
-   * @brief Check whether the costmaps should be activated.
-   */
-  void checkActivateCostmaps();
-
-  /**
-   * @brief Check whether the costmaps should and could be deactivated
-   */
-  void checkDeactivateCostmaps();
-
-  /**
-   * @brief Timer-triggered deactivation of both costmaps.
-   */
-  void deactivateCostmaps(const ros::TimerEvent &event);
 
   /**
    * @brief Callback method for the check_point_cost service
@@ -258,10 +256,10 @@ private:
   boost::shared_ptr<dynamic_reconfigure::Server<base_local_planner::ShadowSpeedLimiterConfig>> speedLimiterShadowConfigServer_;
 
   //! Shared pointer to the common local costmap
-  CostmapPtr local_costmap_ptr_;
+  const CostmapWrapper::Ptr local_costmap_ptr_;
 
   //! Shared pointer to the common global costmap
-  CostmapPtr global_costmap_ptr_;
+  const CostmapWrapper::Ptr global_costmap_ptr_;
 
   //! Service Server for the check_point_cost service
   ros::ServiceServer check_point_cost_srv_;
@@ -274,15 +272,6 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
-
-  //! Stop updating costmaps when not planning or controlling, if true
-  bool shutdown_costmaps_;
-  uint16_t costmaps_users_;               //!< keep track of plugins using costmaps
-  ros::Timer shutdown_costmaps_timer_;    //!< costmpas delayed shutdown timer
-  ros::Duration shutdown_costmaps_delay_; //!< costmpas delayed shutdown delay
-
-  //! Start/stop costmaps mutex; concurrent calls to start can lead to segfault
-  boost::mutex check_costmaps_mutex_;
 };
 
 } /* namespace mbf_costmap_nav */

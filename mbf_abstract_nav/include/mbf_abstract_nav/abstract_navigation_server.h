@@ -124,11 +124,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      * @brief Constructor, reads all parameters and initializes all action servers and creates the plugin instances.
      *        Parameters are the concrete implementations of the abstract classes.
      * @param tf_listener_ptr shared pointer to the common TransformListener buffering transformations
-     * @param planning_ptr shared pointer to an object of the concrete derived implementation of the AbstractPlannerExecution
-     * @param moving_ptr shared pointer to an object of the concrete derived implementation of the AbstractControllerExecution
-     * @param recovery_ptr shared pointer to an object of the concrete derived implementation of the AbstractRecoveryExecution
      */
     AbstractNavigationServer(const TFPtr &tf_listener_ptr);
+
     /**
      * @brief Destructor
      */
@@ -136,19 +134,34 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     virtual void stop();
 
-    //! shared pointer to a new @ref planner_execution "PlannerExecution"
+    /**
+     * @brief Create a new abstract planner execution.
+     * @param plugin_name Name of the planner to use.
+     * @param plugin_ptr Shared pointer to the plugin to use.
+     * @return Shared pointer to a new @ref planner_execution "PlannerExecution".
+     */
     virtual mbf_abstract_nav::AbstractPlannerExecution::Ptr newPlannerExecution(
-        const std::string plugin_name,
+        const std::string &plugin_name,
         const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr);
 
-    //! shared pointer to a new @ref controller_execution "ControllerExecution"
+    /**
+     * @brief Create a new abstract controller execution.
+     * @param plugin_name Name of the controller to use.
+     * @param plugin_ptr Shared pointer to the plugin to use.
+     * @return Shared pointer to a new @ref controller_execution "ControllerExecution".
+     */
     virtual mbf_abstract_nav::AbstractControllerExecution::Ptr newControllerExecution(
-        const std::string plugin_name,
+        const std::string &plugin_name,
         const mbf_abstract_core::AbstractController::Ptr plugin_ptr);
 
-    //! shared pointer to a new @ref recovery_execution "RecoveryExecution"
+    /**
+     * @brief Create a new abstract recovery behavior execution.
+     * @param plugin_name Name of the recovery behavior to run.
+     * @param plugin_ptr Shared pointer to the plugin to use
+     * @return Shared pointer to a new @ref recovery_execution "RecoveryExecution".
+     */
     virtual mbf_abstract_nav::AbstractRecoveryExecution::Ptr newRecoveryExecution(
-        const std::string plugin_name,
+        const std::string &plugin_name,
         const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr);
 
     /**

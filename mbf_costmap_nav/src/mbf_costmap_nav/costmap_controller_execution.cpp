@@ -43,17 +43,15 @@ namespace mbf_costmap_nav
 {
 
 CostmapControllerExecution::CostmapControllerExecution(
-    const std::string name,
+    const std::string &controller_name,
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
-    const ros::Publisher& vel_pub,
-    const ros::Publisher& goal_pub,
+    const ros::Publisher &vel_pub,
+    const ros::Publisher &goal_pub,
     const TFPtr &tf_listener_ptr,
-    CostmapPtr &costmap_ptr,
-    const MoveBaseFlexConfig &config,
-    boost::function<void()> setup_fn,
-    boost::function<void()> cleanup_fn)
-      : AbstractControllerExecution(name, controller_ptr, vel_pub, goal_pub, tf_listener_ptr,
-          toAbstract(config), setup_fn, cleanup_fn),
+    const CostmapWrapper::Ptr &costmap_ptr,
+    const MoveBaseFlexConfig &config)
+      : AbstractControllerExecution(controller_name, controller_ptr, vel_pub, goal_pub,
+                                    tf_listener_ptr, toAbstract(config)),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
@@ -91,6 +89,17 @@ uint32_t CostmapControllerExecution::computeVelocityCmd(
     return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
   }
   return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
+}
+
+bool CostmapControllerExecution::safetyCheck()
+{
+  // Check that the observation buffers for the costmap are current, we don't want to drive blind
+  if (!costmap_ptr_->isCurrent())
+  {
+    ROS_WARN("Sensor data is out of date, we're not going to allow commanding of the base for safety");
+    return false;
+  }
+  return true;
 }
 
 } /* namespace mbf_costmap_nav */

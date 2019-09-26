@@ -145,8 +145,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
       case AbstractPlannerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_INFO_STREAM_NAMED(name_, "Global planner patience has been exceeded! "
-              << "Cancel planning...");
+          ROS_INFO_STREAM_NAMED(name_, "Global planner patience has been exceeded! Cancel planning...");
           if (!execution.cancel())
           {
             ROS_WARN_STREAM_THROTTLE_NAMED(2.0, name_, "Cancel planning failed or is not supported; "
