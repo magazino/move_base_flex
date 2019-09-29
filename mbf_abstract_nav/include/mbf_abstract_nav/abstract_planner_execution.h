@@ -281,12 +281,6 @@ namespace mbf_abstract_nav
     //! main cycle variable of the execution loop
     bool planning_;
 
-    //! robot frame used for computing the current robot pose
-    std::string robot_frame_;
-
-    //! the global frame in which the planner needs to plan
-    std::string global_frame_;
-
     //! shared pointer to a common TransformListener
     const TFPtr tf_listener_ptr_;
 

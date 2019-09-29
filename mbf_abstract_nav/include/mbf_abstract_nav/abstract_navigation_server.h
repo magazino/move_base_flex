@@ -124,7 +124,8 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      *        Parameters are the concrete implementations of the abstract classes.
      * @param tf_listener_ptr shared pointer to the common TransformListener buffering transformations
      */
-    AbstractNavigationServer(const TFPtr &tf_listener_ptr);
+    AbstractNavigationServer(const TFPtr &tf_listener_ptr,
+        const std::string &global_frame = "map", const std::string &robot_frame = "base_link");
 
     /**
      * @brief Destructor
@@ -326,12 +327,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     //! true, if the dynamic reconfigure has been setup.
     bool setup_reconfigure_;
-
-    //! the robot frame, to get the current robot pose in the global_frame_
-    std::string robot_frame_;
-
-    //! the global frame, in which the robot is moving
-    std::string global_frame_;
 
     //! timeout after tf returns without a result
     ros::Duration tf_timeout_;

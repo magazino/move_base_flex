@@ -53,10 +53,6 @@ AbstractPlannerExecution::AbstractPlannerExecution(
 {
   ros::NodeHandle private_nh("~");
 
-  // non-dynamically reconfigurable parameters
-  private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
-  private_nh.param("map_frame", global_frame_, std::string("map"));
-
   // dynamically reconfigurable parameters
   reconfigure(config);
 }

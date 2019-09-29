@@ -314,12 +314,6 @@ namespace mbf_abstract_nav
     //! the duration which corresponds with the controller frequency.
     boost::chrono::microseconds calling_duration_;
 
-    //! the frame of the robot, which will be used to determine its position.
-    std::string robot_frame_;
-
-    //! the global frame the robot is controlling in.
-    std::string global_frame_;
-
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;
 

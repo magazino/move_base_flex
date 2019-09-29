@@ -45,7 +45,8 @@
 namespace mbf_abstract_nav
 {
 
-AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
+AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr,
+  const std::string &global_frame, const std::string &robot_frame)
     : tf_listener_ptr_(tf_listener_ptr), private_nh_("~"),
       planner_plugin_manager_("planners",
           boost::bind(&AbstractNavigationServer::loadPlannerPlugin, this, _1),
@@ -57,9 +58,7 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
           boost::bind(&AbstractNavigationServer::loadRecoveryPlugin, this, _1),
           boost::bind(&AbstractNavigationServer::initializeRecoveryPlugin, this, _1, _2)),
       tf_timeout_(private_nh_.param<double>("tf_timeout", 3.0)),
-      global_frame_(private_nh_.param<std::string>("global_frame", "map")),
-      robot_frame_(private_nh_.param<std::string>("robot_frame", "base_link")),
-      robot_info_(*tf_listener_ptr, global_frame_, robot_frame_, tf_timeout_),
+      robot_info_(*tf_listener_ptr, global_frame, robot_frame, tf_timeout_),
       controller_action_(name_action_exe_path, robot_info_),
       planner_action_(name_action_get_path, robot_info_),
       recovery_action_(name_action_recovery, robot_info_),
