@@ -213,7 +213,25 @@ namespace mbf_abstract_nav
   bool AbstractControllerExecution::isPatienceExceeded()
   {
     boost::lock_guard<boost::mutex> guard(lct_mtx_);
-    return !patience_.isZero() && (ros::Time::now() - last_call_time_ > patience_);
+    if(!patience_.isZero() && ros::Time::now() - start_time_ > patience_) // not zero -> activated, start_time handles init case
+    {
+      if(ros::Time::now() - last_call_time_ > patience_)
+      {
+        ROS_WARN_STREAM_THROTTLE(3, "The controller plugin \"" << name_ << "\" needs more time to compute in one run"
+            " then the patience time! Trying to cancel it and wait for it to finish the run.");
+        if(cancel())
+        {
+          ROS_INFO_STREAM("Successfully canceled the plugin \"" << name_ << "\"!");
+        }
+        return true;
+      }
+      if(ros::Time::now() - last_valid_cmd_time_ > patience_)
+      {
+        ROS_DEBUG_STREAM("Plugin does not return a success state (outcome < 10) for more then the patience time in multiple runs!");
+        return true;
+      }
+    }
+    return false;
   }
 
 
@@ -257,7 +275,7 @@ namespace mbf_abstract_nav
       ROS_ERROR("robot navigation moving has no plan!");
     }
 
-    ros::Time last_valid_cmd_time = ros::Time();
+    last_valid_cmd_time_ = ros::Time();
     int retries = 0;
     int seq = 0;
 
@@ -339,7 +357,7 @@ namespace mbf_abstract_nav
           {
             setState(GOT_LOCAL_CMD);
             vel_pub_.publish(cmd_vel_stamped.twist);
-            last_valid_cmd_time = ros::Time::now();
+            last_valid_cmd_time_ = ros::Time::now();
             retries = 0;
           }
           else
@@ -350,8 +368,7 @@ namespace mbf_abstract_nav
               setState(MAX_RETRIES);
               moving_ = false;
             }
-            else if (!patience_.isZero() && ros::Time::now() - last_valid_cmd_time > patience_
-                     && ros::Time::now() - start_time_ > patience_)
+            else if (isPatienceExceeded())
             {
               // patience limit enabled and running controller for more than patience without valid commands
               setState(PAT_EXCEEDED);
