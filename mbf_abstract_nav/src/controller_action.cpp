@@ -182,8 +182,11 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::STOPPED:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been stopped!");
+        ROS_WARN_STREAM_NAMED(name_, "The controller has been stopped rigorously!");
         controller_active = false;
+        result.outcome = mbf_msgs::ExePathResult::STOPPED;
+        result.message = "Controller has been stopped!";
+        goal_handle.setAborted(result, result.message);
         break;
 
       case AbstractControllerExecution::CANCELED:
@@ -201,14 +204,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_INFO_STREAM_NAMED(name_, "The controller patience has been exceeded! Stopping controller...");
-          // TODO planner is stuck, but we don't have currently any way to cancel it!
-          // We will try to stop the thread, but does nothing with DWA, TR or TEB controllers
-          // Note that this is not the same situation as in case AbstractControllerExecution::PAT_EXCEEDED,
-          // as there is the controller itself reporting that it cannot find a valid command after trying
-          // for more than patience seconds. But after stopping controller execution, it should ideally
-          // report PAT_EXCEEDED as his state on next iteration.
-          execution.stop();
+          ROS_INFO_STREAM_THROTTLE_NAMED(3, name_, "The controller patience has been exceeded! Wait for it to finish the current run.");
         }
         break;
 
@@ -266,7 +262,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
           {
             ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");
-            execution.stop();
+
+            execution.cancel();
             controller_active = false;
             fillExePathResult(mbf_msgs::ExePathResult::OSCILLATION, "Oscillation detected!", result);
             goal_handle.setAborted(result, result.message);

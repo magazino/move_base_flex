@@ -60,19 +60,21 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
     state_recovery_input = execution.getState();
     switch (state_recovery_input)
     {
-      case AbstractRecoveryExecution::INITIALIZED:execution.start();
+      case AbstractRecoveryExecution::INITIALIZED:
+        ROS_DEBUG_STREAM_NAMED(name_, "Recovery behavior \"" << goal.behavior << "\" initialized.");
+        execution.start();
         break;
+
       case AbstractRecoveryExecution::STOPPED:
-        // Recovery behavior doesn't support or didn't answered to cancel and has been ruthlessly stopped
-        ROS_WARN_STREAM("Recovering \"" << goal.behavior << "\" exceeded the patience time and has been stopped!");
-        recovery_active = false; // stopping the action
-        result.outcome = mbf_msgs::RecoveryResult::CANCELED;
-        result.message = "Recovery \"" + goal.behavior + "\" exceeded the patience time";
-        goal_handle.setSucceeded(result, result.message);
+        ROS_DEBUG_STREAM_NAMED(name_, "Recovery behavior stopped rigorously");
+        result.outcome = mbf_msgs::RecoveryResult::STOPPED;
+        result.message = "Recovery has been stopped!";
+        goal_handle.setAborted(result, result.message);
+        recovery_active = false;
         break;
 
       case AbstractRecoveryExecution::STARTED:
-        ROS_DEBUG_STREAM_NAMED(name_, "Recovering \"" << goal.behavior << "\" was started");
+        ROS_DEBUG_STREAM_NAMED(name_, "Recovery behavior \"" << goal.behavior << "\" was started");
         break;
 
       case AbstractRecoveryExecution::RECOVERING:
@@ -82,9 +84,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
           ROS_INFO_STREAM("Recovery behavior \"" << goal.behavior << "\" patience exceeded! Cancel recovering...");
           if (!execution.cancel())
           {
-            ROS_WARN_STREAM("Cancel recovering \"" << goal.behavior << "\" failed or not supported; interrupt it!");
-            execution.stop();
-            //TODO goal_handle.setAborted
+            ROS_WARN_STREAM("Cancel recovering \"" << goal.behavior << "\" failed or not supported; maybe wait until it is finished!");
           }
         }
 
@@ -95,7 +95,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
         // Recovery behavior supports cancel and it worked
         recovery_active = false; // stopping the action
         result.outcome = mbf_msgs::RecoveryResult::CANCELED;
-        result.message = "Recovering \"" + goal.behavior + "\" preempted!";
+        result.message = "Recovering \"" + goal.behavior + "\" canceled!";
         goal_handle.setCanceled(result, result.message);
         ROS_DEBUG_STREAM_NAMED(name_, result.message);
         break;
