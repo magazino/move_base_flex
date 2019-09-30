@@ -72,7 +72,7 @@ namespace mbf_abstract_nav
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     // copy plan and costs to output
     // if the planner plugin do not compute costs compute costs by discrete path length
-    if(cost_ == 0 && !plan_.empty())
+    if(cost_ < 1e-7 && !plan_.empty())
     {
       ROS_DEBUG_STREAM("Compute costs by discrete path length!");
       double cost = 0;
@@ -216,6 +216,7 @@ namespace mbf_abstract_nav
 
   void AbstractPlannerExecution::run()
   {
+    setState(STARTED);
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
     int retries = 0;
     geometry_msgs::PoseStamped current_start = start_;
@@ -269,7 +270,11 @@ namespace mbf_abstract_nav
         setState(PLANNING);
         if (make_plan)
         {
+          ros::Time m1 = ros::Time::now();
           outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
+          ros::Time m2 = ros::Time::now();
+          ROS_INFO_STREAM("planning execution time for " << name_ << ": " <<  (m2 - m1).toSec());
+
           success = outcome_ < 10;
 
           boost::lock_guard<boost::mutex> guard(configuration_mutex_);
@@ -352,6 +357,7 @@ namespace mbf_abstract_nav
     {
       ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
       setState(INTERNAL_ERROR);
+      condition_.notify_all();
     }
   }
 

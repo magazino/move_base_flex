@@ -47,16 +47,14 @@ namespace mbf_abstract_nav{
 
   bool AbstractExecutionBase::start()
   {
-    //setState(STARTED); // TODO
     thread_ = boost::thread(&AbstractExecutionBase::run, this);
     return true;
   }
 
   void AbstractExecutionBase::stop()
   {
-    ROS_WARN_STREAM("Trying to stop the planning rigorously by interrupting the thread!");
+    ROS_WARN_STREAM("Try to stop the move base flex plugin \"" << name_ << "\" rigorously by interrupting the thread!");
     thread_.interrupt();
-    //setState(STOPPED); // TODO
   }
 
   void AbstractExecutionBase::join(){
