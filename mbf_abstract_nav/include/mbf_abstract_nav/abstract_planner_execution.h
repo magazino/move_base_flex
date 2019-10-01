@@ -86,9 +86,7 @@ namespace mbf_abstract_nav
      */
     AbstractPlannerExecution(const std::string name,
                              const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
-                             const MoveBaseFlexConfig &config,
-                             boost::function<void()> setup_fn,
-                             boost::function<void()> cleanup_fn);
+                             const MoveBaseFlexConfig &config);
 
     /**
      * @brief Destructor

@@ -76,6 +76,7 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_planner_execution.cpp
   src/mbf_costmap_nav/costmap_controller_execution.cpp
   src/mbf_costmap_nav/costmap_recovery_execution.cpp
+  src/mbf_costmap_nav/costmap_wrapper.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})
