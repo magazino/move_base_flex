@@ -108,6 +108,7 @@ private:
   ros::NodeHandle private_nh_;
 
   bool shutdown_costmap_;                //!< don't update costmap when not using it
+  bool clear_on_shutdown_;               //!< clear the costmap, when shutting down
   int16_t costmap_users_;                //!< keep track of plugins using costmap
   ros::Timer shutdown_costmap_timer_;    //!< costmap delayed shutdown timer
   ros::Duration shutdown_costmap_delay_; //!< costmap delayed shutdown delay

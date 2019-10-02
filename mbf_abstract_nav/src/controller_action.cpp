@@ -77,6 +77,8 @@ void ControllerAction::start(
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
+      // Update also goal pose, so the feedback remains consistent
+      goal_pose_ = goal_handle.getGoal()->path.poses.back();
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
       concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
@@ -274,9 +276,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::ARRIVED_GOAL:
-        ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived to goal");
+        ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived at goal");
         controller_active = false;
-        fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived to goal!", result);
+        fillExePathResult(mbf_msgs::ExePathResult::SUCCESS, "Controller succeeded; arrived at goal!", result);
         goal_handle.setSucceeded(result, result.message);
         break;
 
