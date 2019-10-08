@@ -71,6 +71,7 @@ namespace mbf_abstract_nav
   double AbstractPlannerExecution::getCost()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
+    ROS_INFO_STREAM("plan_mtx_ locked using lock_guard in getCost function.");
     // copy plan and costs to output
     // if the planner plugin do not compute costs compute costs by discrete path length
     if(cost_ == 0 && !plan_.empty())
@@ -92,7 +93,7 @@ namespace mbf_abstract_nav
   void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
   {
     boost::lock_guard<boost::mutex> guard(configuration_mutex_);
-
+    ROS_INFO_STREAM("configuration_mutex_ locked using lock_guard in reconfigure function.");
     max_retries_ = config.planner_max_retries;
     frequency_ = config.planner_frequency;
 
@@ -109,12 +110,14 @@ namespace mbf_abstract_nav
   typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState()
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
+    ROS_INFO_STREAM("state_mtx_ locked using lock_guard in getState function.");
     return state_;
   }
 
   void AbstractPlannerExecution::setState(PlanningState state)
   {
     boost::lock_guard<boost::mutex> guard(state_mtx_);
+    ROS_INFO_STREAM("state_mtx_ locked using lock_guard in setState function.");
     state_ = state;
   }
 
@@ -122,6 +125,7 @@ namespace mbf_abstract_nav
   ros::Time AbstractPlannerExecution::getLastValidPlanTime()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
+    ROS_INFO_STREAM("plan_mtx_ locked using lock_guard in getLastValidPlanTime function.");
     return last_valid_plan_time_;
   }
 
@@ -135,6 +139,7 @@ namespace mbf_abstract_nav
   std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan()
   {
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
+    ROS_INFO_STREAM("plan_mtx_ locked using lock_guard in getPlan function.");
     // copy plan and costs to output
     return plan_;
   }
@@ -143,6 +148,7 @@ namespace mbf_abstract_nav
   void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal, double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+    ROS_INFO_STREAM("goal_start_mtx_ locked using lock_guard in while setNewGoal function.");
     goal_ = goal;
     tolerance_ = tolerance;
     has_new_goal_ = true;
@@ -152,6 +158,7 @@ namespace mbf_abstract_nav
   void AbstractPlannerExecution::setNewStart(const geometry_msgs::PoseStamped &start)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+    ROS_INFO_STREAM("goal_start_mtx_ locked using lock_guard in while setNewStart function.");
     start_ = start;
     has_new_start_ = true;
   }
@@ -162,6 +169,7 @@ namespace mbf_abstract_nav
                                                     double tolerance)
   {
     boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+    ROS_INFO_STREAM("goal_start_mtx_ locked using lock_guard in while setNewStartAndGoal function.");
     start_ = start;
     goal_ = goal;
     tolerance_ = tolerance;
@@ -179,6 +187,7 @@ namespace mbf_abstract_nav
       return false;
     }
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
+    ROS_INFO_STREAM("planning_mtx_ locked using lock_guard in start function.");
     planning_ = true;
     start_ = start;
     goal_ = goal;
@@ -236,6 +245,7 @@ namespace mbf_abstract_nav
       }
     }
     boost::lock_guard<boost::mutex> guard(planning_mtx_);
+    ROS_INFO_STREAM("planning_mtx_ locked using lock_guard in run function.");
     int retries = 0;
     geometry_msgs::PoseStamped current_start = start_;
     geometry_msgs::PoseStamped current_goal = goal_;
@@ -260,6 +270,7 @@ namespace mbf_abstract_nav
 
         // lock goal start mutex
         goal_start_mtx_.lock();
+        ROS_INFO_STREAM("goal_start_mtx_ locked in while planning_ loop.");
         if (has_new_start_)
         {
           has_new_start_ = false;
@@ -285,6 +296,7 @@ namespace mbf_abstract_nav
 
         // unlock goal
         goal_start_mtx_.unlock();
+        ROS_INFO_STREAM("goal_start_mtx_ unlocked in while planning_ loop.");
         setState(PLANNING);
         if (make_plan)
         {
@@ -292,7 +304,7 @@ namespace mbf_abstract_nav
           success = outcome_ < 10;
 
           boost::lock_guard<boost::mutex> guard(configuration_mutex_);
-
+          ROS_INFO_STREAM("configuration_mutex_ locked using lock_guard in while planning_ loop in run function.");   
           if (cancel_ && !isPatienceExceeded())
           {
             setState(CANCELED);
@@ -307,10 +319,12 @@ namespace mbf_abstract_nav
             planning_ = false;
 
             plan_mtx_.lock();
+            ROS_INFO_STREAM("plan_mtx_ locked in while planning_ loop.");
             plan_ = plan;
             cost_ = cost;
             last_valid_plan_time_ = ros::Time::now();
             plan_mtx_.unlock();
+            ROS_INFO_STREAM("plan_mtx_ unlocked in while planning_ loop.");
             setState(FOUND_PLAN);
 
             condition_.notify_all(); // notify observer
