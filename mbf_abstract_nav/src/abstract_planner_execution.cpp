@@ -295,8 +295,8 @@ namespace mbf_abstract_nav
         make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
 
         // unlock goal
-        goal_start_mtx_.unlock();
         ROS_INFO_STREAM("goal_start_mtx_ unlocked in while planning_ loop.");
+        goal_start_mtx_.unlock();  
         setState(PLANNING);
         if (make_plan)
         {
@@ -323,8 +323,8 @@ namespace mbf_abstract_nav
             plan_ = plan;
             cost_ = cost;
             last_valid_plan_time_ = ros::Time::now();
-            plan_mtx_.unlock();
             ROS_INFO_STREAM("plan_mtx_ unlocked in while planning_ loop.");
+            plan_mtx_.unlock();
             setState(FOUND_PLAN);
 
             condition_.notify_all(); // notify observer
