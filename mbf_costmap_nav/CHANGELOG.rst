@@ -2,6 +2,14 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add clear_on_shutdown functionality
+* Do not pass boost functions to abstract server to (de)activate costmaps.
+  Run instead abstract methods (possibly) overridden in the costmap server,
+  all costmap-related handling refactored to a new CostmapWrapper class
+* On controller execution, check that local costmap is current
+
 0.2.4 (2019-06-16)
 ------------------
 * Add check_point_cost service

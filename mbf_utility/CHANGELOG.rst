@@ -2,6 +2,9 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.4 (2019-06-16)
 ------------------
 * Add check_point_cost service
