@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.5 (2019-10-11)
+------------------
 * Add clear_on_shutdown functionality
 * Do not pass boost functions to abstract server to (de)activate costmaps.
   Run instead abstract methods (possibly) overridden in the costmap server,

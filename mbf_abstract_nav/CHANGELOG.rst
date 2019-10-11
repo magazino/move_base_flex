@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.5 (2019-10-11)
+------------------
 * Update goal pose on replanning, so the feedback remains consistent
 * Fix: Reset oscillation timer after executing a recovery behavior
 * Remove debug log messages
