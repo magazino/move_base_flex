@@ -269,6 +269,7 @@ namespace mbf_abstract_nav
 
         if (cancel_)
         {
+          publishZeroVelocity(); // command the robot to stop on canceling navigation
           setState(CANCELED);
           condition_.notify_all();
           moving_ = false;
