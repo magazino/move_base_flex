@@ -250,7 +250,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
       // in order to transfer the results to the controller.
       boost::mutex mutex;
       boost::unique_lock<boost::mutex> lock(mutex);
-      ROS_INFO_STREAM("mutex unique lock in PlannerAction::run");
+      ROS_DEBUG_STREAM("planner_log","mutex unique lock in PlannerAction::run");
       execution.waitForStateUpdate(boost::chrono::milliseconds(500));
     }
   }  // while (planner_active && ros::ok())
