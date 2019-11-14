@@ -29,6 +29,7 @@ add_action_files(
   ExePath.action
   Recovery.action
   MoveBase.action
+  Navigate.action
 )
 
 generate_messages(

@@ -61,6 +61,7 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
       robot_frame_(private_nh_.param<std::string>("robot_frame", "base_link")),
       robot_info_(*tf_listener_ptr, global_frame_, robot_frame_, tf_timeout_),
       controller_action_(name_action_exe_path, robot_info_),
+      controller_action_navigate_(name_action_navigation, robot_info_),
       planner_action_(name_action_get_path, robot_info_),
       recovery_action_(name_action_recovery, robot_info_),
       move_base_action_(name_action_move_base, robot_info_, recovery_plugin_manager_.getLoadedNames())
@@ -110,6 +111,13 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
       boost::bind(&mbf_abstract_nav::AbstractNavigationServer::cancelActionMoveBase, this, _1),
       false));
 
+  action_server_navigation_ptr_ = ActionServerNavigationPtr(
+    new ActionServerNavigation(
+      private_nh_,
+      name_action_navigation,
+      boost::bind(&mbf_abstract_nav::AbstractNavigationServer::callActionNavigation, this, _1),
+      boost::bind(&mbf_abstract_nav::AbstractNavigationServer::cancelActionNavigation, this, _1),
+      false));
   // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the one possibly created by
   // the base class. If none, it should call startDynamicReconfigureServer method to start the one defined here for
   // providing just the abstract server parameters
@@ -244,6 +252,17 @@ void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHand
   controller_action_.cancel(goal_handle);
 }
 
+void AbstractNavigationServer::callActionNavigation(ActionServerNavigation::GoalHandle goal_handle)
+{
+  //TODO: Handle Navigate action call
+}
+
+void AbstractNavigationServer::cancelActionNavigation(ActionServerNavigation::GoalHandle goal_handle)
+{
+  ROS_INFO_STREAM_NAMED("navigation", "Cancel action \"navigation\"");
+  controller_action_navigate_.cancel(goal_handle);
+}
+
 void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHandle goal_handle)
 {
   const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
@@ -341,6 +360,7 @@ void AbstractNavigationServer::startActionServers()
 {
   action_server_get_path_ptr_->start();
   action_server_exe_path_ptr_->start();
+  action_server_navigation_ptr_->start();
   action_server_recovery_ptr_->start();
   action_server_move_base_ptr_->start();
 }
@@ -372,6 +392,7 @@ void AbstractNavigationServer::reconfigure(
   }
   planner_action_.reconfigureAll(config, level);
   controller_action_.reconfigureAll(config, level);
+  controller_action_navigate_.reconfigureAll(config, level);
   recovery_action_.reconfigureAll(config, level);
   move_base_action_.reconfigure(config, level);
 
@@ -381,6 +402,7 @@ void AbstractNavigationServer::reconfigure(
 void AbstractNavigationServer::stop(){
   planner_action_.cancelAll();
   controller_action_.cancelAll();
+  controller_action_navigate_.cancelAll();
   recovery_action_.cancelAll();
   move_base_action_.cancel();
 }

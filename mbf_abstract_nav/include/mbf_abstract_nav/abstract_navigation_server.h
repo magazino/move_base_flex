@@ -87,6 +87,10 @@ typedef boost::shared_ptr<ActionServerGetPath> ActionServerGetPathPtr;
 typedef actionlib::ActionServer<mbf_msgs::ExePathAction> ActionServerExePath;
 typedef boost::shared_ptr<ActionServerExePath> ActionServerExePathPtr;
 
+//! Navigation action server
+typedef actionlib::ActionServer<mbf_msgs::NavigationAction> ActionServerNavigation;
+typedef boost::shared_ptr<ActionServerNavigation> ActionServerNavigationPtr;
+
 //! Recovery action server
 typedef actionlib::ActionServer<mbf_msgs::RecoveryAction> ActionServerRecovery;
 typedef boost::shared_ptr<ActionServerRecovery> ActionServerRecoveryPtr;
@@ -97,6 +101,8 @@ typedef boost::shared_ptr<ActionServerMoveBase> ActionServerMoveBasePtr;
 
 //! ExePath action topic name
 const std::string name_action_exe_path = "exe_path";
+//! Navigation action topic name
+const std::string name_action_exe_path = "navigation";
 //! GetPath action topic name
 const std::string name_action_get_path = "get_path";
 //! Recovery action topic name
@@ -241,6 +247,15 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     virtual void cancelActionExePath(ActionServerExePath::GoalHandle goal_handle);
 
+      /**
+     * @brief Navigation action execution method. This method will be called if the action server receives a goal
+     * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
+     *        definitions in mbf_msgs.
+     */
+    virtual void callActionNavigation(ActionServerNavigation::GoalHandle goal_handle);
+
+    virtual void cancelActionNavigation(ActionServerNavigation::GoalHandle goal_handle);
+
     /**
      * @brief Recovery action execution method. This method will be called if the action server receives a goal
      * @param goal SimpleActionServer goal containing all necessary parameters for the action execution. See the action
@@ -314,6 +329,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! shared pointer to the ExePath action server
     ActionServerExePathPtr action_server_exe_path_ptr_;
 
+    //! shared pointer to the Navigation action server
+    ActionServerExePathPtr action_server_navigation_ptr_;
+
     //! shared pointer to the GetPath action server
     ActionServerGetPathPtr action_server_get_path_ptr_;
 
@@ -374,6 +392,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     RobotInformation robot_info_;
 
     ControllerAction controller_action_;
+    ControllerAction controller_action_navigate_;
     PlannerAction planner_action_;
     RecoveryAction recovery_action_;
     MoveBaseAction move_base_action_;
