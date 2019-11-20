@@ -45,7 +45,7 @@
 
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_msgs/GetPathAction.h>
-#include <mbf_msgs/ExePathAction.h>
+#include <forklift_interfaces/NavigateAction.h>
 #include <mbf_msgs/RecoveryAction.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -61,7 +61,7 @@ class MoveBaseAction
 
   //! Action clients for the MoveBase action
   typedef actionlib::SimpleActionClient<mbf_msgs::GetPathAction> ActionClientGetPath;
-  typedef actionlib::SimpleActionClient<mbf_msgs::ExePathAction> ActionClientExePath;
+  typedef actionlib::SimpleActionClient<forklift_interfaces::NavigateAction> ActionClientNavigate;
   typedef actionlib::SimpleActionClient<mbf_msgs::RecoveryAction> ActionClientRecovery;
 
   typedef actionlib::ActionServer<mbf_msgs::MoveBaseAction>::GoalHandle GoalHandle;
@@ -79,17 +79,17 @@ class MoveBaseAction
 
  protected:
 
-  void actionExePathFeedback(const mbf_msgs::ExePathFeedbackConstPtr &feedback);
+  void actionNavigateFeedback(const forklift_interfaces::NavigateFeedbackConstPtr &feedback);
 
   void actionGetPathDone(
       const actionlib::SimpleClientGoalState &state,
       const mbf_msgs::GetPathResultConstPtr &result);
 
-  void actionExePathActive();
+  void actionNavigateActive();
 
-  void actionExePathDone(
+  void actionNavigateDone(
       const actionlib::SimpleClientGoalState &state,
-      const mbf_msgs::ExePathResultConstPtr &result);
+      const forklift_interfaces::NavigateResultConstPtr &result);
 
   void actionGetPathReplanningDone(
       const actionlib::SimpleClientGoalState &state,
@@ -101,7 +101,7 @@ class MoveBaseAction
 
   bool attemptRecovery();
 
-  mbf_msgs::ExePathGoal exe_path_goal_;
+  forklift_interfaces::NavigateGoal navigate_goal_;
   mbf_msgs::GetPathGoal get_path_goal_;
   mbf_msgs::RecoveryGoal recovery_goal_;
 
@@ -123,7 +123,7 @@ class MoveBaseAction
   ros::NodeHandle private_nh_;
 
   //! Action client used by the move_base action
-  ActionClientExePath action_client_exe_path_;
+  ActionClientNavigate action_client_navigate_;
 
   //! Action client used by the move_base action
   ActionClientGetPath action_client_get_path_;
@@ -149,7 +149,7 @@ class MoveBaseAction
   {
     NONE,
     GET_PATH,
-    EXE_PATH,
+    NAVIGATE,
     RECOVERY,
     OSCILLATING,
     SUCCEEDED,

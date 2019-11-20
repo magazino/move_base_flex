@@ -6,6 +6,7 @@ find_package(catkin REQUIRED
   actionlib
   actionlib_msgs
   dynamic_reconfigure
+  forklift_interfaces
   geometry_msgs
   mbf_msgs
   mbf_abstract_core
@@ -36,6 +37,7 @@ catkin_package(
   CATKIN_DEPENDS
       actionlib
       actionlib_msgs
+      forklift_interfaces
       dynamic_reconfigure
       geometry_msgs
       mbf_msgs

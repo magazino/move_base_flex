@@ -45,19 +45,18 @@
 #include "mbf_abstract_nav/abstract_controller_execution.h"
 #include "mbf_abstract_nav/robot_information.h"
 #include <actionlib/server/action_server.h>
-#include <mbf_msgs/ExePathAction.h>
+#include <forklift_interfaces/NavigateAction.h>
 
 namespace mbf_abstract_nav{
 
 class ControllerAction :
-    public AbstractAction<mbf_msgs::ExePathAction, AbstractControllerExecution>
+    public AbstractAction<forklift_interfaces::NavigateAction, AbstractControllerExecution>
 {
  public:
 
   typedef boost::shared_ptr<ControllerAction> Ptr;
 
-  ControllerAction(const std::string &name,
-                   const RobotInformation &robot_info);
+  ControllerAction(const std::string &name,const RobotInformation &robot_info);
 
   /**
    * @brief Start controller action.
@@ -73,20 +72,20 @@ class ControllerAction :
   void run(GoalHandle &goal_handle, AbstractControllerExecution &execution);
 
 protected:
-  void publishExePathFeedback(
+  void publishNavigateFeedback(
           GoalHandle& goal_handle,
           uint32_t outcome, const std::string &message,
           const geometry_msgs::TwistStamped& current_twist);
 
   /**
-   * @brief Utility method to fill the ExePath action result in a single line
-   * @param outcome ExePath action outcome
-   * @param message ExePath action message
+   * @brief Utility method to fill the Navigate action result in a single line
+   * @param outcome Navigate action outcome
+   * @param message Navigate action message
    * @param result The action result to fill
    */
-  void fillExePathResult(
+  void fillNavigateResult(
         uint32_t outcome, const std::string &message,
-        mbf_msgs::ExePathResult &result);
+        forklift_interfaces::NavigateResult &result);
 
   boost::mutex goal_mtx_; ///< lock goal handle for updating it while running
   geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose

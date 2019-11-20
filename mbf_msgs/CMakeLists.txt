@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
   message_runtime
   nav_msgs
   std_msgs
+  forklift_interfaces
 )
 
 add_service_files(
@@ -29,11 +30,11 @@ add_action_files(
   ExePath.action
   Recovery.action
   MoveBase.action
-  Navigate.action
 )
 
 generate_messages(
   DEPENDENCIES
+  forklift_interfaces
   actionlib_msgs
   geometry_msgs
   nav_msgs
@@ -44,6 +45,7 @@ catkin_package(
   CATKIN_DEPENDS
   actionlib_msgs
   geometry_msgs
+  forklift_interfaces
   message_runtime
   nav_msgs
   std_msgs

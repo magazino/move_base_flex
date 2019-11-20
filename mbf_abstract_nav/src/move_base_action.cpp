@@ -50,7 +50,7 @@ MoveBaseAction::MoveBaseAction(const std::string &name,
                                const RobotInformation &robot_info,
                                const std::vector<std::string> &behaviors)
   :  name_(name), robot_info_(robot_info), private_nh_("~"),
-     action_client_exe_path_(private_nh_, "exe_path"),
+     action_client_navigate_(private_nh_, "navigate"),
      action_client_get_path_(private_nh_, "get_path"),
      action_client_recovery_(private_nh_, "recovery"),
      oscillation_timeout_(0),
@@ -77,11 +77,11 @@ void MoveBaseAction::reconfigure(
     if (!replanning_)
     {
       replanning_ = true;
-      if (action_state_ == EXE_PATH &&
+      if (action_state_ == NAVIGATE &&
           action_client_get_path_.getState() != actionlib::SimpleClientGoalState::PENDING &&
           action_client_get_path_.getState() != actionlib::SimpleClientGoalState::ACTIVE)
       {
-        // exe_path is running and user has enabled replanning
+        // navigate is running and user has enabled replanning
         ROS_INFO_STREAM_NAMED("move_base", "Planner frequency set to " << config.planner_frequency
                               << ": start replanning, using the \"get_path\" action!");
         action_client_get_path_.sendGoal(
@@ -108,9 +108,9 @@ void MoveBaseAction::cancel()
     action_client_get_path_.cancelGoal();
   }
 
-  if(!action_client_exe_path_.getState().isDone())
+  if(!action_client_navigate_.getState().isDone())
   {
-    action_client_exe_path_.cancelGoal();
+    action_client_navigate_.cancelGoal();
   }
 
   if(!action_client_recovery_.getState().isDone())
@@ -136,7 +136,7 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   get_path_goal_.target_pose = goal.target_pose;
   get_path_goal_.use_start_pose = false; // use the robot pose
   get_path_goal_.planner = goal.planner;
-  exe_path_goal_.controller = goal.controller;
+  navigate_goal_.controller = goal.controller;
 
   ros::Duration connection_timeout(1.0);
 
@@ -149,7 +149,7 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   current_recovery_behavior_ = recovery_behaviors_.begin();
 
   geometry_msgs::PoseStamped robot_pose;
-  // get the current robot pose only at the beginning, as exe_path will keep updating it as we move
+  // get the current robot pose only at the beginning, as navigate will keep updating it as we move
   if (!robot_info_.getRobotPose(robot_pose))
   {
     ROS_ERROR_STREAM_NAMED("move_base", "Could not get the current robot pose!");
@@ -161,11 +161,11 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
 
   // wait for server connections
   if (!action_client_get_path_.waitForServer(connection_timeout) ||
-      !action_client_exe_path_.waitForServer(connection_timeout) ||
+      !action_client_navigate_.waitForServer(connection_timeout) ||
       !action_client_recovery_.waitForServer(connection_timeout))
   {
     ROS_ERROR_STREAM_NAMED("move_base", "Could not connect to one or more of move_base_flex actions:"
-        "\"get_path\" , \"exe_path\", \"recovery \"!");
+        "\"get_path\" , \"navigate\", \"recovery \"!");
     move_base_result.outcome = mbf_msgs::MoveBaseResult::INTERNAL_ERROR;
     move_base_result.message = "Could not connect to the move_base_flex actions!";
     goal_handle.setAborted(move_base_result, move_base_result.message);
@@ -178,24 +178,24 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
       boost::bind(&MoveBaseAction::actionGetPathDone, this, _1, _2));
 }
 
-void MoveBaseAction::actionExePathActive()
+void MoveBaseAction::actionNavigateActive()
 {
-  ROS_DEBUG_STREAM_NAMED("move_base", "The \"exe_path\" action is active.");
+  ROS_DEBUG_STREAM_NAMED("move_base", "The \"navigate\" action is active.");
 }
 
-void MoveBaseAction::actionExePathFeedback(
-    const mbf_msgs::ExePathFeedbackConstPtr &feedback)
+void MoveBaseAction::actionNavigateFeedback(
+    const forklift_interfaces::NavigateFeedbackConstPtr &feedback)
 {
   move_base_feedback_.outcome = feedback->outcome;
   move_base_feedback_.message = feedback->message;
   move_base_feedback_.angle_to_goal = feedback->angle_to_goal;
   move_base_feedback_.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback_.current_pose = feedback->current_pose;
-  move_base_feedback_.last_cmd_vel = feedback->last_cmd_vel;
+  move_base_feedback_.last_cmd_vel = feedback->velocity;
   robot_pose_ = feedback->current_pose;
   goal_handle_.publishFeedback(move_base_feedback_);
 
-  // we create a navigation-level oscillation detection using exe_path action's feedback,
+  // we create a navigation-level oscillation detection using navigate action's feedback,
   // as the later doesn't handle oscillations created by quickly failing repeated plans
 
   // if oscillation detection is enabled by osciallation_timeout != 0
@@ -219,8 +219,8 @@ void MoveBaseAction::actionExePathFeedback(
     {
       std::stringstream oscillation_msgs;
       oscillation_msgs << "Robot is oscillating for " << (ros::Time::now() - last_oscillation_reset_).toSec() << "s!";
-      ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
-      action_client_exe_path_.cancelGoal();
+      ROS_WARN_STREAM_NAMED("navigate", oscillation_msgs.str());
+      action_client_navigate_.cancelGoal();
 
       if (attemptRecovery())
       {
@@ -260,10 +260,14 @@ void MoveBaseAction::actionGetPathDone(
           << "move_base\" received a path from \""
           << "get_path\": " << state.getText());
 
-      exe_path_goal_.path = result.path;
+      navigate_goal_.path.header = result.path.header; //TODO handle conversion from nav_msgs/Path to NavigatePath/Path
+      for(std::size_t it=0; it<result.path.poses.size(); it++)
+      {
+        navigate_goal_.path.checkpoints[it].pose = result.path.poses[it];
+      }
       ROS_DEBUG_STREAM_NAMED("move_base", "Action \""
           << "move_base\" sends the path to \""
-          << "exe_path\".");
+          << "navigate\".");
 
       if (recovery_trigger_ == GET_PATH)
       {
@@ -272,12 +276,12 @@ void MoveBaseAction::actionGetPathDone(
         recovery_trigger_ = NONE;
       }
 
-      action_client_exe_path_.sendGoal(
-          exe_path_goal_,
-          boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
-          boost::bind(&MoveBaseAction::actionExePathActive, this),
-          boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
-      action_state_ = EXE_PATH;
+      action_client_navigate_.sendGoal(
+          navigate_goal_,
+          boost::bind(&MoveBaseAction::actionNavigateDone, this, _1, _2),
+          boost::bind(&MoveBaseAction::actionNavigateActive, this),
+          boost::bind(&MoveBaseAction::actionNavigateFeedback, this, _1));
+      action_state_ = NAVIGATE;
       break;
 
     case actionlib::SimpleClientGoalState::ABORTED:
@@ -330,7 +334,7 @@ void MoveBaseAction::actionGetPathDone(
   }
 
   // start replanning if enabled (can be disabled by dynamic reconfigure) and if we started following a path
-  if (!replanning_ || action_state_ != EXE_PATH)
+  if (!replanning_ || action_state_ != NAVIGATE)
     return;
 
   // we reset the replan clock (we can have been stopped for a while) and make a fist sleep, so we don't replan
@@ -338,7 +342,7 @@ void MoveBaseAction::actionGetPathDone(
   boost::lock_guard<boost::mutex> guard(replanning_mtx_);
   replanning_rate_.reset();
   replanning_rate_.sleep();
-  if (!replanning_ || action_state_ != EXE_PATH ||
+  if (!replanning_ || action_state_ != NAVIGATE ||
       action_client_get_path_.getState() == actionlib::SimpleClientGoalState::PENDING ||
       action_client_get_path_.getState() == actionlib::SimpleClientGoalState::ACTIVE)
     return; // another chance to stop replannings after waiting for replanning period
@@ -349,15 +353,15 @@ void MoveBaseAction::actionGetPathDone(
   );
 }
 
-void MoveBaseAction::actionExePathDone(
+void MoveBaseAction::actionNavigateDone(
     const actionlib::SimpleClientGoalState &state,
-    const mbf_msgs::ExePathResultConstPtr &result_ptr)
+    const forklift_interfaces::NavigateResultConstPtr &result_ptr)
 {
   action_state_ =  FAILED;
 
-  ROS_DEBUG_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
+  ROS_DEBUG_STREAM_NAMED("move_base", "Action \"navigate\" finished.");
 
-  const mbf_msgs::ExePathResult& result = *(result_ptr.get());
+  const forklift_interfaces::NavigateResult& result = *(result_ptr.get());
   const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
 
@@ -368,7 +372,7 @@ void MoveBaseAction::actionExePathDone(
   move_base_result.angle_to_goal = result.angle_to_goal;
   move_base_result.final_pose = result.final_pose;
 
-  ROS_DEBUG_STREAM_NAMED("exe_path", "Current state:" << state.toString());
+  ROS_DEBUG_STREAM_NAMED("navigate", "Current state:" << state.toString());
 
   switch (state.state_)
   {
@@ -383,11 +387,8 @@ void MoveBaseAction::actionExePathDone(
     case actionlib::SimpleClientGoalState::ABORTED:
       switch (result.outcome)
       {
-        case mbf_msgs::ExePathResult::INVALID_PATH:
-        case mbf_msgs::ExePathResult::TF_ERROR:
-        case mbf_msgs::ExePathResult::NOT_INITIALIZED:
-        case mbf_msgs::ExePathResult::INVALID_PLUGIN:
-        case mbf_msgs::ExePathResult::INTERNAL_ERROR:
+        case forklift_interfaces::NavigateResult::INVALID_PATH:
+        case forklift_interfaces::NavigateResult::INVALID_PLUGIN:
           // none of these errors is recoverable
           goal_handle_.setAborted(move_base_result, state.getText());
           break;
@@ -397,7 +398,7 @@ void MoveBaseAction::actionExePathDone(
 
           if (attemptRecovery())
           {
-            recovery_trigger_ = EXE_PATH;
+            recovery_trigger_ = NAVIGATE;
           }
           else
           {
@@ -411,19 +412,19 @@ void MoveBaseAction::actionExePathDone(
     case actionlib::SimpleClientGoalState::PREEMPTED:
       // action was preempted successfully!
       ROS_DEBUG_STREAM_NAMED("move_base", "The action \""
-          << "exe_path" << "\" was preempted successfully!");
+          << "navigate" << "\" was preempted successfully!");
       // TODO
       break;
 
     case actionlib::SimpleClientGoalState::RECALLED:
       ROS_DEBUG_STREAM_NAMED("move_base", "The action \""
-          << "exe_path" << "\" was recalled!");
+          << "navigate" << "\" was recalled!");
       // TODO
       break;
 
     case actionlib::SimpleClientGoalState::REJECTED:
       ROS_DEBUG_STREAM_NAMED("move_base", "The action \""
-          << "exe_path" << "\" was rejected!");
+          << "navigate" << "\" was rejected!");
       // TODO
       break;
 
@@ -568,26 +569,31 @@ void MoveBaseAction::actionGetPathReplanningDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::GetPathResultConstPtr &result)
 {
-  if (!replanning_ || action_state_ != EXE_PATH)
+  if (!replanning_ || action_state_ != NAVIGATE)
     return; // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
 
   if(state == actionlib::SimpleClientGoalState::SUCCEEDED)
   {
-    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"exe_path\" with the new plan");
-    exe_path_goal_.path = result->path;
-    mbf_msgs::ExePathGoal goal(exe_path_goal_);
-    action_client_exe_path_.sendGoal(
+    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"navigate\" with the new plan");
+
+    navigate_goal_.path.header = result->path.header; //TODO handle conversion from nav_msgs/Path to NavigatePath/Path
+    for(std::size_t it=0; it<result->path.poses.size(); it++)
+    {
+      navigate_goal_.path.checkpoints[it].pose = result->path.poses[it];
+    }
+    forklift_interfaces::NavigateGoal goal(navigate_goal_);
+    action_client_navigate_.sendGoal(
         goal,
-        boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
-        boost::bind(&MoveBaseAction::actionExePathActive, this),
-        boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
+        boost::bind(&MoveBaseAction::actionNavigateDone, this, _1, _2),
+        boost::bind(&MoveBaseAction::actionNavigateActive, this),
+        boost::bind(&MoveBaseAction::actionNavigateFeedback, this, _1));
   }
 
   replanning_mtx_.lock();
   replanning_rate_.sleep();
   replanning_mtx_.unlock();
 
-  if (!replanning_ || action_state_ != EXE_PATH)
+  if (!replanning_ || action_state_ != NAVIGATE)
     return; // another chance to stop replannings after waiting for replanning period
 
   ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");

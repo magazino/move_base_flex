@@ -1,5 +1,0 @@
-NavigatePath path             # Path to follow
----
-NavigationResult result       # Final result of navigation
----
-NavigationFeedback feedback   # Continuous feedback regarding progress 
