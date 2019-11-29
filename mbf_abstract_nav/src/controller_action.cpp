@@ -75,14 +75,15 @@ void ControllerAction::start(
       // Goal requests to run the same controller on the same concurrency slot:
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
+      const forklift_interfaces::NavigateGoal &goal = *(goal_handle.getGoal().get());
       std::vector<geometry_msgs::PoseStamped> goal_path;
-      for(std::size_t it = 0; it<goal_handle.getGoal()->path.checkpoints.size(); it++)
+      for(std::size_t it = 0; it<goal.path.checkpoints.size(); it++)
       {
-        goal_path[it] = goal_handle.getGoal()->path.checkpoints[it].pose;
+        goal_path.push_back(goal.path.checkpoints[it].pose);
       }
       execution_ptr->setNewPlan(goal_path);
       // Update also goal pose, so the feedback remains consistent
-      goal_pose_ = goal_handle.getGoal()->path.checkpoints.back().pose;
+      goal_pose_ = goal_path.back();
       forklift_interfaces::NavigateResult result;
       fillNavigateResult(forklift_interfaces::NavigateResult::CANCELED, "Goal preempted by a new plan", result);
       concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
@@ -104,7 +105,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   // Note that we always use the goal handle stored on the concurrency slots map, as it can change when replanning
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
   goal_mtx_.unlock();
-
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
 
   // ensure we don't provide values from previous execution on case of error before filling both poses
@@ -125,15 +125,14 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 
   typename AbstractControllerExecution::ControllerState state_moving_input;
   bool controller_active = true;
-
   goal_mtx_.lock();
   const forklift_interfaces::NavigateGoal &goal = *(goal_handle.getGoal().get());
-
   std::vector<geometry_msgs::PoseStamped> goal_path;
-      for(std::size_t it = 0; it<goal_handle.getGoal()->path.checkpoints.size(); it++)
-      {
-        goal_path[it] = goal_handle.getGoal()->path.checkpoints[it].pose;
-      }
+  for (int it = 0; it < goal.path.checkpoints.size(); it++)
+  {
+    goal_path.push_back(goal.path.checkpoints[it].pose);
+  }
+  
   const std::vector<geometry_msgs::PoseStamped> &plan = goal_path;
   if (plan.empty())
   {
@@ -142,7 +141,6 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
     controller_active = false;
   }
-
   goal_pose_ = plan.back();
   ROS_DEBUG_STREAM_NAMED(name_, "Called action \""
       << name_ << "\" with plan:" << std::endl

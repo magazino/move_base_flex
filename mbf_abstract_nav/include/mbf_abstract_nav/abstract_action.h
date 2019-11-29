@@ -71,7 +71,7 @@ class AbstractAction
   )
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
-
+    ROS_INFO_STREAM("In parent action");
     if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
     {
       goal_handle.setCanceled();
@@ -112,9 +112,11 @@ class AbstractAction
 
   virtual void runAndCleanUp(GoalHandle &goal_handle, typename Execution::Ptr execution_ptr){
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
-
+    ROS_INFO_STREAM("In run and cleanup");
     execution_ptr->preRun();
+    ROS_INFO_STREAM("Finished prerun and running");
     run_(goal_handle, *execution_ptr);
+    ROS_INFO_STREAM("Finished run");
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     execution_ptr->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution thread for action \"" << name_ << "\" stopped, cleaning up execution leftovers.");
