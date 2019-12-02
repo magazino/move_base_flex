@@ -336,6 +336,8 @@ namespace mbf_abstract_nav
         {
           ROS_DEBUG_STREAM_NAMED("abstract_controller_execution", "Reached the goal!");
           setState(ARRIVED_GOAL);
+          publishZeroVelocity();   // send a 0 velocity to make sure the robot is stopped
+
           // goal reached, tell it the controller
           condition_.notify_all();
           moving_ = false;
