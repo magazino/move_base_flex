@@ -197,7 +197,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::CANCELED:
-        ROS_INFO_STREAM("Action \"exe_path\" canceled");
+        ROS_INFO_STREAM("Action \"navigate_path\" canceled");
         fillNavigateResult(forklift_interfaces::NavigateResult::CANCELED, "Controller canceled", result);
         goal_handle.setCanceled(result, result.remarks);
         controller_active = false;
