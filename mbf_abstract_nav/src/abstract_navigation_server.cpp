@@ -198,20 +198,20 @@ void AbstractNavigationServer::callActionNavigate(ActionServerNavigate::GoalHand
   else
   {
     forklift_interfaces::NavigateResult result;
-    result.outcome = forklift_interfaces::NavigateResult::INVALID_PLUGIN;
-    result.message = "No plugins loaded at all!";
-    ROS_WARN_STREAM_NAMED("navigate", result.message);
-    goal_handle.setRejected(result, result.message);
+    result.status = forklift_interfaces::NavigateResult::INVALID_PLUGIN;
+    result.remarks = "No plugins loaded at all!";
+    ROS_WARN_STREAM_NAMED("navigate", result.remarks);
+    goal_handle.setRejected(result, result.remarks);
     return;
   }
 
   if(!controller_plugin_manager_.hasPlugin(controller_name))
   {
     forklift_interfaces::NavigateResult result;
-    result.outcome = forklift_interfaces::NavigateResult::INVALID_PLUGIN;
-    result.message = "No plugin loaded with the given name \"" + controller_name + "\"!";
-    ROS_WARN_STREAM_NAMED("navigate", result.message);
-    goal_handle.setRejected(result, result.message);
+    result.status = forklift_interfaces::NavigateResult::INVALID_PLUGIN;
+    result.remarks = "No plugin loaded with the given name \"" + controller_name + "\"!";
+    ROS_WARN_STREAM_NAMED("navigate", result.remarks);
+    goal_handle.setRejected(result, result.remarks);
     return;
   }
 
@@ -230,10 +230,10 @@ void AbstractNavigationServer::callActionNavigate(ActionServerNavigate::GoalHand
   else
   {
     forklift_interfaces::NavigateResult result;
-    result.outcome = forklift_interfaces::NavigateResult::FAILURE;
-    result.message = "Failure: \"controller_plugin\" pointer should not be a null pointer!";
-    ROS_FATAL_STREAM_NAMED("navigation", result.message);
-    goal_handle.setRejected(result, result.message);
+    result.status = forklift_interfaces::NavigateResult::FAILURE;
+    result.remarks = "Failure: \"controller_plugin\" pointer should not be a null pointer!";
+    ROS_FATAL_STREAM_NAMED("navigation", result.remarks);
+    goal_handle.setRejected(result, result.remarks);
   }
 
 }

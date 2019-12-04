@@ -186,8 +186,8 @@ void MoveBaseAction::actionNavigateActive()
 void MoveBaseAction::actionNavigateFeedback(
     const forklift_interfaces::NavigateFeedbackConstPtr &feedback)
 {
-  move_base_feedback_.outcome = feedback->outcome;
-  move_base_feedback_.message = feedback->message;
+  move_base_feedback_.outcome = feedback->status;
+  move_base_feedback_.message = feedback->remarks;
   move_base_feedback_.angle_to_goal = feedback->angle_to_goal;
   move_base_feedback_.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback_.current_pose = feedback->current_pose;
@@ -366,8 +366,8 @@ void MoveBaseAction::actionNavigateDone(
   mbf_msgs::MoveBaseResult move_base_result;
 
   // copy result from get_path action
-  move_base_result.outcome = result.outcome;
-  move_base_result.message = result.message;
+  move_base_result.outcome = result.status;
+  move_base_result.message = result.remarks;
   move_base_result.dist_to_goal = result.dist_to_goal;
   move_base_result.angle_to_goal = result.angle_to_goal;
   move_base_result.final_pose = result.final_pose;
@@ -385,7 +385,7 @@ void MoveBaseAction::actionNavigateDone(
       break;
 
     case actionlib::SimpleClientGoalState::ABORTED:
-      switch (result.outcome)
+      switch (result.status)
       {
         case forklift_interfaces::NavigateResult::INVALID_PATH:
         case forklift_interfaces::NavigateResult::INVALID_PLUGIN:
@@ -402,7 +402,7 @@ void MoveBaseAction::actionNavigateDone(
           }
           else
           {
-            ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the controller: " << result.message);
+            ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the controller: " << result.remarks);
             goal_handle_.setAborted(move_base_result, state.getText());
           }
           break;

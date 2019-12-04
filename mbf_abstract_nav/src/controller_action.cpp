@@ -86,7 +86,7 @@ void ControllerAction::start(
       goal_pose_ = goal_path.back();
       forklift_interfaces::NavigateResult result;
       fillNavigateResult(forklift_interfaces::NavigateResult::CANCELED, "Goal preempted by a new plan", result);
-      concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
+      concurrency_slots_[slot].goal_handle.setCanceled(result, result.remarks);
       concurrency_slots_[slot].goal_handle = goal_handle;
       concurrency_slots_[slot].goal_handle.setAccepted();
     }
@@ -137,8 +137,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   if (plan.empty())
   {
     fillNavigateResult(forklift_interfaces::NavigateResult::INVALID_PATH, "Controller started with an empty plan!", result);
-    goal_handle.setAborted(result, result.message);
-    ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
+    goal_handle.setAborted(result, result.remarks);
+    ROS_ERROR_STREAM_NAMED(name_, result.remarks << " Canceling the action call.");
     controller_active = false;
   }
   goal_pose_ = plan.back();
@@ -168,9 +168,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       controller_active = false;
       fillNavigateResult(forklift_interfaces::NavigateResult::TF_ERROR, "Could not get the robot pose!", result);
       goal_mtx_.lock();
-      goal_handle.setAborted(result, result.message);
+      goal_handle.setAborted(result, result.remarks);
       goal_mtx_.unlock();
-      ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
+      ROS_ERROR_STREAM_NAMED(name_, result.remarks << " Canceling the action call.");
       break;
     }
 
@@ -199,7 +199,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       case AbstractControllerExecution::CANCELED:
         ROS_INFO_STREAM("Action \"exe_path\" canceled");
         fillNavigateResult(forklift_interfaces::NavigateResult::CANCELED, "Controller canceled", result);
-        goal_handle.setCanceled(result, result.message);
+        goal_handle.setCanceled(result, result.remarks);
         controller_active = false;
         break;
 
@@ -226,35 +226,35 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
         fillNavigateResult(execution.getOutcome(), execution.getMessage(), result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       case AbstractControllerExecution::PAT_EXCEEDED:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the patience time");
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::PAT_EXCEEDED, execution.getMessage(), result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       case AbstractControllerExecution::NO_PLAN:
         ROS_WARN_STREAM_NAMED(name_, "The controller has been started without a plan!");
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::INVALID_PATH, "Controller started without a path", result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       case AbstractControllerExecution::EMPTY_PLAN:
         ROS_WARN_STREAM_NAMED(name_, "The controller has received an empty plan");
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::INVALID_PATH, "Controller started with an empty plan", result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       case AbstractControllerExecution::INVALID_PLAN:
         ROS_WARN_STREAM_NAMED(name_, "The controller has received an invalid plan");
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::INVALID_PATH, "Controller started with an invalid plan", result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       case AbstractControllerExecution::NO_LOCAL_CMD:
@@ -279,7 +279,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
             execution.stop();
             controller_active = false;
             fillNavigateResult(forklift_interfaces::NavigateResult::OSCILLATION, "Oscillation detected!", result);
-            goal_handle.setAborted(result, result.message);
+            goal_handle.setAborted(result, result.remarks);
             break;
           }
         }
@@ -290,14 +290,14 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         ROS_DEBUG_STREAM_NAMED(name_, "Controller succeeded; arrived at goal");
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::SUCCESS, "Controller succeeded; arrived at goal!", result);
-        goal_handle.setSucceeded(result, result.message);
+        goal_handle.setSucceeded(result, result.remarks);
         break;
 
       case AbstractControllerExecution::INTERNAL_ERROR:
         ROS_FATAL_STREAM_NAMED(name_, "Internal error: Unknown error thrown by the plugin: " << execution.getMessage());
         controller_active = false;
         fillNavigateResult(forklift_interfaces::NavigateResult::INTERNAL_ERROR, "Internal error: Unknown error thrown by the plugin!", result);
-        goal_handle.setAborted(result, result.message);
+        goal_handle.setAborted(result, result.remarks);
         break;
 
       default:
@@ -305,8 +305,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         ss << "Internal error: Unknown state in a move base flex controller execution with the number: "
            << static_cast<int>(state_moving_input);
         fillNavigateResult(forklift_interfaces::NavigateResult::INTERNAL_ERROR, ss.str(), result);
-        ROS_FATAL_STREAM_NAMED(name_, result.message);
-        goal_handle.setAborted(result, result.message);
+        ROS_FATAL_STREAM_NAMED(name_, result.remarks);
+        goal_handle.setAborted(result, result.remarks);
         controller_active = false;
     }
     goal_mtx_.unlock();
@@ -339,8 +339,8 @@ void ControllerAction::publishNavigateFeedback(
         const geometry_msgs::TwistStamped& current_twist)
 {
   forklift_interfaces::NavigateFeedback feedback;
-  feedback.outcome = outcome;
-  feedback.message = message;
+  feedback.status = outcome;
+  feedback.remarks = message;
 
   feedback.velocity = current_twist;
   if (feedback.velocity.header.stamp.isZero())
@@ -356,8 +356,8 @@ void ControllerAction::fillNavigateResult(
         uint32_t outcome, const std::string &message,
         forklift_interfaces::NavigateResult &result)
 {
-  result.outcome = outcome;
-  result.message = message;
+  result.status = outcome;
+  result.remarks = message;
   result.final_pose = robot_pose_;
   result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
   result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
