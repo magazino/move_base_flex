@@ -244,6 +244,9 @@ void MoveBaseAction::actionGetPathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::GetPathResultConstPtr &result_ptr)
 {
+  if (action_state_ == CANCELED)
+    return;
+
   action_state_ =  FAILED;
 
   const mbf_msgs::GetPathResult &result = *(result_ptr.get());
@@ -353,6 +356,9 @@ void MoveBaseAction::actionExePathDone(
     const actionlib::SimpleClientGoalState &state,
     const mbf_msgs::ExePathResultConstPtr &result_ptr)
 {
+  if (action_state_ == CANCELED)
+    return;
+
   action_state_ =  FAILED;
 
   ROS_DEBUG_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
@@ -477,6 +483,9 @@ void MoveBaseAction::actionRecoveryDone(
 {
   // give the robot some time to stop oscillating after executing the recovery behavior
   last_oscillation_reset_ = ros::Time::now();
+
+  if (action_state_ == CANCELED)
+    return;
 
   action_state_ =  FAILED;  // unless recovery succeeds or gets canceled...
 
