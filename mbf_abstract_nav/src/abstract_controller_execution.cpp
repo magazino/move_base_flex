@@ -65,6 +65,7 @@ namespace mbf_abstract_nav
     private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
     private_nh.param("map_frame", global_frame_, std::string("map"));
     private_nh.param("mbf_tolerance_check", mbf_tolerance_check_, false);
+    private_nh.param("stop_at_goal", stop_at_goal_, true);
     private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
     private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
     private_nh.param("tf_timeout", tf_timeout_, 1.0);
@@ -316,6 +317,9 @@ namespace mbf_abstract_nav
         if (reachedGoalCheck())
         {
           ROS_DEBUG_STREAM_NAMED("abstract_controller_execution", "Reached the goal!");
+          if (stop_at_goal_) {
+            publishZeroVelocity();
+          }
           setState(ARRIVED_GOAL);
           // goal reached, tell it the controller
           condition_.notify_all();
