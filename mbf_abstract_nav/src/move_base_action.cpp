@@ -263,7 +263,7 @@ void MoveBaseAction::actionGetPathDone(
       navigate_goal_.path.header = result.path.header; //TODO handle conversion from nav_msgs/Path to NavigatePath/Path
       for(std::size_t it=0; it<result.path.poses.size(); it++)
       {
-        navigate_goal_.path.checkpoints[it].pose = result.path.poses[it];
+        navigate_goal_.path.route_points[it].node.pose = result.path.poses[it];
       }
       ROS_DEBUG_STREAM_NAMED("move_base", "Action \""
           << "move_base\" sends the path to \""
@@ -579,7 +579,7 @@ void MoveBaseAction::actionGetPathReplanningDone(
     navigate_goal_.path.header = result->path.header; //TODO handle conversion from nav_msgs/Path to NavigatePath/Path
     for(std::size_t it=0; it<result->path.poses.size(); it++)
     {
-      navigate_goal_.path.checkpoints[it].pose = result->path.poses[it];
+      navigate_goal_.path.route_points[it].node.pose = result->path.poses[it];
     }
     forklift_interfaces::NavigateGoal goal(navigate_goal_);
     action_client_navigate_.sendGoal(

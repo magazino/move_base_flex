@@ -77,9 +77,9 @@ void ControllerAction::start(
       execution_ptr = slot_it->second.execution;
       const forklift_interfaces::NavigateGoal &goal = *(goal_handle.getGoal().get());
       std::vector<geometry_msgs::PoseStamped> goal_path;
-      for(std::size_t it = 0; it<goal.path.checkpoints.size(); it++)
+      for(std::size_t it = 0; it<goal.path.route_points.size(); it++)
       {
-        goal_path.push_back(goal.path.checkpoints[it].pose);
+        goal_path.push_back(goal.path.route_points[it].node.pose);
       }
       execution_ptr->setNewPlan(goal_path);
       // Update also goal pose, so the feedback remains consistent
@@ -128,9 +128,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
   goal_mtx_.lock();
   const forklift_interfaces::NavigateGoal &goal = *(goal_handle.getGoal().get());
   std::vector<geometry_msgs::PoseStamped> goal_path;
-  for (int it = 0; it < goal.path.checkpoints.size(); it++)
+  for (int it = 0; it < goal.path.route_points.size(); it++)
   {
-    goal_path.push_back(goal.path.checkpoints[it].pose);
+    goal_path.push_back(goal.path.route_points[it].node.pose);
   }
   
   const std::vector<geometry_msgs::PoseStamped> &plan = goal_path;
@@ -146,7 +146,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
       << name_ << "\" with plan:" << std::endl
       << "frame: \"" << goal.path.header.frame_id << "\" " << std::endl
       << "stamp: " << goal.path.header.stamp << std::endl
-      << "poses: " << goal.path.checkpoints.size() << std::endl
+      << "poses: " << goal.path.route_points.size() << std::endl
       << "goal: (" << goal_pose_.pose.position.x << ", "
       << goal_pose_.pose.position.y << ", "
       << goal_pose_.pose.position.z << ")");
