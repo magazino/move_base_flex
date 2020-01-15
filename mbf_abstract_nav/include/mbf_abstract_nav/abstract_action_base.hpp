@@ -36,8 +36,8 @@
  *
  */
 
-#ifndef MBF_ABSTRACT_NAV__ABSTRACT_ACTION_H_
-#define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_H_
+#ifndef MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
+#define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 
 #include <actionlib/server/action_server.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
@@ -46,10 +46,10 @@
 namespace mbf_abstract_nav{
 
 template <typename Action, typename Execution>
-class AbstractAction
+class AbstractActionBase
 {
  public:
-  typedef boost::shared_ptr<AbstractAction> Ptr;
+  typedef boost::shared_ptr<AbstractActionBase> Ptr;
   typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
   typedef boost::function<void (GoalHandle &goal_handle, Execution &execution)> RunMethod;
   typedef struct{
@@ -59,7 +59,7 @@ class AbstractAction
   } ConcurrencySlot;
 
 
-  AbstractAction(
+  AbstractActionBase(
       const std::string& name,
       const RobotInformation &robot_info,
       const RunMethod run_method
@@ -94,7 +94,7 @@ class AbstractAction
       concurrency_slots_[slot].goal_handle.setAccepted();
       concurrency_slots_[slot].execution = execution_ptr;
       concurrency_slots_[slot].thread_ptr = threads_.create_thread(boost::bind(
-          &AbstractAction::runAndCleanUp, this,
+          &AbstractActionBase::runAndCleanUp, this,
           boost::ref(concurrency_slots_[slot].goal_handle), execution_ptr));
     }
   }
@@ -166,4 +166,4 @@ protected:
 
 }
 
-#endif //MBF_ABSTRACT_NAV__ABSTRACT_ACTION_H_
+#endif /* MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_ */

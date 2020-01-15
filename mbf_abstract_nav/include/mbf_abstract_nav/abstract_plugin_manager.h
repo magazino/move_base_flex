@@ -41,7 +41,8 @@
 
 #include <boost/function.hpp>
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
 template <typename PluginType>
 class AbstractPluginManager
@@ -75,7 +76,8 @@ class AbstractPluginManager
   const loadPluginFunction loadPlugin_;
   const initPluginFunction initPlugin_;
 };
+
 } /* namespace mbf_abstract_nav */
 
 #include "impl/abstract_plugin_manager.tcc"
-#endif //MBF_ABSTRACT_NAV__ABSTRACT_PLUGIN_MANAGER_H_
+#endif /* MBF_ABSTRACT_NAV__ABSTRACT_PLUGIN_MANAGER_H_ */

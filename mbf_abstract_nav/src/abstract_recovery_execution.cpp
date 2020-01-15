@@ -46,98 +46,98 @@
 namespace mbf_abstract_nav
 {
 
+AbstractRecoveryExecution::AbstractRecoveryExecution(
+    const std::string name,
+    mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
+    const TFPtr &tf_listener_ptr,
+    const MoveBaseFlexConfig &config) :
+  AbstractExecutionBase(name),
+    behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
+{
+  // dynamically reconfigurable parameters
+  reconfigure(config);
+}
 
-  AbstractRecoveryExecution::AbstractRecoveryExecution(
-      const std::string name,
-      mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
-      const TFPtr &tf_listener_ptr,
-      const MoveBaseFlexConfig &config) :
-    AbstractExecutionBase(name),
-      behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
+AbstractRecoveryExecution::~AbstractRecoveryExecution()
+{
+}
+
+
+void AbstractRecoveryExecution::reconfigure(const MoveBaseFlexConfig &config)
+{
+  boost::lock_guard<boost::mutex> guard(conf_mtx_);
+
+  // Maximum time allowed to recovery behaviors. Intended as a safeward for the case a behavior hangs.
+  // If it doesn't return within time, the navigator will cancel it and abort the corresponding action.
+  patience_ = ros::Duration(config.recovery_patience);
+
+  // Nothing else to do here, as recovery_enabled is loaded and used in the navigation server
+}
+
+
+void AbstractRecoveryExecution::setState(RecoveryState state)
+{
+  boost::lock_guard<boost::mutex> guard(state_mtx_);
+  state_ = state;
+}
+
+
+typename AbstractRecoveryExecution::RecoveryState AbstractRecoveryExecution::getState()
+{
+  boost::lock_guard<boost::mutex> guard(state_mtx_);
+  return state_;
+}
+
+bool AbstractRecoveryExecution::cancel()
+{
+  cancel_ = true;
+  // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
+  if(!behavior_->cancel())
   {
-    // dynamically reconfigurable parameters
-    reconfigure(config);
+    ROS_WARN_STREAM("Cancel recovering failed or is not supported by the plugin. "
+                        << "Wait until the current recovery behavior finished!");
+    return false;
   }
+  return true;
+}
 
-  AbstractRecoveryExecution::~AbstractRecoveryExecution()
+bool AbstractRecoveryExecution::isPatienceExceeded()
+{
+  boost::lock_guard<boost::mutex> guard1(conf_mtx_);
+  boost::lock_guard<boost::mutex> guard2(time_mtx_);
+  ROS_DEBUG_STREAM("Patience: " << patience_ << ", start time: " << start_time_ << " now: " << ros::Time::now());
+  return !patience_.isZero() && (ros::Time::now() - start_time_ > patience_);
+}
+
+void AbstractRecoveryExecution::run()
+{
+  cancel_ = false; // reset the canceled state
+
+  time_mtx_.lock();
+  start_time_ = ros::Time::now();
+  time_mtx_.unlock();
+  setState(RECOVERING);
+  try
   {
-  }
-
-
-  void AbstractRecoveryExecution::reconfigure(const MoveBaseFlexConfig &config)
-  {
-    boost::lock_guard<boost::mutex> guard(conf_mtx_);
-
-    // Maximum time allowed to recovery behaviors. Intended as a safeward for the case a behavior hangs.
-    // If it doesn't return within time, the navigator will cancel it and abort the corresponding action.
-    patience_ = ros::Duration(config.recovery_patience);
-
-    // Nothing else to do here, as recovery_enabled is loaded and used in the navigation server
-  }
-
-
-  void AbstractRecoveryExecution::setState(RecoveryState state)
-  {
-    boost::lock_guard<boost::mutex> guard(state_mtx_);
-    state_ = state;
-  }
-
-
-  typename AbstractRecoveryExecution::RecoveryState AbstractRecoveryExecution::getState()
-  {
-    boost::lock_guard<boost::mutex> guard(state_mtx_);
-    return state_;
-  }
-
-  bool AbstractRecoveryExecution::cancel()
-  {
-    cancel_ = true;
-    // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-    if(!behavior_->cancel())
+    outcome_ = behavior_->runBehavior(message_);
+    if (cancel_)
     {
-      ROS_WARN_STREAM("Cancel recovering failed or is not supported by the plugin. "
-                          << "Wait until the current recovery behavior finished!");
-      return false;
+      setState(CANCELED);
     }
-    return true;
-  }
-
-  bool AbstractRecoveryExecution::isPatienceExceeded()
-  {
-    boost::lock_guard<boost::mutex> guard1(conf_mtx_);
-    boost::lock_guard<boost::mutex> guard2(time_mtx_);
-    ROS_DEBUG_STREAM("Patience: " << patience_ << ", start time: " << start_time_ << " now: " << ros::Time::now());
-    return !patience_.isZero() && (ros::Time::now() - start_time_ > patience_);
-  }
-
-  void AbstractRecoveryExecution::run()
-  {
-    cancel_ = false; // reset the canceled state
-
-    time_mtx_.lock();
-    start_time_ = ros::Time::now();
-    time_mtx_.unlock();
-    setState(RECOVERING);
-    try
+    else
     {
-      outcome_ = behavior_->runBehavior(message_);
-      if (cancel_)
-      {
-        setState(CANCELED);
-      }
-      else
-      {
-        setState(RECOVERY_DONE);
-      }
+      setState(RECOVERY_DONE);
     }
-    catch (boost::thread_interrupted &ex)
-    {
-      setState(STOPPED);
-    }
-    catch (...){
-      ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
-      setState(INTERNAL_ERROR);
-    }
-    condition_.notify_one();
   }
+  catch (boost::thread_interrupted &ex)
+  {
+    setState(STOPPED);
+  }
+  catch (...){
+    ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+    setState(INTERNAL_ERROR);
+  }
+  condition_.notify_one();
+}
+
 } /* namespace mbf_abstract_nav */

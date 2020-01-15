@@ -68,6 +68,7 @@
 
 namespace mbf_abstract_nav
 {
+
 /**
  * @defgroup abstract_server Abstract Server
  * @brief Classes belonging to the Abstract Server level.
@@ -381,4 +382,4 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
 } /* namespace mbf_abstract_nav */
 
-#endif /* navigation_controller.h */
+#endif /* MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_ */

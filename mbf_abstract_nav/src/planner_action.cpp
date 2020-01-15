@@ -42,12 +42,13 @@
 
 #include "mbf_abstract_nav/planner_action.h"
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
 PlannerAction::PlannerAction(
     const std::string &name,
     const RobotInformation &robot_info)
-  : AbstractAction(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
+  : AbstractActionBase(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
 {
   ros::NodeHandle private_nh("~");
   // informative topics: current navigation goal
@@ -287,4 +288,3 @@ bool PlannerAction::transformPlanToGlobalFrame(
 }
 
 } /* namespace mbf_abstract_nav */
-

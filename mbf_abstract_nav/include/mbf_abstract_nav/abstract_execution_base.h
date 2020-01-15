@@ -113,6 +113,7 @@ protected:
   //! the plugin name; not the plugin type!
   std::string name_;
 };
+
 } /* namespace mbf_abstract_nav */
 
 #endif  /* MBF_ABSTRACT_NAV__ABSTRACT_EXECUTION_BASE_H_ */

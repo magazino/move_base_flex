@@ -41,7 +41,7 @@
 #ifndef MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_
 #define MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_
 
-#include "mbf_abstract_nav/abstract_action.h"
+#include "mbf_abstract_nav/abstract_action_base.hpp"
 #include "mbf_abstract_nav/abstract_recovery_execution.h"
 #include "mbf_abstract_nav/robot_information.h"
 #include <actionlib/server/action_server.h>
@@ -50,7 +50,7 @@
 
 namespace mbf_abstract_nav{
 
-class RecoveryAction : public AbstractAction<mbf_msgs::RecoveryAction, AbstractRecoveryExecution>
+class RecoveryAction : public AbstractActionBase<mbf_msgs::RecoveryAction, AbstractRecoveryExecution>
 {
  public:
 
@@ -62,7 +62,6 @@ class RecoveryAction : public AbstractAction<mbf_msgs::RecoveryAction, AbstractR
 
 };
 
-}
+} /* mbf_abstract_nav */
 
-
-#endif //MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_
+#endif /* MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_ */

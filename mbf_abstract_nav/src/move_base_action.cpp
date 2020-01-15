@@ -605,6 +605,4 @@ void MoveBaseAction::actionGetPathReplanningDone(
       boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)); // replanning
 }
 
-
 } /* namespace mbf_abstract_nav */
-
