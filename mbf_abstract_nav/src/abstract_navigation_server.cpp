@@ -73,7 +73,7 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
   oscillation_timeout_ = ros::Duration(oscillation_timeout);
   private_nh_.param("oscillation_distance", oscillation_distance_, 0.02);
 
-  goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
+  goal_pub_ = private_nh_.advertise<geometry_msgs::PoseStamped>("current_goal_exe_path", 1);
 
   // init cmd_vel publisher for the robot velocity
   vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
