@@ -59,6 +59,7 @@
 
 namespace mbf_abstract_nav
 {
+
 /**
  * @defgroup controller_execution Controller Execution Classes
  * @brief The controller execution classes are derived from the AbstractControllerExecution and extends the
@@ -334,6 +335,9 @@ namespace mbf_abstract_nav
 
     //! whether move base flex should check for the goal tolerance or not.
     bool mbf_tolerance_check_;
+
+    //! whether move base flex should force the robot to stop once the goal is reached.
+    bool force_stop_at_goal_;
 
     //! distance tolerance to the given goal pose
     double dist_tolerance_;

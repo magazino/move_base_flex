@@ -40,10 +40,11 @@
 
 #include "mbf_abstract_nav/recovery_action.h"
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
 RecoveryAction::RecoveryAction(const std::string &name, const RobotInformation &robot_info)
-  : AbstractAction(name, robot_info, boost::bind(&mbf_abstract_nav::RecoveryAction::run, this, _1, _2)){}
+  : AbstractActionBase(name, robot_info, boost::bind(&mbf_abstract_nav::RecoveryAction::run, this, _1, _2)){}
 
 void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &execution)
 {
@@ -155,4 +156,3 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
 }
 
 } /* namespace mbf_abstract_nav */
-

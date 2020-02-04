@@ -85,5 +85,6 @@ class RobotInformation{
 
 };
 
-}
-#endif //MBF_ABSTRACT_NAV__ROBOT_INFORMATION_H_
+} /* mbf_abstract_nav */
+
+#endif /* MBF_ABSTRACT_NAV__ROBOT_INFORMATION_H_ */

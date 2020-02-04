@@ -2,6 +2,17 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.5 (2019-10-11)
+------------------
+* Update goal pose on replanning, so the feedback remains consistent
+* Fix: Reset oscillation timer after executing a recovery behavior
+* Remove debug log messages
+* Do not pass boost functions to abstract server to (de)activate costmaps.
+  Run instead abstract methods (possibly) overridden in the costmap server,
+  all costmap-related handling refactored to a new CostmapWrapper class
+* On controller execution, check that local costmap is current
+* On move_base action, use MoveBaseResult constant to fill outcome in case of oscilation
+
 0.2.4 (2019-06-16)
 ------------------
 * Reduce log verbosity by combining lines and using more DEBUG
