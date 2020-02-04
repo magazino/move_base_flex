@@ -40,13 +40,13 @@
 
 #include "mbf_abstract_nav/controller_action.h"
 
-namespace mbf_abstract_nav{
-
+namespace mbf_abstract_nav
+{
 
 ControllerAction::ControllerAction(
     const std::string &action_name,
     const RobotInformation &robot_info)
-    : AbstractAction(action_name, robot_info, boost::bind(&mbf_abstract_nav::ControllerAction::run, this, _1, _2))
+    : AbstractActionBase(action_name, robot_info, boost::bind(&mbf_abstract_nav::ControllerAction::run, this, _1, _2))
 {
 }
 
@@ -89,8 +89,8 @@ void ControllerAction::start(
   slot_map_mtx_.unlock();
   if(!update_plan)
   {
-      // Otherwise run parent version of this method
-      AbstractAction::start(goal_handle, execution_ptr);
+    // Otherwise run parent version of this method
+    AbstractActionBase::start(goal_handle, execution_ptr);
   }
 }
 
@@ -355,5 +355,4 @@ void ControllerAction::fillExePathResult(
   result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
 }
 
-}
-
+} /* mbf_abstract_nav */

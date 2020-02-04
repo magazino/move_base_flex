@@ -59,6 +59,7 @@
 
 namespace mbf_abstract_nav
 {
+
 /**
  * @defgroup controller_execution Controller Execution Classes
  * @brief The controller execution classes are derived from the AbstractControllerExecution and extends the

@@ -59,6 +59,7 @@
 
 namespace mbf_abstract_nav
 {
+
 /**
  * @defgroup recovery_execution Recovery Execution Classes
  * @brief The recovery execution classes are derived from the RecoveryPlannerExecution and extends the functionality.
