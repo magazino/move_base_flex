@@ -233,15 +233,15 @@ bool AbstractControllerExecution::reachedGoalCheck()
 
 bool AbstractControllerExecution::cancel()
 {
-  cancel_ = true;
   // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-  if(!controller_->cancel())
+  bool ctrl_cancelled = controller_->cancel();
+  if(!ctrl_cancelled)
   {
     ROS_WARN_STREAM("Cancel controlling failed or is not supported by the plugin. "
                         << "Wait until the current control cycle finished!");
-    return false;
   }
-  return true;
+  cancel_ = true;
+  return ctrl_cancelled;
 }
 
 
