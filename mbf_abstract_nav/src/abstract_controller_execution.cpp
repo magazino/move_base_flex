@@ -233,7 +233,6 @@ bool AbstractControllerExecution::reachedGoalCheck()
 
 bool AbstractControllerExecution::cancel()
 {
-  cancel_ = true;
   // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
   if(!controller_->cancel())
   {
@@ -241,6 +240,7 @@ bool AbstractControllerExecution::cancel()
                         << "Wait until the current control cycle finished!");
     return false;
   }
+  cancel_ = true;
   return true;
 }
 
