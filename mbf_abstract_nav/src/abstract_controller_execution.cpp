@@ -64,8 +64,9 @@ AbstractControllerExecution::AbstractControllerExecution(
   // non-dynamically reconfigurable parameters
   private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
   private_nh.param("map_frame", global_frame_, std::string("map"));
-  private_nh.param("mbf_tolerance_check", mbf_tolerance_check_, false);
   private_nh.param("force_stop_at_goal", force_stop_at_goal_, false);
+  private_nh.param("force_stop_on_cancel", force_stop_on_cancel_, false);
+  private_nh.param("mbf_tolerance_check", mbf_tolerance_check_, false);
   private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
   private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
   private_nh.param("tf_timeout", tf_timeout_, 1.0);
@@ -270,7 +271,9 @@ void AbstractControllerExecution::run()
 
       if (cancel_)
       {
-        publishZeroVelocity(); // command the robot to stop on canceling navigation
+        if (force_stop_on_cancel_) {
+          publishZeroVelocity(); // command the robot to stop on canceling navigation
+        }
         setState(CANCELED);
         condition_.notify_all();
         moving_ = false;

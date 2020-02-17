@@ -336,6 +336,9 @@ namespace mbf_abstract_nav
     //! whether move base flex should force the robot to stop once the goal is reached.
     bool force_stop_at_goal_;
 
+    //! whether move base flex should force the robot to stop on canceling navigation.
+    bool force_stop_on_cancel_;
+
     //! distance tolerance to the given goal pose
     double dist_tolerance_;
 
