@@ -142,7 +142,6 @@ namespace mbf_abstract_nav
     }
     boost::lock_guard<boost::mutex> guard(plan_mtx_);
     new_plan_ = true;
-
     plan_ = plan;
   }
 
