@@ -30,9 +30,9 @@ uint8 TF_ERROR        = 111
 uint8 NOT_INITIALIZED = 112
 uint8 INVALID_PLUGIN  = 113
 uint8 INTERNAL_ERROR  = 114
-uint8 STOPPED         = 115
-uint8 OUT_OF_MAP      = 116
-uint8 MAP_ERROR       = 117
+uint8 OUT_OF_MAP      = 115  # The start and / or the goal are outside the map
+uint8 MAP_ERROR       = 116  # The map is not running properly
+uint8 STOPPED         = 117
 
 # 121..149 are reserved as plugin specific errors
 

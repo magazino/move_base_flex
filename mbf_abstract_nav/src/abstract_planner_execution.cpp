@@ -269,11 +269,7 @@ void AbstractPlannerExecution::run()
       setState(PLANNING);
       if (make_plan)
       {
-        ros::Time m1 = ros::Time::now();
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
-        ros::Time m2 = ros::Time::now();
-        ROS_DEBUG_STREAM("planning execution time for " << name_ << ": " <<  (m2 - m1).toSec());
-
         success = outcome_ < 10;
 
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
@@ -281,7 +277,7 @@ void AbstractPlannerExecution::run()
         if (cancel_ && !isPatienceExceeded())
         {
           setState(CANCELED);
-          ROS_INFO_STREAM("The global planner has been canceled!"); // but not due to patience exceeded
+          ROS_INFO_STREAM("The planner \"" << name_ << "\" has been canceled!"); // but not due to patience exceeded
           planning_ = false;
           condition_.notify_all();
         }

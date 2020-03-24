@@ -220,11 +220,7 @@ bool AbstractControllerExecution::isPatienceExceeded()
     if(ros::Time::now() - last_call_time_ > patience_)
     {
       ROS_WARN_STREAM_THROTTLE(3, "The controller plugin \"" << name_ << "\" needs more time to compute in one run"
-          " then the patience time! Trying to cancel it and wait for it to finish the run.");
-      if(cancel())
-      {
-        ROS_INFO_STREAM("Successfully canceled the plugin \"" << name_ << "\"!");
-      }
+          " than the patience time! Trying to cancel it and wait for it to finish the run.");
       return true;
     }
     if(ros::Time::now() - last_valid_cmd_time_ > patience_)

@@ -202,11 +202,17 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         ROS_DEBUG_STREAM_NAMED(name_, "The moving has been started!");
         break;
 
-        // in progress
       case AbstractControllerExecution::PLANNING:
         if (execution.isPatienceExceeded())
         {
-          ROS_INFO_STREAM_THROTTLE_NAMED(3, name_, "The controller patience has been exceeded! Wait for it to finish the current run.");
+          if(execution.cancel())
+          {
+            ROS_INFO_STREAM("Successfully canceled the plugin \"" << name_ << "\" after the patience time has been exceeded!");
+          }
+          else
+          {
+            ROS_WARN_STREAM_THROTTLE(3, "Could not cancel the plugin \"" << name_ << "\" after the patience time has been exceeded!");
+          }
         }
         break;
 

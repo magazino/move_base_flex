@@ -96,7 +96,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
         // Recovery behavior supports cancel and it worked
         recovery_active = false; // stopping the action
         result.outcome = mbf_msgs::RecoveryResult::CANCELED;
-        result.message = "Recovering \"" + goal.behavior + "\" canceled!";
+        result.message = "Recovery behaviour \"" + goal.behavior + "\" canceled!";
         goal_handle.setCanceled(result, result.message);
         ROS_DEBUG_STREAM_NAMED(name_, result.message);
         break;
