@@ -54,7 +54,7 @@ bool AbstractExecutionBase::start()
 
 void AbstractExecutionBase::stop()
 {
-  ROS_WARN_STREAM("Try to stop the move base flex plugin \"" << name_ << "\" rigorously by interrupting the thread!");
+  ROS_WARN_STREAM("Try to stop the plugin \"" << name_ << "\" rigorously by interrupting the thread!");
   thread_.interrupt();
 }
 

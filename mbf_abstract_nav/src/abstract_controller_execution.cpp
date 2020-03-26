@@ -219,13 +219,12 @@ bool AbstractControllerExecution::isPatienceExceeded()
   {
     if(ros::Time::now() - last_call_time_ > patience_)
     {
-      ROS_WARN_STREAM_THROTTLE(3, "The controller plugin \"" << name_ << "\" needs more time to compute in one run"
-          " than the patience time! Trying to cancel it and wait for it to finish the run.");
+      ROS_WARN_STREAM_THROTTLE(3, "The controller plugin \"" << name_ << "\" needs more time to compute in one run than the patience time!");
       return true;
     }
     if(ros::Time::now() - last_valid_cmd_time_ > patience_)
     {
-      ROS_DEBUG_STREAM("Plugin does not return a success state (outcome < 10) for more then the patience time in multiple runs!");
+      ROS_DEBUG_STREAM("The controller plugin \"" << name_ << "\" does not return a success state (outcome < 10) for more than the patience time in multiple runs!");
       return true;
     }
   }
@@ -252,8 +251,7 @@ bool AbstractControllerExecution::cancel()
   bool ctrl_cancelled = controller_->cancel();
   if(!ctrl_cancelled)
   {
-    ROS_WARN_STREAM("Cancel controlling failed or is not supported by the plugin. "
-                        << "Wait until the current control cycle finished!");
+    ROS_WARN_STREAM("Cancel controlling failed. Wait until the current control cycle finished!");
   }
   cancel_ = true;
   return ctrl_cancelled;

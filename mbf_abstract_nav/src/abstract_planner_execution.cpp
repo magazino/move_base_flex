@@ -71,7 +71,7 @@ double AbstractPlannerExecution::getCost()
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
   // copy plan and costs to output
   // if the planner plugin do not compute costs compute costs by discrete path length
-  if(cost_ < 1e-7 && !plan_.empty())
+  if(cost_ == 0 && !plan_.empty())
   {
     ROS_DEBUG_STREAM("Compute costs by discrete path length!");
     double cost = 0;
