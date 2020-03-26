@@ -151,7 +151,6 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
           {
             ROS_WARN_STREAM_THROTTLE_NAMED(2.0, name_, "Cancel planning failed or is not supported; "
                 "must wait until current plan finish!");
-            execution.stop(); // try to interrupt planning.
           }
         }
         else

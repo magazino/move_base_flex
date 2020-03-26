@@ -71,6 +71,9 @@ bool WrapperLocalPlanner::setPlan(const std::vector<geometry_msgs::PoseStamped> 
 
 bool WrapperLocalPlanner::cancel()
 {
+  ROS_WARN_STREAM("The cancel method is not implemented. "
+                  "Note: you are running a nav_core based plugin, "
+                  "which is wrapped into the MBF interface.");
   return false;
 }
 

@@ -41,7 +41,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#if ROS_VERSION_MINIMUM(1, 14, 0) // if current ros version is >= 1.14.0
+#if ROS_VERSION_MINIMUM (1, 14, 0) // if current ros version is >= 1.14.0
   // Melodic uses TF2
   #include <tf2_ros/buffer.h>
   typedef boost::shared_ptr<tf2_ros::Buffer> TFPtr;

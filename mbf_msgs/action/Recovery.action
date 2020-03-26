@@ -18,6 +18,8 @@ uint8 TF_ERROR        = 153
 uint8 NOT_INITIALIZED = 154
 uint8 INVALID_PLUGIN  = 155
 uint8 INTERNAL_ERROR  = 156
+uint8 STOPPED         = 157  # The recovery behaviour execution has been stopped rigorously.
+
 # 171..199 are reserved as plugin specific errors
 
 uint32 outcome

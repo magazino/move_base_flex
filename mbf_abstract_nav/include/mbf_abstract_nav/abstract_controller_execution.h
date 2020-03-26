@@ -224,6 +224,9 @@ namespace mbf_abstract_nav
     //! The time the controller has been started.
     ros::Time start_time_;
 
+    //! The time the controller responded with a success output (output < 10).
+    ros::Time last_valid_cmd_time_;
+
     //! The maximum number of retries
     int max_retries_;
 

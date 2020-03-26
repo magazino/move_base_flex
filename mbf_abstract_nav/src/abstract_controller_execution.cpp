@@ -215,7 +215,20 @@ ros::Time AbstractControllerExecution::getLastPluginCallTime()
 bool AbstractControllerExecution::isPatienceExceeded()
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
-  return !patience_.isZero() && (ros::Time::now() - last_call_time_ > patience_);
+  if(!patience_.isZero() && ros::Time::now() - start_time_ > patience_) // not zero -> activated, start_time handles init case
+  {
+    if(ros::Time::now() - last_call_time_ > patience_)
+    {
+      ROS_WARN_STREAM_THROTTLE(3, "The controller plugin \"" << name_ << "\" needs more time to compute in one run than the patience time!");
+      return true;
+    }
+    if(ros::Time::now() - last_valid_cmd_time_ > patience_)
+    {
+      ROS_DEBUG_STREAM("The controller plugin \"" << name_ << "\" does not return a success state (outcome < 10) for more than the patience time in multiple runs!");
+      return true;
+    }
+  }
+  return false;
 }
 
 
@@ -238,8 +251,7 @@ bool AbstractControllerExecution::cancel()
   bool ctrl_cancelled = controller_->cancel();
   if(!ctrl_cancelled)
   {
-    ROS_WARN_STREAM("Cancel controlling failed or is not supported by the plugin. "
-                        << "Wait until the current control cycle finished!");
+    ROS_WARN_STREAM("Cancel controlling failed. Wait until the current control cycle finished!");
   }
   cancel_ = true;
   return ctrl_cancelled;
@@ -259,7 +271,7 @@ void AbstractControllerExecution::run()
     ROS_ERROR("robot navigation moving has no plan!");
   }
 
-  ros::Time last_valid_cmd_time = ros::Time();
+  last_valid_cmd_time_ = ros::Time();
   int retries = 0;
   int seq = 0;
 
@@ -347,7 +359,7 @@ void AbstractControllerExecution::run()
         {
           setState(GOT_LOCAL_CMD);
           vel_pub_.publish(cmd_vel_stamped.twist);
-          last_valid_cmd_time = ros::Time::now();
+          last_valid_cmd_time_ = ros::Time::now();
           retries = 0;
         }
         else
@@ -358,8 +370,7 @@ void AbstractControllerExecution::run()
             setState(MAX_RETRIES);
             moving_ = false;
           }
-          else if (!patience_.isZero() && ros::Time::now() - last_valid_cmd_time > patience_
-                   && ros::Time::now() - start_time_ > patience_)
+          else if (isPatienceExceeded())
           {
             // patience limit enabled and running controller for more than patience without valid commands
             setState(PAT_EXCEEDED);

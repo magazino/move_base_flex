@@ -215,6 +215,7 @@ uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &st
 
 void AbstractPlannerExecution::run()
 {
+  setState(STARTED);
   boost::lock_guard<boost::mutex> guard(planning_mtx_);
   int retries = 0;
   geometry_msgs::PoseStamped current_start = start_;
@@ -276,7 +277,7 @@ void AbstractPlannerExecution::run()
         if (cancel_ && !isPatienceExceeded())
         {
           setState(CANCELED);
-          ROS_INFO_STREAM("The global planner has been canceled!"); // but not due to patience exceeded
+          ROS_INFO_STREAM("The planner \"" << name_ << "\" has been canceled!"); // but not due to patience exceeded
           planning_ = false;
           condition_.notify_all();
         }
@@ -351,6 +352,7 @@ void AbstractPlannerExecution::run()
   {
     ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR);
+    condition_.notify_all();
   }
 }
 
