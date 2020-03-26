@@ -30,10 +30,10 @@ uint8 INTERNAL_ERROR = 17
 
 # Planning/controlling failures:
 uint8 PLAN_FAILURE   = 50
-# 51..99 are reserved as global planner specific errors
+# 51..99 are reserved as planner specific errors
 
 uint8 CTRL_FAILURE   = 100
-# 101..149 are reserved as local planner specific errors
+# 101..149 are reserved as controller specific errors
 
 uint32 outcome
 string message
