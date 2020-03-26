@@ -8,7 +8,7 @@
     <author email="spuetz@uni-osnabrueck.de">Sebastian Pütz</author>
     <maintainer email="santos@magazino.eu">Jorge Santos</maintainer>
     <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>
-    <license>3-Clause BSD</license>
+    <license>BSD-3</license>
 
     <buildtool_depend>catkin</buildtool_depend>
 

@@ -9,7 +9,7 @@
   </description>
 
   <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>
-  <license>BSD</license>
+  <license>BSD-3</license>
   <url type="website">http://wiki.ros.org/move_base_flex</url>
   <author email="spuetz@uos.de">Sebastian Pütz</author>
 
