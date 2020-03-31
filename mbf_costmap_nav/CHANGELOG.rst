@@ -2,6 +2,11 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add output for cancel method if nav_core plugin is wrapped
+* unify license declaration to BSD-3
+
 0.2.5 (2019-10-11)
 ------------------
 * Add clear_on_shutdown functionality

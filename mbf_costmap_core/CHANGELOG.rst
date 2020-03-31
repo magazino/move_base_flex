@@ -2,6 +2,10 @@
 Changelog for package mbf_costmap_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* unify license declaration to BSD-3
+
 0.2.5 (2019-10-11)
 ------------------
 

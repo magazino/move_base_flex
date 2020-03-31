@@ -2,6 +2,21 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Clean up patience exceeded method
+* Add last valid cmd time as class variable
+* Add started state and improve output messages
+* Unify license declaration to BSD-3
+* Add parameter force_stop_on_cancel to send a zero-speed command on cancelation (default: true)
+* remove explicit boost-exception dependency, Boost >= 1.69 provides exception by default.
+* Allow the user time-consuming cancel implementations
+* Rename abstract_action.h as abstract_action_base.hpp
+* Remane robot_Information.cpp as robot_information.cpp
+* Unify headers definitions and namespace intentation
+* Add parameter to actively stop once the goal is reached
+* Exit immediately from action done callbacks when action_state is CANCELED
+
 0.2.5 (2019-10-11)
 ------------------
 * Update goal pose on replanning, so the feedback remains consistent

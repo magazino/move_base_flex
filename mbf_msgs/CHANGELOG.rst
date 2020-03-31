@@ -2,6 +2,11 @@
 Changelog for package mbf_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add some more error codes, e.g. out of map, or map error
+* unify license declaration to BSD-3
+
 0.2.5 (2019-10-11)
 ------------------
 
