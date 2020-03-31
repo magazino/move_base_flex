@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2020-03-31)
+------------------
 * add output for cancel method if nav_core plugin is wrapped
 * unify license declaration to BSD-3
 

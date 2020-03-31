@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>mbf_utility</name>
-  <version>0.2.5</version>
+  <version>0.3.0</version>
   <description>The mbf_utility package</description>
 
   <maintainer email="spuetz@uos.de">Sebastian Pütz</maintainer>

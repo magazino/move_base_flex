@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2020-03-31)
+------------------
 * unify license declaration to BSD-3
 
 0.2.5 (2019-10-11)

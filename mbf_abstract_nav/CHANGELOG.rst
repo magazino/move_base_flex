@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2020-03-31)
+------------------
 * Clean up patience exceeded method
 * Add last valid cmd time as class variable
 * Add started state and improve output messages
