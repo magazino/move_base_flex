@@ -64,6 +64,7 @@ CostmapWrapper::CostmapWrapper(const std::string &name, const TFPtr &tf_listener
 
 CostmapWrapper::~CostmapWrapper()
 {
+  shutdown_costmap_timer_.stop();
 }
 
 
