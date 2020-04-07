@@ -76,7 +76,7 @@ int main(int argc, char **argv)
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
   ros::spin();
 
-  // explicitly call desctructor here, otherwise costmap_nav_srv_ptr will be
+  // explicitly call destructor here, otherwise costmap_nav_srv_ptr will be
   // destructed after tearing down internally allocated static variables
   costmap_nav_srv_ptr.reset();
   return EXIT_SUCCESS;
