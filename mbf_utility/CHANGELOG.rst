@@ -2,6 +2,9 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2020-03-31)
 ------------------
 * Add exception classes for get_path, exe_path and recovery

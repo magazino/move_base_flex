@@ -2,6 +2,12 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure that check_costmap_mutex is destroyed after timer.
+* Avoid crash on shutdown by stop shutdown_costmap_timer on destructor
+  and explicitly call the costmap_nav_srv destructor
+
 0.3.0 (2020-03-31)
 ------------------
 * add output for cancel method if nav_core plugin is wrapped

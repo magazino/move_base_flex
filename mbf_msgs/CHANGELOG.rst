@@ -2,6 +2,9 @@
 Changelog for package mbf_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2020-03-31)
 ------------------
 * add some more error codes, e.g. out of map, or map error

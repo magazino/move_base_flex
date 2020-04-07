@@ -2,6 +2,9 @@
 Changelog for package mbf_simple_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2020-03-31)
 ------------------
 * unify license declaration to BSD-3
