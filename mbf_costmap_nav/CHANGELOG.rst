@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2020-04-07)
+------------------
 * Ensure that check_costmap_mutex is destroyed after timer.
 * Avoid crash on shutdown by stop shutdown_costmap_timer on destructor
   and explicitly call the costmap_nav_srv destructor
