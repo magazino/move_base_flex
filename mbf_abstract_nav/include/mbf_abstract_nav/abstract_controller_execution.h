@@ -111,7 +111,7 @@ namespace mbf_abstract_nav
      * @brief Sets a new plan to the controller execution
      * @param plan A vector of stamped poses.
      */
-    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan);
+    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, bool has_tolerance = false, double dist_to_goal_tolerance = 0.0, double angle_to_goal_tolerance = 3.14);
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the

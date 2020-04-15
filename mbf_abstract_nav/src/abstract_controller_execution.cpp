@@ -130,7 +130,7 @@ AbstractControllerExecution::getState()
   return state_;
 }
 
-void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan)
+void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, bool has_tolerance, double dist_to_goal_tolerance, double angle_to_goal_tolerance)
 {
   if (moving_)
   {
