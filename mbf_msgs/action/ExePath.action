@@ -8,6 +8,11 @@ string controller
 # use different slots for concurrency
 uint8 concurrency_slot
 
+# define goal tolerance for the mission
+bool specific_goal_tolerance
+float32 dist_to_goal_tolerance
+float32 angle_to_goal_tolerance
+
 ---
 
 # Predefined success codes:
