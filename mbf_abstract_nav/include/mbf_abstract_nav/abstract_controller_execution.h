@@ -114,7 +114,11 @@ namespace mbf_abstract_nav
      * @param dist_to_goal_tolerance distance goal tolerance specific for this plan
      * @param angle_to_goal_tolerance angle to goal tolerance specific for this plan
      */
-    void setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, bool has_tolerance = false, double dist_to_goal_tolerance = 0.0, double angle_to_goal_tolerance = 3.14);
+    void setNewPlan(
+      const std::vector<geometry_msgs::PoseStamped> &plan,
+      bool has_tolerance = false,
+      double dist_to_goal_tolerance = 1.0,
+      double angle_to_goal_tolerance = 3.1415);
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
@@ -354,6 +358,14 @@ namespace mbf_abstract_nav
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
 
+    //! whether check for action specific has_tolerance
+    bool has_tolerance_;
+
+    //! replaces default distance to goal tolerance for the action
+    double dist_to_goal_tolerance_;
+
+    //! replaces default angle to goal tolerance for the action
+    double angle_to_goal_tolerance_;
   };
 
 } /* namespace mbf_abstract_nav */

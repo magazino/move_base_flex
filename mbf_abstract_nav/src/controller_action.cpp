@@ -76,7 +76,10 @@ void ControllerAction::start(
       // Goal requests to run the same controller on the same concurrency slot:
       // we update the goal handle and pass the new plan to the execution without stopping it
       execution_ptr = slot_it->second.execution;
-      execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses);
+      execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses,
+                                goal_handle.getGoal()->goal_tolerance,
+                                goal_handle.getGoal()->dist_to_goal_tolerance,
+                                goal_handle.getGoal()->angle_to_goal_tolerance);
       // Update also goal pose, so the feedback remains consistent
       goal_pose_ = goal_handle.getGoal()->path.poses.back();
       mbf_msgs::ExePathResult result;
@@ -179,7 +182,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
     switch (state_moving_input)
     {
       case AbstractControllerExecution::INITIALIZED:
-        execution.setNewPlan(plan);
+        execution.setNewPlan(plan, goal.goal_tolerance, goal.dist_to_goal_tolerance, goal.angle_to_goal_tolerance);
         execution.start();
         break;
 

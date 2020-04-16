@@ -130,7 +130,11 @@ AbstractControllerExecution::getState()
   return state_;
 }
 
-void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::PoseStamped> &plan, bool has_tolerance, double dist_to_goal_tolerance, double angle_to_goal_tolerance)
+void AbstractControllerExecution::setNewPlan(
+  const std::vector<geometry_msgs::PoseStamped> &plan,
+  bool has_tolerance,
+  double dist_to_goal_tolerance,
+  double angle_to_goal_tolerance)
 {
   if (moving_)
   {
@@ -141,6 +145,9 @@ void AbstractControllerExecution::setNewPlan(const std::vector<geometry_msgs::Po
   new_plan_ = true;
 
   plan_ = plan;
+  has_tolerance_ = has_tolerance;
+  dist_to_goal_tolerance_ = dist_to_goal_tolerance;
+  angle_to_goal_tolerance_ = angle_to_goal_tolerance;
 }
 
 
@@ -239,7 +246,14 @@ bool AbstractControllerExecution::isMoving()
 
 bool AbstractControllerExecution::reachedGoalCheck()
 {
-  // check whether the controller plugin returns goal reached or if mbf should check for goal reached.
+  //if action has a specific tolerance, check goal reached with those tolerances
+  if(has_tolerance_){
+    return controller_->isGoalReached(dist_to_goal_tolerance_, angle_to_goal_tolerance_) ||
+        (mbf_utility::distance(robot_pose_, plan_.back()) < dist_to_goal_tolerance_
+        && mbf_utility::angle(robot_pose_, plan_.back()) < angle_to_goal_tolerance_);
+  }
+
+  // Otherwise, check whether the controller plugin returns goal reached or if mbf should check for goal reached.
   return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
       && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
       && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
