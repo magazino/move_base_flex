@@ -358,13 +358,13 @@ namespace mbf_abstract_nav
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
 
-    //! whether check for action specific has_tolerance
+    //! whether check for action specific tolerance
     bool has_tolerance_;
 
-    //! replaces default distance to goal tolerance for the action
+    //! replaces parameter dist_tolerance_ for the action
     double dist_to_goal_tolerance_;
 
-    //! replaces default angle to goal tolerance for the action
+    //! replaces parameter angle_tolerance_ for the action
     double angle_to_goal_tolerance_;
   };
 
