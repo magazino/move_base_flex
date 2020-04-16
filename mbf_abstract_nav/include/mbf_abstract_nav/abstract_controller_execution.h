@@ -110,9 +110,9 @@ namespace mbf_abstract_nav
     /**
      * @brief Sets a new plan to the controller execution
      * @param plan A vector of stamped poses.
-     * @param has_tolerance flag that will be set to true when action has tolerance, default is false
-     * @param dist_to_goal_tolerance distance goal tolerance specific for this plan
-     * @param angle_to_goal_tolerance angle to goal tolerance specific for this plan
+     * @param has_tolerance flag that will be set to true when the new plan (action) has tolerance, default is false
+     * @param dist_to_goal_tolerance distance to goal tolerance specific for this new plan
+     * @param angle_to_goal_tolerance angle to goal tolerance specific for this new plan
      */
     void setNewPlan(
       const std::vector<geometry_msgs::PoseStamped> &plan,
