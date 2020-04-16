@@ -12,7 +12,6 @@ uint8 concurrency_slot
 bool goal_tolerance
 float32 dist_to_goal_tolerance
 float32 angle_to_goal_tolerance
-
 ---
 
 # Predefined success codes:
