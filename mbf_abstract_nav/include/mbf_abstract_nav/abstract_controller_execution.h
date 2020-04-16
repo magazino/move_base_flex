@@ -110,15 +110,15 @@ namespace mbf_abstract_nav
     /**
      * @brief Sets a new plan to the controller execution
      * @param plan A vector of stamped poses.
-     * @param has_tolerance flag that will be set to true when the new plan (action) has tolerance, default is false
-     * @param dist_to_goal_tolerance distance to goal tolerance specific for this new plan
-     * @param angle_to_goal_tolerance angle to goal tolerance specific for this new plan
+     * @param tolerance_from_action flag that will be set to true when the new plan (action) has tolerance
+     * @param action_dist_tolerance distance to goal tolerance specific for this new plan (action)
+     * @param action_angle_tolerance angle to goal tolerance specific for this new plan (action)
      */
     void setNewPlan(
       const std::vector<geometry_msgs::PoseStamped> &plan,
-      bool has_tolerance = false,
-      double dist_to_goal_tolerance = 1.0,
-      double angle_to_goal_tolerance = 3.1415);
+      bool tolerance_from_action = false,
+      double action_dist_tolerance = 1.0,
+      double action_angle_tolerance = 3.1415);
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
@@ -359,13 +359,13 @@ namespace mbf_abstract_nav
     geometry_msgs::PoseStamped robot_pose_;
 
     //! whether check for action specific tolerance
-    bool has_tolerance_;
+    bool tolerance_from_action_;
 
     //! replaces parameter dist_tolerance_ for the action
-    double dist_to_goal_tolerance_;
+    double action_dist_tolerance_;
 
     //! replaces parameter angle_tolerance_ for the action
-    double angle_to_goal_tolerance_;
+    double action_angle_tolerance_;
   };
 
 } /* namespace mbf_abstract_nav */

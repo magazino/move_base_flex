@@ -8,10 +8,10 @@ string controller
 # use different slots for concurrency
 uint8 concurrency_slot
 
-# define goal tolerance for the mission
-bool goal_tolerance
-float32 dist_to_goal_tolerance
-float32 angle_to_goal_tolerance
+# define goal tolerance for the action
+bool tolerance_from_action
+float32 dist_tolerance
+float32 angle_tolerance
 ---
 
 # Predefined success codes:
