@@ -3,7 +3,6 @@ project(mbf_costmap_nav)
 
 find_package(catkin REQUIRED
   COMPONENTS
-  base_local_planner
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
@@ -35,7 +34,6 @@ catkin_package(
   CATKIN_DEPENDS
   actionlib
   actionlib_msgs
-  base_local_planner
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav

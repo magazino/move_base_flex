@@ -19,7 +19,6 @@
     <build_depend>pluginlib</build_depend>
     <build_depend>actionlib</build_depend>
     <build_depend>actionlib_msgs</build_depend>
-    <build_depend>base_local_planner</build_depend>
     <build_depend>dynamic_reconfigure</build_depend>
     <build_depend>std_msgs</build_depend>
     <build_depend>std_srvs</build_depend>
@@ -36,7 +35,6 @@
     <run_depend>pluginlib</run_depend>
     <run_depend>actionlib</run_depend>
     <run_depend>actionlib_msgs</run_depend>
-    <run_depend>base_local_planner</run_depend>
     <run_depend>dynamic_reconfigure</run_depend>
     <run_depend>std_msgs</run_depend>
     <run_depend>std_srvs</run_depend>

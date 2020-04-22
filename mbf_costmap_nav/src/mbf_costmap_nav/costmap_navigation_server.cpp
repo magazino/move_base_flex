@@ -40,8 +40,8 @@
 
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
-#include <base_local_planner/footprint_helper.h>
 #include <mbf_msgs/MoveBaseAction.h>
+#include <mbf_utility/footprint_helper.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
 #include <nav_core_wrapper/wrapper_global_planner.h>
@@ -488,9 +488,9 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   costmap_2d::padFootprint(footprint, request.safety_dist);
 
   // use a footprint helper instance to get all the cells totally or partially within footprint polygon
-  base_local_planner::FootprintHelper fph;
-  std::vector<base_local_planner::Position2DInt> footprint_cells =
-    fph.getFootprintCells(Eigen::Vector3f(x, y, yaw), footprint, *costmap->getCostmap(), true);
+  mbf_utility::FootprintHelper fph;
+  std::vector<mbf_utility::Cell> footprint_cells =
+    fph.getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
   response.state = mbf_msgs::CheckPose::Response::FREE;
   if (footprint_cells.empty())
   {
@@ -583,9 +583,6 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
   // get target pose or current robot pose as x, y, yaw coordinates
   std::string costmap_frame = costmap->getGlobalFrameID();
 
-  // use a footprint helper instance to get all the cells totally or partially within footprint polygon
-  base_local_planner::FootprintHelper fph;
-
   std::vector<geometry_msgs::Point> footprint;
   if (!request.path_cells_only)
   {
@@ -616,16 +613,18 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
     double x = pose.pose.position.x;
     double y = pose.pose.position.y;
     double yaw = tf::getYaw(pose.pose.orientation);
-    std::vector<base_local_planner::Position2DInt> cells_to_check;
+    std::vector<mbf_utility::Cell> cells_to_check;
     if (request.path_cells_only)
     {
-      base_local_planner::Position2DInt cell;
+      mbf_utility::Cell cell;
       if (costmap->getCostmap()->worldToMap(x, y, (unsigned int&)cell.x, (unsigned int&)cell.y))
         cells_to_check.push_back(cell);  // out of map if false; cells_to_check will be empty
     }
     else
     {
-      cells_to_check = fph.getFootprintCells(Eigen::Vector3f(x, y, yaw), footprint, *costmap->getCostmap(), true);
+      // use a footprint helper instance to get all the cells totally or partially within footprint polygon
+      mbf_utility::FootprintHelper fph;
+      cells_to_check = fph.getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
     }
 
     if (cells_to_check.empty())
