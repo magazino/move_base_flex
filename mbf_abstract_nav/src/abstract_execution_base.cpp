@@ -59,7 +59,8 @@ void AbstractExecutionBase::stop()
 }
 
 void AbstractExecutionBase::join(){
-  thread_.join();
+  if (thread_.joinable())
+    thread_.join();
 }
 
 void AbstractExecutionBase::waitForStateUpdate(boost::chrono::microseconds const &duration)
