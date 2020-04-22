@@ -66,16 +66,16 @@ void ControllerAction::start(
   bool update_plan = false;
   slot_map_mtx_.lock();
   std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
-  if(slot_it != concurrency_slots_.end())
+  if(slot_it != concurrency_slots_.end() && slot_it->second.in_use)
   {
     boost::lock_guard<boost::mutex> goal_guard(goal_mtx_);
     if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
        goal_handle.getGoal()->controller.empty())
     {
       update_plan = true;
-      // Goal requests to run the same controller on the same concurrency slot:
-      // we update the goal handle and pass the new plan and tolerances from action
-      // to the execution without stopping it
+      // Goal requests to run the same controller on the same concurrency slot already in use:
+      // we update the goal handle and pass the new plan and tolerances from the action to the
+      // execution without stopping it
       execution_ptr = slot_it->second.execution;
       execution_ptr->setNewPlan(goal_handle.getGoal()->path.poses,
                                 goal_handle.getGoal()->tolerance_from_action,
