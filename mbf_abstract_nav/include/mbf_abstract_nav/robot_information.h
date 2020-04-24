@@ -69,7 +69,7 @@ class RobotInformation{
    */
   bool getRobotPose(geometry_msgs::PoseStamped &robot_pose) const;
 
-  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity, ros::Duration look_back_duration) const;
+  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const;
 
   const std::string& getGlobalFrame() const;
 

@@ -335,12 +335,17 @@ void ControllerAction::publishExePathFeedback(
         const geometry_msgs::TwistStamped& current_twist)
 {
   mbf_msgs::ExePathFeedback feedback;
+
   feedback.outcome = outcome;
   feedback.message = message;
 
   feedback.last_cmd_vel = current_twist;
   if (feedback.last_cmd_vel.header.stamp.isZero())
     feedback.last_cmd_vel.header.stamp = ros::Time::now();
+
+  //TODO: maybe can consider the feedback error
+  robot_info_.getRobotVelocity(robot_actual_vel_);
+  feedback.actual_vel = robot_actual_vel_;
 
   feedback.current_pose = robot_pose_;
   feedback.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));

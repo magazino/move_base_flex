@@ -183,13 +183,18 @@ bool AbstractControllerExecution::computeRobotPose()
   return true;
 }
 
+inline void AbstractControllerExecution::updateActualRobotVelocity()
+{
+  mbf_utility::getRobotActualVelocity(robot_velocity_);
+}
+
 
 uint32_t AbstractControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,
                                                          const geometry_msgs::TwistStamped& robot_velocity,
                                                          geometry_msgs::TwistStamped& vel_cmd,
                                                          std::string& message)
 {
-  return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
+  return controller_->computeVelocityCommands(robot_pose, robot_velocity_, vel_cmd, message);
 }
 
 
@@ -343,6 +348,9 @@ void AbstractControllerExecution::run()
       // compute robot pose and store it in robot_pose_
       computeRobotPose();
 
+      // update robot actual velocity and store it in robot_velocity
+      updateActualRobotVelocity();
+
       // ask planner if the goal is reached
       if (reachedGoalCheck())
       {
@@ -367,8 +375,7 @@ void AbstractControllerExecution::run()
 
         // call plugin to compute the next velocity command
         geometry_msgs::TwistStamped cmd_vel_stamped;
-        geometry_msgs::TwistStamped robot_velocity;   // TODO pass current velocity to the plugin!
-        outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
+        outcome_ = computeVelocityCmd(robot_pose_, robot_velocity_, cmd_vel_stamped, message_ = "");
 
         if (outcome_ < 10)
         {

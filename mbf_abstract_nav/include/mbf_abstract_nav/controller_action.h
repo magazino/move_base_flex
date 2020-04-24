@@ -91,6 +91,7 @@ protected:
 
   boost::mutex goal_mtx_; ///< lock goal handle for updating it while running
   geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose
+  geometry_msgs::TwistStamped robot_actual_vel_; //Actual robot velocity feedback
   geometry_msgs::PoseStamped goal_pose_;  ///< Current goal pose
 
 };

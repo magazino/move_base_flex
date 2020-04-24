@@ -66,10 +66,11 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
   return true;
 }
 
-bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity, ros::Duration look_back_duration) const
+bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const
 {
-  // TODO implement and filter tf data to compute velocity.
-  return false;
+  //TODO: maybe can consider the feedback error
+  mbf_utility::getRobotActualVelocity(robot_velocity);
+  return true;
 }
 
 const std::string& RobotInformation::getGlobalFrame() const {return global_frame_;};

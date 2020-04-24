@@ -49,6 +49,7 @@
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 
 #include <mbf_utility/navigation_utility.h>
 #include <mbf_abstract_core/abstract_controller.h>
@@ -275,6 +276,11 @@ namespace mbf_abstract_nav
     bool computeRobotPose();
 
     /**
+     * @brief Update the robot actual velocity;
+     */
+    inline void updateActualRobotVelocity();
+
+    /**
      * @brief Sets the controller state. This method makes the communication of the state thread safe.
      * @param state The current controller state.
      */
@@ -357,6 +363,9 @@ namespace mbf_abstract_nav
 
     //! current robot pose;
     geometry_msgs::PoseStamped robot_pose_;
+
+    //! current robot actual velocity;
+    geometry_msgs::TwistStamped robot_velocity_;
 
     //! whether check for action specific tolerance
     bool tolerance_from_action_;

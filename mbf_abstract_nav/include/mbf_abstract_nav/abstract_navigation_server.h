@@ -347,6 +347,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! current_goal publisher for all controller execution objects
     ros::Publisher goal_pub_;
 
+    //! subscribe for the actual velocity feedback from odometry(wheel encoder)
+    ros::Subscriber odom_sub_;
+
     RobotInformation robot_info_;
 
     ControllerAction controller_action_;

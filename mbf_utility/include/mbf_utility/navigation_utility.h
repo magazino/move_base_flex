@@ -42,6 +42,8 @@
 #define MBF_UTILITY__NAVIGATION_UTILITY_H_
 
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <ros/duration.h>
 #include <ros/time.h>
 #include <string>
@@ -107,6 +109,20 @@ bool getRobotPose(const TF &tf,
                   const std::string &global_frame,
                   const ros::Duration &timeout,
                   geometry_msgs::PoseStamped &robot_pose);
+
+/**
+ * @brief subscribe odom_topic callback
+ * @param sub_odometry subscribe data from wheel odometry
+ */           
+void actualVelCallback(const nav_msgs::Odometry::ConstPtr& sub_odometry);
+
+/**
+ * @brief update the robot actual velocity.
+ * @param tf_listener TransformListener.
+ * @return true, if succeeded, false otherwise.
+ */
+void getRobotActualVelocity(geometry_msgs::TwistStamped &robot_velocity);
+
 /**
  * @brief Computes the Euclidean-distance between two poses.
  * @param pose1 pose 1

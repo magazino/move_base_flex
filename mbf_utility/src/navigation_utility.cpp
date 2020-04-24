@@ -42,6 +42,8 @@
 
 namespace mbf_utility
 {
+  geometry_msgs::TwistStamped actual_vel;
+  boost::mutex vel_mutex;
 
 bool getRobotPose(const TF &tf,
                   const std::string &robot_frame,
@@ -167,6 +169,19 @@ bool transformPoint(const TF &tf,
     return false;
   }
   return true;
+}
+
+void actualVelCallback(const nav_msgs::Odometry::ConstPtr& sub_odometry)
+{
+  boost::lock_guard<boost::mutex> lock(vel_mutex);
+  actual_vel.header = sub_odometry->header;
+  actual_vel.twist = sub_odometry->twist.twist;
+}
+
+void getRobotActualVelocity(geometry_msgs::TwistStamped &robot_velocity)
+{
+  boost::lock_guard<boost::mutex> lock(vel_mutex);
+  robot_velocity = actual_vel;
 }
 
 double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2)

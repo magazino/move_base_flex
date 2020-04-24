@@ -57,3 +57,4 @@ float32 dist_to_goal
 float32 angle_to_goal
 geometry_msgs/PoseStamped  current_pose
 geometry_msgs/TwistStamped last_cmd_vel  # last command calculated by the controller
+geometry_msgs/TwistStamped actual_vel  # robot actual velocity feedback from wheel encoder

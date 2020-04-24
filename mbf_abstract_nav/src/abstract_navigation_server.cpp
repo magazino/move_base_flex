@@ -72,6 +72,9 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
   // init cmd_vel publisher for the robot velocity
   vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 
+  // init odom_sub_ subscribe for the actual robot velocity
+  odom_sub_ = nh.subscribe<nav_msgs::Odometry>("odom", 1, &mbf_utility::actualVelCallback);
+
   action_server_get_path_ptr_ = ActionServerGetPathPtr(
     new ActionServerGetPath(
       private_nh_,
