@@ -271,13 +271,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
      */
     virtual void initializeServerComponents();
 
-    /**
-     * @brief Computes the current robot pose (robot_frame_) in the global frame (global_frame_).
-     * @param robot_pose Reference to the robot_pose message object to be filled.
-     * @return true, if the current robot pose could be computed, false otherwise.
-     */
-    bool getRobotPose(geometry_msgs::PoseStamped &robot_pose);
-
   protected:
 
     /**
@@ -347,24 +340,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
 
     //! shared pointer to the common TransformListener
     const TFPtr tf_listener_ptr_;
-
-    //! current robot pose; moving controller is responsible to update it by calling getRobotPose
-    geometry_msgs::PoseStamped robot_pose_;
-
-    //! current goal pose; used to compute remaining distance and angle
-    geometry_msgs::PoseStamped goal_pose_;
-
-    //! timeout after a oscillation is detected
-    ros::Duration oscillation_timeout_;
-
-    //! minimal move distance to not detect an oscillation
-    double oscillation_distance_;
-
-    //! true, if recovery behavior for the MoveBase action is enabled.
-    bool recovery_enabled_;
-
-    //! true, if clearing rotate is allowed.
-    bool clearing_rotation_allowed_;
 
     //! cmd_vel publisher for all controller execution objects
     ros::Publisher vel_pub_;
