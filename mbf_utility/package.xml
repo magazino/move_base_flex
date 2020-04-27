@@ -13,7 +13,6 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>roscpp</depend>
-  <depend>costmap_2d</depend>
   <depend>geometry_msgs</depend>
   <depend>tf</depend>
   <depend>tf2</depend>

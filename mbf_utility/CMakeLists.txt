@@ -8,13 +8,12 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_ros
   tf2_geometry_msgs
-  costmap_2d
 )
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mbf_utility
-  CATKIN_DEPENDS geometry_msgs roscpp tf tf2 tf2_ros tf2_geometry_msgs costmap_2d
+  CATKIN_DEPENDS geometry_msgs roscpp tf tf2 tf2_ros tf2_geometry_msgs
 )
 
 include_directories(
@@ -24,7 +23,6 @@ include_directories(
 
 add_library(${PROJECT_NAME}
    src/navigation_utility.cpp
-   src/footprint_helper.cpp
 )
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

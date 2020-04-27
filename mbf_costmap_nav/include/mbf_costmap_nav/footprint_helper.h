@@ -43,26 +43,26 @@
 #include <costmap_2d/costmap_2d.h>
 #include <geometry_msgs/Point.h>
 
-namespace mbf_utility {
+namespace mbf_costmap_nav
+{
 
-typedef struct {
+typedef struct
+{
   uint16_t x, y;
 } Cell;
 
-class FootprintHelper {
+class FootprintHelper
+{
 public:
-  FootprintHelper();
-  virtual ~FootprintHelper();
-
   /**
    * @brief  Used to get the cells that make up the footprint of the robot
-   * @param x The x position of the robot
-   * @param y The y position of the robot
-   * @param theta The orientation of the robot
+   * @param  x The x position of the robot
+   * @param  y The y position of the robot
+   * @param  theta The orientation of the robot
    * @param  fill If true: returns all cells in the footprint of the robot. If false: returns only the cells that make up the outline of the footprint.
    * @return The cells that make up either the outline or entire footprint of the robot depending on fill
    */
-  std::vector<Cell> getFootprintCells(
+  static std::vector<Cell> getFootprintCells(
       double x, double y, double theta,
       std::vector<geometry_msgs::Point> footprint_spec,
       const costmap_2d::Costmap2D&,
@@ -76,14 +76,14 @@ public:
    * @param  y1 The y coordinate of the second point
    * @param  pts Will be filled with the cells that lie on the line in the grid
    */
-  void getLineCells(int x0, int x1, int y0, int y1, std::vector<Cell>& pts);
+  static void getLineCells(int x0, int x1, int y0, int y1, std::vector<Cell>& pts);
 
   /**
-   * @brief Fill the outline of a polygon, in this case the robot footprint, in a grid
-   * @param footprint The list of cells making up the footprint in the grid, will be modified to include all cells inside the footprint
+   * @brief  Fill the outline of a polygon, in this case the robot footprint, in a grid
+   * @param  footprint The list of cells making up the footprint in the grid, will be modified to include all cells inside the footprint
    */
-  void getFillCells(std::vector<Cell>& footprint);
+  static void getFillCells(std::vector<Cell>& footprint);
 };
 
-} /* namespace mbf_utility */
+} /* namespace mbf_costmap_nav */
 #endif /* FOOTPRINT_HELPER_H_ */

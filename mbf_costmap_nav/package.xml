@@ -16,6 +16,7 @@
 
     <build_depend>tf</build_depend>
     <build_depend>roscpp</build_depend>
+    <build_depend>costmap_2d</build_depend>
     <build_depend>pluginlib</build_depend>
     <build_depend>actionlib</build_depend>
     <build_depend>actionlib_msgs</build_depend>
@@ -32,6 +33,7 @@
 
     <run_depend>tf</run_depend>
     <run_depend>roscpp</run_depend>
+    <run_depend>costmap_2d</run_depend>
     <run_depend>pluginlib</run_depend>
     <run_depend>actionlib</run_depend>
     <run_depend>actionlib_msgs</run_depend>

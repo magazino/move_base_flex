@@ -35,18 +35,10 @@
  * Author: TKruse
  *********************************************************************/
 
-#include "mbf_utility/footprint_helper.h"
+#include "mbf_costmap_nav/footprint_helper.h"
 
-namespace mbf_utility {
-
-FootprintHelper::FootprintHelper() {
-  // TODO Auto-generated constructor stub
-
-}
-
-FootprintHelper::~FootprintHelper() {
-  // TODO Auto-generated destructor stub
-}
+namespace mbf_costmap_nav
+{
 
 void FootprintHelper::getLineCells(int x0, int x1, int y0, int y1, std::vector<Cell>& pts) {
   //Bresenham Ray-Tracing
@@ -175,7 +167,7 @@ void FootprintHelper::getFillCells(std::vector<Cell>& footprint){
 }
 
 /**
- * get the cellsof a footprint at a given position
+ * get the cells of a footprint at a given position
  */
 std::vector<Cell> FootprintHelper::getFootprintCells(
     double x, double y, double theta,
@@ -242,4 +234,4 @@ std::vector<Cell> FootprintHelper::getFootprintCells(
   return footprint_cells;
 }
 
-} /* namespace mbf_utility */
+} /* namespace mbf_costmap_nav */
