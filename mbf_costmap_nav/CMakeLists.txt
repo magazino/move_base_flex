@@ -3,18 +3,18 @@ project(mbf_costmap_nav)
 
 find_package(catkin REQUIRED
   COMPONENTS
+  costmap_2d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
   mbf_costmap_core
-  mbf_utility
   mbf_msgs
+  mbf_utility
   nav_core
   nav_msgs
+  roscpp
   std_msgs
   std_srvs
-  costmap_2d
-  roscpp
   tf
 )
 
@@ -35,19 +35,19 @@ catkin_package(
   CATKIN_DEPENDS
   actionlib
   actionlib_msgs
+  costmap_2d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
   mbf_costmap_core
-  mbf_utility
   mbf_msgs
+  mbf_utility
   nav_core
   nav_msgs
   pluginlib
+  roscpp
   std_msgs
   std_srvs
-  costmap_2d
-  roscpp
   tf
   DEPENDS Boost
 )
