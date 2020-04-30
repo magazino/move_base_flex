@@ -52,7 +52,6 @@ RobotInformation::RobotInformation(TF &tf_listener,
 }
 
 
-
 bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) const
 {
   bool tf_success = mbf_utility::getRobotPose(tf_listener_, robot_frame_, global_frame_,

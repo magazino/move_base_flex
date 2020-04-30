@@ -158,6 +158,7 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
     goal_handle.setAborted(move_base_result, move_base_result.message);
     return;
   }
+  goal_pose_ = goal.target_pose;
 
   // wait for server connections
   if (!action_client_get_path_.waitForServer(connection_timeout) ||
@@ -250,7 +251,6 @@ void MoveBaseAction::actionGetPathDone(
   action_state_ =  FAILED;
 
   const mbf_msgs::GetPathResult &result = *(result_ptr.get());
-  const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
   switch (state.state_)
   {
@@ -294,8 +294,8 @@ void MoveBaseAction::actionGetPathDone(
         // copy result from get_path action
         move_base_result.outcome = result.outcome;
         move_base_result.message = result.message;
-        move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
-        move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
+        move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+        move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
         move_base_result.final_pose = robot_pose_;
 
         ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the planner: " << result.message);
@@ -309,8 +309,8 @@ void MoveBaseAction::actionGetPathDone(
       // copy result from get_path action
       move_base_result.outcome = result.outcome;
       move_base_result.message = result.message;
-      move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
-      move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
+      move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+      move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
       move_base_result.final_pose = robot_pose_;
       goal_handle_.setCanceled(move_base_result, state.getText());
       break;
@@ -364,7 +364,6 @@ void MoveBaseAction::actionExePathDone(
   ROS_DEBUG_STREAM_NAMED("move_base", "Action \"exe_path\" finished.");
 
   const mbf_msgs::ExePathResult& result = *(result_ptr.get());
-  const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
 
   // copy result from get_path action
@@ -490,14 +489,13 @@ void MoveBaseAction::actionRecoveryDone(
   action_state_ =  FAILED;  // unless recovery succeeds or gets canceled...
 
   const mbf_msgs::RecoveryResult& result = *(result_ptr.get());
-  const mbf_msgs::MoveBaseGoal& goal = *(goal_handle_.getGoal().get());
   mbf_msgs::MoveBaseResult move_base_result;
 
   // copy result from get_path action
   move_base_result.outcome = result.outcome;
   move_base_result.message = result.message;
-  move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal.target_pose));
-  move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal.target_pose));
+  move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+  move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
   move_base_result.final_pose = robot_pose_;
 
   switch (state.state_)
