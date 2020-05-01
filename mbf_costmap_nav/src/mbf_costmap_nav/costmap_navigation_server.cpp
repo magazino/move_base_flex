@@ -40,7 +40,6 @@
 
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
-#include <base_local_planner/footprint_helper.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
@@ -48,6 +47,7 @@
 #include <nav_core_wrapper/wrapper_local_planner.h>
 #include <nav_core_wrapper/wrapper_recovery_behavior.h>
 
+#include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 
 namespace mbf_costmap_nav
@@ -487,10 +487,9 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   std::vector<geometry_msgs::Point> footprint = costmap->getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, request.safety_dist);
 
-  // use a footprint helper instance to get all the cells totally or partially within footprint polygon
-  base_local_planner::FootprintHelper fph;
-  std::vector<base_local_planner::Position2DInt> footprint_cells =
-    fph.getFootprintCells(Eigen::Vector3f(x, y, yaw), footprint, *costmap->getCostmap(), true);
+  // use footprint helper to get all the cells totally or partially within footprint polygon
+  std::vector<Cell> footprint_cells =
+    FootprintHelper::getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
   response.state = mbf_msgs::CheckPose::Response::FREE;
   if (footprint_cells.empty())
   {
@@ -520,7 +519,8 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
           response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::INSCRIBED));
           response.cost += cost * (request.inscrib_cost_mult ? request.inscrib_cost_mult : 1.0);
           break;
-        default:response.cost += cost;
+        default:
+          response.cost += cost;
           break;
       }
     }
@@ -571,9 +571,10 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
       costmap = global_costmap_ptr_;
       costmap_name = "global costmap";
       break;
-    default:ROS_ERROR_STREAM("No valid costmap provided; options are "
-                             << mbf_msgs::CheckPath::Request::LOCAL_COSTMAP << ": local costmap, "
-                             << mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP << ": global costmap");
+    default:
+      ROS_ERROR_STREAM("No valid costmap provided; options are "
+                       << mbf_msgs::CheckPath::Request::LOCAL_COSTMAP << ": local costmap, "
+                       << mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP << ": global costmap");
       return false;
   }
 
@@ -582,9 +583,6 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
 
   // get target pose or current robot pose as x, y, yaw coordinates
   std::string costmap_frame = costmap->getGlobalFrameID();
-
-  // use a footprint helper instance to get all the cells totally or partially within footprint polygon
-  base_local_planner::FootprintHelper fph;
 
   std::vector<geometry_msgs::Point> footprint;
   if (!request.path_cells_only)
@@ -616,16 +614,17 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
     double x = pose.pose.position.x;
     double y = pose.pose.position.y;
     double yaw = tf::getYaw(pose.pose.orientation);
-    std::vector<base_local_planner::Position2DInt> cells_to_check;
+    std::vector<Cell> cells_to_check;
     if (request.path_cells_only)
     {
-      base_local_planner::Position2DInt cell;
+      Cell cell;
       if (costmap->getCostmap()->worldToMap(x, y, (unsigned int&)cell.x, (unsigned int&)cell.y))
         cells_to_check.push_back(cell);  // out of map if false; cells_to_check will be empty
     }
     else
     {
-      cells_to_check = fph.getFootprintCells(Eigen::Vector3f(x, y, yaw), footprint, *costmap->getCostmap(), true);
+      // use footprint helper to get all the cells totally or partially within footprint polygon
+      cells_to_check = FootprintHelper::getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
     }
 
     if (cells_to_check.empty())

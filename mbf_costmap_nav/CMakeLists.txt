@@ -3,7 +3,7 @@ project(mbf_costmap_nav)
 
 find_package(catkin REQUIRED
   COMPONENTS
-  base_local_planner
+  costmap_2d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
@@ -35,7 +35,7 @@ catkin_package(
   CATKIN_DEPENDS
   actionlib
   actionlib_msgs
-  base_local_planner
+  costmap_2d
   dynamic_reconfigure
   geometry_msgs
   mbf_abstract_nav
@@ -75,6 +75,7 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_controller_execution.cpp
   src/mbf_costmap_nav/costmap_recovery_execution.cpp
   src/mbf_costmap_nav/costmap_wrapper.cpp
+  src/mbf_costmap_nav/footprint_helper.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})
