@@ -193,7 +193,7 @@ bool AbstractPlannerExecution::cancel()
   cancel_ = true; // force cancel immediately, as the call to cancel in the planner can take a while
 
   // returns false if cancel is not implemented or rejected by the planner (will run until completion)
-  if(!planner_->cancel())
+  if (!planner_->cancel())
   {
     ROS_WARN_STREAM("Cancel planning failed or is not supported by the plugin. "
         << "Wait until the current planning finished!");
