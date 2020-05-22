@@ -247,7 +247,8 @@ bool AbstractControllerExecution::isMoving()
 bool AbstractControllerExecution::reachedGoalCheck()
 {
   //if action has a specific tolerance, check goal reached with those tolerances
-  if(tolerance_from_action_){
+  if (tolerance_from_action_)
+  {
     return controller_->isGoalReached(action_dist_tolerance_, action_angle_tolerance_) ||
         (mbf_tolerance_check_ && mbf_utility::distance(robot_pose_, plan_.back()) < action_dist_tolerance_
         && mbf_utility::angle(robot_pose_, plan_.back()) < action_angle_tolerance_);
@@ -263,7 +264,7 @@ bool AbstractControllerExecution::cancel()
 {
   // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
   bool ctrl_cancelled = controller_->cancel();
-  if(!ctrl_cancelled)
+  if (!ctrl_cancelled)
   {
     ROS_WARN_STREAM("Cancel controlling failed. Wait until the current control cycle finished!");
   }

@@ -92,7 +92,7 @@ bool AbstractRecoveryExecution::cancel()
 {
   cancel_ = true;
   // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-  if(!behavior_->cancel())
+  if (!behavior_->cancel())
   {
     ROS_WARN_STREAM("Cancel recovery behavior \"" << name_ << "\" failed or is not supported by the plugin. "
                         << "Wait until the current recovery behavior finished!");
@@ -134,10 +134,12 @@ void AbstractRecoveryExecution::run()
     ROS_WARN_STREAM("Recovery \"" << name_ << "\" interrupted!");
     setState(STOPPED);
   }
-  catch (...){
+  catch (...)
+  {
     ROS_FATAL_STREAM("Unknown error occurred in recovery behavior \"" << name_ << "\": " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR);
   }
   condition_.notify_one();
 }
+
 } /* namespace mbf_abstract_nav */

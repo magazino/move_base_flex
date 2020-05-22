@@ -83,10 +83,7 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
         if (execution.isPatienceExceeded())
         {
           ROS_INFO_STREAM("Recovery behavior \"" << goal.behavior << "\" patience exceeded! Cancel recovering...");
-          if (!execution.cancel())
-          {
-            ROS_WARN_STREAM("Cancel recovering \"" << goal.behavior << "\" failed or not supported; maybe wait until it is finished!");
-          }
+          execution.cancel();
         }
 
         ROS_DEBUG_STREAM_THROTTLE_NAMED(3, name_, "Recovering with: " << goal.behavior);

@@ -210,13 +210,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         if (execution.isPatienceExceeded())
         {
           ROS_INFO_STREAM("Try to cancel the plugin \"" << name_ << "\" after the patience time has been exceeded!");
-          if(execution.cancel())
+          if (execution.cancel())
           {
             ROS_INFO_STREAM("Successfully canceled the plugin \"" << name_ << "\" after the patience time has been exceeded!");
-          }
-          else
-          {
-            ROS_WARN_STREAM_THROTTLE(3, "Could not cancel the plugin \"" << name_ << "\" after the patience time has been exceeded!");
           }
         }
         break;
