@@ -24,7 +24,7 @@ matrix:
     env: ROS_DISTRO=noetic
 
 install:
-  - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
+  - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci.git .ci_config -b master
 
 script:
   - .ci_config/travis.sh
