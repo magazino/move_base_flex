@@ -2,6 +2,10 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove dependency on base_local_planner and move FootprintHelper class to mbf_costmap_nav and make it static
+
 0.3.1 (2020-04-07)
 ------------------
 
