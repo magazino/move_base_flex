@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.2 (2020-05-25)
+------------------
 * Avoid duplicated warn logging output when we cannot cancel a plugin
 * Remove unused methods and attributes from AbstractNavigationServer, which are already present at other places
 * Reuse execution slots; cleanup only at destruction
