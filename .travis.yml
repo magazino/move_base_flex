@@ -11,9 +11,6 @@ notifications:
 
 matrix:
   include:
-  - name: "Indigo"
-    env: ROS_DISTRO=indigo
-
   - name: "Kinetic"
     env: ROS_DISTRO=kinetic
 
@@ -22,6 +19,9 @@ matrix:
 
   - name: "Melodic"
     env: ROS_DISTRO=melodic
+  
+  - name: "Noetic"
+    env: ROS_DISTRO=noetic
 
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
