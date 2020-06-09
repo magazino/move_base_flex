@@ -47,7 +47,7 @@ namespace mbf_abstract_nav
 const double AbstractControllerExecution::DEFAULT_CONTROLLER_FREQUENCY = 100.0; // 100 Hz
 
 AbstractControllerExecution::AbstractControllerExecution(
-    const std::string name,
+    const std::string &name,
     const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
     const ros::Publisher& vel_pub,
     const ros::Publisher& goal_pub,

@@ -36,10 +36,10 @@
  *
  */
 
-#include "mbf_abstract_nav/robot_information.h"
+#include "mbf_utility/robot_information.h"
 #include "mbf_utility/navigation_utility.h"
 
-namespace mbf_abstract_nav
+namespace mbf_utility
 {
 
 RobotInformation::RobotInformation(TF &tf_listener,
@@ -80,4 +80,4 @@ const TF& RobotInformation::getTransformListener() const {return tf_listener_;};
 
 const ros::Duration& RobotInformation::getTfTimeout() const {return tf_timeout_;}
 
-} /* namespace mbf_abstract_nav */
+} /* namespace mbf_utility */

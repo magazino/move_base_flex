@@ -6,7 +6,6 @@
 
 namespace mbf_utility{
 struct RecoveryException : public std::exception {
-
   RecoveryException(unsigned int error_code) : outcome(error_code){}
 
   const char * what () const throw () {

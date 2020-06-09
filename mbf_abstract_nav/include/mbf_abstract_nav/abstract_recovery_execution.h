@@ -43,10 +43,7 @@
 
 #include <map>
 #include <string>
-#include <stdint.h>
 #include <vector>
-
-#include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_recovery.h>
 #include <mbf_utility/types.h>

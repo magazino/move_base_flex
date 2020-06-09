@@ -42,11 +42,9 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_CONTROLLER_EXECUTION_H_
 
 #include <map>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
-#include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 
@@ -89,7 +87,7 @@ namespace mbf_abstract_nav
      * @param tf_listener_ptr Shared pointer to a common tf listener
      */
     AbstractControllerExecution(
-        const std::string name,
+        const std::string &name,
         const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
         const ros::Publisher& vel_pub,
         const ros::Publisher& goal_pub,

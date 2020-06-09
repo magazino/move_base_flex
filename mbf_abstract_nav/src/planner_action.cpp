@@ -47,7 +47,7 @@ namespace mbf_abstract_nav
 
 PlannerAction::PlannerAction(
     const std::string &name,
-    const RobotInformation &robot_info)
+    const mbf_utility::RobotInformation &robot_info)
   : AbstractActionBase(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
 {
   ros::NodeHandle private_nh("~");

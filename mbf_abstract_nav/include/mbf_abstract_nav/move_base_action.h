@@ -48,8 +48,9 @@
 #include <mbf_msgs/ExePathAction.h>
 #include <mbf_msgs/RecoveryAction.h>
 
+#include <mbf_utility/robot_information.h>
+
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
-#include "mbf_abstract_nav/robot_information.h"
 
 
 namespace mbf_abstract_nav
@@ -66,7 +67,9 @@ class MoveBaseAction
 
   typedef actionlib::ActionServer<mbf_msgs::MoveBaseAction>::GoalHandle GoalHandle;
 
-  MoveBaseAction(const std::string &name, const RobotInformation &robot_info, const std::vector<std::string> &controllers);
+  MoveBaseAction(const std::string &name,
+                 const mbf_utility::RobotInformation &robot_info,
+                 const std::vector<std::string> &controllers);
 
   ~MoveBaseAction();
 
@@ -118,7 +121,7 @@ class MoveBaseAction
 
   std::string name_;
 
-  RobotInformation robot_info_;
+  mbf_utility::RobotInformation robot_info_;
 
   //! current robot pose; updated with exe_path action feedback
   geometry_msgs::PoseStamped robot_pose_;
