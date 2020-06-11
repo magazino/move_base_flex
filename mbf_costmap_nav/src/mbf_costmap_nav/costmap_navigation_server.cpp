@@ -618,8 +618,10 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
     if (request.path_cells_only)
     {
       Cell cell;
-      if (costmap->getCostmap()->worldToMap(x, y, (unsigned int&)cell.x, (unsigned int&)cell.y))
+      if (costmap->getCostmap()->worldToMap(x, y, cell.x, cell.y))
+      {
         cells_to_check.push_back(cell);  // out of map if false; cells_to_check will be empty
+      }
     }
     else
     {
