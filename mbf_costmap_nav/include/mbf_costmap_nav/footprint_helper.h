@@ -46,10 +46,10 @@
 namespace mbf_costmap_nav
 {
 
-typedef struct
+struct Cell
 {
-  uint16_t x, y;
-} Cell;
+  unsigned int x, y;
+};
 
 class FootprintHelper
 {
