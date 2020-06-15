@@ -49,24 +49,24 @@ class AbstractPluginManager
 {
  public:
 
-  typedef boost::function<typename PluginType::Ptr(const std::string& plugin)> loadPluginFunction;
-  typedef boost::function<bool (const std::string& name, const typename PluginType::Ptr& plugin_ptr)> initPluginFunction;
+  typedef boost::function<typename PluginType::Ptr(const std::string &plugin)> loadPluginFunction;
+  typedef boost::function<bool (const std::string &name, const typename PluginType::Ptr &plugin_ptr)> initPluginFunction;
 
   AbstractPluginManager(
-      const std::string param_name,
-      const loadPluginFunction& loadPlugin,
-      const initPluginFunction& initPlugin
+      const std::string &param_name,
+      const loadPluginFunction &loadPlugin,
+      const initPluginFunction &initPlugin
   );
 
   bool loadPlugins();
 
-  bool hasPlugin(const std::string& name);
+  bool hasPlugin(const std::string &name);
 
-  std::string getType(const std::string& name);
+  std::string getType(const std::string &name);
 
   const std::vector<std::string>& getLoadedNames();
 
-  typename PluginType::Ptr getPlugin(const std::string& name);
+  typename PluginType::Ptr getPlugin(const std::string &name);
 
  protected:
   std::map<std::string, typename PluginType::Ptr> plugins_;

@@ -330,9 +330,9 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
 }
 
 void ControllerAction::publishExePathFeedback(
-        GoalHandle& goal_handle,
+        GoalHandle &goal_handle,
         uint32_t outcome, const std::string &message,
-        const geometry_msgs::TwistStamped& current_twist)
+        const geometry_msgs::TwistStamped &current_twist)
 {
   mbf_msgs::ExePathFeedback feedback;
   feedback.outcome = outcome;

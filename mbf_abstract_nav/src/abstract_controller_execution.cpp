@@ -38,8 +38,9 @@
  *
  */
 
-#include "mbf_abstract_nav/abstract_controller_execution.h"
 #include <mbf_msgs/ExePathResult.h>
+
+#include "mbf_abstract_nav/abstract_controller_execution.h"
 
 namespace mbf_abstract_nav
 {
@@ -48,9 +49,9 @@ const double AbstractControllerExecution::DEFAULT_CONTROLLER_FREQUENCY = 100.0; 
 
 AbstractControllerExecution::AbstractControllerExecution(
     const std::string &name,
-    const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
-    const ros::Publisher& vel_pub,
-    const ros::Publisher& goal_pub,
+    const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
+    const ros::Publisher &vel_pub,
+    const ros::Publisher &goal_pub,
     const TFPtr &tf_listener_ptr,
     const MoveBaseFlexConfig &config) :
   AbstractExecutionBase(name),
@@ -184,10 +185,10 @@ bool AbstractControllerExecution::computeRobotPose()
 }
 
 
-uint32_t AbstractControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped& robot_pose,
-                                                         const geometry_msgs::TwistStamped& robot_velocity,
-                                                         geometry_msgs::TwistStamped& vel_cmd,
-                                                         std::string& message)
+uint32_t AbstractControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped &robot_pose,
+                                                         const geometry_msgs::TwistStamped &robot_velocity,
+                                                         geometry_msgs::TwistStamped &vel_cmd,
+                                                         std::string &message)
 {
   return controller_->computeVelocityCommands(robot_pose, robot_velocity, vel_cmd, message);
 }

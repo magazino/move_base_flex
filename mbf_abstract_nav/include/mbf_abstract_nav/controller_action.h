@@ -77,9 +77,9 @@ class ControllerAction :
 
 protected:
   void publishExePathFeedback(
-          GoalHandle& goal_handle,
+          GoalHandle &goal_handle,
           uint32_t outcome, const std::string &message,
-          const geometry_msgs::TwistStamped& current_twist);
+          const geometry_msgs::TwistStamped &current_twist);
 
   /**
    * @brief Utility method to fill the ExePath action result in a single line

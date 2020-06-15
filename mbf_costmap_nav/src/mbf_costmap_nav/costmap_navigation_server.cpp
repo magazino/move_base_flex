@@ -130,7 +130,7 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
       last_config_);
 }
 
-mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string& planner_type)
+mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string &planner_type)
 {
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   try
@@ -163,8 +163,8 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlug
 }
 
 bool CostmapNavigationServer::initializePlannerPlugin(
-    const std::string& name,
-    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr
+    const std::string &name,
+    const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr
 )
 {
   mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
@@ -183,7 +183,7 @@ bool CostmapNavigationServer::initializePlannerPlugin(
 }
 
 
-mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string& controller_type)
+mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string &controller_type)
 {
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   try
@@ -215,8 +215,8 @@ mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControll
 }
 
 bool CostmapNavigationServer::initializeControllerPlugin(
-    const std::string& name,
-    const mbf_abstract_core::AbstractController::Ptr& controller_ptr)
+    const std::string &name,
+    const mbf_abstract_core::AbstractController::Ptr &controller_ptr)
 {
   ROS_DEBUG_STREAM("Initialize controller \"" << name << "\".");
 
@@ -240,7 +240,7 @@ bool CostmapNavigationServer::initializeControllerPlugin(
 }
 
 mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPlugin(
-    const std::string& recovery_type)
+    const std::string &recovery_type)
 {
   mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
@@ -277,8 +277,8 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
 }
 
 bool CostmapNavigationServer::initializeRecoveryPlugin(
-    const std::string& name,
-    const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr)
+    const std::string &name,
+    const mbf_abstract_core::AbstractRecovery::Ptr &behavior_ptr)
 {
   ROS_DEBUG_STREAM("Initialize recovery behavior \"" << name << "\".");
 

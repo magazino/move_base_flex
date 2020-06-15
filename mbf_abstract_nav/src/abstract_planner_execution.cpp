@@ -44,8 +44,8 @@ namespace mbf_abstract_nav
 {
 
 AbstractPlannerExecution::AbstractPlannerExecution(
-    const std::string name,
-    const mbf_abstract_core::AbstractPlanner::Ptr planner_ptr,
+    const std::string &name,
+    const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
     const MoveBaseFlexConfig &config) :
   AbstractExecutionBase(name),
     planner_(planner_ptr), state_(INITIALIZED), planning_(false),

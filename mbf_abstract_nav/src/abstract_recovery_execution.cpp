@@ -38,7 +38,6 @@
  *
  */
 
-#include <XmlRpcException.h>
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <mbf_abstract_nav/abstract_recovery_execution.h>
@@ -47,8 +46,8 @@ namespace mbf_abstract_nav
 {
 
 AbstractRecoveryExecution::AbstractRecoveryExecution(
-    const std::string name,
-    mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr,
+    const std::string &name,
+    const mbf_abstract_core::AbstractRecovery::Ptr &recovery_ptr,
     const TFPtr &tf_listener_ptr,
     const MoveBaseFlexConfig &config) :
   AbstractExecutionBase(name),

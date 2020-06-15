@@ -46,9 +46,9 @@ namespace mbf_abstract_nav{
 
 template <typename PluginType>
 AbstractPluginManager<PluginType>::AbstractPluginManager(
-    const std::string param_name,
-    const loadPluginFunction& loadPlugin,
-    const initPluginFunction& initPlugin
+    const std::string &param_name,
+    const loadPluginFunction &loadPlugin,
+    const initPluginFunction &initPlugin
 )
   : param_name_(param_name), loadPlugin_(loadPlugin), initPlugin_(initPlugin)
 {
@@ -119,13 +119,13 @@ const std::vector<std::string>& AbstractPluginManager<PluginType>::getLoadedName
 }
 
 template <typename PluginType>
-bool AbstractPluginManager<PluginType>::hasPlugin(const std::string& name)
+bool AbstractPluginManager<PluginType>::hasPlugin(const std::string &name)
 {
   return static_cast<bool>(plugins_.count(name)); // returns 1 or 0;
 }
 
 template <typename PluginType>
-std::string AbstractPluginManager<PluginType>::getType(const std::string& name)
+std::string AbstractPluginManager<PluginType>::getType(const std::string &name)
 {
   std::map<std::string, std::string>::iterator iter = plugins_type_.find(name);
   return iter->second;
@@ -133,7 +133,7 @@ std::string AbstractPluginManager<PluginType>::getType(const std::string& name)
 
 
 template <typename PluginType>
-typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std::string& name)
+typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std::string &name)
 {
   typename std::map<std::string, typename PluginType::Ptr>::iterator new_plugin
       = plugins_.find(name);

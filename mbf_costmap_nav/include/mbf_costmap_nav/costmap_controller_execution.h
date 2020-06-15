@@ -123,10 +123,10 @@ private:
    * @return Result code as described on ExePath action result and plugin's header.
    */
   virtual uint32_t computeVelocityCmd(
-      const geometry_msgs::PoseStamped& robot_pose,
-      const geometry_msgs::TwistStamped& robot_velocity,
-      geometry_msgs::TwistStamped& vel_cmd,
-      std::string& message);
+      const geometry_msgs::PoseStamped &robot_pose,
+      const geometry_msgs::TwistStamped &robot_velocity,
+      geometry_msgs::TwistStamped &vel_cmd,
+      std::string &message);
 
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
