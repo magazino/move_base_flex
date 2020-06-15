@@ -43,7 +43,8 @@
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <mbf_utility/robot_information.h>
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
 template <typename Action, typename Execution>
 class AbstractActionBase
