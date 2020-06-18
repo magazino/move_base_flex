@@ -89,6 +89,30 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
 
 CostmapNavigationServer::~CostmapNavigationServer()
 {
+  // remove every plugin before its classLoader goes out of scope.
+  {
+    const auto& names = planner_plugin_manager_.getLoadedNames();
+    for(const auto& name : names) {
+      planner_plugin_manager_.getPlugin(name).reset();
+    }
+  }
+  {
+    const auto& names = controller_plugin_manager_.getLoadedNames();
+    for(const auto& name : names) {
+      controller_plugin_manager_.getPlugin(name).reset();
+    }
+  }
+  {
+    const auto& names = recovery_plugin_manager_.getLoadedNames();
+    for(const auto& name : names) {
+      recovery_plugin_manager_.getPlugin(name).reset();
+    }
+  }
+
+  action_server_recovery_ptr_.reset();
+  action_server_exe_path_ptr_.reset();
+  action_server_get_path_ptr_.reset();
+  action_server_move_base_ptr_.reset();
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
