@@ -42,7 +42,6 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_NAVIGATION_SERVER_H_
 
 #include <string>
-#include <stdint.h>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -50,7 +49,6 @@
 #include <actionlib/server/action_server.h>
 #include <dynamic_reconfigure/server.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_listener.h>
 
 #include <mbf_utility/navigation_utility.h>
 
@@ -347,7 +345,7 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! current_goal publisher for all controller execution objects
     ros::Publisher goal_pub_;
 
-    RobotInformation robot_info_;
+    mbf_utility::RobotInformation robot_info_;
 
     ControllerAction controller_action_;
     PlannerAction planner_action_;

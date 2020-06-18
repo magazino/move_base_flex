@@ -58,7 +58,6 @@ include_directories(
 )
 
 add_library(${MBF_ABSTRACT_SERVER_LIB}
-  src/robot_information.cpp
   src/controller_action.cpp
   src/planner_action.cpp
   src/recovery_action.cpp

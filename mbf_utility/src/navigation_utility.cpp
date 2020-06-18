@@ -38,6 +38,8 @@
  *
  */
 
+#include <tf/tf.h>
+
 #include "mbf_utility/navigation_utility.h"
 
 namespace mbf_utility

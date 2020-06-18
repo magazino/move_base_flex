@@ -38,6 +38,7 @@
  *
  */
 
+#include <tf/tf.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
 #include <mbf_msgs/MoveBaseAction.h>

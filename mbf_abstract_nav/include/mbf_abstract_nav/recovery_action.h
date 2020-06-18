@@ -41,14 +41,17 @@
 #ifndef MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_
 #define MBF_ABSTRACT_NAV__RECOVERY_ACTION_H_
 
+#include <boost/thread/condition_variable.hpp>
+#include <actionlib/server/action_server.h>
+
+#include <mbf_msgs/RecoveryAction.h>
+#include <mbf_utility/robot_information.h>
+
 #include "mbf_abstract_nav/abstract_action_base.hpp"
 #include "mbf_abstract_nav/abstract_recovery_execution.h"
-#include "mbf_abstract_nav/robot_information.h"
-#include <actionlib/server/action_server.h>
-#include <mbf_msgs/RecoveryAction.h>
-#include <boost/thread/condition_variable.hpp>
 
-namespace mbf_abstract_nav{
+namespace mbf_abstract_nav
+{
 
 class RecoveryAction : public AbstractActionBase<mbf_msgs::RecoveryAction, AbstractRecoveryExecution>
 {
@@ -56,7 +59,7 @@ class RecoveryAction : public AbstractActionBase<mbf_msgs::RecoveryAction, Abstr
 
   typedef boost::shared_ptr<RecoveryAction> Ptr;
 
-  RecoveryAction(const std::string& name, const RobotInformation &robot_info);
+  RecoveryAction(const std::string &name, const mbf_utility::RobotInformation &robot_info);
 
   void run(GoalHandle &goal_handle, AbstractRecoveryExecution &execution);
 

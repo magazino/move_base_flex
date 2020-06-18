@@ -6,7 +6,6 @@
 
 namespace mbf_utility{
 struct ExePathException : public std::exception {
-
   ExePathException(unsigned int error_code) : outcome(error_code){}
 
   const char * what () const throw () {

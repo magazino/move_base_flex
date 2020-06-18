@@ -42,12 +42,10 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_PLANNER_EXECUTION_H_
 
 #include <map>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
 #include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_listener.h>
 
 #include <mbf_abstract_core/abstract_planner.h>
 #include <mbf_utility/types.h>

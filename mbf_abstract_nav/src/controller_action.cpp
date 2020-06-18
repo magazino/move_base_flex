@@ -45,7 +45,7 @@ namespace mbf_abstract_nav
 
 ControllerAction::ControllerAction(
     const std::string &action_name,
-    const RobotInformation &robot_info)
+    const mbf_utility::RobotInformation &robot_info)
     : AbstractActionBase(action_name, robot_info, boost::bind(&mbf_abstract_nav::ControllerAction::run, this, _1, _2))
 {
 }

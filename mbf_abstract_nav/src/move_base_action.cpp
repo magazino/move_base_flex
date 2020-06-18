@@ -47,7 +47,7 @@ namespace mbf_abstract_nav
 {
 
 MoveBaseAction::MoveBaseAction(const std::string &name,
-                               const RobotInformation &robot_info,
+                               const mbf_utility::RobotInformation &robot_info,
                                const std::vector<std::string> &behaviors)
   :  name_(name), robot_info_(robot_info), private_nh_("~"),
      action_client_exe_path_(private_nh_, "exe_path"),

@@ -36,10 +36,11 @@
  *
  */
 
-#ifndef MBF_ABSTRACT_CORE__TYPES_H_
-#define MBF_ABSTRACT_CORE__TYPES_H_
+#ifndef MBF_UTILITY__TYPES_H_
+#define MBF_UTILITY__TYPES_H_
 
 #include <boost/shared_ptr.hpp>
+#include <ros/common.h>
 
 #if ROS_VERSION_MINIMUM (1, 14, 0) // if current ros version is >= 1.14.0
   // Melodic uses TF2
