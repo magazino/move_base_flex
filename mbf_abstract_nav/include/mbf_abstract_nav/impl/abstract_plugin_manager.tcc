@@ -149,6 +149,13 @@ typename PluginType::Ptr AbstractPluginManager<PluginType>::getPlugin(const std:
   }
 }
 
+template <typename PluginType>
+void AbstractPluginManager<PluginType>::clearPlugins() {
+  plugins_.clear();
+  plugins_type_.clear();
+  names_.clear();
+}
+
 } /* namespace mbf_abstract_nav */
 
 #endif //MBF_ABSTRACT_NAV__ABSTRACT_PLUGIN_MANAGER_TCC_
