@@ -90,6 +90,15 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
 
 CostmapNavigationServer::~CostmapNavigationServer()
 {
+  // remove every plugin before its classLoader goes out of scope.
+  controller_plugin_manager_.clearPlugins();
+  planner_plugin_manager_.clearPlugins();
+  recovery_plugin_manager_.clearPlugins();
+
+  action_server_recovery_ptr_.reset();
+  action_server_exe_path_ptr_.reset();
+  action_server_get_path_ptr_.reset();
+  action_server_move_base_ptr_.reset();
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(

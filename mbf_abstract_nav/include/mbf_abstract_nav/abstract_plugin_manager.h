@@ -68,6 +68,8 @@ class AbstractPluginManager
 
   typename PluginType::Ptr getPlugin(const std::string &name);
 
+  void clearPlugins();
+
  protected:
   std::map<std::string, typename PluginType::Ptr> plugins_;
   std::map<std::string, std::string> plugins_type_;
