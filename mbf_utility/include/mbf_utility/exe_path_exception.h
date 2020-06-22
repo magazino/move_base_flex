@@ -4,8 +4,11 @@
 #include <exception>
 #include <mbf_msgs/ExePathResult.h>
 
-namespace mbf_utility{
-struct ExePathException : public std::exception {
+namespace mbf_utility
+{
+
+struct ExePathException : public std::exception
+{
   ExePathException(unsigned int error_code) : outcome(error_code){}
 
   const char * what () const throw () {

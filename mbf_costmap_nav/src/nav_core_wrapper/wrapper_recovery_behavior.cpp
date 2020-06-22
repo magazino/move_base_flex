@@ -50,7 +50,7 @@ void WrapperRecoveryBehavior::initialize(std::string name, TF *tf,
   nav_core_plugin_->initialize(name, tf, global_costmap, local_costmap);
 }
 
-uint32_t WrapperRecoveryBehavior::runBehavior(std::string& message)
+uint32_t WrapperRecoveryBehavior::runBehavior(std::string &message)
 {
   nav_core_plugin_->runBehavior();
   // TODO return a code for old API

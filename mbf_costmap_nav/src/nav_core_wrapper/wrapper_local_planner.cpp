@@ -44,8 +44,8 @@ namespace mbf_nav_core_wrapper
 {
 
 uint32_t WrapperLocalPlanner::computeVelocityCommands(
-    const geometry_msgs::PoseStamped& robot_pose,
-    const geometry_msgs::TwistStamped& robot_velocity,
+    const geometry_msgs::PoseStamped &robot_pose,
+    const geometry_msgs::TwistStamped &robot_velocity,
     geometry_msgs::TwistStamped &cmd_vel,
     std::string &message)
 {

@@ -4,8 +4,11 @@
 #include <exception>
 #include <mbf_msgs/RecoveryResult.h>
 
-namespace mbf_utility{
-struct RecoveryException : public std::exception {
+namespace mbf_utility
+{
+
+struct RecoveryException : public std::exception
+{
   RecoveryException(unsigned int error_code) : outcome(error_code){}
 
   const char * what () const throw () {

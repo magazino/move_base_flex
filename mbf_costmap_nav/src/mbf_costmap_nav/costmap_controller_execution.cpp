@@ -75,10 +75,10 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(cons
 }
 
 uint32_t CostmapControllerExecution::computeVelocityCmd(
-    const geometry_msgs::PoseStamped& robot_pose,
-    const geometry_msgs::TwistStamped& robot_velocity,
-    geometry_msgs::TwistStamped& vel_cmd,
-    std::string& message)
+    const geometry_msgs::PoseStamped &robot_pose,
+    const geometry_msgs::TwistStamped &robot_velocity,
+    geometry_msgs::TwistStamped &vel_cmd,
+    std::string &message)
 {
   // Lock the costmap while planning, but following issue #4, we allow to move the responsibility to the planner itself
   if (lock_costmap_)

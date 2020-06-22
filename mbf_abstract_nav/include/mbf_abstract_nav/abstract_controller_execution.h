@@ -88,9 +88,9 @@ namespace mbf_abstract_nav
      */
     AbstractControllerExecution(
         const std::string &name,
-        const mbf_abstract_core::AbstractController::Ptr& controller_ptr,
-        const ros::Publisher& vel_pub,
-        const ros::Publisher& goal_pub,
+        const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
+        const ros::Publisher &vel_pub,
+        const ros::Publisher &goal_pub,
         const TFPtr &tf_listener_ptr,
         const MoveBaseFlexConfig &config);
 
@@ -204,9 +204,9 @@ namespace mbf_abstract_nav
      * @param message Optional more detailed outcome as a string.
      * @return Result code as described on ExePath action result and plugin's header.
      */
-    virtual uint32_t computeVelocityCmd(const geometry_msgs::PoseStamped& pose,
-                                        const geometry_msgs::TwistStamped& velocity,
-                                        geometry_msgs::TwistStamped& vel_cmd, std::string& message);
+    virtual uint32_t computeVelocityCmd(const geometry_msgs::PoseStamped &pose,
+                                        const geometry_msgs::TwistStamped &velocity,
+                                        geometry_msgs::TwistStamped &vel_cmd, std::string &message);
 
     /**
      * @brief Sets the velocity command, to make it available for another thread

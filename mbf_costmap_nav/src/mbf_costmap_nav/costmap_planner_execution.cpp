@@ -70,8 +70,8 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const M
   return abstract_config;
 }
 
-uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped& start,
-                                           const geometry_msgs::PoseStamped& goal,
+uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
+                                           const geometry_msgs::PoseStamped &goal,
                                            double tolerance,
                                            std::vector<geometry_msgs::PoseStamped> &plan,
                                            double &cost,

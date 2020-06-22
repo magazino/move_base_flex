@@ -68,7 +68,7 @@ namespace mbf_nav_core_wrapper {
       /**
        * @brief Runs the CostmapRecovery
        */
-      virtual uint32_t runBehavior(std::string& message);
+      virtual uint32_t runBehavior(std::string &message);
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes too much time

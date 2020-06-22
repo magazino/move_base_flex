@@ -40,10 +40,12 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 
 #include <actionlib/server/action_server.h>
-#include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <mbf_utility/robot_information.h>
 
-namespace mbf_abstract_nav{
+#include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+
+namespace mbf_abstract_nav
+{
 
 template <typename Action, typename Execution>
 class AbstractActionBase
@@ -61,7 +63,7 @@ class AbstractActionBase
 
 
   AbstractActionBase(
-      const std::string& name,
+      const std::string &name,
       const mbf_utility::RobotInformation &robot_info,
       const RunMethod run_method
   ) : name_(name), robot_info_(robot_info), run_(run_method){}
