@@ -154,9 +154,11 @@ namespace mbf_abstract_nav
     /**
      * @brief Sets a new goal pose for the planner execution
      * @param goal the new goal pose
-     * @param tolerance tolerance to the goal for the planning
+     * @param dist_tolerance how many meters away from the goal can end the created path
+     * @param angle_tolerance how many radians away from the goal can end the created path
      */
-    void setNewGoal(const geometry_msgs::PoseStamped &goal, double tolerance);
+    void setNewGoal(const geometry_msgs::PoseStamped &goal,
+                    double dist_tolerance, double angle_tolerance);
 
     /**
      * @brief Sets a new start pose for the planner execution
@@ -168,20 +170,22 @@ namespace mbf_abstract_nav
      * @brief Sets a new star and goal pose for the planner execution
      * @param start new start pose
      * @param goal new goal pose
-     * @param tolerance tolerance to the new goal for the planning
+     * @param dist_tolerance how many meters away from the goal can end the created path
+     * @param angle_tolerance how many radians away from the goal can end the created path
      */
     void setNewStartAndGoal(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                            double tolerance);
+                            double dist_tolerance, double angle_tolerance);
 
     /**
      * @brief Starts the planner execution thread with the given parameters.
      * @param start start pose for the planning
      * @param goal goal pose for the planning
-     * @param tolerance tolerance to the goal pose for the planning
+     * @param dist_tolerance how many meters away from the goal can end the created path
+     * @param angle_tolerance how many radians away from the goal can end the created path
      * @return true, if the planner thread has been started, false if the thread is already running.
      */
     bool start(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-               double tolerance);
+               double dist_tolerance, double angle_tolerance);
 
     /**
      * @brief Is called by the server thread to reconfigure the controller execution, if a user uses dynamic reconfigure
@@ -210,7 +214,8 @@ namespace mbf_abstract_nav
      *        if a goal tolerance is enabled in the planner plugin.
      * @param start The start pose for planning
      * @param goal The goal pose for planning
-     * @param tolerance The goal tolerance
+     * @param dist_tolerance how many meters away from the goal can end the created path
+     * @param angle_tolerance how many radians away from the goal can end the created path
      * @param plan The computed plan by the plugin
      * @param cost The computed costs for the corresponding plan
      * @param message An optional message which should correspond with the returned outcome
@@ -219,7 +224,7 @@ namespace mbf_abstract_nav
     virtual uint32_t makePlan(
         const geometry_msgs::PoseStamped &start,
         const geometry_msgs::PoseStamped &goal,
-        double tolerance,
+        double dist_tolerance, double angle_tolerance,
         std::vector<geometry_msgs::PoseStamped> &plan,
         double &cost,
         std::string &message);
@@ -266,8 +271,11 @@ namespace mbf_abstract_nav
     //! the current goal pose used for planning
     geometry_msgs::PoseStamped goal_;
 
-    //! optional goal tolerance, in meters
-    double tolerance_;
+    //! optional linear goal tolerance, in meters
+    double dist_tolerance_;
+
+    //! optional angular goal tolerance, in radians
+    double angle_tolerance_;
 
     //! planning cycle frequency (used only when running full navigation; we store here for grouping parameters nicely)
     double frequency_;

@@ -45,7 +45,7 @@ namespace mbf_nav_core_wrapper
 
 uint32_t WrapperGlobalPlanner::makePlan(const geometry_msgs::PoseStamped &start,
                                         const geometry_msgs::PoseStamped &goal,
-                                        double tolerance,
+                                        double dist_tolerance, double angle_tolerance,
                                         std::vector<geometry_msgs::PoseStamped> &plan,
                                         double &cost,
                                         std::string &message)

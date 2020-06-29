@@ -9,14 +9,16 @@ geometry_msgs/PoseStamped start_pose
 # The pose to achieve with the path
 geometry_msgs/PoseStamped target_pose
 
-# If the goal is obstructed, how many meters the planner can relax the constraint in x and y before failing
-float64 tolerance
-
 # Planner to use; defaults to the first one specified on "planners" parameter
 string planner
 
 # use different slots for concurrency
 uint8 concurrency_slot
+
+# Optional: how many meters/radians away from the goal can end the created path
+bool tolerance_from_action
+float32 dist_tolerance
+float32 angle_tolerance
 
 ---
 
