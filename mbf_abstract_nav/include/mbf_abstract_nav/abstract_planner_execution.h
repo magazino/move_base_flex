@@ -154,8 +154,8 @@ namespace mbf_abstract_nav
     /**
      * @brief Sets a new goal pose for the planner execution
      * @param goal the new goal pose
-     * @param dist_tolerance how many meters away from the goal can end the created path
-     * @param angle_tolerance how many radians away from the goal can end the created path
+     * @param dist_tolerance Tolerance in meters to the goal position
+     * @param angle_tolerance Tolerance in radians to the goal orientation
      */
     void setNewGoal(const geometry_msgs::PoseStamped &goal,
                     double dist_tolerance, double angle_tolerance);
@@ -170,8 +170,8 @@ namespace mbf_abstract_nav
      * @brief Sets a new star and goal pose for the planner execution
      * @param start new start pose
      * @param goal new goal pose
-     * @param dist_tolerance how many meters away from the goal can end the created path
-     * @param angle_tolerance how many radians away from the goal can end the created path
+     * @param dist_tolerance Tolerance in meters to the goal position
+     * @param angle_tolerance Tolerance in radians to the goal orientation
      */
     void setNewStartAndGoal(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
                             double dist_tolerance, double angle_tolerance);
@@ -180,8 +180,8 @@ namespace mbf_abstract_nav
      * @brief Starts the planner execution thread with the given parameters.
      * @param start start pose for the planning
      * @param goal goal pose for the planning
-     * @param dist_tolerance how many meters away from the goal can end the created path
-     * @param angle_tolerance how many radians away from the goal can end the created path
+     * @param dist_tolerance Tolerance in meters to the goal position
+     * @param angle_tolerance Tolerance in radians to the goal orientation
      * @return true, if the planner thread has been started, false if the thread is already running.
      */
     bool start(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
@@ -210,12 +210,13 @@ namespace mbf_abstract_nav
   private:
 
     /**
-     * @brief calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
-     *        if a goal tolerance is enabled in the planner plugin.
+     * @brief calls the planner plugin to make a plan from the start pose to the goal pose.
+     * The final pose of the path must be within tolerance range (position and orientation)
+     * for this method to return a success outcome.
      * @param start The start pose for planning
      * @param goal The goal pose for planning
-     * @param dist_tolerance how many meters away from the goal can end the created path
-     * @param angle_tolerance how many radians away from the goal can end the created path
+     * @param dist_tolerance Tolerance in meters to the goal position
+     * @param angle_tolerance Tolerance in radians to the goal orientation
      * @param plan The computed plan by the plugin
      * @param cost The computed costs for the corresponding plan
      * @param message An optional message which should correspond with the returned outcome

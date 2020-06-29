@@ -59,11 +59,13 @@ namespace mbf_abstract_core
       virtual ~AbstractPlanner(){};
 
       /**
-       * @brief Given a goal pose in the world, compute a plan
+       * @brief Given a goal pose in the world, compute a plan.
+       * The final pose of the path must be within tolerance range (position and orientation) for this method
+       * to return a success outcome.
        * @param start The start pose
        * @param goal The goal pose
-       * @param dist_tolerance how many meters away from the goal can end the created path
-       * @param angle_tolerance how many radians away from the goal can end the created path
+       * @param dist_tolerance Tolerance in meters to the goal position
+       * @param angle_tolerance Tolerance in radians to the goal orientation
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string

@@ -15,7 +15,8 @@ string planner
 # use different slots for concurrency
 uint8 concurrency_slot
 
-# Optional: how many meters/radians away from the goal can end the created path
+# Optional: how many meters/radians away from the goal can end the created path. The final pose of the
+# path must be within tolerance range (position and orientation) for MBF to return a success outcome.
 bool tolerance_from_action
 float32 dist_tolerance
 float32 angle_tolerance
