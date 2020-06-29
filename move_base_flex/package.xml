@@ -20,6 +20,7 @@
   <exec_depend>mbf_costmap_nav</exec_depend>
   <exec_depend>mbf_msgs</exec_depend>
   <exec_depend>mbf_simple_nav</exec_depend>
+  <exec_depend>mbf_utility</exec_depend>
 
   <export>
     <metapackage/>
