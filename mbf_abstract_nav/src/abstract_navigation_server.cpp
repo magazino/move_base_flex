@@ -152,7 +152,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
   }
 
   mbf_abstract_core::AbstractPlanner::Ptr planner_plugin = planner_plugin_manager_.getPlugin(planner_name);
-  ROS_INFO_STREAM_NAMED("get_path", "Start action \"get_path\" using planner \"" << planner_name
+  ROS_DEBUG_STREAM_NAMED("get_path", "Start action \"get_path\" using planner \"" << planner_name
                         << "\" of type \"" << planner_plugin_manager_.getType(planner_name) << "\"");
 
 
@@ -176,7 +176,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
 
 void AbstractNavigationServer::cancelActionGetPath(ActionServerGetPath::GoalHandle goal_handle)
 {
-  ROS_INFO_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
+  ROS_DEBUG_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
   planner_action_.cancel(goal_handle);
 }
 
@@ -210,7 +210,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
   }
 
   mbf_abstract_core::AbstractController::Ptr controller_plugin = controller_plugin_manager_.getPlugin(controller_name);
-  ROS_INFO_STREAM_NAMED("exe_path", "Start action \"exe_path\" using controller \"" << controller_name
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Start action \"exe_path\" using controller \"" << controller_name
                         << "\" of type \"" << controller_plugin_manager_.getType(controller_name) << "\"");
 
 
@@ -234,7 +234,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
 void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHandle goal_handle)
 {
-  ROS_INFO_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
+  ROS_DEBUG_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
   controller_action_.cancel(goal_handle);
 }
 
@@ -269,7 +269,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
   }
 
   mbf_abstract_core::AbstractRecovery::Ptr recovery_plugin = recovery_plugin_manager_.getPlugin(recovery_name);
-  ROS_INFO_STREAM_NAMED("recovery", "Start action \"recovery\" using recovery \"" << recovery_name
+  ROS_DEBUG_STREAM_NAMED("recovery", "Start action \"recovery\" using recovery \"" << recovery_name
                         << "\" of type \"" << recovery_plugin_manager_.getType(recovery_name) << "\"");
 
 
@@ -292,19 +292,19 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 
 void AbstractNavigationServer::cancelActionRecovery(ActionServerRecovery::GoalHandle goal_handle)
 {
-  ROS_INFO_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
+  ROS_DEBUG_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
   recovery_action_.cancel(goal_handle);
 }
 
 void AbstractNavigationServer::callActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle)
 {
-  ROS_INFO_STREAM_NAMED("move_base", "Start action \"move_base\"");
+  ROS_DEBUG_STREAM_NAMED("move_base", "Start action \"move_base\"");
   move_base_action_.start(goal_handle);
 }
 
 void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle)
 {
-  ROS_INFO_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
+  ROS_DEBUG_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
   move_base_action_.cancel();
 }
 
