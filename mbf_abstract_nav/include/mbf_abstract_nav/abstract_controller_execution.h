@@ -49,8 +49,10 @@
 #include <geometry_msgs/Twist.h>
 
 #include <mbf_utility/navigation_utility.h>
-#include <mbf_abstract_core/abstract_controller.h>
+#include <mbf_utility/robot_information.h>
 #include <mbf_utility/types.h>
+
+#include <mbf_abstract_core/abstract_controller.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 #include "mbf_abstract_nav/abstract_execution_base.h"
@@ -92,6 +94,7 @@ namespace mbf_abstract_nav
         const ros::Publisher &vel_pub,
         const ros::Publisher &goal_pub,
         const TFPtr &tf_listener_ptr,
+        const mbf_utility::RobotInformation &robot_info,
         const MoveBaseFlexConfig &config);
 
     /**
@@ -264,13 +267,7 @@ namespace mbf_abstract_nav
      * @brief Checks whether the goal has been reached in the range of tolerance or not
      * @return true if the goal has been reached, false otherwise
      */
-    bool reachedGoalCheck();
-
-    /**
-     * @brief Computes the robot pose;
-     * @return true if the robot pose has been computed successfully, false otherwise.
-     */
-    bool computeRobotPose();
+    bool reachedGoalCheck(const geometry_msgs::PoseStamped &robot_pose);
 
     /**
      * @brief Sets the controller state. This method makes the communication of the state thread safe.
@@ -347,8 +344,8 @@ namespace mbf_abstract_nav
     //! angle tolerance to the given goal pose
     double angle_tolerance_;
 
-    //! current robot pose;
-    geometry_msgs::PoseStamped robot_pose_;
+    //! current robot state
+    const mbf_utility::RobotInformation &robot_info_;
 
     //! whether check for action specific tolerance
     bool tolerance_from_action_;

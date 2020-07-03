@@ -78,6 +78,7 @@ public:
       const ros::Publisher &goal_pub,
       const TFPtr &tf_listener_ptr,
       const CostmapWrapper::Ptr &costmap_ptr,
+      const mbf_utility::RobotInformation &robot_info,
       const MoveBaseFlexConfig &config);
 
   /**
