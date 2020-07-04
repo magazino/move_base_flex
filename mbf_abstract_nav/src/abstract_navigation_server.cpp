@@ -64,8 +64,6 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr,
       recovery_action_(name_action_recovery, robot_info_),
       move_base_action_(name_action_move_base, robot_info_, recovery_plugin_manager_.getLoadedNames())
 {
-  ROS_WARN_STREAM_NAMED("get_path","   "<< global_frame);
-  ROS_WARN_STREAM_NAMED("get_path","   " <<  robot_frame);
   ros::NodeHandle nh;
 
   goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
@@ -108,8 +106,6 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr,
   // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the one possibly created by
   // the base class. If none, it should call startDynamicReconfigureServer method to start the one defined here for
   // providing just the abstract server parameters
-  ROS_WARN_STREAM_NAMED("get_path","   "<< global_frame);
-  ROS_WARN_STREAM_NAMED("get_path","   " <<  robot_frame);
 }
 
 void AbstractNavigationServer::initializeServerComponents()

@@ -56,6 +56,12 @@ class RobotInformation
 
   typedef boost::shared_ptr<RobotInformation> Ptr;
 
+  /**
+   * @brief Constructor.
+   * @param global_frame Global reference frame in which we provide the robot pose by default (normally map).
+   * @param robot_frame Robot base reference frame (normally base_link or base_footprint).
+   * @param tf_timeout Timeout allocated to TF calls.
+   */
   RobotInformation(
       TF &tf_listener,
       const std::string &global_frame,
@@ -65,6 +71,7 @@ class RobotInformation
   /**
    * @brief Computes the current robot pose (robot_frame_) in the global frame (global_frame_).
    * @param robot_pose Reference to the robot_pose message object to be filled.
+   * @param target_frame Reference frame in which we provide the robot pose (global_frame_ by default).
    * @return true, if the current robot pose could be computed, false otherwise.
    */
   bool getRobotPose(geometry_msgs::PoseStamped &robot_pose, const std::string &target_frame = "") const;

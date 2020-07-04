@@ -68,7 +68,9 @@ public:
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
    */
-  SimpleNavigationServer(const TFPtr &tf_listener_ptr);
+  SimpleNavigationServer(const TFPtr &tf_listener_ptr,
+                         const std::string &global_frame,
+                         const std::string &robot_frame);
 
   /**
    * @brief Destructor

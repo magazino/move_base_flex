@@ -43,8 +43,16 @@
 namespace mbf_simple_nav
 {
 
-SimpleNavigationServer::SimpleNavigationServer(const TFPtr &tf_listener_ptr) :
-    mbf_abstract_nav::AbstractNavigationServer(tf_listener_ptr),
+/**
+ * @brief Constructor
+ * @param tf_listener_ptr Shared pointer to a common TransformListener
+ * @param global_frame Global reference frame in which we provide the robot pose by default (normally map)
+ * @param robot_frame Robot base reference frame (normally base_link or base_footprint)
+ */
+SimpleNavigationServer::SimpleNavigationServer(const TFPtr &tf_listener_ptr,
+                                               const std::string &global_frame,
+                                               const std::string &robot_frame) :
+    mbf_abstract_nav::AbstractNavigationServer(tf_listener_ptr, global_frame, robot_frame),
     planner_plugin_loader_("mbf_abstract_core", "mbf_abstract_core::AbstractPlanner"),
     controller_plugin_loader_("mbf_abstract_core", "mbf_abstract_core::AbstractController"),
     recovery_plugin_loader_("mbf_abstract_core", "mbf_abstract_core::AbstractRecovery")

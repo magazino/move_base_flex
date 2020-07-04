@@ -64,7 +64,11 @@ int main(int argc, char **argv)
   ros::NodeHandle private_nh("~");
 
   double cache_time;
+  std::string global_frame;
+  std::string robot_frame;
   private_nh.param("tf_cache_time", cache_time, 10.0);
+  private_nh.param("global_costmap/global_frame", global_frame, std::string("map"));
+  private_nh.param("global_costmap/robot_base_frame", robot_frame, std::string("base_footprint"));
 
   signal(SIGINT, sigintHandler);
 #ifdef USE_OLD_TF
@@ -73,7 +77,8 @@ int main(int argc, char **argv)
   TFPtr tf_listener_ptr(new TF(ros::Duration(cache_time)));
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 #endif
-  costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
+  costmap_nav_srv_ptr =
+      boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr, global_frame, robot_frame);
   ros::spin();
 
   // explicitly call destructor here, otherwise costmap_nav_srv_ptr will be

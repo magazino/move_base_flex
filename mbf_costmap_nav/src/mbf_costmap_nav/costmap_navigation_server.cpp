@@ -55,21 +55,20 @@ namespace mbf_costmap_nav
 {
 
 
-CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
-  global_costmap_ptr_(new CostmapWrapper("global_costmap", tf_listener_ptr_)),
-  local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_)),
-  AbstractNavigationServer(tf_listener_ptr,
-                           global_costmap_ptr_->getGlobalFrameID(), global_costmap_ptr_->getBaseFrameID()),
+CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                                                 const std::string &global_frame,
+                                                 const std::string &robot_frame) :
+  AbstractNavigationServer(tf_listener_ptr, global_frame, robot_frame),
   recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
   nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
   controller_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapController"),
   nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner"),
   planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner"),
   nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
+  global_costmap_ptr_(new CostmapWrapper("global_costmap", tf_listener_ptr_)),
+  local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_)),
   setup_reconfigure_(false)
 {
-  ROS_WARN_STREAM_NAMED("CM","   "<< global_costmap_ptr_->getGlobalFrameID());
-  ROS_WARN_STREAM_NAMED("CM","   " <<  global_costmap_ptr_->getBaseFrameID());
   // advertise services and current goal topic
   check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
                                                        &CostmapNavigationServer::callServiceCheckPointCost, this);

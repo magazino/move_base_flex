@@ -86,8 +86,12 @@ public:
   /**
    * @brief Constructor
    * @param tf_listener_ptr Shared pointer to a common TransformListener
+   * @param global_frame Global reference frame in which we provide the robot pose by default (normally map)
+   * @param robot_frame Robot base reference frame (normally base_link or base_footprint)
    */
-  CostmapNavigationServer(const TFPtr &tf_listener_ptr);
+  CostmapNavigationServer(const TFPtr &tf_listener_ptr,
+                          const std::string &global_frame,
+                          const std::string &robot_frame);
 
   /**
    * @brief Destructor

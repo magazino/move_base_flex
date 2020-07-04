@@ -52,7 +52,11 @@ int main(int argc, char **argv)
   ros::NodeHandle private_nh("~");
 
   double cache_time;
+  std::string global_frame;
+  std::string robot_frame;
   private_nh.param("tf_cache_time", cache_time, 10.0);
+  private_nh.param("global_frame", global_frame, std::string("map"));
+  private_nh.param("robot_frame", robot_frame, std::string("base_footprint"));
 
 #ifdef USE_OLD_TF
   TFPtr tf_listener_ptr(new TF(nh, ros::Duration(cache_time), true));
@@ -62,7 +66,7 @@ int main(int argc, char **argv)
 #endif 
   
   SimpleNavigationServerPtr controller_ptr(
-      new mbf_simple_nav::SimpleNavigationServer(tf_listener_ptr));
+      new mbf_simple_nav::SimpleNavigationServer(tf_listener_ptr, global_frame, robot_frame));
 
   ros::spin();
   return EXIT_SUCCESS;

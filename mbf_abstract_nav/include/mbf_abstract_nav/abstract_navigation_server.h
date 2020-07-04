@@ -122,10 +122,13 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     /**
      * @brief Constructor, reads all parameters and initializes all action servers and creates the plugin instances.
      *        Parameters are the concrete implementations of the abstract classes.
-     * @param tf_listener_ptr shared pointer to the common TransformListener buffering transformations
+     * @param tf_listener_ptr shared pointer to the common TransformListener buffering transformations.
+     * @param global_frame Global reference frame in which we provide the robot pose by default (normally map).
+     * @param robot_frame Robot base reference frame (normally base_link or base_footprint).
      */
     AbstractNavigationServer(const TFPtr &tf_listener_ptr,
-        const std::string &global_frame = "map", const std::string &robot_frame = "base_link");
+                             const std::string &global_frame,
+                             const std::string &robot_frame);
 
     /**
      * @brief Destructor
