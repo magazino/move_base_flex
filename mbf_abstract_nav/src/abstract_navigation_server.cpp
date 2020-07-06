@@ -176,7 +176,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
 
 void AbstractNavigationServer::cancelActionGetPath(ActionServerGetPath::GoalHandle goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
+  ROS_INFO_STREAM_NAMED("get_path", "Cancel action \"get_path\"");
   planner_action_.cancel(goal_handle);
 }
 
@@ -234,7 +234,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
 
 void AbstractNavigationServer::cancelActionExePath(ActionServerExePath::GoalHandle goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
+  ROS_INFO_STREAM_NAMED("exe_path", "Cancel action \"exe_path\"");
   controller_action_.cancel(goal_handle);
 }
 
@@ -292,7 +292,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
 
 void AbstractNavigationServer::cancelActionRecovery(ActionServerRecovery::GoalHandle goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
+  ROS_INFO_STREAM_NAMED("recovery", "Cancel action \"recovery\"");
   recovery_action_.cancel(goal_handle);
 }
 
@@ -304,7 +304,7 @@ void AbstractNavigationServer::callActionMoveBase(ActionServerMoveBase::GoalHand
 
 void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHandle goal_handle)
 {
-  ROS_DEBUG_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
+  ROS_INFO_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
   move_base_action_.cancel();
 }
 
