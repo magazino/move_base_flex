@@ -272,6 +272,9 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
+
+  // publisher for ready state
+  ros::Publisher ready_publisher_;
 };
 
 } /* namespace mbf_costmap_nav */

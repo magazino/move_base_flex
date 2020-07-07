@@ -40,6 +40,7 @@
 
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
+#include <std_msgs/Bool.h>
 #include <base_local_planner/footprint_helper.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
@@ -85,6 +86,12 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
 
   // start all action servers
   startActionServers();
+
+  // publish ready state
+  ready_publisher_ = private_nh_.advertise<std_msgs::Bool>( "/move_base_flex/ready", 1, true);
+  std_msgs::Bool ready_msg;
+  ready_msg.data = true;
+  ready_publisher_.publish(ready_msg);
 
   // start speed limiter
   ros::NodeHandle speedLimiter_nh("~/speed_limiters");
