@@ -96,8 +96,11 @@ def mb_reconf_cb(config, level):
     if 'conservative_reset_dist' in mbf_config:
         mbf_config.pop('conservative_reset_dist')  # no mbf equivalent for this!
     if 'clearing_rotation_allowed' in mbf_config:
-        mbf_config.pop('clearing_rotation_allowed')  # no mbf equivalent for this!  TODO: shouldn't? don't think so... if you don't want rotation, do not include that behavior! on recovery_behaviors list!
-                                                     # Btw, recovery_behaviors is commented out on MoveBase.cfg, so it doesn't apear here
+        mbf_config.pop('clearing_rotation_allowed')  # no mbf equivalent for this!
+    if 'make_plan_add_unreachable_goal' in mbf_config:
+        mbf_config.pop('make_plan_add_unreachable_goal')  # no mbf equivalent for this!
+    if 'make_plan_clear_costmap' in mbf_config:
+        mbf_config.pop('make_plan_clear_costmap')  # no mbf equivalent for this!
     mbf_drc.update_configuration(mbf_config)
     return config
 
