@@ -121,7 +121,8 @@ class MoveBaseAction
 
   std::string name_;
 
-  mbf_utility::RobotInformation robot_info_;
+  //! current robot state
+  const mbf_utility::RobotInformation &robot_info_;
 
   //! current robot pose; updated with exe_path action feedback
   geometry_msgs::PoseStamped robot_pose_;
