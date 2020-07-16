@@ -252,13 +252,13 @@ bool AbstractControllerExecution::reachedGoalCheck()
   {
     return controller_->isGoalReached(action_dist_tolerance_, action_angle_tolerance_) ||
         (mbf_tolerance_check_ && mbf_utility::distance(robot_pose_, plan_.back()) < action_dist_tolerance_
-        && mbf_utility::angle(robot_pose_, plan_.back()) < action_angle_tolerance_);
+        && std::abs(mbf_utility::angle(robot_pose_, plan_.back())) < action_angle_tolerance_);
   }
 
   // Otherwise, check whether the controller plugin returns goal reached or if mbf should check for goal reached.
   return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
       && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
-      && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
+      && std::abs(mbf_utility::angle(robot_pose_, plan_.back())) < angle_tolerance_);
 }
 
 bool AbstractControllerExecution::cancel()
