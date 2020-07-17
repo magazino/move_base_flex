@@ -263,14 +263,20 @@ bool AbstractControllerExecution::reachedGoalCheck()
 
 bool AbstractControllerExecution::cancel()
 {
-  // returns false if cancel is not implemented or rejected by the recovery behavior (will run until completion)
-  bool ctrl_cancelled = controller_->cancel();
-  if (!ctrl_cancelled)
+  // request the controller to cancel; it returns false if cancel is not implemented or rejected by the plugin
+  if (!controller_->cancel())
   {
     ROS_WARN_STREAM("Cancel controlling failed. Wait until the current control cycle finished!");
   }
+  // then wait for the control cycle to stop (should happen immediately if the controller cancel returned true)
   cancel_ = true;
-  return ctrl_cancelled;
+  if (waitForStateUpdate(boost::chrono::milliseconds(500)) == boost::cv_status::timeout)
+  {
+    // this situation should never happen; if it does, the action server will be unready for goals immediately sent
+    ROS_WARN_STREAM("Timeout while waiting for control cycle to stop; immediately sent goals can get stuck");
+    return false;
+  }
+  return true;
 }
 
 

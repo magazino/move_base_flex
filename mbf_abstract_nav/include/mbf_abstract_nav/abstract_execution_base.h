@@ -66,7 +66,7 @@ class AbstractExecutionBase
 
   void join();
 
-  void waitForStateUpdate(boost::chrono::microseconds const &duration);
+  boost::cv_status waitForStateUpdate(boost::chrono::microseconds const &duration);
 
   /**
    * @brief Gets the current plugin execution outcome
