@@ -136,6 +136,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
     goal_handle.setAborted(result, result.message);
     ROS_ERROR_STREAM_NAMED(name_, result.message << " Canceling the action call.");
     controller_active = false;
+    goal_mtx_.unlock();
+    return;
   }
 
   goal_pose_ = plan.back();
