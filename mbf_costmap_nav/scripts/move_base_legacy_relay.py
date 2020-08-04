@@ -23,14 +23,19 @@ We also relay the simple goal topic published by RViz, the make_plan service and
 calls (note that some parameters have changed names; see http://wiki.ros.org/move_base_flex for details)
 """
 
+# keep configured base local and global planners to send to MBF
+bgp = None
+blp = None
+
 
 def simple_goal_cb(msg):
-    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg))
+    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg, planner=bgp, controller=blp))
     rospy.logdebug("Relaying move_base_simple/goal pose to mbf")
 
 
 def mb_execute_cb(msg):
-    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg.target_pose), feedback_cb=mbf_feedback_cb)
+    mbf_mb_ac.send_goal(mbf_msgs.MoveBaseGoal(target_pose=msg.target_pose, planner=bgp, controller=blp),
+                        feedback_cb=mbf_feedback_cb)
     rospy.logdebug("Relaying legacy move_base goal to mbf")
     mbf_mb_ac.wait_for_result()
 
@@ -46,8 +51,8 @@ def mb_execute_cb(msg):
 
 def make_plan_cb(request):
     mbf_gp_ac.send_goal(mbf_msgs.GetPathGoal(start_pose=request.start, target_pose=request.goal,
-                                             use_start_pose = bool(request.start.header.frame_id),
-                                             tolerance=request.tolerance))
+                                             use_start_pose=bool(request.start.header.frame_id),
+                                             planner=bgp, tolerance=request.tolerance))
     rospy.logdebug("Relaying legacy make_plan service to mbf get_path action server")
     mbf_gp_ac.wait_for_result()
 
@@ -74,9 +79,12 @@ def mb_reconf_cb(config, level):
 
     mbf_config = copy.deepcopy(config)
 
-    # Map move_base legacy parameters to new mbf ones
-    if 'base_local_planner' in mbf_config:  # mbf doesn't allow changing plugins dynamically
-        mbf_config.pop('base_local_planner')
+    # Map move_base legacy parameters to new mbf ones, and drop those not supported
+    # mbf doesn't allow changing plugins dynamically, but we can provide them in the
+    # action goal, so we keep both base_local_planner and base_global_planner
+    if 'base_local_planner' in mbf_config:
+        global blp
+        blp = mbf_config.pop('base_local_planner')
     if 'controller_frequency' in mbf_config:
         mbf_config['controller_frequency'] = mbf_config.pop('controller_frequency')
     if 'controller_patience' in mbf_config:
@@ -84,7 +92,8 @@ def mb_reconf_cb(config, level):
     if 'max_controller_retries' in mbf_config:
         mbf_config['controller_max_retries'] = mbf_config.pop('max_controller_retries')
     if 'base_global_planner' in mbf_config:
-        mbf_config.pop('base_global_planner')  # mbf doesn't allow changing plugins dynamically
+        global bgp
+        bgp = mbf_config.pop('base_global_planner')
     if 'planner_frequency' in mbf_config:
         mbf_config['planner_frequency'] = mbf_config.pop('planner_frequency')
     if 'planner_patience' in mbf_config:
