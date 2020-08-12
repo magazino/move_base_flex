@@ -104,6 +104,17 @@ class MoveBaseAction
 
   bool attemptRecovery();
 
+  template <typename ResultType>
+  void fillMoveBaseResult(const ResultType& result, mbf_msgs::MoveBaseResult& move_base_result)
+  {
+    // copy outcome and message from action client result
+    move_base_result.outcome = result.outcome;
+    move_base_result.message = result.message;
+    move_base_result.dist_to_goal = static_cast<float>(mbf_utility::distance(robot_pose_, goal_pose_));
+    move_base_result.angle_to_goal = static_cast<float>(mbf_utility::angle(robot_pose_, goal_pose_));
+    move_base_result.final_pose = robot_pose_;
+  }
+
   mbf_msgs::ExePathGoal exe_path_goal_;
   mbf_msgs::GetPathGoal get_path_goal_;
   mbf_msgs::RecoveryGoal recovery_goal_;
@@ -147,8 +158,6 @@ class MoveBaseAction
 
   //! true, if recovery behavior for the MoveBase action is enabled.
   bool recovery_enabled_;
-
-  mbf_msgs::MoveBaseFeedback move_base_feedback_;
 
   std::vector<std::string> recovery_behaviors_;
 
