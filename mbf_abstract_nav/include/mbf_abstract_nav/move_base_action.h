@@ -104,6 +104,8 @@ class MoveBaseAction
 
   bool attemptRecovery();
 
+  void cancelActiveClients();
+
   template <typename ResultType>
   void fillMoveBaseResult(const ResultType& result, mbf_msgs::MoveBaseResult& move_base_result)
   {

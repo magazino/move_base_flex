@@ -102,18 +102,22 @@ void MoveBaseAction::reconfigure(
 void MoveBaseAction::cancel()
 {
   action_state_ = CANCELED;
+  cancelActiveClients();
+}
 
-  if(!action_client_get_path_.getState().isDone())
+void MoveBaseAction::cancelActiveClients()
+{
+  if (!action_client_get_path_.getState().isDone())
   {
     action_client_get_path_.cancelGoal();
   }
 
-  if(!action_client_exe_path_.getState().isDone())
+  if (!action_client_exe_path_.getState().isDone())
   {
     action_client_exe_path_.cancelGoal();
   }
 
-  if(!action_client_recovery_.getState().isDone())
+  if (!action_client_recovery_.getState().isDone())
   {
     action_client_recovery_.cancelGoal();
   }
@@ -148,9 +152,8 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   recovery_behaviors_ = goal.recovery_behaviors.empty() ? behaviors_ : goal.recovery_behaviors;
   current_recovery_behavior_ = recovery_behaviors_.begin();
 
-  geometry_msgs::PoseStamped robot_pose;
   // get the current robot pose only at the beginning, as exe_path will keep updating it as we move
-  if (!robot_info_.getRobotPose(robot_pose))
+  if (!robot_info_.getRobotPose(robot_pose_))
   {
     ROS_ERROR_STREAM_NAMED("move_base", "Could not get the current robot pose!");
     move_base_result.message = "Could not get the current robot pose!";
@@ -221,8 +224,8 @@ void MoveBaseAction::actionExePathFeedback(
     {
       std::stringstream oscillation_msgs;
       oscillation_msgs << "Robot is oscillating for " << (ros::Time::now() - last_oscillation_reset_).toSec() << "s!";
-      ROS_WARN_STREAM_NAMED("exe_path", oscillation_msgs.str());
-      action_client_exe_path_.cancelGoal();
+      ROS_WARN_STREAM_NAMED("move_base", oscillation_msgs.str());
+      cancelActiveClients();
 
       if (attemptRecovery())
       {
@@ -292,18 +295,18 @@ void MoveBaseAction::actionGetPathDone(
         ROS_WARN_STREAM_NAMED("move_base", "Abort the execution of the planner: " << get_path_result.message);
         goal_handle_.setAborted(move_base_result, state.getText());
       }
-      action_state_ =  FAILED;
+      action_state_ = FAILED;
       break;
 
     case actionlib::SimpleClientGoalState::PREEMPTED:
-      ROS_ASSERT_MSG(action_state_ == CANCELED,
-                     "GetPath PREEMPTED: action state must be CANCELED, not %d", action_state_);
-    ROS_WARN_STREAM_NAMED("move_base", "The action \"" << "get_path" << "\" was preempted successfully!  "<< action_state_ << "   must be "<< CANCELED);
-
-      // the get_path action has been preempted; copy result into move_base result
-      ROS_WARN_STREAM_NAMED("move_base", "The get_path action has been preempted!");
-      fillMoveBaseResult(get_path_result, move_base_result);
-      goal_handle_.setCanceled(move_base_result, state.getText());
+      ROS_INFO_STREAM_NAMED("move_base", "The action \"" << "get_path" << "\" has been preempted!");
+      if (action_state_ == CANCELED)
+      {
+        // move_base preempted while executing get_path; fill result and report canceled to the client
+        ROS_INFO_STREAM_NAMED("move_base", "move_base preempted while executing get_path");
+        fillMoveBaseResult(get_path_result, move_base_result);
+        goal_handle_.setCanceled(move_base_result, state.getText());
+      }
       break;
 
     case actionlib::SimpleClientGoalState::RECALLED:
@@ -355,7 +358,7 @@ void MoveBaseAction::actionExePathDone(
   // copy result from exe_path action
   fillMoveBaseResult(exe_path_result, move_base_result);
 
-  ROS_DEBUG_STREAM_NAMED("exe_path", "Current state:" << state.toString());
+  ROS_DEBUG_STREAM_NAMED("move_base", "Current state:" << state.toString());
 
   switch (state.state_)
   {
@@ -368,7 +371,7 @@ void MoveBaseAction::actionExePathDone(
       break;
 
     case actionlib::SimpleClientGoalState::ABORTED:
-      action_state_ =  FAILED;
+      action_state_ = FAILED;
 
       switch (exe_path_result.outcome)
       {
@@ -398,13 +401,14 @@ void MoveBaseAction::actionExePathDone(
       break;
 
     case actionlib::SimpleClientGoalState::PREEMPTED:
-      ROS_ASSERT_MSG(action_state_ == CANCELED,
-                     "ExePath PREEMPTED: action state must be CANCELED, not %d", action_state_);
-      ROS_WARN_STREAM_NAMED("move_base", "The action \"" << "exe_path" << "\" was preempted successfully!  "<< action_state_ << "   must be "<< CANCELED);
-
-      // the exe_path action has been preempted; copy result into move_base result
-      fillMoveBaseResult(exe_path_result, move_base_result);
-      goal_handle_.setCanceled(move_base_result, state.getText());
+      ROS_INFO_STREAM_NAMED("move_base", "The action \"" << "exe_path" << "\" has been preempted!");
+      if (action_state_ == CANCELED)
+      {
+        // move_base preempted while executing exe_path; fill result and report canceled to the client
+        ROS_INFO_STREAM_NAMED("move_base", "move_base preempted while executing exe_path");
+        fillMoveBaseResult(exe_path_result, move_base_result);
+        goal_handle_.setCanceled(move_base_result, state.getText());
+      }
       break;
 
     case actionlib::SimpleClientGoalState::RECALLED:
@@ -479,7 +483,7 @@ void MoveBaseAction::actionRecoveryDone(
   switch (state.state_)
   {
     case actionlib::SimpleClientGoalState::ABORTED:
-      action_state_ =  FAILED;
+      action_state_ = FAILED;
 
       ROS_DEBUG_STREAM_NAMED("move_base", "Recovery behavior aborted!");
       ROS_DEBUG_STREAM_NAMED("move_base", "The recovery behavior \""
@@ -520,18 +524,17 @@ void MoveBaseAction::actionRecoveryDone(
       );
       break;
     case actionlib::SimpleClientGoalState::PREEMPTED:
-//      ROS_INFO_STREAM_NAMED("move_base", "The recovery action has been preempted!");
-
-      ROS_ASSERT_MSG(action_state_ == CANCELED,
-                     "Recovery PREEMPTED: action state must be CANCELED, not %d", action_state_);
-      ROS_WARN_STREAM_NAMED("move_base", "The action \"" << "recovery" << "\" was preempted successfully!  "<< action_state_ << "   must be "<< CANCELED);
-
-      // the recovery action has been preempted; copy result into move_base result
-      fillMoveBaseResult(recovery_result, move_base_result);
-      goal_handle_.setCanceled(move_base_result, state.getText());
+      ROS_INFO_STREAM_NAMED("move_base", "The action \"" << "recovery" << "\" has been preempted!");
+      if (action_state_ == CANCELED)
+      {
+        // move_base preempted while executing a recovery; fill result and report canceled to the client
+        ROS_INFO_STREAM_NAMED("move_base", "move_base preempted while executing a recovery behavior");
+        fillMoveBaseResult(recovery_result, move_base_result);
+        goal_handle_.setCanceled(move_base_result, state.getText());
+      }
       break;
 
-  case actionlib::SimpleClientGoalState::RECALLED:
+    case actionlib::SimpleClientGoalState::RECALLED:
       ROS_INFO_STREAM_NAMED("move_base",
                             "The recovery action has been recalled!");
       if(action_state_ == CANCELED)
