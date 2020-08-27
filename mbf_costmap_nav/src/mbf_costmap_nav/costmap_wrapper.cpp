@@ -130,10 +130,10 @@ void CostmapWrapper::deactivate(const ros::TimerEvent &event)
   boost::mutex::scoped_lock sl(check_costmap_mutex_);
 
   ROS_ASSERT_MSG(!costmap_users_, "Deactivating costmap with %d active users!", costmap_users_);
+  if (clear_on_shutdown_)
+    clear();  // do before stop, as some layers (e.g. obstacle and voxel) reactivate their subscribers on reset
   stop();
   ROS_DEBUG_STREAM("" << name_ << " deactivated");
-  if(clear_on_shutdown_)
-    clear();
 }
 
 } /* namespace mbf_costmap_nav */
