@@ -72,7 +72,7 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapPlannerExecution::toAbstract(const M
 
 uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
                                            const geometry_msgs::PoseStamped &goal,
-                                           double tolerance,
+                                           double dist_tolerance, double angle_tolerance,
                                            std::vector<geometry_msgs::PoseStamped> &plan,
                                            double &cost,
                                            std::string &message)
@@ -80,9 +80,9 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(start, goal, dist_tolerance, angle_tolerance, plan, cost, message);
   }
-  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(start, goal, dist_tolerance, angle_tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */

@@ -102,11 +102,13 @@ private:
   mbf_abstract_nav::MoveBaseFlexConfig toAbstract(const MoveBaseFlexConfig &config);
 
   /**
-   * @brief Calls the planner plugin to make a plan from the start pose to the goal pose with the given tolerance,
-   *        if a goal tolerance is enabled in the planner plugin.
+   * @brief Calls the planner plugin to make a plan from the start pose to the goal pose.
+   * The final pose of the path must be within tolerance range (position and orientation)
+   * for this method to return a success outcome.
    * @param start The start pose for planning
    * @param goal The goal pose for planning
-   * @param tolerance The goal tolerance
+   * @param dist_tolerance Tolerance in meters to the goal position
+   * @param angle_tolerance Tolerance in radians to the goal orientation
    * @param plan The computed plan by the plugin
    * @param cost The computed costs for the corresponding plan
    * @param message An optional message which should correspond with the returned outcome
@@ -115,7 +117,7 @@ private:
   virtual uint32_t makePlan(
       const geometry_msgs::PoseStamped &start,
       const geometry_msgs::PoseStamped &goal,
-      double tolerance,
+      double dist_tolerance, double angle_tolerance,
       std::vector<geometry_msgs::PoseStamped> &plan,
       double &cost,
       std::string &message);

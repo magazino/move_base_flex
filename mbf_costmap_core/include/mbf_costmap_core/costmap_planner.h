@@ -56,10 +56,12 @@ namespace mbf_costmap_core {
 
       /**
        * @brief Given a goal pose in the world, compute a plan
+       * The final pose of the path must be within tolerance range (position and orientation)
+       * for this method to return a success outcome.
        * @param start The start pose
        * @param goal The goal pose
-       * @param tolerance If the goal is obstructed, how many meters the planner can relax the constraint
-       *        in x and y before failing
+       * @param dist_tolerance Tolerance in meters to the goal position
+       * @param angle_tolerance Tolerance in radians to the goal orientation
        * @param plan The plan... filled by the planner
        * @param cost The cost for the the plan
        * @param message Optional more detailed outcome as a string
@@ -80,8 +82,8 @@ namespace mbf_costmap_core {
        *         71..99 are reserved as plugin specific errors
        */
       virtual uint32_t makePlan(const geometry_msgs::PoseStamped &start, const geometry_msgs::PoseStamped &goal,
-                                double tolerance, std::vector<geometry_msgs::PoseStamped> &plan, double &cost,
-                                std::string &message) = 0;
+                                double dist_tolerance, double angle_tolerance,
+                                std::vector<geometry_msgs::PoseStamped> &plan, double &cost, std::string &message) = 0;
 
       /**
        * @brief Requests the planner to cancel, e.g. if it takes too much time.
