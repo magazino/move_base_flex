@@ -116,7 +116,7 @@ namespace mbf_costmap_core {
        * @param tf A pointer to a transform listener
        * @param costmap_ros The cost map to use for assigning costs to local plans
        */
-      virtual void initialize(std::string name, TF *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
+      virtual void initialize(std::string name, ::TF *tf, costmap_2d::Costmap2DROS *costmap_ros) = 0;
 
       /**
        * @brief  Virtual destructor for the interface
