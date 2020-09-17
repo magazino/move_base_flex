@@ -119,9 +119,10 @@ namespace mbf_abstract_nav
       double action_angle_tolerance = 3.1415);
 
     /**
-     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
-     * computation takes too much time.
-     * @return true, if the planner plugin tries / tried to cancel the planning step.
+     * @brief Cancel the controller execution.
+     * This calls the cancel method of the controller plugin, sets the cancel_ flag to true,
+     * and waits for the control loop to stop. Normally called upon aborting the navigation.
+     * @return true, if the control loop stops within a cycle time.
      */
     virtual bool cancel();
 

@@ -63,11 +63,11 @@ void AbstractExecutionBase::join(){
     thread_.join();
 }
 
-void AbstractExecutionBase::waitForStateUpdate(boost::chrono::microseconds const &duration)
+boost::cv_status AbstractExecutionBase::waitForStateUpdate(boost::chrono::microseconds const &duration)
 {
   boost::mutex mutex;
   boost::unique_lock<boost::mutex> lock(mutex);
-  condition_.wait_for(lock, duration);
+  return condition_.wait_for(lock, duration);
 }
 
 uint32_t AbstractExecutionBase::getOutcome()

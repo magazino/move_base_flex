@@ -145,8 +145,8 @@ namespace mbf_abstract_nav
     double getCost();
 
     /**
-     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin. This could be useful if the
-     * computation takes too much time.
+     * @brief Cancel the planner execution. This calls the cancel method of the planner plugin.
+     * This could be useful if the computation takes too much time, or if we are aborting the navigation.
      * @return true, if the planner plugin tries / tried to cancel the planning step.
      */
     virtual bool cancel();
