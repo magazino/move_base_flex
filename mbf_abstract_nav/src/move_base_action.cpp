@@ -102,11 +102,7 @@ void MoveBaseAction::reconfigure(
 void MoveBaseAction::cancel()
 {
   action_state_ = CANCELED;
-  cancelActiveClients();
-}
 
-void MoveBaseAction::cancelActiveClients()
-{
   if (!action_client_get_path_.getState().isDone())
   {
     action_client_get_path_.cancelGoal();
@@ -225,7 +221,7 @@ void MoveBaseAction::actionExePathFeedback(
       std::stringstream oscillation_msgs;
       oscillation_msgs << "Robot is oscillating for " << (ros::Time::now() - last_oscillation_reset_).toSec() << "s!";
       ROS_WARN_STREAM_NAMED("move_base", oscillation_msgs.str());
-      cancelActiveClients();
+      action_client_exe_path_.cancelGoal();
 
       if (attemptRecovery())
       {

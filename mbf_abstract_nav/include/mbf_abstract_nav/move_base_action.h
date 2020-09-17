@@ -104,8 +104,12 @@ class MoveBaseAction
 
   bool attemptRecovery();
 
-  void cancelActiveClients();
-
+  /**
+   * Utility method that fills move base action result with the result of any of the action clients.
+   * @tparam ResultType
+   * @param result
+   * @param move_base_result
+   */
   template <typename ResultType>
   void fillMoveBaseResult(const ResultType& result, mbf_msgs::MoveBaseResult& move_base_result)
   {
