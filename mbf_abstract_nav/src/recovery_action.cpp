@@ -50,8 +50,9 @@ void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &exe
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
 
-  const mbf_msgs::RecoveryGoal &goal = *(goal_handle.getGoal().get());
+  const mbf_msgs::RecoveryGoal &goal = *goal_handle.getGoal();
   mbf_msgs::RecoveryResult result;
+  result.used_plugin = goal.behavior;
   bool recovery_active = true;
 
   typename AbstractRecoveryExecution::RecoveryState state_recovery_input;
