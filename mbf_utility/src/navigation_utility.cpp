@@ -51,45 +51,43 @@ bool getRobotPose(const TF &tf,
                   const ros::Duration &timeout,
                   geometry_msgs::PoseStamped &robot_pose)
 {
-  tf::Stamped<tf::Pose> local_pose;
-  local_pose.setIdentity();
-  local_pose.frame_id_ = robot_frame;
-  geometry_msgs::PoseStamped local_pose_msg;
-  tf::poseStampedTFToMsg(local_pose, local_pose_msg);
-  return transformPose(tf,
-                       global_frame,
-                       ros::Time(0), // most recent available
-                       timeout,
-                       local_pose_msg,
-                       global_frame,
-                       robot_pose);
+  geometry_msgs::PoseStamped local_pose;
+  local_pose.header.frame_id = robot_frame;
+  local_pose.header.stamp = ros::Time(0); // most recent available
+  local_pose.pose.orientation.w = 1.0;
+  bool success = transformPose(tf,
+                               global_frame,
+                               timeout,
+                               local_pose,
+                               robot_pose);
+  if (success && ros::Time::now() - robot_pose.header.stamp > timeout)
+  {
+    ROS_WARN("Most recent robot pose is %gs old (tolerance %gs)",
+             (ros::Time::now() - robot_pose.header.stamp).toSec(), timeout.toSec());
+    return false;
+  }
+  return success;
 }
 
 bool transformPose(const TF &tf,
                    const std::string &target_frame,
-                   const ros::Time &target_time,
                    const ros::Duration &timeout,
                    const geometry_msgs::PoseStamped &in,
-                   const std::string &fixed_frame,
                    geometry_msgs::PoseStamped &out)
 {
   std::string error_msg;
 
 #ifdef USE_OLD_TF
   bool success = tf.waitForTransform(target_frame,
-                                     target_time,
                                      in.header.frame_id,
                                      in.header.stamp,
-                                     fixed_frame,
                                      timeout,
                                      ros::Duration(0.01),
                                      &error_msg);
 #else
   bool success = tf.canTransform(target_frame,
-                                 target_time,
                                  in.header.frame_id,
                                  in.header.stamp,
-                                 fixed_frame,
                                  timeout,
                                  &error_msg);
 #endif
@@ -104,9 +102,9 @@ bool transformPose(const TF &tf,
   try
   {
 #ifdef USE_OLD_TF
-    tf.transformPose(target_frame, target_time, in, fixed_frame, out);
+    tf.transformPose(target_frame, in, out);
 #else
-    tf.transform(in, out, target_frame, target_time, fixed_frame);
+    tf.transform(in, out, target_frame);
 #endif
   }
   catch (const TFException &ex)
@@ -120,29 +118,23 @@ bool transformPose(const TF &tf,
 
 bool transformPoint(const TF &tf,
                     const std::string &target_frame,
-                    const ros::Time &target_time,
                     const ros::Duration &timeout,
                     const geometry_msgs::PointStamped &in,
-                    const std::string &fixed_frame,
                     geometry_msgs::PointStamped &out)
 {
   std::string error_msg;
 
 #ifdef USE_OLD_TF
   bool success = tf.waitForTransform(target_frame,
-                                     target_time,
                                      in.header.frame_id,
                                      in.header.stamp,
-                                     fixed_frame,
                                      timeout,
                                      ros::Duration(0.01),
                                      &error_msg);
 #else
   bool success = tf.canTransform(target_frame,
-                                 target_time,
                                  in.header.frame_id,
                                  in.header.stamp,
-                                 fixed_frame,
                                  timeout,
                                  &error_msg);
 #endif
@@ -157,9 +149,9 @@ bool transformPoint(const TF &tf,
   try
   {
 #ifdef USE_OLD_TF
-    tf.transformPoint(target_frame, target_time, in, fixed_frame, out);
+    tf.transformPoint(target_frame, in, out);
 #else
-    tf.transform(in, out, target_frame, target_time, fixed_frame);
+    tf.transform(in, out, target_frame);
 #endif
   }
   catch (const TFException &ex)

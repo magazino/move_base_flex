@@ -169,14 +169,11 @@ std::vector<geometry_msgs::PoseStamped> AbstractControllerExecution::getNewPlan(
 
 bool AbstractControllerExecution::computeRobotPose()
 {
-  bool tf_success = mbf_utility::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
-                                              ros::Duration(tf_timeout_), robot_pose_);
-  // would be 0 if not, as we ask tf listener for the last pose available
-  robot_pose_.header.stamp = ros::Time::now();
-  if (!tf_success)
+  if (!mbf_utility::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
+                                 ros::Duration(tf_timeout_), robot_pose_))
   {
     ROS_ERROR_STREAM("Could not get the robot pose in the global frame. - robot frame: \""
-                         << robot_frame_ << "\"   global frame: \"" << global_frame_ << std::endl);
+                         << robot_frame_ << "\"   global frame: \"" << global_frame_);
     message_ = "Could not get the robot pose";
     outcome_ = mbf_msgs::ExePathResult::TF_ERROR;
     return false;
@@ -305,7 +302,8 @@ void AbstractControllerExecution::run()
 
       if (cancel_)
       {
-        if (force_stop_on_cancel_) {
+        if (force_stop_on_cancel_)
+        {
           publishZeroVelocity(); // command the robot to stop on canceling navigation
         }
         setState(CANCELED);
@@ -348,13 +346,21 @@ void AbstractControllerExecution::run()
       }
 
       // compute robot pose and store it in robot_pose_
-      computeRobotPose();
+      if (!computeRobotPose())
+      {
+        publishZeroVelocity();
+        setState(INTERNAL_ERROR);
+        condition_.notify_all();
+        moving_ = false;
+        return;
+      }
 
       // ask planner if the goal is reached
       if (reachedGoalCheck())
       {
         ROS_DEBUG_STREAM_NAMED("abstract_controller_execution", "Reached the goal!");
-        if (force_stop_at_goal_) {
+        if (force_stop_at_goal_)
+        {
           publishZeroVelocity();
         }
         setState(ARRIVED_GOAL);

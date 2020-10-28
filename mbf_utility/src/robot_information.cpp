@@ -56,7 +56,6 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
 {
   bool tf_success = mbf_utility::getRobotPose(tf_listener_, robot_frame_, global_frame_,
                                               ros::Duration(tf_timeout_), robot_pose);
-  robot_pose.header.stamp = ros::Time::now(); // would be 0 if not, as we ask tf listener for the last pose available
   if (!tf_success)
   {
     ROS_ERROR_STREAM("Can not get the robot pose in the global frame. - robot frame: \""
