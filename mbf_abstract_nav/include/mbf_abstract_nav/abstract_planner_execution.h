@@ -227,8 +227,9 @@ namespace mbf_abstract_nav
     /**
      * @brief Sets the internal state, thread communication safe
      * @param state the current state
+     * @param signalling set true to trigger the condition-variable for state-update
      */
-    void setState(PlanningState state);
+    void setState(PlanningState state, bool signalling);
 
     //! mutex to handle safe thread communication for the current state
     boost::mutex state_mtx_;
