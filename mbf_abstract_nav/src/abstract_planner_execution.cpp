@@ -66,7 +66,7 @@ AbstractPlannerExecution::~AbstractPlannerExecution()
 }
 
 
-double AbstractPlannerExecution::getCost()
+double AbstractPlannerExecution::getCost() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
   // copy plan and costs to output
@@ -77,7 +77,7 @@ double AbstractPlannerExecution::getCost()
     double cost = 0;
 
     geometry_msgs::PoseStamped prev_pose = plan_.front();
-    for(std::vector<geometry_msgs::PoseStamped>::iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
+    for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
     {
       cost += mbf_utility::distance(prev_pose, *iter);
       prev_pose = *iter;
@@ -100,7 +100,7 @@ void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
 }
 
 
-typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState()
+typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState() const
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   return state_;
@@ -113,20 +113,20 @@ void AbstractPlannerExecution::setState(PlanningState state)
 }
 
 
-ros::Time AbstractPlannerExecution::getLastValidPlanTime()
+ros::Time AbstractPlannerExecution::getLastValidPlanTime() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
   return last_valid_plan_time_;
 }
 
 
-bool AbstractPlannerExecution::isPatienceExceeded()
+bool AbstractPlannerExecution::isPatienceExceeded() const
 {
   return !patience_.isZero() && (ros::Time::now() - last_call_start_time_ > patience_);
 }
 
 
-std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan()
+std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
   // copy plan and costs to output
