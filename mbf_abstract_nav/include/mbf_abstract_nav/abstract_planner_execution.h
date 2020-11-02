@@ -59,7 +59,7 @@ namespace mbf_abstract_nav
 
 /**
  * @defgroup planner_execution Planner Execution Classes
- * @brief The planner execution classes are derived from the AbstractPlannerExecution and extends the functionality.
+ * @brief The planner execution classes are derived from the AbstractPlannerExecution and extend the functionality.
  *        The base planner execution code is located in the AbstractPlannerExecution.
  */
 
@@ -80,7 +80,9 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Constructor
-     * @param condition Thread sleep condition variable, to wake up connected threads
+     * @param name Name of this execution
+     * @param planner_ptr Pointer to the planner
+     * @param config Initial configuration for this execution
      */
     AbstractPlannerExecution(const std::string &name,
                              const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
@@ -93,8 +95,6 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Returns a new plan, if one is available.
-     * @param plan A reference to a plan, which then will be filled.
-     * @param cost A reference to the costs, which then will be filled.
      */
     std::vector<geometry_msgs::PoseStamped> getPlan();
 
@@ -192,7 +192,7 @@ namespace mbf_abstract_nav
 
   protected:
 
-    //! the local planer to calculate the velocity command
+    //! the local planer to calculate the robot trajectory
     mbf_abstract_core::AbstractPlanner::Ptr planner_;
 
     //! the name of the loaded planner plugin
