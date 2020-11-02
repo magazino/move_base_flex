@@ -96,19 +96,19 @@ namespace mbf_abstract_nav
     /**
      * @brief Returns a new plan, if one is available.
      */
-    std::vector<geometry_msgs::PoseStamped> getPlan();
+    std::vector<geometry_msgs::PoseStamped> getPlan() const;
 
     /**
      * @brief Returns the last time a valid plan was available.
      * @return time, the last valid plan was available.
      */
-    ros::Time getLastValidPlanTime();
+    ros::Time getLastValidPlanTime() const;
 
     /**
      * @brief Checks whether the patience was exceeded.
      * @return true, if the patience duration was exceeded.
      */
-    bool isPatienceExceeded();
+    bool isPatienceExceeded() const;
 
     /**
      * @brief Internal states
@@ -131,18 +131,18 @@ namespace mbf_abstract_nav
      * @brief Returns the current internal state
      * @return the current internal state
      */
-    PlanningState getState();
+    PlanningState getState() const;
 
     /**
      * @brief Gets planning frequency
      */
-    double getFrequency() { return frequency_; };
+    double getFrequency() const { return frequency_; };
 
     /**
      * @brief Gets computed costs
      * @return The costs of the computed path
      */
-    double getCost();
+    double getCost() const;
 
     /**
      * @brief Cancel the planner execution. This calls the cancel method of the planner plugin.
@@ -231,16 +231,19 @@ namespace mbf_abstract_nav
     void setState(PlanningState state);
 
     //! mutex to handle safe thread communication for the current state
-    boost::mutex state_mtx_;
+    mutable boost::mutex state_mtx_;
 
     //! mutex to handle safe thread communication for the plan and plan-costs
-    boost::mutex plan_mtx_;
+    mutable boost::mutex plan_mtx_;
 
     //! mutex to handle safe thread communication for the goal and start pose.
-    boost::mutex goal_start_mtx_;
+    mutable boost::mutex goal_start_mtx_;
 
     //! mutex to handle safe thread communication for the planning_ flag.
-    boost::mutex planning_mtx_;
+    mutable boost::mutex planning_mtx_;
+
+    //! dynamic reconfigure mutex for a thread safe communication
+    mutable boost::mutex configuration_mutex_;
 
     //! true, if a new goal pose has been set, until it is used.
     bool has_new_goal_;
@@ -292,9 +295,6 @@ namespace mbf_abstract_nav
 
     //! current internal state
     PlanningState state_;
-
-    //! dynamic reconfigure mutex for a thread safe communication
-    boost::mutex configuration_mutex_;
 
   };
 
