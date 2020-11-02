@@ -178,8 +178,8 @@ bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
   goal_ = goal;
   tolerance_ = tolerance;
 
-  geometry_msgs::Point s = start.pose.position;
-  geometry_msgs::Point g = goal.pose.position;
+  const geometry_msgs::Point& s = start.pose.position;
+  const geometry_msgs::Point& g = goal.pose.position;
 
   ROS_DEBUG_STREAM("Start planning from the start pose: (" << s.x << ", " << s.y << ", " << s.z << ")"
                                  << " to the goal pose: ("<< g.x << ", " << g.y << ", " << g.z << ")");
@@ -247,7 +247,7 @@ void AbstractPlannerExecution::run()
         current_start = start_;
         ROS_INFO_STREAM("A new start pose is available. Planning with the new start pose!");
         exceeded = false;
-        geometry_msgs::Point s = start_.pose.position;
+        const geometry_msgs::Point& s = start_.pose.position;
         ROS_INFO_STREAM("New planning start pose: (" << s.x << ", " << s.y << ", " << s.z << ")");
       }
       if (has_new_goal_)
@@ -258,7 +258,7 @@ void AbstractPlannerExecution::run()
         ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and the tolerance: "
                         << current_tolerance);
         exceeded = false;
-        geometry_msgs::Point g = goal_.pose.position;
+        const geometry_msgs::Point& g = goal_.pose.position;
         ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
       }
 
@@ -289,6 +289,7 @@ void AbstractPlannerExecution::run()
 
           plan_mtx_.lock();
           plan_ = plan;
+          // todo compute the cost once!
           cost_ = cost;
           last_valid_plan_time_ = ros::Time::now();
           plan_mtx_.unlock();
