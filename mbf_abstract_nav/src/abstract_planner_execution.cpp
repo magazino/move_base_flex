@@ -226,10 +226,6 @@ void AbstractPlannerExecution::run()
   geometry_msgs::PoseStamped current_goal = goal_;
   double current_tolerance = tolerance_;
 
-  bool success = false;
-  bool make_plan = false;
-  bool exceeded = false;
-
   last_call_start_time_ = ros::Time::now();
   last_valid_plan_time_ = ros::Time::now();
 
@@ -250,7 +246,6 @@ void AbstractPlannerExecution::run()
         has_new_start_ = false;
         current_start = start_;
         ROS_INFO_STREAM("A new start pose is available. Planning with the new start pose!");
-        exceeded = false;
         const geometry_msgs::Point& s = start_.pose.position;
         ROS_INFO_STREAM("New planning start pose: (" << s.x << ", " << s.y << ", " << s.z << ")");
       }
@@ -261,12 +256,9 @@ void AbstractPlannerExecution::run()
         current_tolerance = tolerance_;
         ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and the tolerance: "
                         << current_tolerance);
-        exceeded = false;
         const geometry_msgs::Point& g = goal_.pose.position;
         ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
       }
-
-      make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
 
       // unlock goal
       goal_start_mtx_.unlock();
@@ -276,12 +268,12 @@ void AbstractPlannerExecution::run()
         planning_ = false;
         setState(CANCELED, true);
       }
-      else if (make_plan)
+      else
       {
         setState(PLANNING, false);
 
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
-        success = outcome_ < 10;
+        bool success = outcome_ < 10;
 
         // assume we are done (will change this below if we need to retry)
         planning_ = false;
@@ -296,7 +288,6 @@ void AbstractPlannerExecution::run()
         else if (success)
         {
           ROS_DEBUG_STREAM("Successfully found a plan.");
-          exceeded = false;
 
           plan_mtx_.lock();
           plan_ = plan;
@@ -309,7 +300,6 @@ void AbstractPlannerExecution::run()
         else if (max_retries_ >= 0 && ++retries > max_retries_)
         {
           ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
-          exceeded = true;
           setState(MAX_RETRIES, true);
         }
         else if (isPatienceExceeded())
@@ -320,18 +310,15 @@ void AbstractPlannerExecution::run()
           // old nav_core-based planners do not support canceling), and we add here the fact to the log for info
           ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
                                                 << (cancel_ ? "; planner canceled!" : ""));
-          exceeded = true;
           setState(PAT_EXCEEDED, true);
         }
         else if (max_retries_ == 0 && patience_.isZero())
         {
           ROS_INFO_STREAM("Planning could not find a plan!");
-          exceeded = true;
           setState(NO_PLAN_FOUND, true);
         }
         else
         {
-          exceeded = false;
           planning_ = true;
           ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
         }
