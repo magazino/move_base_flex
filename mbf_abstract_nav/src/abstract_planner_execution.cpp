@@ -289,15 +289,14 @@ void AbstractPlannerExecution::run()
         {
           ROS_DEBUG_STREAM("Successfully found a plan.");
 
-          plan_mtx_.lock();
+          boost::lock_guard<boost::mutex> plan_mtx_guard(plan_mtx_);
           plan_ = plan;
           // todo compute the cost once!
           cost_ = cost;
           last_valid_plan_time_ = ros::Time::now();
-          plan_mtx_.unlock();
           setState(FOUND_PLAN, true);
         }
-        else if (max_retries_ >= 0 && ++retries > max_retries_)
+        else if (max_retries_ > 0 && ++retries > max_retries_)
         {
           ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
           setState(MAX_RETRIES, true);
