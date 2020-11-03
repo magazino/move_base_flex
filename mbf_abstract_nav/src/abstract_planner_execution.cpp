@@ -343,7 +343,6 @@ void AbstractPlannerExecution::run()
   {
     // Planner thread interrupted; probably we have exceeded planner patience
     ROS_WARN_STREAM("Planner thread interrupted!");
-    planning_ = false;
     setState(STOPPED, true);
   }
   catch (...)
@@ -351,6 +350,7 @@ void AbstractPlannerExecution::run()
     ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR, true);
   }
+  planning_ = false;
 }
 
 } /* namespace mbf_abstract_nav */
