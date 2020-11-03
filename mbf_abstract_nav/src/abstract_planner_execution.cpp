@@ -283,19 +283,20 @@ void AbstractPlannerExecution::run()
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
         success = outcome_ < 10;
 
+        // assume we are done (will change this below if we need to retry)
+        planning_ = false;
+
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
         if (cancel_ && !isPatienceExceeded())
         {
           ROS_INFO_STREAM("The planner \"" << name_ << "\" has been canceled!"); // but not due to patience exceeded
-          planning_ = false;
           setState(CANCELED, true);
         }
         else if (success)
         {
           ROS_DEBUG_STREAM("Successfully found a plan.");
           exceeded = false;
-          planning_ = false;
 
           plan_mtx_.lock();
           plan_ = plan;
@@ -309,7 +310,6 @@ void AbstractPlannerExecution::run()
         {
           ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
           exceeded = true;
-          planning_ = false;
           setState(MAX_RETRIES, true);
         }
         else if (isPatienceExceeded())
@@ -321,19 +321,18 @@ void AbstractPlannerExecution::run()
           ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
                                                 << (cancel_ ? "; planner canceled!" : ""));
           exceeded = true;
-          planning_ = false;
           setState(PAT_EXCEEDED, true);
         }
         else if (max_retries_ == 0 && patience_.isZero())
         {
           ROS_INFO_STREAM("Planning could not find a plan!");
           exceeded = true;
-          planning_ = false;
           setState(NO_PLAN_FOUND, true);
         }
         else
         {
           exceeded = false;
+          planning_ = true;
           ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
         }
       }
