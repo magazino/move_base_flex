@@ -270,9 +270,16 @@ void AbstractPlannerExecution::run()
 
       // unlock goal
       goal_start_mtx_.unlock();
-      setState(PLANNING, false);
-      if (make_plan)
+      if (cancel_)
       {
+        ROS_INFO_STREAM("The global planner has been canceled!");
+        planning_ = false;
+        setState(CANCELED, true);
+      }
+      else if (make_plan)
+      {
+        setState(PLANNING, false);
+
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
         success = outcome_ < 10;
 
@@ -329,12 +336,6 @@ void AbstractPlannerExecution::run()
           exceeded = false;
           ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
         }
-      }
-      else if (cancel_)
-      {
-        ROS_INFO_STREAM("The global planner has been canceled!");
-        planning_ = false;
-        setState(CANCELED, true);
       }
     } // while (planning_ && ros::ok())
   }
