@@ -58,38 +58,30 @@ namespace mbf_utility
  * @brief Transforms a point from one frame into another.
  * @param tf_listener TransformListener.
  * @param target_frame Target frame for the point.
- * @param target_time Time, in that the frames should be used.
  * @param timeout Timeout for looking up the transformation.
  * @param in Point to transform.
- * @param fixed_frame Fixed frame of the source and target frame.
  * @param out Transformed point.
  * @return true, if the transformation succeeded.
  */
 bool transformPoint(const TF &tf,
                     const std::string &target_frame,
-                    const ros::Time &target_time,
                     const ros::Duration &timeout,
                     const geometry_msgs::PointStamped &in,
-                    const std::string &fixed_frame,
                     geometry_msgs::PointStamped &out);
 
 /**
  * @brief Transforms a pose from one frame into another.
  * @param tf_listener TransformListener.
  * @param target_frame Target frame for the pose.
- * @param target_time Time, in that the frames should be used.
  * @param timeout Timeout for looking up the transformation.
  * @param in Pose to transform.
- * @param fixed_frame Fixed frame of the source and target frame.
  * @param out Transformed pose.
  * @return true, if the transformation succeeded.
  */
 bool transformPose(const TF &tf,
                    const std::string &target_frame,
-                   const ros::Time &target_time,
                    const ros::Duration &timeout,
                    const geometry_msgs::PoseStamped &in,
-                   const std::string &fixed_frame,
                    geometry_msgs::PoseStamped &out);
 
 /**
