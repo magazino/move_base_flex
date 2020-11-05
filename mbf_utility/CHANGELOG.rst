@@ -2,8 +2,8 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.3 (2020-11-05)
+------------------
 * fix controller fails if robot pose gets older than tf_timeout
 * Make reference symbol position consistent across the project
 * Move RobotInformation to mbf_utility, as it can be used generally

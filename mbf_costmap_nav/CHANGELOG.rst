@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.3 (2020-11-05)
+------------------
 * Fix controller fails if robot pose gets older than tf_timeout, see #231
 * clear the costmap before deactivating it, see #220
 * Use `catkin_install_python` to install legacy relay. see #219

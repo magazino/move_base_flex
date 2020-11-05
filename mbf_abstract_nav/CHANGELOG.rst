@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.3 (2020-11-05)
+------------------
 * On move_base action, handle properly RECALLED, REJECTED and LOST status, see #228
 * Fill recovery result field used_plugin, see #229
 * Signal from setState function, see #236
