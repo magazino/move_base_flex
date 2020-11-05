@@ -136,7 +136,14 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
   get_path_goal_.target_pose = goal.target_pose;
   get_path_goal_.use_start_pose = false; // use the robot pose
   get_path_goal_.planner = goal.planner;
+  get_path_goal_.tolerance_from_action = goal.tolerance_from_action;
+  get_path_goal_.dist_tolerance = goal.dist_tolerance;
+  get_path_goal_.angle_tolerance = goal.angle_tolerance;
+
   exe_path_goal_.controller = goal.controller;
+  exe_path_goal_.tolerance_from_action = goal.tolerance_from_action;
+  exe_path_goal_.dist_tolerance = goal.dist_tolerance;
+  exe_path_goal_.angle_tolerance = goal.angle_tolerance;
 
   ros::Duration connection_timeout(1.0);
 

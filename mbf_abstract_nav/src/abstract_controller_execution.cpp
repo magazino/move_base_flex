@@ -67,7 +67,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   private_nh.param("map_frame", global_frame_, std::string("map"));
   private_nh.param("force_stop_at_goal", force_stop_at_goal_, false);
   private_nh.param("force_stop_on_cancel", force_stop_on_cancel_, false);
-  private_nh.param("mbf_tolerance_check", mbf_tolerance_check_, false);
+  private_nh.param("check_goal_reached", mbf_check_goal_reached_, false);
   private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
   private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
   private_nh.param("tf_timeout", tf_timeout_, 1.0);
@@ -244,18 +244,18 @@ bool AbstractControllerExecution::isMoving()
 
 bool AbstractControllerExecution::reachedGoalCheck()
 {
-  //if action has a specific tolerance, check goal reached with those tolerances
-  if (tolerance_from_action_)
-  {
-    return controller_->isGoalReached(action_dist_tolerance_, action_angle_tolerance_) ||
-        (mbf_tolerance_check_ && mbf_utility::distance(robot_pose_, plan_.back()) < action_dist_tolerance_
-        && mbf_utility::angle(robot_pose_, plan_.back()) < action_angle_tolerance_);
-  }
+  // Use action-provided tolerances if requested, or use parameter values otherwise
+  double dist_tolerance = tolerance_from_action_ ? action_dist_tolerance_ : dist_tolerance_;
+  double angle_tolerance = tolerance_from_action_ ? action_angle_tolerance_ : angle_tolerance_;
 
-  // Otherwise, check whether the controller plugin returns goal reached or if mbf should check for goal reached.
-  return controller_->isGoalReached(dist_tolerance_, angle_tolerance_) || (mbf_tolerance_check_
-      && mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_
-      && mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_);
+  if (mbf_check_goal_reached_)
+  {
+    // MBF checks if we have reached the goal, or...
+    return mbf_utility::distance(robot_pose_, plan_.back()) < dist_tolerance_ &&
+           mbf_utility::angle(robot_pose_, plan_.back()) < angle_tolerance_;
+  }
+  // ...we let the controller decide
+  return controller_->isGoalReached(dist_tolerance_, angle_tolerance_);
 }
 
 bool AbstractControllerExecution::cancel()

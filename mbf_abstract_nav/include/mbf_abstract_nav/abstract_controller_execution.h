@@ -312,13 +312,13 @@ namespace mbf_abstract_nav
     //! the last set plan which is currently processed by the controller
     std::vector<geometry_msgs::PoseStamped> plan_;
 
-    //! the duration which corresponds with the controller frequency.
+    //! the duration which corresponds with the controller frequency
     boost::chrono::microseconds calling_duration_;
 
-    //! the frame of the robot, which will be used to determine its position.
+    //! the frame of the robot, which will be used to determine its position
     std::string robot_frame_;
 
-    //! the global frame the robot is controlling in.
+    //! the global frame the robot is controlling in
     std::string global_frame_;
 
     //! publisher for the current velocity command
@@ -339,13 +339,13 @@ namespace mbf_abstract_nav
     //! main controller loop variable, true if the controller is running, false otherwise
     bool moving_;
 
-    //! whether move base flex should check for the goal tolerance or not.
-    bool mbf_tolerance_check_;
+    //! whether MBF should check if the robot has reached the goal, or delegate on the controller instead
+    bool mbf_check_goal_reached_;
 
-    //! whether move base flex should force the robot to stop once the goal is reached.
+    //! whether move base flex should force the robot to stop once the goal is reached
     bool force_stop_at_goal_;
 
-    //! whether move base flex should force the robot to stop on canceling navigation.
+    //! whether move base flex should force the robot to stop on canceling navigation
     bool force_stop_on_cancel_;
 
     //! distance tolerance to the given goal pose

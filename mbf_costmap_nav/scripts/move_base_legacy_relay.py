@@ -51,8 +51,9 @@ def mb_execute_cb(msg):
 
 def make_plan_cb(request):
     mbf_gp_ac.send_goal(mbf_msgs.GetPathGoal(start_pose=request.start, target_pose=request.goal,
-                                             use_start_pose=bool(request.start.header.frame_id),
-                                             planner=bgp, tolerance=request.tolerance))
+                                             use_start_pose=bool(request.start.header.frame_id), planner=bgp,
+                                             dist_tolerance=request.tolerance, angle_tolerance=request.tolerance,
+                                             tolerance_from_action=bool(request.tolerance > 0.0)))
     rospy.logdebug("Relaying legacy make_plan service to mbf get_path action server")
     mbf_gp_ac.wait_for_result()
 

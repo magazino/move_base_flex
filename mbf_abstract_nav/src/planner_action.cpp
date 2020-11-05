@@ -65,13 +65,14 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
   result.path.header.seq = path_seq_count_++;
   result.path.header.frame_id = robot_info_.getGlobalFrame();
 
-  double tolerance = goal.tolerance;
+  double dist_tolerance = goal.tolerance_from_action ? goal.dist_tolerance : 0.0;
+  double angle_tolerance = goal.tolerance_from_action ? goal.angle_tolerance : 0.0;
   bool use_start_pose = goal.use_start_pose;
   current_goal_pub_.publish(goal.target_pose);
 
   bool planner_active = true;
 
-  if(use_start_pose)
+  if (use_start_pose)
   {
     start_pose = goal.start_pose;
     const geometry_msgs::Point& p = start_pose.pose.position;
@@ -109,7 +110,7 @@ void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execu
     {
       case AbstractPlannerExecution::INITIALIZED:
         ROS_DEBUG_STREAM_NAMED(name_, "planner state: initialized");
-        if (!execution.start(start_pose, goal.target_pose, tolerance))
+        if (!execution.start(start_pose, goal.target_pose, dist_tolerance, angle_tolerance))
         {
           result.outcome = mbf_msgs::GetPathResult::INTERNAL_ERROR;
           result.message = "Another thread is still planning!";

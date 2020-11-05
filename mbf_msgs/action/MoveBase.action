@@ -12,6 +12,11 @@ string planner
 # Recovery behaviors to try on case of failure; defaults to the "recovery_behaviors" parameter value
 string[] recovery_behaviors
 
+# Optionally overrule controller's goal tolerances
+bool tolerance_from_action
+float32 dist_tolerance
+float32 angle_tolerance
+
 ---
 
 # Predefined success codes:

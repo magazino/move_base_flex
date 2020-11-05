@@ -138,11 +138,13 @@ std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan() cons
 }
 
 
-void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal, double tolerance)
+void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal,
+                                          double dist_tolerance, double angle_tolerance)
 {
   boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
   goal_ = goal;
-  tolerance_ = tolerance;
+  dist_tolerance_ = dist_tolerance;
+  angle_tolerance_ = angle_tolerance;
   has_new_goal_ = true;
 }
 
@@ -157,12 +159,13 @@ void AbstractPlannerExecution::setNewStart(const geometry_msgs::PoseStamped &sta
 
 void AbstractPlannerExecution::setNewStartAndGoal(const geometry_msgs::PoseStamped &start,
                                                   const geometry_msgs::PoseStamped &goal,
-                                                  double tolerance)
+                                                  double dist_tolerance, double angle_tolerance)
 {
   boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
   start_ = start;
   goal_ = goal;
-  tolerance_ = tolerance;
+  dist_tolerance_ = dist_tolerance;
+  angle_tolerance_ = angle_tolerance;
   has_new_start_ = true;
   has_new_goal_ = true;
 }
@@ -170,7 +173,7 @@ void AbstractPlannerExecution::setNewStartAndGoal(const geometry_msgs::PoseStamp
 
 bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
                                      const geometry_msgs::PoseStamped &goal,
-                                     double tolerance)
+                                     double dist_tolerance, double angle_tolerance)
 {
   if (planning_)
   {
@@ -180,7 +183,8 @@ bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
   planning_ = true;
   start_ = start;
   goal_ = goal;
-  tolerance_ = tolerance;
+  dist_tolerance_ = dist_tolerance;
+  angle_tolerance_ = angle_tolerance;
 
   const geometry_msgs::Point& s = start.pose.position;
   const geometry_msgs::Point& g = goal.pose.position;
@@ -209,12 +213,12 @@ bool AbstractPlannerExecution::cancel()
 
 uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &start,
                                             const geometry_msgs::PoseStamped &goal,
-                                            double tolerance,
+                                            double dist_tolerance, double angle_tolerance,
                                             std::vector<geometry_msgs::PoseStamped> &plan,
                                             double &cost,
                                             std::string &message)
 {
-  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(start, goal, dist_tolerance, angle_tolerance, plan, cost, message);
 }
 
 void AbstractPlannerExecution::run()
@@ -224,7 +228,6 @@ void AbstractPlannerExecution::run()
   int retries = 0;
   geometry_msgs::PoseStamped current_start = start_;
   geometry_msgs::PoseStamped current_goal = goal_;
-  double current_tolerance = tolerance_;
 
   bool success = false;
   bool make_plan = false;
@@ -258,9 +261,8 @@ void AbstractPlannerExecution::run()
       {
         has_new_goal_ = false;
         current_goal = goal_;
-        current_tolerance = tolerance_;
-        ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and the tolerance: "
-                        << current_tolerance);
+        ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and tolerances: "
+                        << dist_tolerance_ << " m, " << angle_tolerance_ << " rad");
         exceeded = false;
         const geometry_msgs::Point& g = goal_.pose.position;
         ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
@@ -273,7 +275,7 @@ void AbstractPlannerExecution::run()
       setState(PLANNING, false);
       if (make_plan)
       {
-        outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
+        outcome_ = makePlan(current_start, current_goal, dist_tolerance_, angle_tolerance_, plan, cost, message_);
         success = outcome_ < 10;
 
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
