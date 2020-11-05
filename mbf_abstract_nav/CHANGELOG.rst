@@ -2,6 +2,20 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* On move_base action, handle properly RECALLED, REJECTED and LOST status, see #228
+* Fill recovery result field used_plugin, see #229
+* Signal from setState function, see #236
+* Controller fails if robot pose gets older than tf_timeout, see #231
+* Send move_base result when canceled during exe_path and recovery, see #218
+* On controller cancel, wait for the control loop to stop, see #215
+* Ensure MBF does not crash upon receiving an empty path, see #214
+* Make robot_info a reference to keep one single instance, see #204
+* mbf_abstract_nav action event logging from INFO to DEBUG, see #203
+* Fix deallocation on shutdown by discarding all plugins and resetting action server pointers, see #199
+* Move RobotInformation to mbf_utility, as it can be used generaly, see #196
+
 0.3.2 (2020-05-25)
 ------------------
 * Avoid duplicated warn logging output when we cannot cancel a plugin
