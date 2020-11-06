@@ -9,7 +9,7 @@ This repository contains Move Base Flex (MBF), a backwards-compatible replacemen
 * Load multiple planners and controllers, selectable at runtime by setting one of the loaded plugin names in the action goal. 
 * Concurrency: Parallel planning, recovering, controlling by selecting different concurrency slots when defining the action goal. Only different plugins instances can run in parallel.
 
-Please see also the [Move Base Flex Documentation and Tutorials](https://wiki.ros.org/move_base_flex) in the ROS wiki.
+Please see also the [Move Base Flex Documentation and Tutorials](https://wiki.ros.org/move_base_flex) in the ROS wiki. And [this repository](https://github.com/Rayman/turtlebot3_mbf) contains a working minimal configuration for a turtlebot 3.
 
 ## Concepts & Architecture
 
