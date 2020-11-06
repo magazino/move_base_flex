@@ -111,6 +111,9 @@ void AbstractPlannerExecution::setState(PlanningState state, bool signalling)
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   state_ = state;
 
+  // we exit planning if we are signalling.
+  planning_ = !signalling;
+
   // some states are quiet, most aren't
   if(signalling)
     condition_.notify_all();
@@ -265,7 +268,6 @@ void AbstractPlannerExecution::run()
       if (cancel_)
       {
         ROS_INFO_STREAM("The global planner has been canceled!");
-        planning_ = false;
         setState(CANCELED, true);
       }
       else
@@ -274,9 +276,6 @@ void AbstractPlannerExecution::run()
 
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
         bool success = outcome_ < 10;
-
-        // assume we are done (will change this below if we need to retry)
-        planning_ = false;
 
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
@@ -291,7 +290,6 @@ void AbstractPlannerExecution::run()
 
           boost::lock_guard<boost::mutex> plan_mtx_guard(plan_mtx_);
           plan_ = plan;
-          // todo compute the cost once!
           cost_ = cost;
           last_valid_plan_time_ = ros::Time::now();
           setState(FOUND_PLAN, true);
@@ -318,7 +316,6 @@ void AbstractPlannerExecution::run()
         }
         else
         {
-          planning_ = true;
           ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
         }
       }
@@ -335,7 +332,6 @@ void AbstractPlannerExecution::run()
     ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR, true);
   }
-  planning_ = false;
 }
 
 } /* namespace mbf_abstract_nav */
