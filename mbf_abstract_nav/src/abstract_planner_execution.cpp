@@ -66,24 +66,27 @@ AbstractPlannerExecution::~AbstractPlannerExecution()
 }
 
 
+template <typename _Iter>
+double sumDistance(_Iter _begin, _Iter _end)
+{
+  // helper function to get the distance of a path.
+  // in C++11, we could add static_assert on the interator_type.
+  double dist = 0.;
+
+  // minimum length of the path is 2.
+  if(std::distance(_begin, _end) < 2)
+    return dist;
+
+  // two pointer iteration
+  for(_Iter next = _begin + 1; next != _end; ++_begin, ++next)
+    dist += mbf_utility::distance(*_begin, *next);
+
+  return dist;
+}
+
+
 double AbstractPlannerExecution::getCost() const
 {
-  boost::lock_guard<boost::mutex> guard(plan_mtx_);
-  // copy plan and costs to output
-  // if the planner plugin do not compute costs compute costs by discrete path length
-  if(cost_ == 0 && !plan_.empty())
-  {
-    ROS_DEBUG_STREAM("Compute costs by discrete path length!");
-    double cost = 0;
-
-    geometry_msgs::PoseStamped prev_pose = plan_.front();
-    for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
-    {
-      cost += mbf_utility::distance(prev_pose, *iter);
-      prev_pose = *iter;
-    }
-    return cost;
-  }
   return cost_;
 }
 
@@ -291,6 +294,10 @@ void AbstractPlannerExecution::run()
           boost::lock_guard<boost::mutex> plan_mtx_guard(plan_mtx_);
           plan_ = plan;
           cost_ = cost;
+          // estimate the cost based on the distance if its zero.
+          if(cost_ == 0)
+            cost_ = sumDistance(plan_.begin(), plan_.end());
+
           last_valid_plan_time_ = ros::Time::now();
           setState(FOUND_PLAN, true);
         }
