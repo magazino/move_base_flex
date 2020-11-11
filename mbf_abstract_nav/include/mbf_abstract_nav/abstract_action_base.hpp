@@ -47,6 +47,13 @@
 namespace mbf_abstract_nav
 {
 
+/**
+ * Base class for managing multiple concurrent executions.
+ *
+ * @tparam Action an actionlib-compatible action
+ * @tparam Execution a class adhering to the AbstractExecutionBase
+ *
+ */
 template <typename Action, typename Execution>
 class AbstractActionBase
 {
