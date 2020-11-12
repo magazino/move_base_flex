@@ -61,7 +61,7 @@ class RecoveryAction : public AbstractActionBase<mbf_msgs::RecoveryAction, Abstr
 
   RecoveryAction(const std::string &name, const mbf_utility::RobotInformation &robot_info);
 
-  void run(GoalHandle &goal_handle, AbstractRecoveryExecution &execution);
+  void runImpl(GoalHandle &goal_handle, AbstractRecoveryExecution &execution);
 
 };
 

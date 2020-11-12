@@ -73,7 +73,7 @@ class ControllerAction :
       typename AbstractControllerExecution::Ptr execution_ptr
   );
 
-  void run(GoalHandle &goal_handle, AbstractControllerExecution &execution);
+  void runImpl(GoalHandle &goal_handle, AbstractControllerExecution& execution);
 
 protected:
   void publishExePathFeedback(
