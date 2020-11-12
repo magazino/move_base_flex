@@ -65,8 +65,8 @@ namespace mbf_abstract_nav
  * @tparam Execution a class implementing the AbstractExecutionBase
  *
  * Place the implementation specific code into AbstractActionBase::runImpl.
- * Also it is required, that you have to define MyExecution::Ptr as a
- * shared pointer for your execution.
+ * Also it is required, that you define MyExecution::Ptr as a shared pointer
+ * for your execution.
  *
  */
 template <typename Action, typename Execution>
@@ -80,7 +80,7 @@ class AbstractActionBase
   struct ConcurrencySlot{
     ConcurrencySlot() : thread_ptr(NULL), in_use(false){}
     typename Execution::Ptr execution;
-    boost::thread* thread_ptr;
+    boost::thread* thread_ptr; ///< Owned pointer to a thread
     GoalHandle goal_handle;
     bool in_use;
   };
@@ -91,7 +91,15 @@ protected:
   typedef std::map<uint8_t, ConcurrencySlot> ConcurrencyMap;
 public:
 
-
+  /**
+   * @brief Construct a new AbstractActionBase
+   *
+   * @param name name of the AbstractActionBase
+   * @param robot_info robot information
+   *
+   * @warning Both arguments are stored by ref. You have to ensure, that
+   * the lifetime of name and robot_info exceeds the lifetime of this object.
+   */
   AbstractActionBase(
       const std::string &name,
       const mbf_utility::RobotInformation &robot_info
