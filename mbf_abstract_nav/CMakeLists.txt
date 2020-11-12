@@ -96,11 +96,8 @@ if(CATKIN_ENABLE_TESTING)
     test/abstract_action_base.cpp)
   target_link_libraries(abstract_action_base_test ${MBF_ABSTRACT_SERVER_LIB})
   
-  # gmock-tests only for noetic and newer
-  if(${roscpp_VERSION} VERSION_GREATER 1.15.0)
-    add_rostest_gmock(abstract_planner_execution_test
-      test/abstract_planner_execution.launch
-      test/abstract_planner_execution.cpp)
-    target_link_libraries(abstract_planner_execution_test ${MBF_ABSTRACT_SERVER_LIB})
-  endif()
+  add_rostest_gmock(abstract_planner_execution_test
+    test/abstract_planner_execution.launch
+    test/abstract_planner_execution.cpp)
+  target_link_libraries(abstract_planner_execution_test ${MBF_ABSTRACT_SERVER_LIB})
 endif()

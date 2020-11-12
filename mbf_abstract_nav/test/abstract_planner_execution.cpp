@@ -13,9 +13,9 @@ using mbf_abstract_core::AbstractPlanner;
 // we will control the output of it
 struct AbstractPlannerMock : public AbstractPlanner
 {
-  MOCK_METHOD(uint32_t, makePlan, (const PoseStamped &, const PoseStamped &, double, std::vector<PoseStamped> &, double &, std::string &), (override));
+  MOCK_METHOD6(makePlan, uint32_t(const PoseStamped &, const PoseStamped &, double, std::vector<PoseStamped> &, double &, std::string &));
 
-  MOCK_METHOD(bool, cancel, (), (override));
+  MOCK_METHOD0(cancel, bool());
 };
 
 using mbf_abstract_nav::AbstractPlannerExecution;
