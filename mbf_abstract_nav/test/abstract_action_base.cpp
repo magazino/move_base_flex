@@ -64,8 +64,8 @@ TEST_F(AbstractActionBaseFixture, cancelAll)
   cancelAll();
 
   // check the result
-  for(const auto& slot : concurrency_slots_)
-    ASSERT_FALSE(slot.second.in_use);
+  for(ConcurrencyMap::iterator slot = concurrency_slots_.begin(); slot != concurrency_slots_.end(); ++slot)
+    ASSERT_FALSE(slot->second.in_use);
 
 }
 
