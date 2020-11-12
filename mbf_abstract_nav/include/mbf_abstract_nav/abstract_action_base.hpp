@@ -39,6 +39,15 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+
+#include <string>
+#include <map>
+
 #include <actionlib/server/action_server.h>
 #include <mbf_utility/robot_information.h>
 
