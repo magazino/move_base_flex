@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 
-#include <mbf_abstract_nav/abstract_planner_execution.h>
 #include <mbf_abstract_core/abstract_planner.h>
+#include <mbf_abstract_nav/abstract_planner_execution.h>
 
 // too long namespaces...
 using geometry_msgs::PoseStamped;
@@ -11,9 +11,10 @@ using mbf_abstract_core::AbstractPlanner;
 
 // mocked version of a planner
 // we will control the output of it
-struct AbstractPlannerMock : public AbstractPlanner
-{
-  MOCK_METHOD6(makePlan, uint32_t(const PoseStamped &, const PoseStamped &, double, std::vector<PoseStamped> &, double &, std::string &));
+struct AbstractPlannerMock : public AbstractPlanner {
+  MOCK_METHOD6(makePlan,
+               uint32_t(const PoseStamped &, const PoseStamped &, double,
+                        std::vector<PoseStamped> &, double &, std::string &));
 
   MOCK_METHOD0(cancel, bool());
 };
@@ -25,11 +26,16 @@ using testing::Return;
 using testing::Test;
 
 // setup the test-fixture
-struct AbstractPlannerExecutionFixture : public Test, public AbstractPlannerExecution
-{
-  PoseStamped pose; // dummy pose to call start
+struct AbstractPlannerExecutionFixture : public Test,
+                                         public AbstractPlannerExecution {
+  PoseStamped pose;  // dummy pose to call start
 
-  AbstractPlannerExecutionFixture() : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{new AbstractPlannerMock()}, MoveBaseFlexConfig{}) {}
+  AbstractPlannerExecutionFixture()
+      : AbstractPlannerExecution(
+            "foo", AbstractPlanner::Ptr{new AbstractPlannerMock()},
+            MoveBaseFlexConfig{})
+  {
+  }
 };
 
 TEST_F(AbstractPlannerExecutionFixture, success)
@@ -43,7 +49,8 @@ TEST_F(AbstractPlannerExecutionFixture, success)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), FOUND_PLAN);
 
   join();
@@ -75,7 +82,8 @@ TEST_F(AbstractPlannerExecutionFixture, cancel)
   cv.notify_all();
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), CANCELED);
 
   join();
@@ -89,19 +97,22 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
   // configure the class
   MoveBaseFlexConfig config;
   config.planner_max_retries = 5;
-  config.planner_patience = 100; // set a high patience
+  config.planner_patience = 100;  // set a high patience
   reconfigure(config);
 
   // setup the expectations
   AbstractPlannerMock &mock = dynamic_cast<AbstractPlannerMock &>(*planner_);
   // todo retries is misleading since we retry n+1 times...
-  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries + 1).WillRepeatedly(Return(11));
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _))
+      .Times(config.planner_max_retries + 1)
+      .WillRepeatedly(Return(11));
 
   // call and wait
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), MAX_RETRIES);
 
   join();
@@ -126,8 +137,40 @@ TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), NO_PLAN_FOUND);
+
+  join();
+}
+
+using testing::DoAll;
+using testing::SetArgReferee;
+
+TEST_F(AbstractPlannerExecutionFixture, sumDist)
+{
+  // simulate the case when the planner returns zero cost
+  std::vector<geometry_msgs::PoseStamped> plan(4);
+  for (size_t ii = 0; ii != plan.size(); ++ii)
+    plan.at(ii).pose.position.x = ii;
+  double cost = 0;
+
+  // call the planner
+  // the good case - we succeed
+  // setup the expectation
+  AbstractPlannerMock &mock = dynamic_cast<AbstractPlannerMock &>(*planner_);
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _))
+      .WillOnce(
+          DoAll(SetArgReferee<3>(plan), SetArgReferee<4>(cost), Return(0)));
+
+  // call and wait
+  ASSERT_TRUE(start(pose, pose, 0));
+
+  // check result
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
+  ASSERT_EQ(getState(), FOUND_PLAN);
+  ASSERT_EQ(getCost(), 3);
 
   join();
 }
@@ -156,29 +199,30 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
   cv.notify_all();
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), PAT_EXCEEDED);
 
   join();
 }
 
-ACTION(ThrowException)
-{
-  throw std::runtime_error("bad planner");
-}
+ACTION(ThrowException) { throw std::runtime_error("bad planner"); }
 
 TEST_F(AbstractPlannerExecutionFixture, exception)
 {
   // if we throw an exception, we expect that we can recover from it
   // setup the expectations
   AbstractPlannerMock &mock = dynamic_cast<AbstractPlannerMock &>(*planner_);
-  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1).WillOnce(ThrowException());
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _))
+      .Times(1)
+      .WillOnce(ThrowException());
 
   // call and wait
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}), boost::cv_status::no_timeout);
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+            boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), INTERNAL_ERROR);
 
   join();
