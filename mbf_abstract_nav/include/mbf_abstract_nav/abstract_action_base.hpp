@@ -77,12 +77,13 @@ class AbstractActionBase
   typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
 
   /// @brief POD holding info for one execution
-  typedef struct{
+  struct ConcurrencySlot{
+    ConcurrencySlot() : thread_ptr(NULL), in_use(false){}
     typename Execution::Ptr execution;
-    boost::thread* thread_ptr = NULL;
+    boost::thread* thread_ptr;
     GoalHandle goal_handle;
-    bool in_use = false;
-  } ConcurrencySlot;
+    bool in_use;
+  };
 
 protected:
   // not part of the public interface
