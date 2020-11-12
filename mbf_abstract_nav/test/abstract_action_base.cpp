@@ -30,7 +30,7 @@ struct AbstractActionBaseFixture
       public Test {
   // required members for the c'tor
   TF tf_;
-  std::string test_name = "action_base";
+  std::string test_name;
   mbf_utility::RobotInformation ri;
 
   AbstractActionBaseFixture()
@@ -40,7 +40,7 @@ struct AbstractActionBaseFixture
   {
   }
 
-  void runImpl(GoalHandle &goal_handle, MockedExecution &execution) override {}
+  void runImpl(GoalHandle &goal_handle, MockedExecution &execution) {}
 };
 
 TEST_F(AbstractActionBaseFixture, thread_stop)
