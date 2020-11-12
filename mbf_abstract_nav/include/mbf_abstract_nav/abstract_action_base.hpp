@@ -106,7 +106,8 @@ public:
     {
       // cancel and join all spawned threads.
       slot_it->second.execution->cancel();
-      slot_it->second.thread_ptr->join();
+      if(slot_it->second.thread_ptr->joinable())
+        slot_it->second.thread_ptr->join();
 
       // unregister and delete
       threads_.remove_thread(slot_it->second.thread_ptr);
