@@ -49,7 +49,7 @@ TEST_F(AbstractPlannerExecutionFixture, success)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), FOUND_PLAN);
 
@@ -82,7 +82,7 @@ TEST_F(AbstractPlannerExecutionFixture, cancel)
   cv.notify_all();
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), CANCELED);
 
@@ -111,7 +111,7 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), MAX_RETRIES);
 
@@ -137,7 +137,7 @@ TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), NO_PLAN_FOUND);
 
@@ -167,7 +167,7 @@ TEST_F(AbstractPlannerExecutionFixture, sumDist)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), FOUND_PLAN);
   ASSERT_EQ(getCost(), 3);
@@ -199,7 +199,7 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
   cv.notify_all();
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), PAT_EXCEEDED);
 
@@ -221,7 +221,7 @@ TEST_F(AbstractPlannerExecutionFixture, exception)
   ASSERT_TRUE(start(pose, pose, 0));
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds{1}),
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)),
             boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), INTERNAL_ERROR);
 
