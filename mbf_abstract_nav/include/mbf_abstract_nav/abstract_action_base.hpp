@@ -137,14 +137,17 @@ public:
         if (slot_it->second.thread_ptr->joinable()) {
           slot_it->second.thread_ptr->join();
         }
+      }
 
+      if(slot_it != concurrency_slots_.end())
+      {
         // cleanup previous execution; otherwise we will leak threads
         threads_.remove_thread(concurrency_slots_[slot].thread_ptr);
         delete concurrency_slots_[slot].thread_ptr;
       }
-
-      // create a new map object in order to avoid costly lookups
-      if(slot_it == concurrency_slots_.end()) {
+      else
+      {
+        // create a new map object in order to avoid costly lookups
         // note: currently unchecked
         slot_it = concurrency_slots_.insert(std::make_pair(slot, ConcurrencySlot())).first;
       }
