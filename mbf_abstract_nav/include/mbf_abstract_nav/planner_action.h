@@ -74,7 +74,7 @@ class PlannerAction : public AbstractActionBase<mbf_msgs::GetPathAction, Abstrac
    * @param global_plan Output plan, which is then transformed to the global frame.
    * @return true, if the transformation succeeded, false otherwise
    */
-  bool transformPlanToGlobalFrame(std::vector<geometry_msgs::PoseStamped> &plan,
+  bool transformPlanToGlobalFrame(const std::vector<geometry_msgs::PoseStamped> &plan,
                                   std::vector<geometry_msgs::PoseStamped> &global_plan);
 
 

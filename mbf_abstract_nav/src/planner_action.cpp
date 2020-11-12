@@ -261,10 +261,10 @@ void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &e
 }
 
 bool PlannerAction::transformPlanToGlobalFrame(
-    std::vector<geometry_msgs::PoseStamped> &plan, std::vector<geometry_msgs::PoseStamped> &global_plan)
+    const std::vector<geometry_msgs::PoseStamped> &plan, std::vector<geometry_msgs::PoseStamped> &global_plan)
 {
   global_plan.clear();
-  std::vector<geometry_msgs::PoseStamped>::iterator iter;
+  std::vector<geometry_msgs::PoseStamped>::const_iterator iter;
   bool tf_success = false;
   for (iter = plan.begin(); iter != plan.end(); ++iter)
   {
