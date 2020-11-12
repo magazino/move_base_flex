@@ -244,8 +244,6 @@ void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &e
       // try to sleep a bit
       // normally this thread should be woken up from the planner execution thread
       // in order to transfer the results to the controller.
-      boost::mutex mutex;
-      boost::unique_lock<boost::mutex> lock(mutex);
       execution.waitForStateUpdate(boost::chrono::milliseconds(500));
     }
   }  // while (planner_active && ros::ok())
