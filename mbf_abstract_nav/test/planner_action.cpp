@@ -10,7 +10,7 @@
 #include <mbf_abstract_nav/abstract_planner_execution.h>
 
 #include <boost/chrono.hpp>
-#include <boost/thread/thread.hpp> 
+#include <boost/thread/thread.hpp>
 
 using namespace mbf_abstract_nav;
 
@@ -82,17 +82,21 @@ struct PlannerActionFixture : public Test
         geometry_msgs::TransformStamped transform;
         transform.header.frame_id = global_frame;
         transform.child_frame_id = local_frame;
+#if ROS_VERSION_MINIMUM(1, 14, 0) // if current ros version is >= 1.14.0
         tf.setTransform(transform, "someone", true);
+#else
+        tf.setTransform(transform, "someone");
+#endif
         tf.setUsingDedicatedThread(true);
     }
 
-    void SetUp() override
+    void SetUp()
     {
         // wait for server
         ASSERT_TRUE(action_client.waitForServer(ros::Duration(1)));
     }
 
-    void TearDown() override
+    void TearDown()
     {
         // here we fire up the request and wait for the result
         // setup the client expectation - we always want to hear something back
@@ -146,8 +150,8 @@ TEST_F(PlannerActionFixture, success)
     // create a dummy path
     std::vector<geometry_msgs::PoseStamped> path(10);
     // set the frame such that we can skip tf
-    for (auto &pose : path)
-        pose.header.frame_id = global_frame;
+    for (size_t ii = 0; ii != path.size(); ++ii)
+        path[ii].header.frame_id = global_frame;
 
     // setup the expectation
     EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(DoAll(SetArgReferee<3>(path), Return(0)));
@@ -163,8 +167,8 @@ TEST_F(PlannerActionFixture, tfError)
     // create a dummy path
     std::vector<geometry_msgs::PoseStamped> path(10);
     // set the frame such that we fail at the tf
-    for (auto &pose : path)
-        pose.header.frame_id = "unknow";
+    for (size_t ii = 0; ii != path.size(); ++ii)
+        path[ii].header.frame_id = "unknown";
 
     // setup the expectation - we succeed here
     EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(DoAll(SetArgReferee<3>(path), Return(0)));
@@ -192,6 +196,7 @@ TEST_F(PlannerActionFixture, noPlanFound)
 {
     // test case where the planner fails.
     // in this case we will receive NO_PLAN_FOUND from the server.
+    config.planner_max_retries = 0;
 
     // valid goal
     goal.use_start_pose = true;
@@ -202,8 +207,9 @@ TEST_F(PlannerActionFixture, noPlanFound)
     expected_result.outcome = mbf_msgs::GetPathResult::NO_PATH_FOUND;
 }
 
-ACTION(SleepAndFail){
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
+ACTION(SleepAndFail)
+{
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     return 11;
 }
 
@@ -212,8 +218,8 @@ TEST_F(PlannerActionFixture, patExceeded)
     // test case where the planner fails multple times and we are out of patience
 
     // setup the config; this will be passed to the execution
-    config.planner_max_retries = 10;
-    config.planner_patience = 0.1;
+    config.planner_max_retries = 5;
+    config.planner_patience = 0.05;
 
     // valid goal
     goal.use_start_pose = true;
