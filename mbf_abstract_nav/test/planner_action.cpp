@@ -80,6 +80,7 @@ struct PlannerActionFixture : public Test
     {
         action_server.start();
         tf.setUsingDedicatedThread(true);
+        config.planner_patience = 0;
     }
 
     void SetUp()

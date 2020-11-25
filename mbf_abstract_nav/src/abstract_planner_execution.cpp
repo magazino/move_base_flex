@@ -100,7 +100,13 @@ void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
 
   // Timeout granted to the global planner. We keep calling it up to this time or up to max_retries times
   // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
-  patience_ = ros::Duration(config.planner_patience);
+  try{
+    patience_ = ros::Duration(config.planner_patience);
+  }
+  catch(std::exception& ex) {
+    ROS_ERROR_STREAM("Failed to set planner_patience: " << ex.what());
+    patience_ = ros::Duration(0);
+  }
 }
 
 
