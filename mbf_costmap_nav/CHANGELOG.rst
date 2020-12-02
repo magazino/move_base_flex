@@ -2,6 +2,10 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix blind driving (`#243 <https://github.com/magazino/move_base_flex/issues/243>`_)
+
 0.3.3 (2020-11-05)
 ------------------
 * Fix controller fails if robot pose gets older than tf_timeout, see #231
