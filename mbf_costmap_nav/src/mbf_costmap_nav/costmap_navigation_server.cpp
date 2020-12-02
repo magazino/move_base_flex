@@ -103,7 +103,7 @@ CostmapNavigationServer::~CostmapNavigationServer()
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
     const std::string &plugin_name,
-    const mbf_abstract_core::AbstractPlanner::Ptr plugin_ptr)
+    const mbf_abstract_core::AbstractPlanner::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
       plugin_name,
@@ -114,7 +114,7 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlan
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
     const std::string &plugin_name,
-    const mbf_abstract_core::AbstractController::Ptr plugin_ptr)
+    const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
       plugin_name,
@@ -128,7 +128,7 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
     const std::string &plugin_name,
-    const mbf_abstract_core::AbstractRecovery::Ptr plugin_ptr)
+    const mbf_abstract_core::AbstractRecovery::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
       plugin_name,
