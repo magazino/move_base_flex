@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.4 (2020-12-02)
+------------------
 * fix blind driving (`#243 <https://github.com/magazino/move_base_flex/issues/243>`_)
 
 0.3.3 (2020-11-05)
