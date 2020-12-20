@@ -1,0 +1,31 @@
+sudo: required
+language: generic
+dist: trusty
+
+notifications:
+  email:
+    recipients:
+      - spuetz@uos.de
+    on_success: change
+    on_failure: change
+
+matrix:
+  include:
+  - name: "Kinetic"
+    env: ROS_DISTRO=kinetic
+
+  - name: "Lunar"
+    env: ROS_DISTRO=lunar
+
+  - name: "Melodic"
+    env: ROS_DISTRO=melodic
+  
+  - name: "Noetic"
+    env: ROS_DISTRO=noetic
+
+install:
+  - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci.git .ci_config -b master
+
+script:
+  - .ci_config/travis.sh
+  - .run-style-check-diff.sh
