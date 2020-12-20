@@ -28,3 +28,4 @@ install:
 
 script:
   - .ci_config/travis.sh
+  - .run-style-check-diff.sh
