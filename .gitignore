@@ -1,3 +1,8 @@
-.*
+.pyc
+.idea
+.project
+.cproject
+.settings
+.pydevproject
 cmake-build-debug
 !/.gitignore
