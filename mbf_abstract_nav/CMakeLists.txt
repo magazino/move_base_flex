@@ -87,3 +87,11 @@ install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gmock(abstract_action_base_test
+    test/abstract_action_base.launch
+    test/abstract_action_base.cpp)
+  target_link_libraries(abstract_action_base_test ${MBF_ABSTRACT_SERVER_LIB})
+endif()

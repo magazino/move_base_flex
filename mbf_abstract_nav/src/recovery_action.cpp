@@ -44,9 +44,9 @@ namespace mbf_abstract_nav
 {
 
 RecoveryAction::RecoveryAction(const std::string &name, const mbf_utility::RobotInformation &robot_info)
-  : AbstractActionBase(name, robot_info, boost::bind(&mbf_abstract_nav::RecoveryAction::run, this, _1, _2)){}
+  : AbstractActionBase(name, robot_info){}
 
-void RecoveryAction::run(GoalHandle &goal_handle, AbstractRecoveryExecution &execution)
+void RecoveryAction::runImpl(GoalHandle &goal_handle, AbstractRecoveryExecution &execution)
 {
   ROS_DEBUG_STREAM_NAMED(name_, "Start action "  << name_);
 

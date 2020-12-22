@@ -39,42 +39,86 @@
 #ifndef MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 #define MBF_ABSTRACT_NAV__ABSTRACT_ACTION_BASE_H_
 
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
+
+#include <string>
+#include <map>
+#include <utility>
+
 #include <actionlib/server/action_server.h>
 #include <mbf_utility/robot_information.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
+#include "mbf_abstract_nav/abstract_execution_base.h"
 
 namespace mbf_abstract_nav
 {
 
+/**
+ * Base class for managing multiple concurrent executions.
+ *
+ * @tparam Action an actionlib-compatible action
+ * @tparam Execution a class implementing the AbstractExecutionBase
+ *
+ * Place the implementation specific code into AbstractActionBase::runImpl.
+ * Also it is required, that you define MyExecution::Ptr as a shared pointer
+ * for your execution.
+ *
+ */
 template <typename Action, typename Execution>
 class AbstractActionBase
 {
  public:
   typedef boost::shared_ptr<AbstractActionBase> Ptr;
   typedef typename actionlib::ActionServer<Action>::GoalHandle GoalHandle;
-  typedef boost::function<void (GoalHandle &goal_handle, Execution &execution)> RunMethod;
-  typedef struct{
+
+  /// @brief POD holding info for one execution
+  struct ConcurrencySlot{
+    ConcurrencySlot() : thread_ptr(NULL), in_use(false){}
     typename Execution::Ptr execution;
-    boost::thread* thread_ptr = NULL;
+    boost::thread* thread_ptr; ///< Owned pointer to a thread
     GoalHandle goal_handle;
-    bool in_use = false;
-  } ConcurrencySlot;
+    bool in_use;
+  };
 
+protected:
+  // not part of the public interface
+  // todo change to unordered_map
+  typedef std::map<uint8_t, ConcurrencySlot> ConcurrencyMap;
+public:
 
+  /**
+   * @brief Construct a new AbstractActionBase
+   *
+   * @param name name of the AbstractActionBase
+   * @param robot_info robot information
+   *
+   * @warning Both arguments are stored by ref. You have to ensure, that
+   * the lifetime of name and robot_info exceeds the lifetime of this object.
+   */
   AbstractActionBase(
       const std::string &name,
-      const mbf_utility::RobotInformation &robot_info,
-      const RunMethod run_method
-  ) : name_(name), robot_info_(robot_info), run_(run_method){}
+      const mbf_utility::RobotInformation &robot_info
+  ) : name_(name), robot_info_(robot_info){}
 
   virtual ~AbstractActionBase()
   {
     // cleanup threads used on executions
+    // note: cannot call cancelAll, since our mutex is not recursive
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.begin();
+    typename ConcurrencyMap::iterator slot_it = concurrency_slots_.begin();
     for (; slot_it != concurrency_slots_.end(); ++slot_it)
     {
+      // cancel and join all spawned threads.
+      slot_it->second.execution->cancel();
+      if(slot_it->second.thread_ptr->joinable())
+        slot_it->second.thread_ptr->join();
+
+      // unregister and delete
       threads_.remove_thread(slot_it->second.thread_ptr);
       delete slot_it->second.thread_ptr;
     }
@@ -94,7 +138,7 @@ class AbstractActionBase
     else
     {
       boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-      typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+      typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
       if (slot_it != concurrency_slots_.end() && slot_it->second.in_use) {
         // if there is already a plugin running on the same slot, cancel it
         slot_it->second.execution->cancel();
@@ -104,18 +148,25 @@ class AbstractActionBase
         }
       }
 
-      // fill concurrency slot with the new goal handle, execution, and working thread
-      concurrency_slots_[slot].in_use = true;
-      concurrency_slots_[slot].goal_handle = goal_handle;
-      concurrency_slots_[slot].goal_handle.setAccepted();
-      concurrency_slots_[slot].execution = execution_ptr;
-      if (concurrency_slots_[slot].thread_ptr)
+      if(slot_it != concurrency_slots_.end())
       {
         // cleanup previous execution; otherwise we will leak threads
         threads_.remove_thread(concurrency_slots_[slot].thread_ptr);
         delete concurrency_slots_[slot].thread_ptr;
       }
-      concurrency_slots_[slot].thread_ptr =
+      else
+      {
+        // create a new map object in order to avoid costly lookups
+        // note: currently unchecked
+        slot_it = concurrency_slots_.insert(std::make_pair(slot, ConcurrencySlot())).first;
+      }
+
+      // fill concurrency slot with the new goal handle, execution, and working thread
+      slot_it->second.in_use = true;
+      slot_it->second.goal_handle = goal_handle;
+      slot_it->second.goal_handle.setAccepted();
+      slot_it->second.execution = execution_ptr;
+      slot_it->second.thread_ptr =
         threads_.create_thread(boost::bind(&AbstractActionBase::run, this, boost::ref(concurrency_slots_[slot])));
     }
   }
@@ -125,17 +176,19 @@ class AbstractActionBase
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
+    typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
     if (slot_it != concurrency_slots_.end())
     {
       concurrency_slots_[slot].execution->cancel();
     }
   }
 
+  virtual void runImpl(GoalHandle &goal_handle, Execution& execution) {};
+
   virtual void run(ConcurrencySlot &slot)
   {
     slot.execution->preRun();
-    run_(slot.goal_handle, *slot.execution);
+    runImpl(slot.goal_handle, *slot.execution);
     ROS_DEBUG_STREAM_NAMED(name_, "Finished action \"" << name_ << "\" run method, waiting for execution thread to finish.");
     slot.execution->join();
     ROS_DEBUG_STREAM_NAMED(name_, "Execution completed with goal status "
@@ -149,7 +202,7 @@ class AbstractActionBase
   {
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
 
-    typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
+    typename ConcurrencyMap::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->reconfigure(config);
@@ -160,7 +213,7 @@ class AbstractActionBase
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
-    typename std::map<uint8_t, ConcurrencySlot>::iterator iter;
+    typename ConcurrencyMap::iterator iter;
     for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->cancel();
@@ -172,9 +225,8 @@ protected:
   const std::string &name_;
   const mbf_utility::RobotInformation &robot_info_;
 
-  RunMethod run_;
   boost::thread_group threads_;
-  std::map<uint8_t, ConcurrencySlot> concurrency_slots_;
+  ConcurrencyMap concurrency_slots_;
 
   boost::mutex slot_map_mtx_;
 

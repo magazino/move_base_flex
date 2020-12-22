@@ -93,6 +93,11 @@ class AbstractExecutionBase
    */
   virtual void postRun() { };
 
+  /**
+   * @brief Optional implementaiton-specific configuration function.
+   */
+  virtual void reconfigure(MoveBaseFlexConfig& _cfg){}
+
 protected:
   virtual void run() = 0;
 

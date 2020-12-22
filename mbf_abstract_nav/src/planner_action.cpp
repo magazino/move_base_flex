@@ -48,14 +48,14 @@ namespace mbf_abstract_nav
 PlannerAction::PlannerAction(
     const std::string &name,
     const mbf_utility::RobotInformation &robot_info)
-  : AbstractActionBase(name, robot_info, boost::bind(&mbf_abstract_nav::PlannerAction::run, this, _1, _2)), path_seq_count_(0)
+  : AbstractActionBase(name, robot_info), path_seq_count_(0)
 {
   ros::NodeHandle private_nh("~");
   // informative topics: current navigation goal
   current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
 }
 
-void PlannerAction::run(GoalHandle &goal_handle, AbstractPlannerExecution &execution)
+void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &execution)
 {
   const mbf_msgs::GetPathGoal& goal = *(goal_handle.getGoal().get());
 
