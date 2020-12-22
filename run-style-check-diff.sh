@@ -11,10 +11,9 @@ git fetch upstream
 newest_common_ancestor_sha=$(git merge-base ${GITHUB_HEAD_REF} upstream/${GITHUB_BASE_REF})
 lines_diff_count=$(git clang-format --diff ${newest_common_ancestor_sha} | wc -l)
 
-echo "${newest_common_ancestor_sha}"
-echo "${lines_diff_count}"
 # in case of no diff we return a one-liner
-if [ ${lines_diff_count} -ge 1 ]; then
-	echo "error"
+if [ ${lines_diff_count} -gt 1 ]; then
 	exit 1
+else
+	exit 0
 fi
