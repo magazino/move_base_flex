@@ -65,7 +65,6 @@ AbstractPlannerExecution::~AbstractPlannerExecution()
 {
 }
 
-
 template <typename _Iter>
 double sumDistance(_Iter _begin, _Iter _end)
 {
@@ -74,16 +73,15 @@ double sumDistance(_Iter _begin, _Iter _end)
   double dist = 0.;
 
   // minimum length of the path is 2.
-  if(std::distance(_begin, _end) < 2)
+  if (std::distance(_begin, _end) < 2)
     return dist;
 
   // two pointer iteration
-  for(_Iter next = _begin + 1; next != _end; ++_begin, ++next)
+  for (_Iter next = _begin + 1; next != _end; ++_begin, ++next)
     dist += mbf_utility::distance(*_begin, *next);
 
   return dist;
 }
-
 
 double AbstractPlannerExecution::getCost() const
 {
@@ -295,7 +293,7 @@ void AbstractPlannerExecution::run()
           plan_ = plan;
           cost_ = cost;
           // estimate the cost based on the distance if its zero.
-          if(cost_ == 0)
+          if (cost_ == 0)
             cost_ = sumDistance(plan_.begin(), plan_.end());
 
           last_valid_plan_time_ = ros::Time::now();
