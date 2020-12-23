@@ -40,10 +40,14 @@
 
 namespace mbf_abstract_nav
 {
-
-AbstractExecutionBase::AbstractExecutionBase(std::string name)
-  : outcome_(255), cancel_(false), name_(name)
+AbstractExecutionBase::AbstractExecutionBase(const std::string& name) : outcome_(255), cancel_(false), name_(name)
 {
+}
+
+AbstractExecutionBase::~AbstractExecutionBase()
+{
+  stop();
+  join();
 }
 
 bool AbstractExecutionBase::start()
@@ -70,17 +74,17 @@ boost::cv_status AbstractExecutionBase::waitForStateUpdate(boost::chrono::micros
   return condition_.wait_for(lock, duration);
 }
 
-uint32_t AbstractExecutionBase::getOutcome()
+uint32_t AbstractExecutionBase::getOutcome() const
 {
   return outcome_;
 }
 
-std::string AbstractExecutionBase::getMessage()
+const std::string& AbstractExecutionBase::getMessage() const
 {
   return message_;
 }
 
-std::string AbstractExecutionBase::getName()
+const std::string& AbstractExecutionBase::getName() const
 {
   return name_;
 }
