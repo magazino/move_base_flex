@@ -71,7 +71,10 @@ class AbstractExecutionBase
     * @brief Cancel the plugin execution.
     * @return true, if the plugin tries / tried to cancel the computation.
     */
-   virtual bool cancel() = 0;
+   virtual bool cancel()
+   {
+     return false;
+   };
 
    void join();
 
@@ -109,7 +112,7 @@ class AbstractExecutionBase
    {}
 
 protected:
-  virtual void run() = 0;
+  virtual void run(){};
 
   //! condition variable to wake up control thread
   boost::condition_variable condition_;

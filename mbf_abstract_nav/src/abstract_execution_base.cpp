@@ -46,12 +46,28 @@ AbstractExecutionBase::AbstractExecutionBase(const std::string& name) : outcome_
 
 AbstractExecutionBase::~AbstractExecutionBase()
 {
-  stop();
-  join();
+  if (thread_.joinable())
+  {
+    // if the user forgets to call stop(), we have to kill it
+    stop();
+    thread_.join();
+  }
 }
 
 bool AbstractExecutionBase::start()
 {
+  if (thread_.joinable())
+  {
+    // if the user forgets to call stop(), we have to kill it
+    stop();
+    thread_.join();
+  }
+
+  // reset the member vars
+  cancel_ = false;
+  outcome_ = 255;
+  message_.clear();
+
   thread_ = boost::thread(&AbstractExecutionBase::run, this);
   return true;
 }
