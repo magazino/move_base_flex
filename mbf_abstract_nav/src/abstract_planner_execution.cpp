@@ -39,6 +39,7 @@
  */
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
+#include <mbf_utility/thread_affinity.h>
 
 namespace mbf_abstract_nav
 {
@@ -69,6 +70,7 @@ AbstractPlannerExecution::~AbstractPlannerExecution()
 double AbstractPlannerExecution::getCost() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
+  ROS_DEBUG_NAMED("planner_log","plan_mtx_ locked using lock_guard in getCost function.");
   // copy plan and costs to output
   // if the planner plugin do not compute costs compute costs by discrete path length
   if(cost_ == 0 && !plan_.empty())
@@ -90,6 +92,7 @@ double AbstractPlannerExecution::getCost() const
 void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
 {
   boost::lock_guard<boost::mutex> guard(configuration_mutex_);
+  ROS_DEBUG_NAMED("planner_log","configuration_mutex_ locked using lock_guard in reconfigure function.");
 
   max_retries_ = config.planner_max_retries;
   frequency_ = config.planner_frequency;
@@ -97,18 +100,24 @@ void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
   // Timeout granted to the global planner. We keep calling it up to this time or up to max_retries times
   // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
   patience_ = ros::Duration(config.planner_patience);
+
+  thread_affinity_ = config.planner_thread_affinity;
+
+  thread_nice_ = config.planner_thread_nice;
 }
 
 
 typename AbstractPlannerExecution::PlanningState AbstractPlannerExecution::getState() const
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
+  ROS_DEBUG_NAMED("planner_log","state_mtx_ locked using lock_guard in getState function.");
   return state_;
 }
 
 void AbstractPlannerExecution::setState(PlanningState state, bool signalling)
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
+  ROS_DEBUG_NAMED("planner_log","state_mtx_ locked using lock_guard in setState function.");
   state_ = state;
 
   // some states are quiet, most aren't
@@ -120,6 +129,7 @@ void AbstractPlannerExecution::setState(PlanningState state, bool signalling)
 ros::Time AbstractPlannerExecution::getLastValidPlanTime() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
+  ROS_DEBUG_NAMED("planner_log","plan_mtx_ locked using lock_guard in getLastValidPlanTime function.");
   return last_valid_plan_time_;
 }
 
@@ -133,6 +143,7 @@ bool AbstractPlannerExecution::isPatienceExceeded() const
 std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan() const
 {
   boost::lock_guard<boost::mutex> guard(plan_mtx_);
+  ROS_DEBUG_NAMED("planner_log","plan_mtx_ locked using lock_guard in getPlan function.");
   // copy plan and costs to output
   return plan_;
 }
@@ -141,6 +152,7 @@ std::vector<geometry_msgs::PoseStamped> AbstractPlannerExecution::getPlan() cons
 void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal, double tolerance)
 {
   boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+  ROS_DEBUG_NAMED("planner_log","goal_start_mtx_ locked using lock_guard in while setNewGoal function.");
   goal_ = goal;
   tolerance_ = tolerance;
   has_new_goal_ = true;
@@ -150,6 +162,7 @@ void AbstractPlannerExecution::setNewGoal(const geometry_msgs::PoseStamped &goal
 void AbstractPlannerExecution::setNewStart(const geometry_msgs::PoseStamped &start)
 {
   boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+  ROS_DEBUG_NAMED("planner_log","goal_start_mtx_ locked using lock_guard in while setNewStart function.");
   start_ = start;
   has_new_start_ = true;
 }
@@ -160,6 +173,7 @@ void AbstractPlannerExecution::setNewStartAndGoal(const geometry_msgs::PoseStamp
                                                   double tolerance)
 {
   boost::lock_guard<boost::mutex> guard(goal_start_mtx_);
+  ROS_DEBUG_NAMED("planner_log","goal_start_mtx_ locked using lock_guard in while setNewStartAndGoal function.");
   start_ = start;
   goal_ = goal;
   tolerance_ = tolerance;
@@ -177,6 +191,7 @@ bool AbstractPlannerExecution::start(const geometry_msgs::PoseStamped &start,
     return false;
   }
   boost::lock_guard<boost::mutex> guard(planning_mtx_);
+  ROS_DEBUG_NAMED("planner_log","planning_mtx_ locked using lock_guard in start function.");
   planning_ = true;
   start_ = start;
   goal_ = goal;
@@ -219,8 +234,24 @@ uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &st
 
 void AbstractPlannerExecution::run()
 {
+  // Set the thread niceness and affinity
+  niceThread("planner", thread_nice_);
+
+  if (thread_affinity_ >= 0)
+  {
+    if (setThreadAffinity(thread_affinity_))
+    {
+      ROS_INFO("Set planner thread affinity to %d", thread_affinity_);
+    }
+    else
+    {
+      ROS_WARN("Could not set planner thread affinity to %d", thread_affinity_);
+    }
+  }
+
   setState(STARTED, false);
   boost::lock_guard<boost::mutex> guard(planning_mtx_);
+  ROS_DEBUG_NAMED("planner_log","planning_mtx_ locked using lock_guard in run function.");
   int retries = 0;
   geometry_msgs::PoseStamped current_start = start_;
   geometry_msgs::PoseStamped current_goal = goal_;
@@ -245,6 +276,7 @@ void AbstractPlannerExecution::run()
 
       // lock goal start mutex
       goal_start_mtx_.lock();
+      ROS_DEBUG_NAMED("planner_log","goal_start_mtx_ locked in while planning_ loop.");
       if (has_new_start_)
       {
         has_new_start_ = false;
@@ -267,7 +299,7 @@ void AbstractPlannerExecution::run()
       }
 
       make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
-
+      ROS_DEBUG_NAMED("planner_log","goal_start_mtx_ unlocked in while planning_ loop.");
       // unlock goal
       goal_start_mtx_.unlock();
       setState(PLANNING, false);
@@ -277,7 +309,7 @@ void AbstractPlannerExecution::run()
         success = outcome_ < 10;
 
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
-
+        ROS_DEBUG_NAMED("planner_log","configuration_mutex_ locked using lock_guard in while planning_ loop in run function."); 
         if (cancel_ && !isPatienceExceeded())
         {
           ROS_INFO_STREAM("The planner \"" << name_ << "\" has been canceled!"); // but not due to patience exceeded
@@ -291,10 +323,12 @@ void AbstractPlannerExecution::run()
           planning_ = false;
 
           plan_mtx_.lock();
+          ROS_DEBUG_NAMED("planner_log","plan_mtx_ locked in while planning_ loop.");
           plan_ = plan;
           // todo compute the cost once!
           cost_ = cost;
           last_valid_plan_time_ = ros::Time::now();
+          ROS_DEBUG_NAMED("planner_log","plan_mtx_ unlocked in while planning_ loop.");
           plan_mtx_.unlock();
           setState(FOUND_PLAN, true);
         }

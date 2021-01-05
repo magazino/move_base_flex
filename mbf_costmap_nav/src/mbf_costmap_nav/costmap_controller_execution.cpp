@@ -71,6 +71,8 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(cons
   abstract_config.controller_max_retries = config.controller_max_retries;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
   abstract_config.oscillation_distance = config.oscillation_distance;
+  abstract_config.controller_thread_affinity = config.controller_thread_affinity;
+  abstract_config.controller_thread_nice = config.controller_thread_nice;
   return abstract_config;
 }
 
@@ -94,7 +96,7 @@ bool CostmapControllerExecution::safetyCheck()
   // Check that the observation buffers for the costmap are current, we don't want to drive blind
   if (!costmap_ptr_->isCurrent())
   {
-    ROS_WARN("Sensor data is out of date, we're not going to allow commanding of the base for safety");
+    ROS_WARN_THROTTLE(10.0,"Sensor data is out of date, we're not going to allow commanding of the base for safety");
     return false;
   }
   return true;
