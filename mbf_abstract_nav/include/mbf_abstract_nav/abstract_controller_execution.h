@@ -364,6 +364,12 @@ namespace mbf_abstract_nav
 
     //! replaces parameter angle_tolerance_ for the action
     double action_angle_tolerance_;
+
+    //! desired processor affinity of the thread
+    int thread_affinity_;
+
+    //! desired processor niceness of the thread
+    int thread_nice_;
   };
 
 } /* namespace mbf_abstract_nav */

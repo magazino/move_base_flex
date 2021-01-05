@@ -297,6 +297,12 @@ namespace mbf_abstract_nav
     //! current internal state
     PlanningState state_;
 
+    //! desired processor affinity of the thread
+    int thread_affinity_;
+
+    //! desired processor niceness of the thread
+    int thread_nice_;
+
   };
 
 } /* namespace mbf_abstract_nav */
