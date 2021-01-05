@@ -41,6 +41,7 @@
 #include <tf/tf.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
+#include <std_msgs/Bool.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
@@ -116,6 +117,12 @@ CostmapNavigationServer::~CostmapNavigationServer()
   action_server_exe_path_ptr_.reset();
   action_server_get_path_ptr_.reset();
   action_server_move_base_ptr_.reset();
+}
+
+void CostmapNavigationServer::publishReadySignal(bool signal){
+  std_msgs::Bool ready_msg;
+  ready_msg.data = signal;
+  ready_publisher_.publish(ready_msg);
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
