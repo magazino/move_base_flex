@@ -364,6 +364,8 @@ void AbstractControllerExecution::run()
           publishZeroVelocity();
         }
         setState(ARRIVED_GOAL);
+        publishZeroVelocity();   // send a 0 velocity to make sure the robot is stopped
+
         // goal reached, tell it the controller
         condition_.notify_all();
         moving_ = false;
