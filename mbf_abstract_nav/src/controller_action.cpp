@@ -202,6 +202,8 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Controller canceled", result);
         goal_handle.setCanceled(result, result.message);
         controller_active = false;
+        execution.stop();
+        execution.publishZeroVelocity();
         break;
 
       case AbstractControllerExecution::STARTED:
@@ -220,7 +222,7 @@ void ControllerAction::run(GoalHandle &goal_handle, AbstractControllerExecution 
         break;
 
       case AbstractControllerExecution::MAX_RETRIES:
-        ROS_WARN_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
+        ROS_DEBUG_STREAM_NAMED(name_, "The controller has been aborted after it exceeded the maximum number of retries!");
         controller_active = false;
         fillExePathResult(execution.getOutcome(), execution.getMessage(), result);
         goal_handle.setAborted(result, result.message);

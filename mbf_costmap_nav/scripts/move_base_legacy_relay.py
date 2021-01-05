@@ -115,7 +115,7 @@ def mb_reconf_cb(config, level):
 
 
 if __name__ == '__main__':
-    rospy.init_node("move_base")
+    rospy.init_node("move_base",log_level=rospy.DEBUG)
 
     # TODO what happens with malformed target goal???  FAILURE  or INVALID_POSE
     # txt must be:  "Aborting on goal because it was sent with an invalid quaternion"   
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     mbf_drc = Client("move_base_flex", timeout=10)
 
     # move_base simple topic and action server
-    mb_sg = rospy.Subscriber('move_base_simple/goal', PoseStamped, simple_goal_cb)
+    mb_sg = rospy.Subscriber('/request/goal', PoseStamped, simple_goal_cb)
     mb_as = actionlib.SimpleActionServer('move_base', mb_msgs.MoveBaseAction, mb_execute_cb, auto_start=False)
     mb_as.start()
 
@@ -138,6 +138,6 @@ if __name__ == '__main__':
     mb_mps = rospy.Service('~make_plan', nav_srvs.GetPlan, make_plan_cb)
 
     # move_base dynamic reconfigure server
-    mb_drs = Server(MoveBaseConfig, mb_reconf_cb)
+    #mb_drs = Server(MoveBaseConfig, mb_reconf_cb)
 
     rospy.spin()

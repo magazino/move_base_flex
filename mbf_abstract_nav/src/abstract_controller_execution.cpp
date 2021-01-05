@@ -445,7 +445,7 @@ void AbstractControllerExecution::run()
   {
     // Controller thread interrupted; in most cases we have started a new plan
     // Can also be that robot is oscillating or we have exceeded planner patience
-    ROS_DEBUG_STREAM("Controller thread interrupted!");
+    ROS_WARN_STREAM("Controller thread interrupted!");
     publishZeroVelocity();
     setState(STOPPED);
     condition_.notify_all();

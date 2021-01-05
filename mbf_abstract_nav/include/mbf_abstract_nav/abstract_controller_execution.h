@@ -193,6 +193,11 @@ namespace mbf_abstract_nav
      */
     bool isMoving();
 
+    /**
+     * @brief Publishes a velocity command with zero values to stop the robot.
+     */
+    void publishZeroVelocity();
+
   protected:
 
     /**
@@ -254,12 +259,6 @@ namespace mbf_abstract_nav
     virtual bool safetyCheck() { return true; };
 
   private:
-
-
-    /**
-     * @brief Publishes a velocity command with zero values to stop the robot.
-     */
-    void publishZeroVelocity();
 
     /**
      * @brief Checks whether the goal has been reached in the range of tolerance or not
