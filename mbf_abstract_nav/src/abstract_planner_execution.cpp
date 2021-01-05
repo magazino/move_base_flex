@@ -39,6 +39,7 @@
  */
 
 #include "mbf_abstract_nav/abstract_planner_execution.h"
+#include <mbf_utility/thread_affinity.h>
 
 namespace mbf_abstract_nav
 {
@@ -97,6 +98,10 @@ void AbstractPlannerExecution::reconfigure(const MoveBaseFlexConfig &config)
   // Timeout granted to the global planner. We keep calling it up to this time or up to max_retries times
   // If it doesn't return within time, the navigator will cancel it and abort the corresponding action
   patience_ = ros::Duration(config.planner_patience);
+
+  thread_affinity_ = config.planner_thread_affinity;
+
+  thread_nice_ = config.planner_thread_nice;
 }
 
 
@@ -219,6 +224,21 @@ uint32_t AbstractPlannerExecution::makePlan(const geometry_msgs::PoseStamped &st
 
 void AbstractPlannerExecution::run()
 {
+  // Set the thread niceness and affinity
+  niceThread("planner", thread_nice_);
+
+  if (thread_affinity_ >= 0)
+  {
+    if (setThreadAffinity(thread_affinity_))
+    {
+      ROS_INFO("Set planner thread affinity to %d", thread_affinity_);
+    }
+    else
+    {
+      ROS_WARN("Could not set planner thread affinity to %d", thread_affinity_);
+    }
+  }
+
   setState(STARTED, false);
   boost::lock_guard<boost::mutex> guard(planning_mtx_);
   int retries = 0;

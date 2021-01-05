@@ -21,6 +21,10 @@ def add_mbf_abstract_nav_params(gen):
             "How long the planner will wait in seconds in an attempt to find a valid plan before giving up", 5.0, 0, 100)
     gen.add("planner_max_retries", int_t, 0,
             "How many times we will recall the planner in an attempt to find a valid plan before giving up", -1, -1, 1000)
+    gen.add("planner_thread_affinity", int_t, 0,
+            "The processor on which to run the planner loop.  -1 means no processor affinity.", -1, -1, 10)
+    gen.add("planner_thread_nice", int_t, 0,
+            "The niceness of planner loop.", 0, -100, 100)
 
     gen.add("controller_frequency", double_t, 0,
             "The rate in Hz at which to run the control loop and send velocity commands to the base", 20, 0, 100)
@@ -28,7 +32,11 @@ def add_mbf_abstract_nav_params(gen):
             "How long the controller will wait in seconds without receiving a valid control before giving up", 5.0, 0, 100)
     gen.add("controller_max_retries", int_t, 0,
             "How many times we will recall the controller in an attempt to find a valid command before giving up", -1, -1, 1000)
-
+    gen.add("controller_thread_affinity", int_t, 0,
+            "The processor on which to run the control loop.  -1 means no processor affinity.", -1, -1, 10)
+    gen.add("controller_thread_nice", int_t, 0,
+            "The niceness of control loop.", 0, -100, 100)
+            
     gen.add("recovery_enabled", bool_t, 0,
             "Whether or not to enable the move_base_flex recovery behaviors to attempt to clear out space", True)
     gen.add("recovery_patience", double_t, 0,
