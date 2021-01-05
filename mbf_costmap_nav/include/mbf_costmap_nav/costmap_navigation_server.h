@@ -230,6 +230,12 @@ private:
    */
   void reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level);
 
+  /**
+   * @brief Publishes ready signal for move base flex.
+   * @param signal determine ready status of move base flex is true or false
+   */
+  void publishReadySignal(bool signal);
+
   pluginlib::ClassLoader<mbf_costmap_core::CostmapRecovery> recovery_plugin_loader_;
   pluginlib::ClassLoader<nav_core::RecoveryBehavior> nav_core_recovery_plugin_loader_;
   pluginlib::ClassLoader<mbf_costmap_core::CostmapController> controller_plugin_loader_;
@@ -272,6 +278,9 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
+
+  // publisher for ready state
+  ros::Publisher ready_publisher_;
 };
 
 } /* namespace mbf_costmap_nav */

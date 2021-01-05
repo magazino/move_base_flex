@@ -41,6 +41,7 @@
 #include <tf/tf.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
+#include <std_msgs/Bool.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
@@ -87,6 +88,9 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   // start all action servers
   startActionServers();
 
+  // publish ready state
+  ready_publisher_ = private_nh_.advertise<std_msgs::Bool>("/move_base_flex/ready", 1, true);
+
   // start speed limiter
   ros::NodeHandle speedLimiter_nh("~/speed_limiters");
   speedLimiterConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::SpeedLimitManagerConfig>>(speedLimiter_nh);
@@ -98,6 +102,8 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   speedLimiterExternalConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::ExternalSpeedLimiterConfig>>(speedLimiterExternal_nh);
   ros::NodeHandle speedLimiterShadow_nh("~/speed_limiters/shadow");
   speedLimiterShadowConfigServer_ = boost::make_shared<dynamic_reconfigure::Server<base_local_planner::ShadowSpeedLimiterConfig>>(speedLimiterShadow_nh);
+  
+  publishReadySignal(true);
 }
 
 CostmapNavigationServer::~CostmapNavigationServer()
@@ -111,6 +117,12 @@ CostmapNavigationServer::~CostmapNavigationServer()
   action_server_exe_path_ptr_.reset();
   action_server_get_path_ptr_.reset();
   action_server_move_base_ptr_.reset();
+}
+
+void CostmapNavigationServer::publishReadySignal(bool signal){
+  std_msgs::Bool ready_msg;
+  ready_msg.data = signal;
+  ready_publisher_.publish(ready_msg);
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
