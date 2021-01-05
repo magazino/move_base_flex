@@ -95,7 +95,7 @@ bool CostmapControllerExecution::safetyCheck()
 {
   // Check that the observation buffers for the costmap are current, we don't want to drive blind
   if (!costmap_ptr_->isCurrent())
-  
+  {
     ROS_WARN_THROTTLE(10.0,"Sensor data is out of date, we're not going to allow commanding of the base for safety");
     return false;
   }
