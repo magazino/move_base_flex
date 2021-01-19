@@ -38,6 +38,7 @@
  *
  */
 #include <nav_core_wrapper/wrapper_global_planner.h>
+#include <mbf_msgs/GetPathResult.h>
 
 #include "mbf_costmap_nav/costmap_planner_execution.h"
 
@@ -77,12 +78,24 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
                                            double &cost,
                                            std::string &message)
 {
+  // transform the input to the global frame of the costmap, since this is an
+  // "implicit" requirement for most planners
+  const ros::Duration pat(costmap_ptr_->getTransformTolerance());
+  const std::string frame = costmap_ptr_->getGlobalFrameID();
+  geometry_msgs::PoseStamped g_start, g_goal;
+
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, pat, start, g_start))
+    return mbf_msgs::GetPathResult::TF_ERROR;
+
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, pat, goal, g_goal))
+    return mbf_msgs::GetPathResult::TF_ERROR;
+
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(g_start, g_goal, tolerance, plan, cost, message);
   }
-  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(g_start, g_goal, tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */

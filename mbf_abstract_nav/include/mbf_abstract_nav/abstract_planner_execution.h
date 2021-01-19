@@ -198,6 +198,9 @@ namespace mbf_abstract_nav
     //! the name of the loaded planner plugin
     std::string plugin_name_;
 
+    //! shared pointer to a common TransformListener
+    const TFPtr tf_listener_ptr_;
+
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */
@@ -290,9 +293,6 @@ namespace mbf_abstract_nav
 
     //! the global frame in which the planner needs to plan
     std::string global_frame_;
-
-    //! shared pointer to a common TransformListener
-    const TFPtr tf_listener_ptr_;
 
     //! current internal state
     PlanningState state_;
