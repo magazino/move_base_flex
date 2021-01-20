@@ -45,61 +45,75 @@
 
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 
+#include <string>
+
 namespace mbf_abstract_nav
 {
-
+/**
+ * @brief Base class for running concurrent navigation tasks.
+ *
+ * The class uses a dedicated thread to run potentially long-lasting jobs.
+ * The user can use waitForStateUpdate to get notification about the progress
+ * of the said job.
+ */
 class AbstractExecutionBase
 {
  public:
+   AbstractExecutionBase(const std::string& name);
 
-  AbstractExecutionBase(std::string name);
+   virtual ~AbstractExecutionBase();
 
-  virtual bool start();
+   virtual bool start();
 
-  virtual void stop();
+   virtual void stop();
 
-  /**
-   * @brief Cancel the plugin execution.
-   * @return true, if the plugin tries / tried to cancel the computation.
-   */
-  virtual bool cancel() = 0;
+   /**
+    * @brief Cancel the plugin execution.
+    * @return true, if the plugin tries / tried to cancel the computation.
+    */
+   virtual bool cancel()
+   {
+     return false;
+   };
 
-  void join();
+   void join();
 
-  boost::cv_status waitForStateUpdate(boost::chrono::microseconds const &duration);
+   boost::cv_status waitForStateUpdate(boost::chrono::microseconds const& duration);
 
-  /**
-   * @brief Gets the current plugin execution outcome
-   */
-  uint32_t getOutcome();
+   /**
+    * @brief Gets the current plugin execution outcome
+    */
+   uint32_t getOutcome() const;
 
-  /**
-   * @brief Gets the current plugin execution message
-   */
-  std::string getMessage();
+   /**
+    * @brief Gets the current plugin execution message
+    */
+   const std::string& getMessage() const;
 
-  /**
-   * @brief Returns the name of the corresponding plugin
-   */
-  std::string getName();
+   /**
+    * @brief Returns the name of the corresponding plugin
+    */
+   const std::string& getName() const;
 
-  /**
-   * @brief Optional implementation-specific setup function, called right before execution.
-   */
-  virtual void preRun() { };
+   /**
+    * @brief Optional implementation-specific setup function, called right before execution.
+    */
+   virtual void preRun(){};
 
-  /**
-   * @brief Optional implementation-specific cleanup function, called right after execution.
-   */
-  virtual void postRun() { };
+   /**
+    * @brief Optional implementation-specific cleanup function, called right after execution.
+    */
+   virtual void postRun(){};
 
-  /**
-   * @brief Optional implementaiton-specific configuration function.
-   */
-  virtual void reconfigure(MoveBaseFlexConfig& _cfg){}
+   /**
+    * @brief Optional implementaiton-specific configuration function.
+    */
+   virtual void reconfigure(MoveBaseFlexConfig& _cfg)
+   {
+   }
 
 protected:
-  virtual void run() = 0;
+  virtual void run(){};
 
   //! condition variable to wake up control thread
   boost::condition_variable condition_;

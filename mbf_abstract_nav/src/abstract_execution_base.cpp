@@ -40,14 +40,34 @@
 
 namespace mbf_abstract_nav
 {
-
-AbstractExecutionBase::AbstractExecutionBase(std::string name)
-  : outcome_(255), cancel_(false), name_(name)
+AbstractExecutionBase::AbstractExecutionBase(const std::string& name) : outcome_(255), cancel_(false), name_(name)
 {
+}
+
+AbstractExecutionBase::~AbstractExecutionBase()
+{
+  if (thread_.joinable())
+  {
+    // if the user forgets to call stop(), we have to kill it
+    stop();
+    thread_.join();
+  }
 }
 
 bool AbstractExecutionBase::start()
 {
+  if (thread_.joinable())
+  {
+    // if the user forgets to call stop(), we have to kill it
+    stop();
+    thread_.join();
+  }
+
+  // reset the member vars
+  cancel_ = false;
+  outcome_ = 255;
+  message_.clear();
+
   thread_ = boost::thread(&AbstractExecutionBase::run, this);
   return true;
 }
@@ -70,17 +90,17 @@ boost::cv_status AbstractExecutionBase::waitForStateUpdate(boost::chrono::micros
   return condition_.wait_for(lock, duration);
 }
 
-uint32_t AbstractExecutionBase::getOutcome()
+uint32_t AbstractExecutionBase::getOutcome() const
 {
   return outcome_;
 }
 
-std::string AbstractExecutionBase::getMessage()
+const std::string& AbstractExecutionBase::getMessage() const
 {
   return message_;
 }
 
-std::string AbstractExecutionBase::getName()
+const std::string& AbstractExecutionBase::getName() const
 {
   return name_;
 }
