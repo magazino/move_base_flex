@@ -334,7 +334,7 @@ void AbstractPlannerExecution::run()
   }
   catch (...)
   {
-    ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+    ROS_ERROR_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR, true);
   }
 }

@@ -34,6 +34,12 @@ struct AbstractPlannerExecutionFixture : public Test, public AbstractPlannerExec
     : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{ new AbstractPlannerMock() }, MoveBaseFlexConfig{})
   {
   }
+
+  void TearDown() override
+  {
+    // we have to stop the thread when the test is done
+    join();
+  }
 };
 
 TEST_F(AbstractPlannerExecutionFixture, success)
@@ -49,8 +55,6 @@ TEST_F(AbstractPlannerExecutionFixture, success)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), FOUND_PLAN);
-
-  join();
 }
 
 ACTION_P(Wait, cv)
@@ -81,8 +85,6 @@ TEST_F(AbstractPlannerExecutionFixture, cancel)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), CANCELED);
-
-  join();
 }
 
 TEST_F(AbstractPlannerExecutionFixture, max_retries)
@@ -107,8 +109,6 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), MAX_RETRIES);
-
-  join();
 }
 
 TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
@@ -132,8 +132,6 @@ TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), NO_PLAN_FOUND);
-
-  join();
 }
 
 using testing::DoAll;
@@ -161,8 +159,6 @@ TEST_F(AbstractPlannerExecutionFixture, sumDist)
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), FOUND_PLAN);
   ASSERT_EQ(getCost(), 3);
-
-  join();
 }
 
 TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
@@ -191,8 +187,6 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), PAT_EXCEEDED);
-
-  join();
 }
 
 ACTION(ThrowException)
@@ -213,14 +207,17 @@ TEST_F(AbstractPlannerExecutionFixture, exception)
   // check result
   ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), INTERNAL_ERROR);
-
-  join();
 }
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "read_types");
   ros::NodeHandle nh;
+  // suppress the logging since we don't want warnings to polute the test-outcome
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Fatal))
+  {
+    ros::console::notifyLoggerLevelsChanged();
+  }
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
