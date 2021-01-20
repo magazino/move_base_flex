@@ -65,25 +65,26 @@ AbstractPlannerExecution::~AbstractPlannerExecution()
 {
 }
 
+template <typename _Iter>
+double sumDistance(_Iter _begin, _Iter _end)
+{
+  // helper function to get the distance of a path.
+  // in C++11, we could add static_assert on the interator_type.
+  double dist = 0.;
+
+  // minimum length of the path is 2.
+  if (std::distance(_begin, _end) < 2)
+    return dist;
+
+  // two pointer iteration
+  for (_Iter next = _begin + 1; next != _end; ++_begin, ++next)
+    dist += mbf_utility::distance(*_begin, *next);
+
+  return dist;
+}
 
 double AbstractPlannerExecution::getCost() const
 {
-  boost::lock_guard<boost::mutex> guard(plan_mtx_);
-  // copy plan and costs to output
-  // if the planner plugin do not compute costs compute costs by discrete path length
-  if(cost_ == 0 && !plan_.empty())
-  {
-    ROS_DEBUG_STREAM("Compute costs by discrete path length!");
-    double cost = 0;
-
-    geometry_msgs::PoseStamped prev_pose = plan_.front();
-    for(std::vector<geometry_msgs::PoseStamped>::const_iterator iter = plan_.begin() + 1; iter != plan_.end(); ++iter)
-    {
-      cost += mbf_utility::distance(prev_pose, *iter);
-      prev_pose = *iter;
-    }
-    return cost;
-  }
   return cost_;
 }
 
@@ -110,6 +111,9 @@ void AbstractPlannerExecution::setState(PlanningState state, bool signalling)
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   state_ = state;
+
+  // we exit planning if we are signalling.
+  planning_ = !signalling;
 
   // some states are quiet, most aren't
   if(signalling)
@@ -226,10 +230,6 @@ void AbstractPlannerExecution::run()
   geometry_msgs::PoseStamped current_goal = goal_;
   double current_tolerance = tolerance_;
 
-  bool success = false;
-  bool make_plan = false;
-  bool exceeded = false;
-
   last_call_start_time_ = ros::Time::now();
   last_valid_plan_time_ = ros::Time::now();
 
@@ -250,7 +250,6 @@ void AbstractPlannerExecution::run()
         has_new_start_ = false;
         current_start = start_;
         ROS_INFO_STREAM("A new start pose is available. Planning with the new start pose!");
-        exceeded = false;
         const geometry_msgs::Point& s = start_.pose.position;
         ROS_INFO_STREAM("New planning start pose: (" << s.x << ", " << s.y << ", " << s.z << ")");
       }
@@ -261,48 +260,48 @@ void AbstractPlannerExecution::run()
         current_tolerance = tolerance_;
         ROS_INFO_STREAM("A new goal pose is available. Planning with the new goal pose and the tolerance: "
                         << current_tolerance);
-        exceeded = false;
         const geometry_msgs::Point& g = goal_.pose.position;
         ROS_INFO_STREAM("New goal pose: (" << g.x << ", " << g.y << ", " << g.z << ")");
       }
 
-      make_plan = !(success || exceeded) || has_new_start_ || has_new_goal_;
-
       // unlock goal
       goal_start_mtx_.unlock();
-      setState(PLANNING, false);
-      if (make_plan)
+      if (cancel_)
       {
+        ROS_INFO_STREAM("The global planner has been canceled!");
+        setState(CANCELED, true);
+      }
+      else
+      {
+        setState(PLANNING, false);
+
         outcome_ = makePlan(current_start, current_goal, current_tolerance, plan, cost, message_);
-        success = outcome_ < 10;
+        bool success = outcome_ < 10;
 
         boost::lock_guard<boost::mutex> guard(configuration_mutex_);
 
         if (cancel_ && !isPatienceExceeded())
         {
           ROS_INFO_STREAM("The planner \"" << name_ << "\" has been canceled!"); // but not due to patience exceeded
-          planning_ = false;
           setState(CANCELED, true);
         }
         else if (success)
         {
           ROS_DEBUG_STREAM("Successfully found a plan.");
-          exceeded = false;
-          planning_ = false;
 
-          plan_mtx_.lock();
+          boost::lock_guard<boost::mutex> plan_mtx_guard(plan_mtx_);
           plan_ = plan;
-          // todo compute the cost once!
           cost_ = cost;
+          // estimate the cost based on the distance if its zero.
+          if (cost_ == 0)
+            cost_ = sumDistance(plan_.begin(), plan_.end());
+
           last_valid_plan_time_ = ros::Time::now();
-          plan_mtx_.unlock();
           setState(FOUND_PLAN, true);
         }
-        else if (max_retries_ >= 0 && ++retries > max_retries_)
+        else if (max_retries_ > 0 && ++retries > max_retries_)
         {
           ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
-          exceeded = true;
-          planning_ = false;
           setState(MAX_RETRIES, true);
         }
         else if (isPatienceExceeded())
@@ -313,28 +312,17 @@ void AbstractPlannerExecution::run()
           // old nav_core-based planners do not support canceling), and we add here the fact to the log for info
           ROS_INFO_STREAM("Planning patience (" << patience_.toSec() << "s) has been exceeded"
                                                 << (cancel_ ? "; planner canceled!" : ""));
-          exceeded = true;
-          planning_ = false;
           setState(PAT_EXCEEDED, true);
         }
         else if (max_retries_ == 0 && patience_.isZero())
         {
           ROS_INFO_STREAM("Planning could not find a plan!");
-          exceeded = true;
-          planning_ = false;
           setState(NO_PLAN_FOUND, true);
         }
         else
         {
-          exceeded = false;
           ROS_DEBUG_STREAM("Planning could not find a plan! Trying again...");
         }
-      }
-      else if (cancel_)
-      {
-        ROS_INFO_STREAM("The global planner has been canceled!");
-        planning_ = false;
-        setState(CANCELED, true);
       }
     } // while (planning_ && ros::ok())
   }
@@ -342,12 +330,11 @@ void AbstractPlannerExecution::run()
   {
     // Planner thread interrupted; probably we have exceeded planner patience
     ROS_WARN_STREAM("Planner thread interrupted!");
-    planning_ = false;
     setState(STOPPED, true);
   }
   catch (...)
   {
-    ROS_FATAL_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
+    ROS_ERROR_STREAM("Unknown error occurred: " << boost::current_exception_diagnostic_information());
     setState(INTERNAL_ERROR, true);
   }
 }
