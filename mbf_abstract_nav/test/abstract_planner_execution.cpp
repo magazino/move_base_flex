@@ -185,7 +185,7 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
   cv.notify_all();
 
   // check result
-  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
+  waitForStateUpdate(boost::chrono::seconds(1));
   ASSERT_EQ(getState(), PAT_EXCEEDED);
 }
 
