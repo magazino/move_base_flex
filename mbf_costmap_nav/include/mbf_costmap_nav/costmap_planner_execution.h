@@ -60,7 +60,6 @@ namespace mbf_costmap_nav
 class CostmapPlannerExecution : public mbf_abstract_nav::AbstractPlannerExecution
 {
 public:
-
   /**
    * @brief Constructor.
    * @param planner_name Name of the planner to use.
@@ -69,12 +68,9 @@ public:
    * @param costmap_ptr Shared pointer to the global costmap.
    * @param config Current server configuration (dynamic).
    */
-  CostmapPlannerExecution(
-      const std::string &planner_name,
-      const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-      const TFPtr &tf_listener_ptr,
-      const CostmapWrapper::Ptr &costmap_ptr,
-      const MoveBaseFlexConfig &config);
+  CostmapPlannerExecution(const std::string& planner_name, const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
+                          const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+                          const MoveBaseFlexConfig& config);
 
   /**
    * @brief Destructor

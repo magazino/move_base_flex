@@ -85,10 +85,8 @@ namespace mbf_abstract_nav
      * @param tf_listener_ptr Shared Pointer to a tf-listener.
      * @param config Initial configuration for this execution
      */
-    AbstractPlannerExecution(const std::string &name,
-                             const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                             const TFPtr &tf_listener_ptr,
-                             const MoveBaseFlexConfig &config);
+    AbstractPlannerExecution(const std::string& name, const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                             const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config);
 
     /**
      * @brief Destructor

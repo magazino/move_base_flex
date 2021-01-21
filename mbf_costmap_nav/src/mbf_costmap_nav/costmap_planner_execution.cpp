@@ -44,15 +44,11 @@
 
 namespace mbf_costmap_nav
 {
-
-CostmapPlannerExecution::CostmapPlannerExecution(
-    const std::string &planner_name,
-    const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-    const TFPtr &tf_listener_ptr,
-    const CostmapWrapper::Ptr &costmap_ptr,
-    const MoveBaseFlexConfig &config)
-      : AbstractPlannerExecution(planner_name, planner_ptr, tf_listener_ptr, toAbstract(config)),
-        costmap_ptr_(costmap_ptr)
+CostmapPlannerExecution::CostmapPlannerExecution(const std::string& planner_name,
+                                                 const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
+                                                 const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+                                                 const MoveBaseFlexConfig& config)
+  : AbstractPlannerExecution(planner_name, planner_ptr, tf_listener_ptr, toAbstract(config)), costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
