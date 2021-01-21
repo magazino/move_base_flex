@@ -77,7 +77,9 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
 {
   // transform the input to the global frame of the costmap, since this is an
   // "implicit" requirement for most planners
-  const ros::Duration pat(costmap_ptr_->getTransformTolerance());
+  // note: costmap_2d::Costmap2DROS::getTransformTolerance might be a good idea,
+  // but it's not part of the class API in ros-kinetic
+  const ros::Duration pat(0.5);
   const std::string frame = costmap_ptr_->getGlobalFrameID();
   geometry_msgs::PoseStamped g_start, g_goal;
 
