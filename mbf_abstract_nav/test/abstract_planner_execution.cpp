@@ -31,7 +31,7 @@ struct AbstractPlannerExecutionFixture : public Test, public AbstractPlannerExec
   PoseStamped pose;  // dummy pose to call start
 
   AbstractPlannerExecutionFixture()
-    : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{ new AbstractPlannerMock() }, MoveBaseFlexConfig{})
+    : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{ new AbstractPlannerMock() }, nullptr, MoveBaseFlexConfig{})
   {
   }
 
