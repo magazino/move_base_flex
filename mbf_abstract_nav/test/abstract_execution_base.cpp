@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <mbf_abstract_nav/abstract_execution_base.h>
 
+#include <boost/chrono.hpp>
+
 using namespace mbf_abstract_nav;
 
 // our dummy implementation of the AbstractExecutionBase
@@ -26,7 +28,9 @@ protected:
     boost::unique_lock<boost::mutex> lock(mutex);
 
     // wait until someone says we are done (== cancel or stop)
-    condition_.wait(lock);
+    // we set a timeout, since we might miss the cancel call (especially if we
+    // run on an environment with high CPU load)
+    condition_.wait_for(lock, boost::chrono::seconds(1));
     outcome_ = 0;
   }
 };
