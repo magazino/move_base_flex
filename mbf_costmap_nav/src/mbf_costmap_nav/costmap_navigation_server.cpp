@@ -108,6 +108,7 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlan
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
       plugin_name,
       boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr),
+      tf_listener_ptr_,
       global_costmap_ptr_,
       last_config_);
 }
