@@ -237,8 +237,6 @@ void AbstractPlannerExecution::run()
   {
     while (planning_ && ros::ok())
     {
-      boost::chrono::thread_clock::time_point start_time = boost::chrono::thread_clock::now();
-
       // call the planner
       std::vector<geometry_msgs::PoseStamped> plan;
       double cost;

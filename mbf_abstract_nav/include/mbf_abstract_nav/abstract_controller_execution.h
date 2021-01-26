@@ -312,8 +312,8 @@ namespace mbf_abstract_nav
     //! the last set plan which is currently processed by the controller
     std::vector<geometry_msgs::PoseStamped> plan_;
 
-    //! the duration which corresponds with the controller frequency.
-    boost::chrono::microseconds calling_duration_;
+    //! the loop_rate which corresponds with the controller frequency.
+    ros::Rate loop_rate_;
 
     //! the frame of the robot, which will be used to determine its position.
     std::string robot_frame_;

@@ -40,8 +40,6 @@
 #define MBF_ABSTRACT_NAV__ABSTRACT_EXECUTION_BASE_H_
 
 #include <boost/thread.hpp>
-#include <boost/chrono/duration.hpp>
-#include <boost/chrono/thread_clock.hpp>
 
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 

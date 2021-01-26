@@ -57,7 +57,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   AbstractExecutionBase(name),
     controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
     moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
-    calling_duration_(boost::chrono::microseconds(static_cast<int>(1e6 / DEFAULT_CONTROLLER_FREQUENCY)))
+    loop_rate_(ros::Rate(DEFAULT_CONTROLLER_FREQUENCY))
 {
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
@@ -88,7 +88,7 @@ bool AbstractControllerExecution::setControllerFrequency(double frequency)
     ROS_ERROR("Controller frequency must be greater than 0.0! No change of the frequency!");
     return false;
   }
-  calling_duration_ = boost::chrono::microseconds(static_cast<int>(1e6 / frequency));
+  loop_rate_ = ros::Rate(frequency);
   return true;
 }
 
@@ -298,8 +298,6 @@ void AbstractControllerExecution::run()
   {
     while (moving_ && ros::ok())
     {
-      boost::chrono::thread_clock::time_point loop_start_time = boost::chrono::thread_clock::now();
-
       if (cancel_)
       {
         if (force_stop_on_cancel_)
@@ -317,7 +315,7 @@ void AbstractControllerExecution::run()
         // the specific implementation must have detected a risk situation; at this abstract level, we
         // cannot tell what the problem is, but anyway we command the robot to stop to avoid crashes
         publishZeroVelocity();   // note that we still feedback command calculated by the plugin
-        boost::this_thread::sleep_for(calling_duration_);
+        loop_rate_.sleep();
       }
 
       // update plan dynamically
@@ -418,25 +416,14 @@ void AbstractControllerExecution::run()
         condition_.notify_all();
       }
 
-      boost::chrono::thread_clock::time_point end_time = boost::chrono::thread_clock::now();
-      boost::chrono::microseconds execution_duration =
-          boost::chrono::duration_cast<boost::chrono::microseconds>(end_time - loop_start_time);
-      configuration_mutex_.lock();
-      boost::chrono::microseconds sleep_time = calling_duration_ - execution_duration;
-      configuration_mutex_.unlock();
       if (moving_ && ros::ok())
       {
-        if (sleep_time > boost::chrono::microseconds(0))
-        {
-          // interruption point
-          boost::this_thread::sleep_for(sleep_time);
-        }
-        else
+        if (!loop_rate_.sleep())
         {
           // provide an interruption point also with 0 or negative sleep_time
           boost::this_thread::interruption_point();
           ROS_WARN_THROTTLE(1.0, "Calculation needs too much time to stay in the moving frequency! (%f > %f)",
-                            execution_duration.count()/1000000.0, calling_duration_.count()/1000000.0);
+                            loop_rate_.cycleTime().toSec(), loop_rate_.expectedCycleTime().toSec());
         }
       }
     }
