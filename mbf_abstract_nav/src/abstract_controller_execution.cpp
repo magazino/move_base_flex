@@ -416,7 +416,7 @@ void AbstractControllerExecution::run()
         condition_.notify_all();
       }
 
-      if (moving_ && ros::ok())
+      if (moving_)
       {
         // The nanosleep used by ROS time is not interruptable, therefore providing an interrupt point before and after
         boost::this_thread::interruption_point();
