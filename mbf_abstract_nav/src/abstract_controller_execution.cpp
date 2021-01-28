@@ -422,7 +422,7 @@ void AbstractControllerExecution::run()
         boost::this_thread::interruption_point();
         if (!loop_rate_.sleep())
         {
-          ROS_WARN_THROTTLE(1.0, "Calculation needs too much time to stay in the moving frequency! (%f > %f)",
+          ROS_WARN_THROTTLE(1.0, "Calculation needs too much time to stay in the moving frequency! (%.4fs > %.4fs)",
                             loop_rate_.cycleTime().toSec(), loop_rate_.expectedCycleTime().toSec());
         }
         boost::this_thread::interruption_point();
