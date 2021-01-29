@@ -57,7 +57,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   AbstractExecutionBase(name),
     controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
     moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
-    loop_rate_(ros::Rate(DEFAULT_CONTROLLER_FREQUENCY))
+    loop_rate_(DEFAULT_CONTROLLER_FREQUENCY)
 {
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
