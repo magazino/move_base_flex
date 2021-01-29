@@ -79,14 +79,14 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
   // "implicit" requirement for most planners
   // note: costmap_2d::Costmap2DROS::getTransformTolerance might be a good idea,
   // but it's not part of the class API in ros-kinetic
-  const ros::Duration pat(0.5);
+  const ros::Duration timeout(0.5);
   const std::string frame = costmap_ptr_->getGlobalFrameID();
   geometry_msgs::PoseStamped g_start, g_goal;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, pat, start, g_start))
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, start, g_start))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, pat, goal, g_goal))
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, goal, g_goal))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
   if (lock_costmap_)
