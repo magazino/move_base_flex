@@ -42,14 +42,16 @@
 
 namespace mbf_abstract_nav
 {
-
-AbstractPlannerExecution::AbstractPlannerExecution(
-    const std::string &name,
-    const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-    const MoveBaseFlexConfig &config) :
-  AbstractExecutionBase(name),
-    planner_(planner_ptr), state_(INITIALIZED), planning_(false),
-    has_new_start_(false), has_new_goal_(false)
+AbstractPlannerExecution::AbstractPlannerExecution(const std::string& name,
+                                                   const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                                                   const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config)
+  : AbstractExecutionBase(name)
+  , planner_(planner_ptr)
+  , state_(INITIALIZED)
+  , planning_(false)
+  , tf_listener_ptr_(tf_listener_ptr)
+  , has_new_start_(false)
+  , has_new_goal_(false)
 {
   ros::NodeHandle private_nh("~");
 

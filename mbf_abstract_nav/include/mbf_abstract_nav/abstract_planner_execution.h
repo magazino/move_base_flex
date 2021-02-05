@@ -82,11 +82,11 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param name Name of this execution
      * @param planner_ptr Pointer to the planner
+     * @param tf_listener_ptr Shared Pointer to a tf-listener.
      * @param config Initial configuration for this execution
      */
-    AbstractPlannerExecution(const std::string &name,
-                             const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr,
-                             const MoveBaseFlexConfig &config);
+    AbstractPlannerExecution(const std::string& name, const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                             const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config);
 
     /**
      * @brief Destructor
@@ -198,6 +198,9 @@ namespace mbf_abstract_nav
     //! the name of the loaded planner plugin
     std::string plugin_name_;
 
+    //! shared pointer to a common TransformListener
+    const TFPtr tf_listener_ptr_;
+
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */
@@ -290,9 +293,6 @@ namespace mbf_abstract_nav
 
     //! the global frame in which the planner needs to plan
     std::string global_frame_;
-
-    //! shared pointer to a common TransformListener
-    const TFPtr tf_listener_ptr_;
 
     //! current internal state
     PlanningState state_;

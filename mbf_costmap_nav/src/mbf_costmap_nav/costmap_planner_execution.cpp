@@ -38,19 +38,17 @@
  *
  */
 #include <nav_core_wrapper/wrapper_global_planner.h>
+#include <mbf_msgs/GetPathResult.h>
 
 #include "mbf_costmap_nav/costmap_planner_execution.h"
 
 namespace mbf_costmap_nav
 {
-
-CostmapPlannerExecution::CostmapPlannerExecution(
-    const std::string &planner_name,
-    const mbf_costmap_core::CostmapPlanner::Ptr &planner_ptr,
-    const CostmapWrapper::Ptr &costmap_ptr,
-    const MoveBaseFlexConfig &config)
-      : AbstractPlannerExecution(planner_name, planner_ptr, toAbstract(config)),
-        costmap_ptr_(costmap_ptr)
+CostmapPlannerExecution::CostmapPlannerExecution(const std::string& planner_name,
+                                                 const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
+                                                 const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+                                                 const MoveBaseFlexConfig& config)
+  : AbstractPlannerExecution(planner_name, planner_ptr, tf_listener_ptr, toAbstract(config)), costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
@@ -77,12 +75,26 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
                                            double &cost,
                                            std::string &message)
 {
+  // transform the input to the global frame of the costmap, since this is an
+  // "implicit" requirement for most planners
+  // note: costmap_2d::Costmap2DROS::getTransformTolerance might be a good idea,
+  // but it's not part of the class API in ros-kinetic
+  const ros::Duration timeout(0.5);
+  const std::string frame = costmap_ptr_->getGlobalFrameID();
+  geometry_msgs::PoseStamped g_start, g_goal;
+
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, start, g_start))
+    return mbf_msgs::GetPathResult::TF_ERROR;
+
+  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, goal, g_goal))
+    return mbf_msgs::GetPathResult::TF_ERROR;
+
   if (lock_costmap_)
   {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap_ptr_->getCostmap()->getMutex()));
-    return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+    return planner_->makePlan(g_start, g_goal, tolerance, plan, cost, message);
   }
-  return planner_->makePlan(start, goal, tolerance, plan, cost, message);
+  return planner_->makePlan(g_start, g_goal, tolerance, plan, cost, message);
 }
 
 } /* namespace mbf_costmap_nav */
