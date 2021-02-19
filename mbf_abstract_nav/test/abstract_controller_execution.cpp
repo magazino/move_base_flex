@@ -264,7 +264,7 @@ TEST_F(AbstractControllerExecutionFixture, patExceeded)
   transform.transform.rotation.w = 1;
   TF_PTR->setTransform(transform, "mama", false);
 
-  // disable the retries logic and enable the patience logic
+  // disable the retries logic and enable the patience logic: we cheat by setting it to a negative duration.
   max_retries_ = -1;
   patience_ = ros::Duration(-1e-3);
 
