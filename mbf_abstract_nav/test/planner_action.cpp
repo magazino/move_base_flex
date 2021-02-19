@@ -11,6 +11,9 @@
 
 #include <boost/chrono.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/condition.hpp>
+
+#include <string>
 
 using namespace mbf_abstract_nav;
 
@@ -26,23 +29,65 @@ struct MockPlanner : public AbstractPlanner
   MOCK_METHOD6(makePlan, uint32_t(const PoseStamped&, const PoseStamped&, double, std::vector<PoseStamped>&, double&,
                                   std::string&));
 
-  MOCK_METHOD0(cancel, bool());
-};
-
-// mocked client, so we can check the outcome
-struct MockClient
-{
-  MOCK_METHOD0(call, void());
+  // the cancel call is for now uninteresting. if this changes, we can also mock it.
+  bool cancel()
+  {
+    return true;
+  }
 };
 
 using mbf_abstract_nav::AbstractPlannerExecution;
+using mbf_msgs::GetPathAction;
+
+using testing::_;
+using testing::DoAll;
+using testing::Eq;
+using testing::Field;
+using testing::Return;
+using testing::SetArgReferee;
 using testing::Test;
 
-// test-fixture putting clinet and server together
+// a mocked action server
+struct MockedActionServer : public actionlib::ActionServerBase<GetPathAction>
+{
+  // define the types we are using
+  typedef actionlib::ServerGoalHandle<GetPathAction> GoalHandle;
+  typedef actionlib::ActionServerBase<GetPathAction> ActionServerBase;
+
+  MockedActionServer(boost::function<void(GoalHandle)> goal_cb, boost::function<void(GoalHandle)> cancel_cb)
+    : ActionServerBase(goal_cb, cancel_cb, true)
+  {
+  }
+
+  // the mocked method
+  MOCK_METHOD2(publishResult, void(const actionlib_msgs::GoalStatus&, const Result&));
+
+  // methods below are not required for now but might be mocked in the future
+  virtual void initialize()
+  {
+  }
+
+  void publishFeedback(const actionlib_msgs::GoalStatus&, const Feedback&)
+  {
+  }
+
+  void publishStatus()
+  {
+  }
+};
+
+// action which will trigger our condition variable, so we can wait until the runImpl thread reaches makePlan
+ACTION_P(Notify, cv)
+{
+  cv->notify_all();
+}
+
+// test-fixture
 struct PlannerActionFixture : public Test
 {
-  boost::shared_ptr<MockPlanner> planner;
-  MoveBaseFlexConfig config;
+  boost::shared_ptr<MockPlanner> planner;     ///< the mocked planner
+  boost::condition_variable done_condition_;  ///< cv triggered on makePlan
+  MoveBaseFlexConfig config;                  ///< config for the mbf
 
   std::string action_name;
   TFPtr tf;
@@ -56,15 +101,10 @@ struct PlannerActionFixture : public Test
   PlannerAction planner_action;
   ros::NodeHandle nh;
 
-  typedef actionlib::ActionServer<mbf_msgs::GetPathAction> ActionServer;
-  typedef actionlib::SimpleActionClient<mbf_msgs::GetPathAction> ActionClient;
+  MockedActionServer action_server;
 
-  ActionServer action_server;
-  ActionClient action_client;
-
-  MockClient mock_client;
   mbf_msgs::GetPathResult expected_result;
-  mbf_msgs::GetPathGoal goal;
+  mbf_msgs::GetPathActionGoalPtr goal;
 
   PlannerActionFixture()
     : planner(new MockPlanner())
@@ -73,70 +113,52 @@ struct PlannerActionFixture : public Test
     , global_frame("global_frame")
     , local_frame("local_frame")
     , dur(0)
+    , goal(new mbf_msgs::GetPathActionGoal())
     , robot_info(*tf, global_frame, local_frame, dur)
     , planner_action(action_name, robot_info)
-    , action_server(nh, "get_path", boost::bind(&PlannerActionFixture::callAction, this, _1),
-                    boost::bind(&PlannerActionFixture::cancelAction, this, _1), false)
-    , action_client("get_path", true)
+    , action_server(boost::bind(&PlannerActionFixture::callAction, this, _1),
+                    boost::bind(&PlannerActionFixture::cancelAction, this, _1))
   {
-    action_server.start();
     tf->setUsingDedicatedThread(true);
     config.planner_patience = 0;
   }
 
-  void SetUp()
-  {
-    // wait for server
-    ASSERT_TRUE(action_client.waitForServer(ros::Duration(1)));
-  }
-
   void TearDown()
   {
-    // here we fire up the request and wait for the result
-    // setup the client expectation - we always want to hear something back
-    EXPECT_CALL(mock_client, call()).Times(1);
+    // call the server - this is where the actual test call happens
+    action_server.goalCallback(goal);
 
-    // send goal
-    action_client.sendGoal(goal, boost::bind(&PlannerActionFixture::doneCallback, this, _1, _2));
-
-    // wait here
-    ASSERT_TRUE(action_client.waitForResult(ros::Duration(1)));
+    // wait until the cv gets triggered
+    boost::mutex m;
+    boost::unique_lock<boost::mutex> lock(m);
+    done_condition_.wait_for(lock, boost::chrono::seconds(1));
   }
 
-  void callAction(ActionServer::GoalHandle goal_handle)
+  void callAction(MockedActionServer::GoalHandle goal_handle)
   {
     planner_action.start(goal_handle, boost::make_shared<AbstractPlannerExecution>("plugin", planner, tf, config));
   }
 
-  void cancelAction(ActionServer::GoalHandle goal_handle)
+  void cancelAction(MockedActionServer::GoalHandle goal_handle)
   {
     planner_action.cancel(goal_handle);
   }
-
-  void doneCallback(const actionlib::SimpleClientGoalState& state, const mbf_msgs::GetPathResultConstPtr& result)
-  {
-    mock_client.call();
-    EXPECT_EQ(result->outcome, expected_result.outcome);
-  }
 };
-
-using testing::_;
-using testing::Return;
 
 TEST_F(PlannerActionFixture, emptyPath)
 {
+  // goal with frames, so we can pass tf-lookup
+  goal->goal.use_start_pose = true;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
+
   // setup the expectation
   // we dont return anything here, so the outcome should be empty path
   EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(Return(0));
-  expected_result.outcome = mbf_msgs::GetPathResult::EMPTY_PATH;
-
-  // goal with frames, so we can pass tf-lookup
-  goal.use_start_pose = true;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::EMPTY_PATH))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 }
-
-using testing::DoAll;
-using testing::SetArgReferee;
 
 #if !ROS_VERSION_MINIMUM(1, 14, 0)
 // disable the test on kinetic and lunar, until I figure out how to transform
@@ -152,13 +174,16 @@ TEST_F(PlannerActionFixture, success)
   for (size_t ii = 0; ii != path.size(); ++ii)
     path[ii].header.frame_id = global_frame;
 
+  // goal with frames, so we can pass tf-lookup
+  goal->goal.use_start_pose = true;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
+
   // setup the expectation
   EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(DoAll(SetArgReferee<3>(path), Return(0)));
-  expected_result.outcome = mbf_msgs::GetPathResult::SUCCESS;
-
-  // goal with frames, so we can pass tf-lookup
-  goal.use_start_pose = true;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::SUCCESS))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 }
 
 TEST_F(PlannerActionFixture, tfError)
@@ -171,11 +196,14 @@ TEST_F(PlannerActionFixture, tfError)
 
   // setup the expectation - we succeed here
   EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(DoAll(SetArgReferee<3>(path), Return(0)));
-  expected_result.outcome = mbf_msgs::GetPathResult::TF_ERROR;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::TF_ERROR))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 
   // goal with frames, so we can pass tf-lookup
-  goal.use_start_pose = true;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  goal->goal.use_start_pose = true;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
 }
 
 TEST_F(PlannerActionFixture, noRobotPose)
@@ -184,26 +212,32 @@ TEST_F(PlannerActionFixture, noRobotPose)
   // in this case we will receive a TF_ERROR from the server.
 
   // make us use the robot pose
-  goal.use_start_pose = false;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  goal->goal.use_start_pose = false;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
 
   // set the expectation
-  expected_result.outcome = mbf_msgs::GetPathResult::TF_ERROR;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::TF_ERROR))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 }
 
-TEST_F(PlannerActionFixture, noPlanFound)
+TEST_F(PlannerActionFixture, noPathFound)
 {
   // test case where the planner fails.
   // in this case we will receive NO_PLAN_FOUND from the server.
   config.planner_max_retries = 0;
 
   // valid goal
-  goal.use_start_pose = true;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  goal->goal.use_start_pose = true;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
 
   // set the expectation: the planner retuns a failure
   EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillOnce(Return(mbf_msgs::GetPathResult::NO_PATH_FOUND));
-  expected_result.outcome = mbf_msgs::GetPathResult::NO_PATH_FOUND;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::NO_PATH_FOUND))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 }
 
 ACTION(SleepAndFail)
@@ -221,23 +255,21 @@ TEST_F(PlannerActionFixture, patExceeded)
   config.planner_patience = 0.001;
 
   // valid goal
-  goal.use_start_pose = true;
-  goal.start_pose.header.frame_id = goal.target_pose.header.frame_id = global_frame;
+  goal->goal.use_start_pose = true;
+  goal->goal.start_pose.header.frame_id = goal->goal.target_pose.header.frame_id = global_frame;
 
   // set the expectation: the planner retuns a failure
   EXPECT_CALL(*planner, makePlan(_, _, _, _, _, _)).WillRepeatedly(SleepAndFail());
-  expected_result.outcome = mbf_msgs::GetPathResult::PAT_EXCEEDED;
+  EXPECT_CALL(action_server,
+              publishResult(_, Field(&mbf_msgs::GetPathResult::outcome, Eq(mbf_msgs::GetPathResult::PAT_EXCEEDED))))
+      .Times(1)
+      .WillOnce(Notify(&done_condition_));
 }
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "read_types");
   ros::NodeHandle nh;
-  ros::AsyncSpinner spinner(4);
-
   testing::InitGoogleTest(&argc, argv);
-  spinner.start();
-  int result = RUN_ALL_TESTS();
-  spinner.stop();
-  return result;
+  return RUN_ALL_TESTS();
 }
