@@ -238,8 +238,8 @@ namespace mbf_abstract_nav
 
     //! The time / duration of patience, before changing the state.
     ros::Duration patience_;
-  
-      //! the frame of the robot, which will be used to determine its position.
+
+    //! the frame of the robot, which will be used to determine its position.
     std::string robot_frame_;
 
     //! the global frame the robot is controlling in.
