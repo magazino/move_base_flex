@@ -238,6 +238,12 @@ namespace mbf_abstract_nav
 
     //! The time / duration of patience, before changing the state.
     ros::Duration patience_;
+  
+      //! the frame of the robot, which will be used to determine its position.
+    std::string robot_frame_;
+
+    //! the global frame the robot is controlling in.
+    std::string global_frame_;
 
     /**
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
@@ -314,12 +320,6 @@ namespace mbf_abstract_nav
 
     //! the loop_rate which corresponds with the controller frequency.
     ros::Rate loop_rate_;
-
-    //! the frame of the robot, which will be used to determine its position.
-    std::string robot_frame_;
-
-    //! the global frame the robot is controlling in.
-    std::string global_frame_;
 
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;
