@@ -42,7 +42,6 @@
 
 namespace mbf_abstract_nav
 {
-
 AbstractPlannerExecution::AbstractPlannerExecution(const std::string& name,
                                                    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
                                                    const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config)
