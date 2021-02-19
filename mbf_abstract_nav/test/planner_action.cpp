@@ -45,7 +45,7 @@ struct PlannerActionFixture : public Test
   MoveBaseFlexConfig config;
 
   std::string action_name;
-  TF tf;
+  TFPtr tf;
 
   // todo change this from const ref
   std::string global_frame;
@@ -69,17 +69,18 @@ struct PlannerActionFixture : public Test
   PlannerActionFixture()
     : planner(new MockPlanner())
     , action_name("action_name")
+    , tf(new TF())
     , global_frame("global_frame")
     , local_frame("local_frame")
     , dur(0)
-    , robot_info(tf, global_frame, local_frame, dur)
+    , robot_info(*tf, global_frame, local_frame, dur)
     , planner_action(action_name, robot_info)
     , action_server(nh, "get_path", boost::bind(&PlannerActionFixture::callAction, this, _1),
                     boost::bind(&PlannerActionFixture::cancelAction, this, _1), false)
     , action_client("get_path", true)
   {
     action_server.start();
-    tf.setUsingDedicatedThread(true);
+    tf->setUsingDedicatedThread(true);
     config.planner_patience = 0;
   }
 
@@ -104,7 +105,7 @@ struct PlannerActionFixture : public Test
 
   void callAction(ActionServer::GoalHandle goal_handle)
   {
-    planner_action.start(goal_handle, boost::make_shared<AbstractPlannerExecution>("plugin", planner, config));
+    planner_action.start(goal_handle, boost::make_shared<AbstractPlannerExecution>("plugin", planner, tf, config));
   }
 
   void cancelAction(ActionServer::GoalHandle goal_handle)
