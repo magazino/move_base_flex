@@ -125,7 +125,7 @@ void AbstractControllerExecution::setState(ControllerState state)
 
 
 typename AbstractControllerExecution::ControllerState
-AbstractControllerExecution::getState()
+AbstractControllerExecution::getState() const
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   return state_;
@@ -203,21 +203,21 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
 }
 
 
-geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd()
+geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd() const
 {
   boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
   return vel_cmd_stamped_;
 }
 
 
-ros::Time AbstractControllerExecution::getLastPluginCallTime()
+ros::Time AbstractControllerExecution::getLastPluginCallTime() const
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
   return last_call_time_;
 }
 
 
-bool AbstractControllerExecution::isPatienceExceeded()
+bool AbstractControllerExecution::isPatienceExceeded() const
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
   if(!patience_.isZero() && ros::Time::now() - start_time_ > patience_) // not zero -> activated, start_time handles init case
@@ -237,7 +237,7 @@ bool AbstractControllerExecution::isPatienceExceeded()
 }
 
 
-bool AbstractControllerExecution::isMoving()
+bool AbstractControllerExecution::isMoving() const
 {
   return moving_;
 }

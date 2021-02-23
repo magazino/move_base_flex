@@ -151,13 +151,13 @@ namespace mbf_abstract_nav
      * @brief Return the current state of the controller execution. Thread communication safe.
      * @return current state, enum value of ControllerState
      */
-    ControllerState getState();
+    ControllerState getState() const;
 
     /**
      * @brief Returns the time of the last plugin call
      * @return Time of the last plugin call
      */
-    ros::Time getLastPluginCallTime();
+    ros::Time getLastPluginCallTime() const;
 
     /**
      * @brief Returns the last velocity command calculated by the plugin. Set by setVelocityCmd method.
@@ -165,13 +165,13 @@ namespace mbf_abstract_nav
      * to the plugin on controller action feedback.
      * @return The last valid velocity command.
      */
-    geometry_msgs::TwistStamped getVelocityCmd();
+    geometry_msgs::TwistStamped getVelocityCmd() const;
 
     /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
      * @return true, if the patience has been exceeded.
      */
-    bool isPatienceExceeded();
+    bool isPatienceExceeded() const;
 
     /**
      * @brief Sets the controller frequency
@@ -191,7 +191,7 @@ namespace mbf_abstract_nav
      * @brief Returns whether the robot should normally move or not. True if the controller seems to work properly.
      * @return true, if the robot should normally move, false otherwise
      */
-    bool isMoving();
+    bool isMoving() const;
 
   protected:
 
