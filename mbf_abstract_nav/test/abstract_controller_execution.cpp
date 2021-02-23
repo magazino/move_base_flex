@@ -53,6 +53,11 @@ struct AbstractControllerExecutionFixture : public Test, public AbstractControll
 
   void TearDown() override
   {
+    // after every test we expect that moving_ is set to false
+    // we don't expect this for the case NO_LOCAL_CMD
+    if (getState() != NO_LOCAL_CMD)
+      EXPECT_FALSE(isMoving());
+
     // we have to stop the thread when the test is done
     join();
   }
@@ -133,7 +138,25 @@ TEST_F(AbstractControllerExecutionFixture, internalError)
   ASSERT_EQ(getState(), INTERNAL_ERROR);
 }
 
-TEST_F(AbstractControllerExecutionFixture, arrivedGoal)
+// fixture making us pass computeRobotPose()
+struct ComputeRobotPoseFixture : public AbstractControllerExecutionFixture
+{
+  void SetUp()
+  {
+    // setup the transform.
+    global_frame_ = "global_frame";
+    robot_frame_ = "robot_frame";
+    // todo right now the mbf_utility checks on the transform age - but this does not work for static transforms
+    TransformStamped transform;
+    transform.header.stamp = ros::Time::now();
+    transform.header.frame_id = global_frame_;
+    transform.child_frame_id = robot_frame_;
+    transform.transform.rotation.w = 1;
+    TF_PTR->setTransform(transform, "mama", false);
+  }
+};
+
+TEST_F(ComputeRobotPoseFixture, arrivedGoal)
 {
   // test checks the case where we reach the goal.
   // the expected output is ARRIVED_GOAL
@@ -145,23 +168,11 @@ TEST_F(AbstractControllerExecutionFixture, arrivedGoal)
 
   // we compare against the back-pose of the plan
   plan_t plan(10);
-  plan.back().header.frame_id = global_frame_ = "global_frame";
+  plan.back().header.frame_id = global_frame_;
   plan.back().pose.orientation.w = 1;
 
   // make the toleraces small
   setNewPlan(plan, true, 1e-3, 1e-3);
-
-  // for identical frames the lookup should return 0
-  robot_frame_ = "robot_frame";
-
-  // setup the transform.
-  // todo right now the mbf_utility checks on the transform age - but this does not work for static transforms
-  TransformStamped transform;
-  transform.header.stamp = ros::Time::now();
-  transform.header.frame_id = global_frame_;
-  transform.child_frame_id = robot_frame_;
-  transform.transform.rotation.w = 1;
-  TF_PTR->setTransform(transform, "mama", false);
 
   // call staret
   ASSERT_TRUE(start());
@@ -171,32 +182,59 @@ TEST_F(AbstractControllerExecutionFixture, arrivedGoal)
   ASSERT_EQ(getState(), ARRIVED_GOAL);
 }
 
-TEST_F(AbstractControllerExecutionFixture, maxRetries)
+ACTION(ControllerException)
+{
+  throw std::runtime_error("Oh no! Controller throws an Exception");
+}
+
+TEST_F(ComputeRobotPoseFixture, controllerException)
+{
+  // setup the expectation: the controller accepts the plan and says we are not arrived.
+  // the controller throws then an exception
+  AbstractControllerMock& mock = dynamic_cast<AbstractControllerMock&>(*controller_);
+  EXPECT_CALL(mock, setPlan(_)).WillOnce(Return(true));
+  EXPECT_CALL(mock, isGoalReached(_, _)).WillOnce(Return(false));
+  EXPECT_CALL(mock, computeVelocityCommands(_, _, _, _)).WillOnce(ControllerException());
+
+  // setup the plan
+  plan_t plan(10);
+  setNewPlan(plan, true, 1e-3, 1e-3);
+
+  // call start
+  ASSERT_TRUE(start());
+
+  // wait for the status update
+  waitForStateUpdate(boost::chrono::seconds(1));
+  ASSERT_EQ(getState(), INTERNAL_ERROR);
+}
+
+// fixture which will setup the mock such that we generate a controller failure
+struct FailureFixture : public ComputeRobotPoseFixture
+{
+  void SetUp()
+  {
+    // setup the expectation: the controller accepts the plan and says we are not arrived.
+    // it furhermore returns an error code
+    AbstractControllerMock& mock = dynamic_cast<AbstractControllerMock&>(*controller_);
+    EXPECT_CALL(mock, setPlan(_)).WillOnce(Return(true));
+    EXPECT_CALL(mock, isGoalReached(_, _)).WillRepeatedly(Return(false));
+    EXPECT_CALL(mock, computeVelocityCommands(_, _, _, _)).WillRepeatedly(Return(11));
+
+    // setup the plan
+    plan_t plan(10);
+    setNewPlan(plan, true, 1e-3, 1e-3);
+
+    // call the parent method for the computeRobotPose call
+    ComputeRobotPoseFixture::SetUp();
+  }
+};
+
+TEST_F(FailureFixture, maxRetries)
 {
   // test verfies the case where we exceed the max-retries.
   // the expected output is MAX_RETRIES
 
-  // setup the expectation: the controller accepts the plan and says we are arrived
-  AbstractControllerMock& mock = dynamic_cast<AbstractControllerMock&>(*controller_);
-  EXPECT_CALL(mock, setPlan(_)).WillOnce(Return(true));
-  EXPECT_CALL(mock, isGoalReached(_, _)).WillRepeatedly(Return(false));
-  EXPECT_CALL(mock, computeVelocityCommands(_, _, _, _)).WillRepeatedly(Return(11));
-
-  // we compare against the back-pose of the plan
-  plan_t plan(10);
-  global_frame_ = "global_frame";
-  robot_frame_ = "robot_frame";
-  // make the toleraces small
-  setNewPlan(plan, true, 1e-3, 1e-3);
-
-  TransformStamped transform;
-  transform.header.stamp = ros::Time::now();
-  transform.header.frame_id = global_frame_;
-  transform.child_frame_id = robot_frame_;
-  transform.transform.rotation.w = 1;
-  TF_PTR->setTransform(transform, "mama", false);
-
-  // call staret
+  // call start
   ASSERT_TRUE(start());
 
   // wait for the status update
@@ -204,34 +242,14 @@ TEST_F(AbstractControllerExecutionFixture, maxRetries)
   ASSERT_EQ(getState(), MAX_RETRIES);
 }
 
-TEST_F(AbstractControllerExecutionFixture, noValidCmd)
+TEST_F(FailureFixture, noValidCmd)
 {
   // test verfies the case where we don't exceed the patience or max-retries conditions
   // the expected output is NO_VALID_CMD
 
-  // setup the expectation: the controller accepts the plan and says we are arrived
-  AbstractControllerMock& mock = dynamic_cast<AbstractControllerMock&>(*controller_);
-  EXPECT_CALL(mock, setPlan(_)).WillOnce(Return(true));
-  EXPECT_CALL(mock, isGoalReached(_, _)).WillRepeatedly(Return(false));
-  EXPECT_CALL(mock, computeVelocityCommands(_, _, _, _)).WillRepeatedly(Return(11));
-
-  // we compare against the back-pose of the plan
-  plan_t plan(10);
-  global_frame_ = "global_frame";
-  robot_frame_ = "robot_frame";
-  // make the toleraces small
-  setNewPlan(plan, true, 1e-3, 1e-3);
-
-  TransformStamped transform;
-  transform.header.stamp = ros::Time::now();
-  transform.header.frame_id = global_frame_;
-  transform.child_frame_id = robot_frame_;
-  transform.transform.rotation.w = 1;
-  TF_PTR->setTransform(transform, "mama", false);
-
   // disable the retries logic
   max_retries_ = -1;
-  // call staret
+  // call start
   ASSERT_TRUE(start());
 
   // wait for the status update
@@ -239,36 +257,16 @@ TEST_F(AbstractControllerExecutionFixture, noValidCmd)
   ASSERT_EQ(getState(), NO_LOCAL_CMD);
 }
 
-TEST_F(AbstractControllerExecutionFixture, patExceeded)
+TEST_F(FailureFixture, patExceeded)
 {
   // test verfies the case where we exceed the patience
   // the expected output is PAT_EXCEEDED
-
-  // setup the expectation: the controller accepts the plan and says we are arrived
-  AbstractControllerMock& mock = dynamic_cast<AbstractControllerMock&>(*controller_);
-  EXPECT_CALL(mock, setPlan(_)).WillOnce(Return(true));
-  EXPECT_CALL(mock, isGoalReached(_, _)).WillOnce(Return(false));
-  EXPECT_CALL(mock, computeVelocityCommands(_, _, _, _)).WillOnce(Return(11));
-
-  // we compare against the back-pose of the plan
-  plan_t plan(10);
-  global_frame_ = "global_frame";
-  robot_frame_ = "robot_frame";
-  // make the toleraces small
-  setNewPlan(plan, true, 1e-3, 1e-3);
-
-  TransformStamped transform;
-  transform.header.stamp = ros::Time::now();
-  transform.header.frame_id = global_frame_;
-  transform.child_frame_id = robot_frame_;
-  transform.transform.rotation.w = 1;
-  TF_PTR->setTransform(transform, "mama", false);
 
   // disable the retries logic and enable the patience logic: we cheat by setting it to a negative duration.
   max_retries_ = -1;
   patience_ = ros::Duration(-1e-3);
 
-  // call staret
+  // call start
   ASSERT_TRUE(start());
 
   // wait for the status update
