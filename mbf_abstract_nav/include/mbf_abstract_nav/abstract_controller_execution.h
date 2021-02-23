@@ -286,16 +286,16 @@ namespace mbf_abstract_nav
     void setState(ControllerState state);
 
     //! mutex to handle safe thread communication for the current value of the state
-    boost::mutex state_mtx_;
+    mutable boost::mutex state_mtx_;
 
     //! mutex to handle safe thread communication for the current plan
-    boost::mutex plan_mtx_;
+    mutable boost::mutex plan_mtx_;
 
     //! mutex to handle safe thread communication for the current velocity command
-    boost::mutex vel_cmd_mtx_;
+    mutable boost::mutex vel_cmd_mtx_;
 
     //! mutex to handle safe thread communication for the last plugin call time
-    boost::mutex lct_mtx_;
+    mutable boost::mutex lct_mtx_;
 
     //! true, if a new plan is available. See hasNewPlan()!
     bool new_plan_;
