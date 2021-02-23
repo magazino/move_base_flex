@@ -9,6 +9,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <tf/transform_datatypes.h>
 #include <geometry_msgs/TransformStamped.h>
 
 #include <string>
@@ -24,6 +25,8 @@ using mbf_abstract_nav::MoveBaseFlexConfig;
 using testing::_;
 using testing::Return;
 using testing::Test;
+// for kinetic
+using tf::StampedTransform;
 
 // the plan as a vector of poses
 typedef std::vector<PoseStamped> plan_t;
@@ -146,13 +149,20 @@ struct ComputeRobotPoseFixture : public AbstractControllerExecutionFixture
     // setup the transform.
     global_frame_ = "global_frame";
     robot_frame_ = "robot_frame";
-    // todo right now the mbf_utility checks on the transform age - but this does not work for static transforms
+#ifdef USE_OLD_TF
+    StampedTransform transform;
+    transform.child_frame_id_ = robot_frame_;
+    transform.frame_id_ = global_frame_;
+    transform.stamp_ = ros::Time::now();
+#else
     TransformStamped transform;
     transform.header.stamp = ros::Time::now();
     transform.header.frame_id = global_frame_;
     transform.child_frame_id = robot_frame_;
     transform.transform.rotation.w = 1;
-    TF_PTR->setTransform(transform, "mama", false);
+#endif
+    // todo right now the mbf_utility checks on the transform age - but this does not work for static transforms
+    TF_PTR->setTransform(transform, "mama");
   }
 };
 
