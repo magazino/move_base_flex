@@ -299,8 +299,8 @@ void AbstractControllerExecution::run()
           publishZeroVelocity(); // command the robot to stop on canceling navigation
         }
         setState(CANCELED);
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         return;
       }
 
@@ -321,8 +321,8 @@ void AbstractControllerExecution::run()
         if (plan.empty())
         {
           setState(EMPTY_PLAN);
-          condition_.notify_all();
           moving_ = false;
+          condition_.notify_all();
           return;
         }
 
@@ -330,8 +330,8 @@ void AbstractControllerExecution::run()
         if (!controller_->setPlan(plan))
         {
           setState(INVALID_PLAN);
-          condition_.notify_all();
           moving_ = false;
+          condition_.notify_all();
           return;
         }
         current_goal_pub_.publish(plan.back());
@@ -342,8 +342,8 @@ void AbstractControllerExecution::run()
       {
         publishZeroVelocity();
         setState(INTERNAL_ERROR);
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         return;
       }
 
@@ -357,8 +357,8 @@ void AbstractControllerExecution::run()
         }
         setState(ARRIVED_GOAL);
         // goal reached, tell it the controller
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         // if not, keep moving
       }
       else
