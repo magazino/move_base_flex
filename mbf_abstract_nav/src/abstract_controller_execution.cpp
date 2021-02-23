@@ -123,9 +123,7 @@ void AbstractControllerExecution::setState(ControllerState state)
   state_ = state;
 }
 
-
-typename AbstractControllerExecution::ControllerState
-AbstractControllerExecution::getState() const
+typename AbstractControllerExecution::ControllerState AbstractControllerExecution::getState() const
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   return state_;
@@ -202,20 +200,17 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
   // TODO so there should be no loss of information in the feedback stream
 }
 
-
 geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd() const
 {
   boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
   return vel_cmd_stamped_;
 }
 
-
 ros::Time AbstractControllerExecution::getLastPluginCallTime() const
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
   return last_call_time_;
 }
-
 
 bool AbstractControllerExecution::isPatienceExceeded() const
 {
@@ -235,7 +230,6 @@ bool AbstractControllerExecution::isPatienceExceeded() const
   }
   return false;
 }
-
 
 bool AbstractControllerExecution::isMoving() const
 {
