@@ -45,7 +45,6 @@ ros::Publisher VEL_PUB, GOAL_PUB;
 TFPtr TF_PTR;
 
 // fixture for our tests
-// we need
 struct AbstractControllerExecutionFixture : public Test, public AbstractControllerExecution
 {
   AbstractControllerExecutionFixture()
