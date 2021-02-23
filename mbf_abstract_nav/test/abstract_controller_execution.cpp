@@ -174,7 +174,7 @@ TEST_F(ComputeRobotPoseFixture, arrivedGoal)
   // make the toleraces small
   setNewPlan(plan, true, 1e-3, 1e-3);
 
-  // call staret
+  // call start
   ASSERT_TRUE(start());
 
   // wait for the status update
