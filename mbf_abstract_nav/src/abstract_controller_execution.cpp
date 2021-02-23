@@ -444,6 +444,8 @@ void AbstractControllerExecution::run()
     message_ = "Unknown error occurred: " + boost::current_exception_diagnostic_information();
     ROS_FATAL_STREAM(message_);
     setState(INTERNAL_ERROR);
+    moving_ = false;
+    condition_.notify_all();
   }
 }
 
