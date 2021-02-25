@@ -299,7 +299,7 @@ void AbstractPlannerExecution::run()
           last_valid_plan_time_ = ros::Time::now();
           setState(FOUND_PLAN, true);
         }
-        else if (max_retries_ >= 0 && retries++ > max_retries_)
+        else if (max_retries_ > 0 && ++retries > max_retries_)
         {
           ROS_INFO_STREAM("Planning reached max retries! (" << max_retries_ << ")");
           setState(MAX_RETRIES, true);
