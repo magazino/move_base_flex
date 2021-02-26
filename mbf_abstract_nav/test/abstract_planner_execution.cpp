@@ -100,7 +100,7 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
 
   // setup the expectations
   AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
-  // todo retries is misleading since we retry n+1 times...
+
   EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries + 1).WillRepeatedly(Return(11));
 
   // call and wait

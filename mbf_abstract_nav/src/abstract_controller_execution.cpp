@@ -391,7 +391,7 @@ void AbstractControllerExecution::run()
         else
         {
           boost::lock_guard<boost::mutex> guard(configuration_mutex_);
-          if (max_retries_ >= 0 && ++retries > max_retries_)
+          if (max_retries_ > 0 && ++retries > max_retries_)
           {
             setState(MAX_RETRIES);
             moving_ = false;
