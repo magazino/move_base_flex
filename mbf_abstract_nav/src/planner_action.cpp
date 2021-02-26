@@ -244,8 +244,6 @@ void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &e
       // try to sleep a bit
       // normally this thread should be woken up from the planner execution thread
       // in order to transfer the results to the controller.
-      boost::mutex mutex;
-      boost::unique_lock<boost::mutex> lock(mutex);
       execution.waitForStateUpdate(boost::chrono::milliseconds(500));
     }
   }  // while (planner_active && ros::ok())
@@ -260,11 +258,12 @@ void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &e
   }
 }
 
-bool PlannerAction::transformPlanToGlobalFrame(
-    std::vector<geometry_msgs::PoseStamped> &plan, std::vector<geometry_msgs::PoseStamped> &global_plan)
+bool PlannerAction::transformPlanToGlobalFrame(const std::vector<geometry_msgs::PoseStamped>& plan,
+                                               std::vector<geometry_msgs::PoseStamped>& global_plan)
 {
   global_plan.clear();
-  std::vector<geometry_msgs::PoseStamped>::iterator iter;
+  global_plan.reserve(plan.size());
+  std::vector<geometry_msgs::PoseStamped>::const_iterator iter;
   bool tf_success = false;
   for (iter = plan.begin(); iter != plan.end(); ++iter)
   {
