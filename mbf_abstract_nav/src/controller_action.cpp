@@ -257,7 +257,14 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
       case AbstractControllerExecution::NO_LOCAL_CMD:
         ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
             << execution.getMessage());
-        publishExePathFeedback(goal_handle, execution.getOutcome(), execution.getMessage(), execution.getVelocityCmd());
+        controller_active = execution.isMoving();
+        if(!controller_active){
+          fillExePathResult(execution.getOutcome(), execution.getMessage(), result);
+          goal_handle.setAborted(result, result.message);
+        }
+        else{
+          publishExePathFeedback(goal_handle, execution.getOutcome(), execution.getMessage(), execution.getVelocityCmd());
+        }
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
