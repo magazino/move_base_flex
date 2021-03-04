@@ -258,12 +258,15 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
         ROS_WARN_STREAM_THROTTLE_NAMED(3, name_, "No velocity command received from controller! "
             << execution.getMessage());
         controller_active = execution.isMoving();
-        if(!controller_active){
+        if (!controller_active)
+        {
           fillExePathResult(execution.getOutcome(), execution.getMessage(), result);
           goal_handle.setAborted(result, result.message);
         }
-        else{
-          publishExePathFeedback(goal_handle, execution.getOutcome(), execution.getMessage(), execution.getVelocityCmd());
+        else
+        {
+          publishExePathFeedback(goal_handle, execution.getOutcome(), execution.getMessage(),
+                                 execution.getVelocityCmd());
         }
         break;
 
