@@ -151,13 +151,13 @@ namespace mbf_abstract_nav
      * @brief Return the current state of the controller execution. Thread communication safe.
      * @return current state, enum value of ControllerState
      */
-    ControllerState getState();
+    ControllerState getState() const;
 
     /**
      * @brief Returns the time of the last plugin call
      * @return Time of the last plugin call
      */
-    ros::Time getLastPluginCallTime();
+    ros::Time getLastPluginCallTime() const;
 
     /**
      * @brief Returns the last velocity command calculated by the plugin. Set by setVelocityCmd method.
@@ -165,13 +165,13 @@ namespace mbf_abstract_nav
      * to the plugin on controller action feedback.
      * @return The last valid velocity command.
      */
-    geometry_msgs::TwistStamped getVelocityCmd();
+    geometry_msgs::TwistStamped getVelocityCmd() const;
 
     /**
      * @brief Checks whether the patience duration time has been exceeded, ot not
      * @return true, if the patience has been exceeded.
      */
-    bool isPatienceExceeded();
+    bool isPatienceExceeded() const;
 
     /**
      * @brief Sets the controller frequency
@@ -191,7 +191,7 @@ namespace mbf_abstract_nav
      * @brief Returns whether the robot should normally move or not. True if the controller seems to work properly.
      * @return true, if the robot should normally move, false otherwise
      */
-    bool isMoving();
+    bool isMoving() const;
 
   protected:
 
@@ -239,6 +239,12 @@ namespace mbf_abstract_nav
     //! The time / duration of patience, before changing the state.
     ros::Duration patience_;
 
+    //! the frame of the robot, which will be used to determine its position.
+    std::string robot_frame_;
+
+    //! the global frame the robot is controlling in.
+    std::string global_frame_;
+
     /**
      * @brief The main run method, a thread will execute this method. It contains the main controller execution loop.
      */
@@ -280,16 +286,16 @@ namespace mbf_abstract_nav
     void setState(ControllerState state);
 
     //! mutex to handle safe thread communication for the current value of the state
-    boost::mutex state_mtx_;
+    mutable boost::mutex state_mtx_;
 
     //! mutex to handle safe thread communication for the current plan
-    boost::mutex plan_mtx_;
+    mutable boost::mutex plan_mtx_;
 
     //! mutex to handle safe thread communication for the current velocity command
-    boost::mutex vel_cmd_mtx_;
+    mutable boost::mutex vel_cmd_mtx_;
 
     //! mutex to handle safe thread communication for the last plugin call time
-    boost::mutex lct_mtx_;
+    mutable boost::mutex lct_mtx_;
 
     //! true, if a new plan is available. See hasNewPlan()!
     bool new_plan_;
@@ -314,12 +320,6 @@ namespace mbf_abstract_nav
 
     //! the loop_rate which corresponds with the controller frequency.
     ros::Rate loop_rate_;
-
-    //! the frame of the robot, which will be used to determine its position.
-    std::string robot_frame_;
-
-    //! the global frame the robot is controlling in.
-    std::string global_frame_;
 
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;

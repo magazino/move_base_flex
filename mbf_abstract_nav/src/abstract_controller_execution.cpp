@@ -123,9 +123,7 @@ void AbstractControllerExecution::setState(ControllerState state)
   state_ = state;
 }
 
-
-typename AbstractControllerExecution::ControllerState
-AbstractControllerExecution::getState()
+typename AbstractControllerExecution::ControllerState AbstractControllerExecution::getState() const
 {
   boost::lock_guard<boost::mutex> guard(state_mtx_);
   return state_;
@@ -202,22 +200,19 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
   // TODO so there should be no loss of information in the feedback stream
 }
 
-
-geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd()
+geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd() const
 {
   boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
   return vel_cmd_stamped_;
 }
 
-
-ros::Time AbstractControllerExecution::getLastPluginCallTime()
+ros::Time AbstractControllerExecution::getLastPluginCallTime() const
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
   return last_call_time_;
 }
 
-
-bool AbstractControllerExecution::isPatienceExceeded()
+bool AbstractControllerExecution::isPatienceExceeded() const
 {
   boost::lock_guard<boost::mutex> guard(lct_mtx_);
   if(!patience_.isZero() && ros::Time::now() - start_time_ > patience_) // not zero -> activated, start_time handles init case
@@ -236,8 +231,7 @@ bool AbstractControllerExecution::isPatienceExceeded()
   return false;
 }
 
-
-bool AbstractControllerExecution::isMoving()
+bool AbstractControllerExecution::isMoving() const
 {
   return moving_;
 }
@@ -305,8 +299,8 @@ void AbstractControllerExecution::run()
           publishZeroVelocity(); // command the robot to stop on canceling navigation
         }
         setState(CANCELED);
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         return;
       }
 
@@ -327,8 +321,8 @@ void AbstractControllerExecution::run()
         if (plan.empty())
         {
           setState(EMPTY_PLAN);
-          condition_.notify_all();
           moving_ = false;
+          condition_.notify_all();
           return;
         }
 
@@ -336,8 +330,8 @@ void AbstractControllerExecution::run()
         if (!controller_->setPlan(plan))
         {
           setState(INVALID_PLAN);
-          condition_.notify_all();
           moving_ = false;
+          condition_.notify_all();
           return;
         }
         current_goal_pub_.publish(plan.back());
@@ -348,8 +342,8 @@ void AbstractControllerExecution::run()
       {
         publishZeroVelocity();
         setState(INTERNAL_ERROR);
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         return;
       }
 
@@ -363,8 +357,8 @@ void AbstractControllerExecution::run()
         }
         setState(ARRIVED_GOAL);
         // goal reached, tell it the controller
-        condition_.notify_all();
         moving_ = false;
+        condition_.notify_all();
         // if not, keep moving
       }
       else
@@ -444,6 +438,8 @@ void AbstractControllerExecution::run()
     message_ = "Unknown error occurred: " + boost::current_exception_diagnostic_information();
     ROS_FATAL_STREAM(message_);
     setState(INTERNAL_ERROR);
+    moving_ = false;
+    condition_.notify_all();
   }
 }
 
