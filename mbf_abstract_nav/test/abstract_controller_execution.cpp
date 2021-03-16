@@ -249,8 +249,13 @@ TEST_F(FailureFixture, maxRetries)
   // call start
   ASSERT_TRUE(start());
 
-  // wait for the status update
-  waitForStateUpdate(boost::chrono::seconds(5));
+  // wait for the status update: in first iteration NO_LOCAL_CMD
+  waitForStateUpdate(boost::chrono::seconds(1));
+  ASSERT_EQ(getState(), NO_LOCAL_CMD);
+
+  // wait for the status update: in second iteration MAX_RETRIES
+  // bcs max_retries_ > 0 && ++retries > max_retries_
+  waitForStateUpdate(boost::chrono::seconds(1));
   ASSERT_EQ(getState(), MAX_RETRIES);
 }
 
