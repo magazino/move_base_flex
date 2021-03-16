@@ -243,6 +243,9 @@ TEST_F(FailureFixture, maxRetries)
   // test verfies the case where we exceed the max-retries.
   // the expected output is MAX_RETRIES
 
+  // enable the retries logic (max_retries > 0)
+  max_retries_ = 2;
+
   // call start
   ASSERT_TRUE(start());
 
