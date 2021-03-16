@@ -240,17 +240,17 @@ struct FailureFixture : public ComputeRobotPoseFixture
 
 TEST_F(FailureFixture, maxRetries)
 {
-  // test verfies the case where we exceed the max-retries.
+  // test verifies the case where we exceed the max-retries.
   // the expected output is MAX_RETRIES
 
   // enable the retries logic (max_retries > 0)
-  max_retries_ = 2;
+  max_retries_ = 1;
 
   // call start
   ASSERT_TRUE(start());
 
   // wait for the status update
-  waitForStateUpdate(boost::chrono::seconds(1));
+  waitForStateUpdate(boost::chrono::seconds(5));
   ASSERT_EQ(getState(), MAX_RETRIES);
 }
 
