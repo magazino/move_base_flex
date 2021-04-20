@@ -94,15 +94,13 @@ class MoveBaseAction
       const actionlib::SimpleClientGoalState &state,
       const mbf_msgs::ExePathResultConstPtr &result);
 
-  void actionGetPathReplanningDone(
-      const actionlib::SimpleClientGoalState &state,
-      const mbf_msgs::GetPathResultConstPtr &result);
-
   void actionRecoveryDone(
       const actionlib::SimpleClientGoalState &state,
       const mbf_msgs::RecoveryResultConstPtr &result);
 
   bool attemptRecovery();
+
+  void replanningThread();
 
   /**
    * Utility method that fills move base action result with the result of any of the action clients.
@@ -158,9 +156,14 @@ class MoveBaseAction
   //! Action client used by the move_base action
   ActionClientRecovery action_client_recovery_;
 
-  bool replanning_;
-  ros::Rate replanning_rate_;
-  boost::mutex replanning_mtx_;
+  //! current distance to goal (we will stop replanning if very close to avoid destabilizing the controller)
+  double dist_to_goal_;
+
+  //! Replanning period dynamically reconfigurable
+  ros::Duration replanning_period_;
+
+  //! Replanning thread, running permanently
+  boost::thread replanning_thread_;
 
   //! true, if recovery behavior for the MoveBase action is enabled.
   bool recovery_enabled_;
