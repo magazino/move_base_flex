@@ -100,6 +100,8 @@ class MoveBaseAction
 
   bool attemptRecovery();
 
+  bool replanningActive() const;
+
   void replanningThread();
 
   /**

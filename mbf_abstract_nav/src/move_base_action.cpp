@@ -38,6 +38,8 @@
  *
  */
 
+#include <limits>
+
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -66,6 +68,8 @@ MoveBaseAction::MoveBaseAction(const std::string& name, const mbf_utility::Robot
 
 MoveBaseAction::~MoveBaseAction()
 {
+  action_state_ = NONE;
+  replanning_thread_.join();
 }
 
 void MoveBaseAction::reconfigure(
@@ -509,23 +513,26 @@ void MoveBaseAction::actionRecoveryDone(
   }
 }
 
+bool MoveBaseAction::replanningActive() const
+{
+  // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
+  return !replanning_period_.isZero() && action_state_ == EXE_PATH && dist_to_goal_ > 0.1;
+}
+
 void MoveBaseAction::replanningThread()
 {
-  ros::Duration update_period(0.001);
+  ros::Duration update_period(0.005);
   ros::Time last_replan_time(0.0);
 
   while (ros::ok())
   {
-    // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
-    bool keep_replanning = !replanning_period_.isZero() && action_state_ == EXE_PATH && dist_to_goal_ > 0.1;
-
     if (!action_client_get_path_.getState().isDone())
     {
       if (action_client_get_path_.waitForResult(update_period))
       {
         actionlib::SimpleClientGoalState state = action_client_get_path_.getState();
         mbf_msgs::GetPathResultConstPtr result = action_client_get_path_.getResult();
-        if (state == actionlib::SimpleClientGoalState::SUCCEEDED && keep_replanning)
+        if (state == actionlib::SimpleClientGoalState::SUCCEEDED && replanningActive())
         {
           ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"exe_path\" with the new plan");
           exe_path_goal_.path = result->path;
@@ -540,20 +547,13 @@ void MoveBaseAction::replanningThread()
                                  "Replanning failed with error code " << result->outcome << ": " << result->message);
         }
       }
-      else
-      {
-        // keep waiting for planning to complete (we already waited update_period in waitForResult)
-        continue;
-      }
+      // else keep waiting for planning to complete (we already waited update_period in waitForResult)
     }
-
-    if (!keep_replanning)
+    else if (!replanningActive())
     {
       update_period.sleep();
-      continue;
     }
-
-    if (ros::Time::now() - last_replan_time >= replanning_period_)
+    else if (ros::Time::now() - last_replan_time >= replanning_period_)
     {
       ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
       action_client_get_path_.sendGoal(get_path_goal_);
