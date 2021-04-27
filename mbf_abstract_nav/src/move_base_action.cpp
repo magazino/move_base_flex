@@ -38,6 +38,8 @@
  *
  */
 
+#include <limits>
+
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -45,55 +47,38 @@
 
 namespace mbf_abstract_nav
 {
-
-MoveBaseAction::MoveBaseAction(const std::string &name,
-                               const mbf_utility::RobotInformation &robot_info,
-                               const std::vector<std::string> &behaviors)
-  :  name_(name), robot_info_(robot_info), private_nh_("~"),
-     action_client_exe_path_(private_nh_, "exe_path"),
-     action_client_get_path_(private_nh_, "get_path"),
-     action_client_recovery_(private_nh_, "recovery"),
-     oscillation_timeout_(0),
-     oscillation_distance_(0),
-     recovery_enabled_(true),
-     behaviors_(behaviors),
-     action_state_(NONE),
-     recovery_trigger_(NONE),
-     replanning_(false),
-     replanning_rate_(1.0)
+MoveBaseAction::MoveBaseAction(const std::string& name, const mbf_utility::RobotInformation& robot_info,
+                               const std::vector<std::string>& behaviors)
+  : name_(name)
+  , robot_info_(robot_info)
+  , private_nh_("~")
+  , action_client_exe_path_(private_nh_, "exe_path")
+  , action_client_get_path_(private_nh_, "get_path")
+  , action_client_recovery_(private_nh_, "recovery")
+  , oscillation_timeout_(0)
+  , oscillation_distance_(0)
+  , recovery_enabled_(true)
+  , behaviors_(behaviors)
+  , action_state_(NONE)
+  , recovery_trigger_(NONE)
+  , dist_to_goal_(std::numeric_limits<double>::infinity())
+  , replanning_thread_(boost::bind(&MoveBaseAction::replanningThread, this))
 {
 }
 
 MoveBaseAction::~MoveBaseAction()
 {
+  action_state_ = NONE;
+  replanning_thread_.join();
 }
 
 void MoveBaseAction::reconfigure(
     mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
 {
   if (config.planner_frequency > 0.0)
-  {
-    boost::lock_guard<boost::mutex> guard(replanning_mtx_);
-    if (!replanning_)
-    {
-      replanning_ = true;
-      if (action_state_ == EXE_PATH &&
-          action_client_get_path_.getState() != actionlib::SimpleClientGoalState::PENDING &&
-          action_client_get_path_.getState() != actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        // exe_path is running and user has enabled replanning
-        ROS_INFO_STREAM_NAMED("move_base", "Planner frequency set to " << config.planner_frequency
-                              << ": start replanning, using the \"get_path\" action!");
-        action_client_get_path_.sendGoal(
-            get_path_goal_,
-            boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
-        );
-      }
-    }
-    replanning_rate_ = ros::Rate(config.planner_frequency);
-  }
+    replanning_period_.fromSec(1.0 / config.planner_frequency);
   else
-    replanning_ = false;
+    replanning_period_.fromSec(0.0);
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
   recovery_enabled_ = config.recovery_enabled;
@@ -121,6 +106,8 @@ void MoveBaseAction::cancel()
 
 void MoveBaseAction::start(GoalHandle &goal_handle)
 {
+  dist_to_goal_ = std::numeric_limits<double>::infinity();
+
   action_state_ = GET_PATH;
 
   goal_handle.setAccepted();
@@ -193,8 +180,9 @@ void MoveBaseAction::actionExePathFeedback(
   move_base_feedback.dist_to_goal = feedback->dist_to_goal;
   move_base_feedback.current_pose = feedback->current_pose;
   move_base_feedback.last_cmd_vel = feedback->last_cmd_vel;
-  robot_pose_ = feedback->current_pose;
   goal_handle_.publishFeedback(move_base_feedback);
+  dist_to_goal_ = feedback->dist_to_goal;
+  robot_pose_ = feedback->current_pose;
 
   // we create a navigation-level oscillation detection using exe_path action's feedback,
   // as the later doesn't handle oscillations created by quickly failing repeated plans
@@ -326,25 +314,6 @@ void MoveBaseAction::actionGetPathDone(
       action_state_ = FAILED;
       break;
   }
-
-  // start replanning if enabled (can be disabled by dynamic reconfigure) and if we started following a path
-  if (!replanning_ || action_state_ != EXE_PATH)
-    return;
-
-  // we reset the replan clock (we can have been stopped for a while) and make a fist sleep, so we don't replan
-  // just after start moving
-  boost::lock_guard<boost::mutex> guard(replanning_mtx_);
-  replanning_rate_.reset();
-  replanning_rate_.sleep();
-  if (!replanning_ || action_state_ != EXE_PATH ||
-      action_client_get_path_.getState() == actionlib::SimpleClientGoalState::PENDING ||
-      action_client_get_path_.getState() == actionlib::SimpleClientGoalState::ACTIVE)
-    return; // another chance to stop replannings after waiting for replanning period
-  ROS_INFO_STREAM_NAMED("move_base", "Start replanning, using the \"get_path\" action!");
-  action_client_get_path_.sendGoal(
-      get_path_goal_,
-      boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)
-  );
 }
 
 void MoveBaseAction::actionExePathDone(
@@ -359,7 +328,7 @@ void MoveBaseAction::actionExePathDone(
   // copy result from exe_path action
   fillMoveBaseResult(exe_path_result, move_base_result);
 
-  ROS_DEBUG_STREAM_NAMED("move_base", "Current state:" << state.toString());
+  ROS_DEBUG_STREAM_NAMED("move_base", "Current state: " << state.toString());
 
   switch (state.state_)
   {
@@ -544,36 +513,53 @@ void MoveBaseAction::actionRecoveryDone(
   }
 }
 
-void MoveBaseAction::actionGetPathReplanningDone(
-    const actionlib::SimpleClientGoalState &state,
-    const mbf_msgs::GetPathResultConstPtr &result)
+bool MoveBaseAction::replanningActive() const
 {
-  if (!replanning_ || action_state_ != EXE_PATH)
-    return; // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
+  // replan only while following a path and if replanning is enabled (can be disabled by dynamic reconfigure)
+  return !replanning_period_.isZero() && action_state_ == EXE_PATH && dist_to_goal_ > 0.1;
+}
 
-  if (state == actionlib::SimpleClientGoalState::SUCCEEDED)
+void MoveBaseAction::replanningThread()
+{
+  ros::Duration update_period(0.005);
+  ros::Time last_replan_time(0.0);
+
+  while (ros::ok())
   {
-    ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"exe_path\" with the new plan");
-    exe_path_goal_.path = result->path;
-    mbf_msgs::ExePathGoal goal(exe_path_goal_);
-    action_client_exe_path_.sendGoal(
-        goal,
-        boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
-        boost::bind(&MoveBaseAction::actionExePathActive, this),
-        boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
+    if (!action_client_get_path_.getState().isDone())
+    {
+      if (action_client_get_path_.waitForResult(update_period))
+      {
+        actionlib::SimpleClientGoalState state = action_client_get_path_.getState();
+        mbf_msgs::GetPathResultConstPtr result = action_client_get_path_.getResult();
+        if (state == actionlib::SimpleClientGoalState::SUCCEEDED && replanningActive())
+        {
+          ROS_DEBUG_STREAM_NAMED("move_base", "Replanning succeeded; sending a goal to \"exe_path\" with the new plan");
+          exe_path_goal_.path = result->path;
+          mbf_msgs::ExePathGoal goal(exe_path_goal_);
+          action_client_exe_path_.sendGoal(goal, boost::bind(&MoveBaseAction::actionExePathDone, this, _1, _2),
+                                           boost::bind(&MoveBaseAction::actionExePathActive, this),
+                                           boost::bind(&MoveBaseAction::actionExePathFeedback, this, _1));
+        }
+        else
+        {
+          ROS_DEBUG_STREAM_NAMED("move_base",
+                                 "Replanning failed with error code " << result->outcome << ": " << result->message);
+        }
+      }
+      // else keep waiting for planning to complete (we already waited update_period in waitForResult)
+    }
+    else if (!replanningActive())
+    {
+      update_period.sleep();
+    }
+    else if (ros::Time::now() - last_replan_time >= replanning_period_)
+    {
+      ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
+      action_client_get_path_.sendGoal(get_path_goal_);
+      last_replan_time = ros::Time::now();
+    }
   }
-
-  replanning_mtx_.lock();
-  replanning_rate_.sleep();
-  replanning_mtx_.unlock();
-
-  if (!replanning_ || action_state_ != EXE_PATH)
-    return; // another chance to stop replannings after waiting for replanning period
-
-  ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
-  action_client_get_path_.sendGoal(
-      get_path_goal_,
-      boost::bind(&MoveBaseAction::actionGetPathReplanningDone, this, _1, _2)); // replanning
 }
 
 } /* namespace mbf_abstract_nav */

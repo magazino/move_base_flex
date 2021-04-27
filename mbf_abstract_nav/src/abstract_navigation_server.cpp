@@ -306,6 +306,7 @@ void AbstractNavigationServer::cancelActionMoveBase(ActionServerMoveBase::GoalHa
 {
   ROS_INFO_STREAM_NAMED("move_base", "Cancel action \"move_base\"");
   move_base_action_.cancel();
+  ROS_DEBUG_STREAM_NAMED("move_base", "Cancel action \"move_base\" completed");
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPlannerExecution(
