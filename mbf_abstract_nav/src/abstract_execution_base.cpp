@@ -63,11 +63,6 @@ bool AbstractExecutionBase::start()
     thread_.join();
   }
 
-  // reset the member vars
-  cancel_ = false;
-  outcome_ = 255;
-  message_.clear();
-
   thread_ = boost::thread(&AbstractExecutionBase::run, this);
   return true;
 }
@@ -78,12 +73,13 @@ void AbstractExecutionBase::stop()
   thread_.interrupt();
 }
 
-void AbstractExecutionBase::join(){
+void AbstractExecutionBase::join()
+{
   if (thread_.joinable())
     thread_.join();
 }
 
-boost::cv_status AbstractExecutionBase::waitForStateUpdate(boost::chrono::microseconds const &duration)
+boost::cv_status AbstractExecutionBase::waitForStateUpdate(boost::chrono::microseconds const& duration)
 {
   boost::mutex mutex;
   boost::unique_lock<boost::mutex> lock(mutex);
