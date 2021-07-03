@@ -261,6 +261,9 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
+
+  //! Topic showing the padded footprint used to check pose cost
+  ros::Publisher padded_footprint_pub_;
 };
 
 } /* namespace mbf_costmap_nav */

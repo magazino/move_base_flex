@@ -40,7 +40,7 @@
 
 #include <tf/tf.h>
 #include <nav_msgs/Path.h>
-#include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PolygonStamped.h>
 #include <mbf_msgs/MoveBaseAction.h>
 #include <mbf_abstract_nav/MoveBaseFlexConfig.h>
 #include <actionlib/client/simple_action_client.h>
@@ -67,7 +67,7 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_)),
   setup_reconfigure_(false)
 {
-  // advertise services and current goal topic
+  // advertise services and topics
   check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
                                                        &CostmapNavigationServer::callServiceCheckPointCost, this);
   check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
@@ -76,6 +76,8 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
                                                       &CostmapNavigationServer::callServiceCheckPathCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
                                                      &CostmapNavigationServer::callServiceClearCostmaps, this);
+
+  padded_footprint_pub_ = private_nh_.advertise<geometry_msgs::PolygonStamped>("check_pose_footprint", 1);
 
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
@@ -493,6 +495,12 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   std::vector<geometry_msgs::Point> footprint = costmap->getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, request.safety_dist);
 
+  // publish the padded footprint to visualize the area within which we will calculate the cost
+  geometry_msgs::PolygonStamped footprint_polygon;
+  footprint_polygon.header.frame_id = costmap->getGlobalFrameID();
+  costmap_2d::transformFootprint(x, y, yaw, footprint, footprint_polygon);
+  padded_footprint_pub_.publish(footprint_polygon);
+
   // use footprint helper to get all the cells totally or partially within footprint polygon
   std::vector<Cell> footprint_cells =
     FootprintHelper::getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
@@ -500,6 +508,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   if (footprint_cells.empty())
   {
     // no cells within footprint polygon must mean that robot is completely outside of the map
+    // (if partially outside we still calculate the cost)
     response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::OUTSIDE));
   }
   else
