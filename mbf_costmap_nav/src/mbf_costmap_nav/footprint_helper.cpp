@@ -192,23 +192,19 @@ std::vector<Cell> FootprintHelper::getFootprintCells(
   double cos_th = cos(theta);
   double sin_th = sin(theta);
   double new_x, new_y;
-  unsigned int x0, y0, x1, y1;
+  int x0, y0, x1, y1;
   unsigned int last_index = footprint_spec.size() - 1;
 
   for (unsigned int i = 0; i < last_index; ++i) {
     //find the cell coordinates of the first segment point
     new_x = x + (footprint_spec[i].x * cos_th - footprint_spec[i].y * sin_th);
     new_y = y + (footprint_spec[i].x * sin_th + footprint_spec[i].y * cos_th);
-    if(!costmap.worldToMap(new_x, new_y, x0, y0)) {
-      return footprint_cells;
-    }
+    costmap.worldToMapEnforceBounds(new_x, new_y, x0, y0);
 
     //find the cell coordinates of the second segment point
     new_x = x + (footprint_spec[i + 1].x * cos_th - footprint_spec[i + 1].y * sin_th);
     new_y = y + (footprint_spec[i + 1].x * sin_th + footprint_spec[i + 1].y * cos_th);
-    if (!costmap.worldToMap(new_x, new_y, x1, y1)) {
-      return footprint_cells;
-    }
+    costmap.worldToMapEnforceBounds(new_x, new_y, x1, y1);
 
     getLineCells(x0, x1, y0, y1, footprint_cells);
   }
@@ -216,18 +212,15 @@ std::vector<Cell> FootprintHelper::getFootprintCells(
   //we need to close the loop, so we also have to raytrace from the last pt to first pt
   new_x = x + (footprint_spec[last_index].x * cos_th - footprint_spec[last_index].y * sin_th);
   new_y = y + (footprint_spec[last_index].x * sin_th + footprint_spec[last_index].y * cos_th);
-  if (!costmap.worldToMap(new_x, new_y, x0, y0)) {
-    return footprint_cells;
-  }
+  costmap.worldToMapEnforceBounds(new_x, new_y, x0, y0);
+
   new_x = x + (footprint_spec[0].x * cos_th - footprint_spec[0].y * sin_th);
   new_y = y + (footprint_spec[0].x * sin_th + footprint_spec[0].y * cos_th);
-  if(!costmap.worldToMap(new_x, new_y, x1, y1)) {
-    return footprint_cells;
-  }
+  costmap.worldToMapEnforceBounds(new_x, new_y, x1, y1);
 
   getLineCells(x0, x1, y0, y1, footprint_cells);
 
-  if(fill) {
+  if (fill) {
     getFillCells(footprint_cells);
   }
 
