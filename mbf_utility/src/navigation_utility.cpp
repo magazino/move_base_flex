@@ -72,7 +72,7 @@ bool getRobotPose(const TF &tf,
 }
 
 /**
- * @brief Returns true, ifthe given Quaternion is normalized.
+ * @brief Returns true, if the given quaternion is normalized.
  *
  * @param _q The quaternion to check.
  * @param _epsilon The epsilon (squared distance to 1).
