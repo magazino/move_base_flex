@@ -42,6 +42,8 @@
 
 #include "mbf_utility/navigation_utility.h"
 
+#include <cmath>
+
 namespace mbf_utility
 {
 
@@ -69,12 +71,31 @@ bool getRobotPose(const TF &tf,
   return success;
 }
 
+/**
+ * @brief Returns true, ifthe given Quaternion is normalized.
+ *
+ * @param _q The quaternion to check.
+ * @param _epsilon The epsilon (squared distance to 1).
+ */
+static bool isNormalized(const geometry_msgs::Quaternion& _q, double _epsilon)
+{
+  const double sq_sum = std::pow(_q.x, 2) + std::pow(_q.y, 2) + std::pow(_q.z, 2) + std::pow(_q.w, 2);
+  return std::abs(sq_sum - 1.) <= _epsilon;
+}
+
 bool transformPose(const TF &tf,
                    const std::string &target_frame,
                    const ros::Duration &timeout,
                    const geometry_msgs::PoseStamped &in,
                    geometry_msgs::PoseStamped &out)
 {
+  // Note: The tf-library does not check if the input is well formed.
+  if (!isNormalized(in.pose.orientation, 0.01))
+  {
+    ROS_WARN_STREAM("The given quaterinon " << in.pose.orientation << " is not normalized");
+    return false;
+  }
+
   std::string error_msg;
 
 #ifdef USE_OLD_TF
