@@ -110,6 +110,7 @@ public:
     // cleanup threads used on executions
     // note: cannot call cancelAll, since our mutex is not recursive
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+
     typename ConcurrencyMap::iterator slot_it = concurrency_slots_.begin();
     for (; slot_it != concurrency_slots_.end(); ++slot_it)
     {
@@ -131,28 +132,31 @@ public:
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
+    if (goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
     {
       goal_handle.setCanceled();
     }
     else
     {
-      boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+      slot_map_mtx_.lock();
       typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
-      if (slot_it != concurrency_slots_.end() && slot_it->second.in_use) {
+      slot_map_mtx_.unlock();
+      if (slot_it != concurrency_slots_.end() && slot_it->second.in_use)
+      {
         // if there is already a plugin running on the same slot, cancel it
         slot_it->second.execution->cancel();
 
-        if (slot_it->second.thread_ptr->joinable()) {
+        if (slot_it->second.thread_ptr->joinable())
+        {
           slot_it->second.thread_ptr->join();
         }
       }
 
-      if(slot_it != concurrency_slots_.end())
+      if (slot_it != concurrency_slots_.end())
       {
         // cleanup previous execution; otherwise we will leak threads
-        threads_.remove_thread(concurrency_slots_[slot].thread_ptr);
-        delete concurrency_slots_[slot].thread_ptr;
+        threads_.remove_thread(slot_it->second.thread_ptr);
+        delete slot_it->second.thread_ptr;
       }
       else
       {
@@ -175,11 +179,12 @@ public:
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+    slot_map_mtx_.lock();
     typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
-    if (slot_it != concurrency_slots_.end())
+    slot_map_mtx_.unlock();
+    if (slot_it != concurrency_slots_.end() && slot_it->second.execution)
     {
-      concurrency_slots_[slot].execution->cancel();
+      slot_it->second.execution->cancel();
     }
   }
 
@@ -203,7 +208,7 @@ public:
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
 
     typename ConcurrencyMap::iterator iter;
-    for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
+    for (iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->reconfigure(config);
     }
@@ -213,8 +218,9 @@ public:
   {
     ROS_INFO_STREAM_NAMED(name_, "Cancel all goals for \"" << name_ << "\".");
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+
     typename ConcurrencyMap::iterator iter;
-    for(iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
+    for (iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
       iter->second.execution->cancel();
     }

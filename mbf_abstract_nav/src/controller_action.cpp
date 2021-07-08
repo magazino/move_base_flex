@@ -55,7 +55,7 @@ void ControllerAction::start(
     typename AbstractControllerExecution::Ptr execution_ptr
 )
 {
-  if(goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
+  if (goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::RECALLING)
   {
     goal_handle.setCanceled();
     return;
@@ -64,12 +64,14 @@ void ControllerAction::start(
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
   bool update_plan = false;
+
   slot_map_mtx_.lock();
   std::map<uint8_t, ConcurrencySlot>::iterator slot_it = concurrency_slots_.find(slot);
-  if(slot_it != concurrency_slots_.end() && slot_it->second.in_use)
+  slot_map_mtx_.unlock();
+  if (slot_it != concurrency_slots_.end() && slot_it->second.in_use)
   {
     boost::lock_guard<boost::mutex> goal_guard(goal_mtx_);
-    if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
+    if (slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
        goal_handle.getGoal()->controller.empty())
     {
       update_plan = true;
@@ -85,13 +87,13 @@ void ControllerAction::start(
       goal_pose_ = goal_handle.getGoal()->path.poses.back();
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
-      concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
-      concurrency_slots_[slot].goal_handle = goal_handle;
-      concurrency_slots_[slot].goal_handle.setAccepted();
+      slot_it->second.goal_handle.setCanceled(result, result.message);
+      slot_it->second.goal_handle = goal_handle;
+      slot_it->second.goal_handle.setAccepted();
     }
   }
-  slot_map_mtx_.unlock();
-  if(!update_plan)
+
+  if (!update_plan)
   {
     // Otherwise run parent version of this method
     AbstractActionBase::start(goal_handle, execution_ptr);
