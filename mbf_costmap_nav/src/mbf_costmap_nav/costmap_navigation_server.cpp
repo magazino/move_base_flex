@@ -499,7 +499,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   response.state = mbf_msgs::CheckPose::Response::FREE;
   if (footprint_cells.empty())
   {
-    // no cells within footprint polygon must mean that robot is partly outside of the map
+    // no cells within footprint polygon must mean that robot is at least partly outside of the map
     response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::OUTSIDE));
   }
   else
