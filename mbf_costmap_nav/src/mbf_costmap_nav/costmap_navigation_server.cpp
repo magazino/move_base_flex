@@ -637,7 +637,7 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
     if (cells_to_check.empty())
     {
       // if path_cells_only is true, this means that current path's pose is outside the map
-      // if not, no cells within footprint polygon means that robot is partly outside of the map
+      // if not, no cells within footprint polygon means that robot is at least partly outside of the map
       response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::OUTSIDE));
     }
     else
