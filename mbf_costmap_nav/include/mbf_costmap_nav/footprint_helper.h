@@ -62,11 +62,9 @@ public:
    * @param  fill If true: returns all cells in the footprint of the robot. If false: returns only the cells that make up the outline of the footprint.
    * @return The cells that make up either the outline or entire footprint of the robot depending on fill
    */
-  static std::vector<Cell> getFootprintCells(
-      double x, double y, double theta,
-      std::vector<geometry_msgs::Point> footprint_spec,
-      const costmap_2d::Costmap2D&,
-      bool fill);
+  static std::vector<Cell> getFootprintCells(double x, double y, double theta,
+                                             const std::vector<geometry_msgs::Point>& footprint_spec,
+                                             const costmap_2d::Costmap2D&, bool fill);
 
   /**
    * @brief  Use Bresenham's algorithm to trace a line between two points in a grid
