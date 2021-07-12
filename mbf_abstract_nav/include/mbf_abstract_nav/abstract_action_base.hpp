@@ -138,9 +138,7 @@ public:
     }
     else
     {
-      slot_map_mtx_.lock();
-      typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
-      slot_map_mtx_.unlock();
+      typename ConcurrencyMap::iterator slot_it = findSlot(slot);
       if (slot_it != concurrency_slots_.end() && slot_it->second.in_use)
       {
         // if there is already a plugin running on the same slot, cancel it
@@ -179,9 +177,7 @@ public:
   {
     uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
-    slot_map_mtx_.lock();
-    typename ConcurrencyMap::iterator slot_it = concurrency_slots_.find(slot);
-    slot_map_mtx_.unlock();
+    typename ConcurrencyMap::iterator slot_it = findSlot(slot);
     if (slot_it != concurrency_slots_.end() && slot_it->second.execution)
     {
       slot_it->second.execution->cancel();
@@ -210,7 +206,8 @@ public:
     typename ConcurrencyMap::iterator iter;
     for (iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
-      iter->second.execution->reconfigure(config);
+      if (iter->second.execution)
+        iter->second.execution->reconfigure(config);
     }
   }
 
@@ -222,7 +219,8 @@ public:
     typename ConcurrencyMap::iterator iter;
     for (iter = concurrency_slots_.begin(); iter != concurrency_slots_.end(); ++iter)
     {
-      iter->second.execution->cancel();
+      if (iter->second.execution)
+        iter->second.execution->cancel();
     }
     threads_.join_all();
   }
@@ -236,6 +234,11 @@ protected:
 
   boost::mutex slot_map_mtx_;
 
+  typename ConcurrencyMap::iterator findSlot(uint8_t slot)
+  {
+    boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
+    return concurrency_slots_.find(slot);
+  }
 };
 
 }
