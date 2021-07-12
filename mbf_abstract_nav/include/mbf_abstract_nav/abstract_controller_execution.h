@@ -119,10 +119,12 @@ namespace mbf_abstract_nav
       double action_angle_tolerance = 3.1415);
 
     /**
-     * @brief Cancel the controller execution.
-     * This calls the cancel method of the controller plugin, sets the cancel_ flag to true,
-     * and waits for the control loop to stop. Normally called upon aborting the navigation.
-     * @return true, if the control loop stops within a cycle time.
+     * @brief Cancel the controller execution. Normally called upon aborting the navigation.
+     * This calls the cancel method of the controller plugin. If the plugins returns true, it becomes
+     * responsible of stopping, and we will keep requesting velocity commands until it returns CANCELED.
+     * If it returns false (meaning cancel is not implemented, or that the controller defers handling it),
+     * MBF will set the cancel_ flag to true, and wait for the control loop to stop.
+     * @return true, if the controller handles the stooping, or the control loop stops within a cycle time.
      */
     virtual bool cancel();
 
