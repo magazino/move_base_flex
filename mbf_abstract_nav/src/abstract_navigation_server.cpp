@@ -72,6 +72,7 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
   // init cmd_vel publisher for the robot velocity
   vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 
+  private_nh_.setCallbackQueue(&callback_queue_);
   action_server_get_path_ptr_ = ActionServerGetPathPtr(
     new ActionServerGetPath(
       private_nh_,
@@ -104,6 +105,8 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
       boost::bind(&mbf_abstract_nav::AbstractNavigationServer::cancelActionMoveBase, this, _1),
       false));
 
+  spinner_.reset(new ros::AsyncSpinner(1, &callback_queue_));
+  spinner_->start();
   // XXX note that we don't start a dynamic reconfigure server, to avoid colliding with the one possibly created by
   // the base class. If none, it should call startDynamicReconfigureServer method to start the one defined here for
   // providing just the abstract server parameters

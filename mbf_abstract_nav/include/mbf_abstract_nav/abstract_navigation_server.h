@@ -49,6 +49,9 @@
 #include <actionlib/server/action_server.h>
 #include <dynamic_reconfigure/server.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <ros/spinner.h>
+#include <ros/callback_queue.h>
+
 
 #include <mbf_utility/navigation_utility.h>
 
@@ -352,6 +355,9 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     PlannerAction planner_action_;
     RecoveryAction recovery_action_;
     MoveBaseAction move_base_action_;
+
+    ros::CallbackQueue callback_queue_;
+    boost::shared_ptr<ros::AsyncSpinner> spinner_;
   };
 
 } /* namespace mbf_abstract_nav */
