@@ -74,7 +74,11 @@ int main(int argc, char **argv)
   tf2_ros::TransformListener tf_listener(*tf_listener_ptr);
 #endif
   costmap_nav_srv_ptr = boost::make_shared<mbf_costmap_nav::CostmapNavigationServer>(tf_listener_ptr);
-  ros::spin();
+
+  ros::AsyncSpinner spinner(4);
+  spinner.start();
+  ros::waitForShutdown();
+  spinner.stop();
 
   // explicitly call destructor here, otherwise costmap_nav_srv_ptr will be
   // destructed after tearing down internally allocated static variables
