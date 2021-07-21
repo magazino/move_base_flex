@@ -254,18 +254,24 @@ bool AbstractControllerExecution::reachedGoalCheck()
 
 bool AbstractControllerExecution::cancel()
 {
-  // request the controller to cancel; it returns false if cancel is not implemented or rejected by the plugin
-  if (!controller_->cancel())
+  // Request the controller to cancel; it will return true if it takes care of stopping, returning CANCELED on
+  // computeVelocityCmd when done. This allows for smooth, controlled stops.
+  // If false (meaning cancel is not implemented, or that the controller defers handling it) MBF will take care.
+  if (controller_->cancel())
   {
-    ROS_WARN_STREAM("Cancel controlling failed. Wait until the current control cycle finished!");
+    ROS_INFO("Controller will take care of stopping");
   }
-  // then wait for the control cycle to stop (should happen immediately if the controller cancel returned true)
-  cancel_ = true;
-  if (waitForStateUpdate(boost::chrono::milliseconds(500)) == boost::cv_status::timeout)
+  else
   {
-    // this situation should never happen; if it does, the action server will be unready for goals immediately sent
-    ROS_WARN_STREAM("Timeout while waiting for control cycle to stop; immediately sent goals can get stuck");
-    return false;
+    ROS_WARN("Controller defers handling cancel; force it and wait until the current control cycle finished");
+    cancel_ = true;
+    // wait for the control cycle to stop
+    if (waitForStateUpdate(boost::chrono::milliseconds(500)) == boost::cv_status::timeout)
+    {
+      // this situation should never happen; if it does, the action server will be unready for goals immediately sent
+      ROS_WARN_STREAM("Timeout while waiting for control cycle to stop; immediately sent goals can get stuck");
+      return false;
+    }
   }
   return true;
 }
@@ -381,6 +387,12 @@ void AbstractControllerExecution::run()
           vel_pub_.publish(cmd_vel_stamped.twist);
           last_valid_cmd_time_ = ros::Time::now();
           retries = 0;
+        }
+        else if (outcome_ == mbf_msgs::ExePathResult::CANCELED)
+        {
+          ROS_INFO_STREAM("Controller-handled cancel completed");
+          cancel_ = true;
+          continue;
         }
         else
         {
