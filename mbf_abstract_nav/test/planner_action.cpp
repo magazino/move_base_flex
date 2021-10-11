@@ -172,7 +172,10 @@ TEST_F(PlannerActionFixture, success)
   std::vector<geometry_msgs::PoseStamped> path(10);
   // set the frame such that we can skip tf
   for (size_t ii = 0; ii != path.size(); ++ii)
+  {
     path[ii].header.frame_id = global_frame;
+    path[ii].pose.orientation.w = 1;
+  }
 
   // goal with frames, so we can pass tf-lookup
   goal->goal.use_start_pose = true;

@@ -167,13 +167,21 @@ void FootprintHelper::getFillCells(std::vector<Cell>& footprint){
 }
 
 /**
+ * @brief Helper function which clears and returns the input.
+ */
+static const std::vector<Cell>& clearAndReturn(std::vector<Cell>& _cells)
+{
+  _cells.clear();
+  return _cells;
+}
+
+/**
  * get the cells of a footprint at a given position
  */
-std::vector<Cell> FootprintHelper::getFootprintCells(
-    double x, double y, double theta,
-    std::vector<geometry_msgs::Point> footprint_spec,
-    const costmap_2d::Costmap2D& costmap,
-    bool fill){
+std::vector<Cell> FootprintHelper::getFootprintCells(double x, double y, double theta,
+                                                     const std::vector<geometry_msgs::Point>& footprint_spec,
+                                                     const costmap_2d::Costmap2D& costmap, bool fill)
+{
   std::vector<Cell> footprint_cells;
 
   //if we have no footprint... do nothing
@@ -200,14 +208,14 @@ std::vector<Cell> FootprintHelper::getFootprintCells(
     new_x = x + (footprint_spec[i].x * cos_th - footprint_spec[i].y * sin_th);
     new_y = y + (footprint_spec[i].x * sin_th + footprint_spec[i].y * cos_th);
     if(!costmap.worldToMap(new_x, new_y, x0, y0)) {
-      return footprint_cells;
+      return clearAndReturn(footprint_cells);
     }
 
     //find the cell coordinates of the second segment point
     new_x = x + (footprint_spec[i + 1].x * cos_th - footprint_spec[i + 1].y * sin_th);
     new_y = y + (footprint_spec[i + 1].x * sin_th + footprint_spec[i + 1].y * cos_th);
     if (!costmap.worldToMap(new_x, new_y, x1, y1)) {
-      return footprint_cells;
+      return clearAndReturn(footprint_cells);
     }
 
     getLineCells(x0, x1, y0, y1, footprint_cells);
@@ -217,12 +225,12 @@ std::vector<Cell> FootprintHelper::getFootprintCells(
   new_x = x + (footprint_spec[last_index].x * cos_th - footprint_spec[last_index].y * sin_th);
   new_y = y + (footprint_spec[last_index].x * sin_th + footprint_spec[last_index].y * cos_th);
   if (!costmap.worldToMap(new_x, new_y, x0, y0)) {
-    return footprint_cells;
+    return clearAndReturn(footprint_cells);
   }
   new_x = x + (footprint_spec[0].x * cos_th - footprint_spec[0].y * sin_th);
   new_y = y + (footprint_spec[0].x * sin_th + footprint_spec[0].y * cos_th);
   if(!costmap.worldToMap(new_x, new_y, x1, y1)) {
-    return footprint_cells;
+    return clearAndReturn(footprint_cells);
   }
 
   getLineCells(x0, x1, y0, y1, footprint_cells);
