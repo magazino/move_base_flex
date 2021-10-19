@@ -58,6 +58,11 @@
 #include "mbf_costmap_nav/costmap_recovery_execution.h"
 #include "mbf_costmap_nav/costmap_wrapper.h"
 
+// Change this to std::unordered_map, once we move to C++11.
+#include <boost/unordered_map.hpp>
+#include <boost/shared_ptr.hpp>
+
+#include <string>
 
 namespace mbf_costmap_nav
 {
@@ -68,6 +73,9 @@ namespace mbf_costmap_nav
 
 
 typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> > DynamicReconfigureServerCostmapNav;
+
+/// @brief A mapping from a string to a map-ptr.
+typedef boost::unordered_map<std::string, CostmapWrapper::Ptr> StringToMap;
 
 /**
  * @brief The CostmapNavigationServer makes Move Base Flex backwards compatible to the old move_base. It combines the
@@ -249,6 +257,12 @@ private:
 
   //! Shared pointer to the common global costmap
   const CostmapWrapper::Ptr global_costmap_ptr_;
+
+  //! Maps planner names to the costmap ptr.
+  StringToMap planner_name_to_costmap_ptr_;
+
+  //! Maps the controller names to the costmap ptr.
+  StringToMap controller_name_to_costmap_ptr_;
 
   //! Service Server for the check_point_cost service
   ros::ServiceServer check_point_cost_srv_;

@@ -47,13 +47,111 @@
 #include <nav_core_wrapper/wrapper_global_planner.h>
 #include <nav_core_wrapper/wrapper_local_planner.h>
 #include <nav_core_wrapper/wrapper_recovery_behavior.h>
+#include <xmlrpcpp/XmlRpc.h>
 
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 
 namespace mbf_costmap_nav
 {
+/// @brief Returns a string element with the tag from value.
+/// @throw XmlRpc::XmlRpcException if the tag is missing.
+static std::string getStringElement(const XmlRpc::XmlRpcValue& value, const std::string& tag)
+{
+  // We have to check manually, since XmlRpc would just return tag if its
+  // missing...
+  if (!value.hasMember(tag))
+    throw XmlRpc::XmlRpcException(tag + " not found");
 
+  return static_cast<std::string>(value[tag]);
+}
+
+/**
+ * @brief Returns the mapping from 'names' to 'costmaps' for the defined resource.
+ *
+ * @param resource The name of the resource (e.g 'planners').
+ * @param nh The private node handle containing the given resource.
+ * @param global_costmap_ptr Ptr to the global costmap.
+ * @param local_costmap_ptr Ptr to the local costmap.
+ */
+StringToMap loadStringToMapsImpl(const std::string& resource, const ros::NodeHandle& nh,
+                                 const CostmapWrapper::Ptr& global_costmap_ptr,
+                                 const CostmapWrapper::Ptr& local_costmap_ptr)
+{
+  using namespace XmlRpc;
+  XmlRpcValue raw;
+
+  // Load the data from the param server
+  if (!nh.getParam(resource, raw))
+    throw std::runtime_error("No parameter " + resource);
+
+  // We expect that resource defines an array
+  if (raw.getType() != XmlRpcValue::TypeArray)
+    throw std::runtime_error(resource + " must be an XmlRpcValue::TypeArray");
+
+  StringToMap output, mapping;
+
+  // We support only 'local' or 'global' names for the costmap tag.
+  mapping["global"] = global_costmap_ptr;
+  mapping["local"] = local_costmap_ptr;
+
+  const int size = raw.size();
+  for (int ii = 0; ii != size; ++ii)
+  {
+    const XmlRpcValue& element = raw[ii];
+
+    // The element must be of the type struct.
+    if (element.getType() != XmlRpcValue::TypeStruct)
+      continue;
+
+    // Check if the tags name and costmap are defined and ignore the element if not.
+    if (!element.hasMember("name") || !element.hasMember("costmap"))
+      continue;
+
+    try
+    {
+      // Try to convert the tags to strings. If the elements cannot be
+      // converted, we will throw.
+      const std::string name = getStringElement(element, "name");
+      const std::string costmap = getStringElement(element, "costmap");
+
+      // If the costmap tag is not 'local' or 'global', we will throw.
+      output[name] = mapping.at(costmap);
+    }
+    catch (const XmlRpcException& ex)
+    {
+      ROS_ERROR_STREAM("Failed to read the tags 'name' and 'costmap': " << ex.getMessage());
+    }
+    catch (const std::out_of_range& _ex)
+    {
+      ROS_ERROR_STREAM("Unknown costmap name. It must be either 'local' or 'global'");
+    }
+  }
+  return output;
+}
+
+/**
+ * @brief Non-throwing version of loadStringToMapsImpl.
+ * @copydetails loadStringToMapsImpl
+ */
+StringToMap loadStringToMaps(const std::string& resource, const ros::NodeHandle& nh,
+                             const CostmapWrapper::Ptr& global_costmap_ptr,
+                             const CostmapWrapper::Ptr& local_costmap_ptr)
+{
+  try
+  {
+    return loadStringToMapsImpl(resource, nh, global_costmap_ptr, local_costmap_ptr);
+  }
+  catch (const XmlRpc::XmlRpcException& _ex)
+  {
+    ROS_ERROR_STREAM("Failed to load the mapping: " << _ex.getMessage());
+  }
+  catch (const std::exception& _ex)
+  {
+    ROS_ERROR_STREAM("Failed to load the mapping: " << _ex.what());
+  }
+  return StringToMap();
+}
 
 CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   AbstractNavigationServer(tf_listener_ptr),
@@ -81,6 +179,11 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
 
+  // Load the optional mapping from planner/controller name to the costmap.
+  planner_name_to_costmap_ptr_ = loadStringToMaps("planners", private_nh_, global_costmap_ptr_, local_costmap_ptr_);
+  controller_name_to_costmap_ptr_ =
+      loadStringToMaps("controllers", private_nh_, global_costmap_ptr_, local_costmap_ptr_);
+
   // initialize all plugins
   initializeServerComponents();
 
@@ -101,27 +204,36 @@ CostmapNavigationServer::~CostmapNavigationServer()
   action_server_move_base_ptr_.reset();
 }
 
+template <typename Key, typename Value>
+const Value& findWithDefault(const boost::unordered_map<Key, Value>& map, const Key& key, const Value& default_value)
+{
+  typedef boost::unordered_map<Key, Value> MapType;
+  typename MapType::const_iterator iter = map.find(key);
+  if (iter == map.end())
+    return default_value;
+  return iter->second;
+}
+
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractPlanner::Ptr &plugin_ptr)
 {
+  const CostmapWrapper::Ptr& costmap_ptr =
+      findWithDefault(planner_name_to_costmap_ptr_, plugin_name, global_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
       plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), tf_listener_ptr_,
-      global_costmap_ptr_, last_config_);
+      costmap_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
 {
+  const CostmapWrapper::Ptr& costmap_ptr =
+      findWithDefault(controller_name_to_costmap_ptr_, plugin_name, local_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
-      plugin_name,
-      boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr),
-      vel_pub_,
-      goal_pub_,
-      tf_listener_ptr_,
-      local_costmap_ptr_,
-      last_config_);
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), vel_pub_, goal_pub_,
+      tf_listener_ptr_, costmap_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
@@ -178,14 +290,15 @@ bool CostmapNavigationServer::initializePlannerPlugin(
       = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
   ROS_DEBUG_STREAM("Initialize planner \"" << name << "\".");
 
-  if (!global_costmap_ptr_)
+  const CostmapWrapper::Ptr& costmap_ptr = findWithDefault(planner_name_to_costmap_ptr_, name, global_costmap_ptr_);
+
+  if (!costmap_ptr)
   {
     ROS_FATAL_STREAM("The costmap pointer has not been initialized!");
     return false;
   }
 
-  costmap_planner_ptr->initialize(name, global_costmap_ptr_.get());
-  ROS_DEBUG("Planner plugin initialized.");
+  costmap_planner_ptr->initialize(name, costmap_ptr.get());
   return true;
 }
 
@@ -233,7 +346,9 @@ bool CostmapNavigationServer::initializeControllerPlugin(
     return false;
   }
 
-  if (!local_costmap_ptr_)
+  const CostmapWrapper::Ptr& costmap_ptr = findWithDefault(controller_name_to_costmap_ptr_, name, local_costmap_ptr_);
+
+  if (!costmap_ptr)
   {
     ROS_FATAL_STREAM("The costmap pointer has not been initialized!");
     return false;
@@ -241,7 +356,7 @@ bool CostmapNavigationServer::initializeControllerPlugin(
 
   mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr
       = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
-  costmap_controller_ptr->initialize(name, tf_listener_ptr_.get(), local_costmap_ptr_.get());
+  costmap_controller_ptr->initialize(name, tf_listener_ptr_.get(), costmap_ptr.get());
   ROS_DEBUG_STREAM("Controller plugin \"" << name << "\" initialized.");
   return true;
 }
