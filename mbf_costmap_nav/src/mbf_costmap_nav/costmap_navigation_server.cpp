@@ -54,46 +54,46 @@
 
 namespace mbf_costmap_nav
 {
-/// @brief Returns a string element with the tag _tag from _v.
+/// @brief Returns a string element with the tag from value.
 /// @throw XmlRpc::XmlRpcException if the tag is missing.
-static std::string getStringElement(const XmlRpc::XmlRpcValue& _v, const std::string& _tag)
+static std::string getStringElement(const XmlRpc::XmlRpcValue& value, const std::string& tag)
 {
-  // We have to check manually, since XmlRpc would just return _tag if its
+  // We have to check manually, since XmlRpc would just return tag if its
   // missing...
-  if (!_v.hasMember(_tag))
-    throw XmlRpc::XmlRpcException(_tag + " not found");
+  if (!value.hasMember(tag))
+    throw XmlRpc::XmlRpcException(tag + " not found");
 
-  return static_cast<std::string>(_v[_tag]);
+  return static_cast<std::string>(value[tag]);
 }
 
 /**
  * @brief Returns the mapping from 'names' to 'costmaps' for the defined resource.
  *
- * @param _resource The name of the resource (e.g 'planners').
- * @param _nh The private node handle containing the given resource.
- * @param _global_costmap_ptr Ptr to the global costmap.
- * @param _local_costmap_ptr Ptr to the local costmap.
+ * @param resource The name of the resource (e.g 'planners').
+ * @param nh The private node handle containing the given resource.
+ * @param global_costmap_ptr Ptr to the global costmap.
+ * @param local_costmap_ptr Ptr to the local costmap.
  */
-StringToMap loadStringToMapsImpl(const std::string& _resource, const ros::NodeHandle& _nh,
-                                 const CostmapWrapper::Ptr& _global_costmap_ptr,
-                                 const CostmapWrapper::Ptr& _local_costmap_ptr)
+StringToMap loadStringToMapsImpl(const std::string& resource, const ros::NodeHandle& nh,
+                                 const CostmapWrapper::Ptr& global_costmap_ptr,
+                                 const CostmapWrapper::Ptr& local_costmap_ptr)
 {
   using namespace XmlRpc;
   XmlRpcValue raw;
 
   // Load the data from the param server
-  if (!_nh.getParam(_resource, raw))
-    throw std::runtime_error("No parameter " + _resource);
+  if (!nh.getParam(resource, raw))
+    throw std::runtime_error("No parameter " + resource);
 
-  // We expect that _resource defines an array
+  // We expect that resource defines an array
   if (raw.getType() != XmlRpcValue::TypeArray)
-    throw std::runtime_error(_resource + " must be an XmlRpcValue::TypeArray");
+    throw std::runtime_error(resource + " must be an XmlRpcValue::TypeArray");
 
   StringToMap output, mapping;
 
   // We support only 'local' or 'global' names for the costmap tag.
-  mapping["global"] = _global_costmap_ptr;
-  mapping["local"] = _local_costmap_ptr;
+  mapping["global"] = global_costmap_ptr;
+  mapping["local"] = local_costmap_ptr;
 
   const int size = raw.size();
   for (int ii = 0; ii != size; ++ii)
@@ -134,12 +134,13 @@ StringToMap loadStringToMapsImpl(const std::string& _resource, const ros::NodeHa
  * @brief Non-throwing version of loadStringToMapsImpl.
  * @copydetails loadStringToMapsImpl
  */
-StringToMap loadStringToMaps(const std::string& _resource, const ros::NodeHandle& _nh,
-                             const CostmapWrapper::Ptr& _global, const CostmapWrapper::Ptr& _local)
+StringToMap loadStringToMaps(const std::string& resource, const ros::NodeHandle& nh,
+                             const CostmapWrapper::Ptr& global_costmap_ptr,
+                             const CostmapWrapper::Ptr& local_costmap_ptr)
 {
   try
   {
-    return loadStringToMapsImpl(_resource, _nh, _global, _local);
+    return loadStringToMapsImpl(resource, nh, global_costmap_ptr, local_costmap_ptr);
   }
   catch (const XmlRpc::XmlRpcException& _ex)
   {
@@ -204,12 +205,12 @@ CostmapNavigationServer::~CostmapNavigationServer()
 }
 
 template <typename Key, typename Value>
-const Value& findWithDefault(const boost::unordered_map<Key, Value>& _map, const Key& _key, const Value& _default)
+const Value& findWithDefault(const boost::unordered_map<Key, Value>& map, const Key& key, const Value& default_value)
 {
   typedef boost::unordered_map<Key, Value> MapType;
-  typename MapType::const_iterator iter = _map.find(_key);
-  if (iter == _map.end())
-    return _default;
+  typename MapType::const_iterator iter = map.find(key);
+  if (iter == map.end())
+    return default_value;
   return iter->second;
 }
 
