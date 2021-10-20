@@ -84,7 +84,6 @@ namespace mbf_abstract_nav
      * @param planner_ptr Pointer to the planner
      * @param config Initial configuration for this execution
      */
-     [[deprecated]]
     AbstractPlannerExecution(const std::string& name, const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
                              const MoveBaseFlexConfig& config);
 
