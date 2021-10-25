@@ -44,6 +44,27 @@ namespace mbf_abstract_nav
 {
 AbstractPlannerExecution::AbstractPlannerExecution(const std::string& name,
                                                    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                                                   const MoveBaseFlexConfig& config)
+  : AbstractExecutionBase(name)
+  , planner_(planner_ptr)
+  , state_(INITIALIZED)
+  , max_retries_(0)
+  , planning_(false)
+  , has_new_start_(false)
+  , has_new_goal_(false)
+{
+  ros::NodeHandle private_nh("~");
+
+  // non-dynamically reconfigurable parameters
+  private_nh.param("robot_frame", robot_frame_, std::string("base_footprint"));
+  private_nh.param("map_frame", global_frame_, std::string("map"));
+
+  // dynamically reconfigurable parameters
+  reconfigure(config);
+}
+
+AbstractPlannerExecution::AbstractPlannerExecution(const std::string& name,
+                                                   const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
                                                    const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config)
   : AbstractExecutionBase(name)
   , planner_(planner_ptr)
