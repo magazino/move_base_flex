@@ -2,6 +2,26 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixes planner execution API compatibility, see #279 and https://github.com/uos/mesh_navigation/issues/18
+* return empty footprint if partly outside of the map, see #272
+* Allow the controller to handle cancel if properly implemented, see #274
+* Do not reset cancel\_, as that will invalidate ongoing canceling
+* Run replanning in its own thread, fixes #223, see #267
+* enable max retries logic for controller execution test, see #264
+* fix controller termination, see #263
+* abstract controller execution unit tests, see #261
+* planner action unit tests, see #244
+* Fix number of retries check, see #262
+* transform pose to global frame before calling planner in costmap planner execution, see #256
+* Use ROS rates for sleeping to support simulation time, see #257
+* wait for timeout in abstract eecution base, since cancel call could be missed, see #255
+* add unit test for the abstract execution base, see #249
+* fix race-condition in the test, see #254
+* AbstractPlannerExecution refactoring and unit tests, see #237
+* add documentation, missing includes, joinable check, and fixup and test the abstract_action_base
+
 0.3.4 (2020-12-02)
 ------------------
 

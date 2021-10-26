@@ -2,9 +2,16 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* make the costmaps used for planning and controlling configurable, see #278
+* return empty footprint if partly outside of the map, see #272
+* add tf_transform_ptr to the abstract planner execution, see #256
+* transform pose to global frame before calling planner in costmap planner execution, see #256
+
 0.3.4 (2020-12-02)
 ------------------
-* fix blind driving (`#243 <https://github.com/magazino/move_base_flex/issues/243>`_)
+* fix blind driving, see #243
 
 0.3.3 (2020-11-05)
 ------------------
