@@ -2,8 +2,8 @@
 Changelog for package mbf_costmap_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2021-10-26)
+------------------
 * make the costmaps used for planning and controlling configurable, see #278
 * return empty footprint if partly outside of the map, see #272
 * add tf_transform_ptr to the abstract planner execution, see #256

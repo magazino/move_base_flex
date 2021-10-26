@@ -2,8 +2,8 @@
 Changelog for package mbf_utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2021-10-26)
+------------------
 * return empty footprint if partly outside of the map, see #272
 
 0.3.4 (2020-12-02)

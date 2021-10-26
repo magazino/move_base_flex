@@ -2,8 +2,8 @@
 Changelog for package mbf_abstract_nav
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2021-10-26)
+------------------
 * Fixes planner execution API compatibility, see #279 and https://github.com/uos/mesh_navigation/issues/18
 * return empty footprint if partly outside of the map, see #272
 * Allow the controller to handle cancel if properly implemented, see #274
