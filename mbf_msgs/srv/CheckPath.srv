@@ -9,8 +9,10 @@ float32                    unknown_cost_mult # cost multiplier for cells marked 
 uint8                      costmap           # costmap in which to check the pose
 uint8                      return_on         # abort check on finding a pose with this state or worse (zero is ignored)
 uint8                      skip_poses        # skip this number of poses between checks, to speedup processing
+bool                       use_padded_fp     # include footprint padding when checking cost; note that safety distance
+                                             # will be measured from the padded footprint
 bool                       path_cells_only   # check only cells directly traversed by the path, ignoring robot footprint
-                                             # (if true, safety_dist is ignored)
+                                             # (if true, both safety_dist and use_padded_fp are ignored)
 ---
 uint8                      FREE      =  0    # path is completely in traversable space
 uint8                      INSCRIBED =  1    # path is partially in inscribed space

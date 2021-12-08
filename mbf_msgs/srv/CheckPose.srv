@@ -8,6 +8,8 @@ float32                    inscrib_cost_mult # cost multiplier for cells marked 
 float32                    unknown_cost_mult # cost multiplier for cells marked as unknown space (zero is ignored)
 uint8                      costmap           # costmap in which to check the pose
 bool                       current_pose      # check current robot pose instead (ignores pose field)
+bool                       use_padded_fp     # include footprint padding when checking cost; note that safety distance
+                                             # will be measured from the padded footprint
 ---
 uint8                      FREE      =  0    # robot is completely in traversable space
 uint8                      INSCRIBED =  1    # robot is partially in inscribed space
