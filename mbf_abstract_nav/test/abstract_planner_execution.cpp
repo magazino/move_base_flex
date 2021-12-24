@@ -23,6 +23,7 @@ using mbf_abstract_nav::AbstractPlannerExecution;
 using mbf_abstract_nav::MoveBaseFlexConfig;
 using testing::_;
 using testing::AtLeast;
+using testing::InSequence;
 using testing::Return;
 using testing::Test;
 
@@ -125,8 +126,9 @@ TEST_F(AbstractPlannerExecutionFixture, success_after_retries)
 
   // setup the expectations
   AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
-  auto& exp = EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries).WillRepeatedly(Return(11));
-  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1).After(exp).WillOnce(Return(1));
+  InSequence seq;
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries).WillRepeatedly(Return(11));
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1).WillOnce(Return(1));
 
   // call and wait
   ASSERT_TRUE(start(pose, pose, 0));
@@ -238,7 +240,8 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded_waiting_for_planner_re
 
 TEST_F(AbstractPlannerExecutionFixture, patience_exceeded_infinite_retries)
 {
-  // if negative retries are configured, we expect makePlan to repeatedly get called, and PAT_EXCEEDED to be returned once the patience is exceeded
+  // if negative retries are configured, we expect makePlan to repeatedly get called, and PAT_EXCEEDED to be returned
+  // once the patience is exceeded
 
   // configure the class
   MoveBaseFlexConfig config;
