@@ -344,7 +344,7 @@ void AbstractPlannerExecution::run()
                                                 << (cancel_ ? "; planner canceled!" : ""));
           setState(PAT_EXCEEDED, true);
         }
-        else if (max_retries_ == 0 && patience_.isZero())
+        else if (max_retries_ == 0)
         {
           ROS_INFO_STREAM("Planning could not find a plan!");
           setState(NO_PLAN_FOUND, true);

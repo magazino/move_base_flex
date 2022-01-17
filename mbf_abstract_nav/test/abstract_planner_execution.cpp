@@ -22,6 +22,8 @@ struct AbstractPlannerMock : public AbstractPlanner
 using mbf_abstract_nav::AbstractPlannerExecution;
 using mbf_abstract_nav::MoveBaseFlexConfig;
 using testing::_;
+using testing::AtLeast;
+using testing::InSequence;
 using testing::Return;
 using testing::Test;
 
@@ -89,7 +91,7 @@ TEST_F(AbstractPlannerExecutionFixture, cancel)
 
 TEST_F(AbstractPlannerExecutionFixture, max_retries)
 {
-  // we expect that if the planner fails for max_retries times, that
+  // we expect that if the planner fails for 1 + max_retries times, that
   // the class returns MAX_RETRIES
 
   // configure the class
@@ -101,7 +103,7 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
   // setup the expectations
   AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
 
-  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries + 1).WillRepeatedly(Return(11));
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1 + config.planner_max_retries).WillRepeatedly(Return(11));
 
   // call and wait
   ASSERT_TRUE(start(pose, pose, 0));
@@ -111,7 +113,32 @@ TEST_F(AbstractPlannerExecutionFixture, max_retries)
   ASSERT_EQ(getState(), MAX_RETRIES);
 }
 
-TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
+TEST_F(AbstractPlannerExecutionFixture, success_after_retries)
+{
+  // we expect that if the planner fails for 1 + (max_retries - 1) times and then succeeds, that
+  // the class returns FOUND_PLAN
+
+  // configure the class
+  MoveBaseFlexConfig config;
+  config.planner_max_retries = 5;
+  config.planner_patience = 100;  // set a high patience
+  reconfigure(config);
+
+  // setup the expectations
+  AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
+  InSequence seq;
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(config.planner_max_retries).WillRepeatedly(Return(11));
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1).WillOnce(Return(1));
+
+  // call and wait
+  ASSERT_TRUE(start(pose, pose, 0));
+
+  // wait for the patience to elapse and check result
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
+  ASSERT_EQ(getState(), FOUND_PLAN);
+}
+
+TEST_F(AbstractPlannerExecutionFixture, no_plan_found_zero_patience)
 {
   // if no retries and no patience are configured, we return NO_PLAN_FOUND on
   // planner failure
@@ -120,6 +147,29 @@ TEST_F(AbstractPlannerExecutionFixture, no_plan_found)
   MoveBaseFlexConfig config;
   config.planner_max_retries = 0;
   config.planner_patience = 0;
+  reconfigure(config);
+
+  // setup the expectations
+  AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(1).WillOnce(Return(11));
+
+  // call and wait
+  ASSERT_TRUE(start(pose, pose, 0));
+
+  // check result
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
+  ASSERT_EQ(getState(), NO_PLAN_FOUND);
+}
+
+TEST_F(AbstractPlannerExecutionFixture, no_plan_found_non_zero_patience)
+{
+  // if no retries and a large patience are configured, we return NO_PLAN_FOUND on
+  // planner failure
+
+  // configure the class
+  MoveBaseFlexConfig config;
+  config.planner_max_retries = 0;
+  config.planner_patience = 1;
   reconfigure(config);
 
   // setup the expectations
@@ -161,10 +211,9 @@ TEST_F(AbstractPlannerExecutionFixture, sumDist)
   ASSERT_EQ(getCost(), 3);
 }
 
-TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
+TEST_F(AbstractPlannerExecutionFixture, patience_exceeded_waiting_for_planner_response)
 {
-  // if no retries and no patience are configured, we return NO_PLAN_FOUND on
-  // planner failure
+  // if makePlan does not return before the patience times out, we return PAT_EXCEEDED
 
   // configure the class
   MoveBaseFlexConfig config;
@@ -185,7 +234,30 @@ TEST_F(AbstractPlannerExecutionFixture, patience_exceeded)
   cv.notify_all();
 
   // check result
-  waitForStateUpdate(boost::chrono::seconds(1));
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
+  ASSERT_EQ(getState(), PAT_EXCEEDED);
+}
+
+TEST_F(AbstractPlannerExecutionFixture, patience_exceeded_infinite_retries)
+{
+  // if negative retries are configured, we expect makePlan to repeatedly get called, and PAT_EXCEEDED to be returned
+  // once the patience is exceeded
+
+  // configure the class
+  MoveBaseFlexConfig config;
+  config.planner_max_retries = -1;
+  config.planner_patience = 0.5;
+  reconfigure(config);
+
+  // setup the expectations
+  AbstractPlannerMock& mock = dynamic_cast<AbstractPlannerMock&>(*planner_);
+  EXPECT_CALL(mock, makePlan(_, _, _, _, _, _)).Times(AtLeast(10)).WillRepeatedly(Return(11));
+
+  // call and wait
+  ASSERT_TRUE(start(pose, pose, 0));
+
+  // wait for the patience to elapse and check result
+  ASSERT_EQ(waitForStateUpdate(boost::chrono::seconds(1)), boost::cv_status::no_timeout);
   ASSERT_EQ(getState(), PAT_EXCEEDED);
 }
 
