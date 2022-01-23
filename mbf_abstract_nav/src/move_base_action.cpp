@@ -185,7 +185,7 @@ void MoveBaseAction::actionExePathFeedback(
   robot_pose_ = feedback->current_pose;
 
   // we create a navigation-level oscillation detection using exe_path action's feedback,
-  // as the later doesn't handle oscillations created by quickly failing repeated plans
+  // as the latter doesn't handle oscillations created by quickly failing repeated plans
 
   // if oscillation detection is enabled by oscillation_timeout != 0
   if (!oscillation_timeout_.isZero())
@@ -271,7 +271,11 @@ void MoveBaseAction::actionGetPathDone(
       break;
 
     case actionlib::SimpleClientGoalState::ABORTED:
-
+      if (!action_client_exe_path_.getState().isDone())
+      {
+        ROS_WARN_STREAM_NAMED("move_base", "Cancel previous goal, as planning to the new one has failed");
+        cancel();
+      }
       if (attemptRecovery())
       {
         recovery_trigger_ = GET_PATH;

@@ -314,7 +314,7 @@ void AbstractControllerExecution::run()
       {
         // the specific implementation must have detected a risk situation; at this abstract level, we
         // cannot tell what the problem is, but anyway we command the robot to stop to avoid crashes
-        publishZeroVelocity();   // note that we still feedback command calculated by the plugin
+        publishZeroVelocity();   // note that we still feedback the command calculated by the plugin
         loop_rate_.sleep();
       }
 
