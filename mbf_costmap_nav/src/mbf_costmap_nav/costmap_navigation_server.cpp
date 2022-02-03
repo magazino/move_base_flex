@@ -601,11 +601,12 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   double y = pose.pose.position.y;
   double yaw = tf::getYaw(pose.pose.orientation);
 
-  // ensure costmap is active so cost reflects latest sensor readings
+  // ensure costmap is active so cost reflects the latest sensor readings
   costmap->checkActivate();
 
   // pad raw footprint to the requested safety distance; note that we discard footprint_padding parameter effect
-  std::vector<geometry_msgs::Point> footprint = costmap->getUnpaddedRobotFootprint();
+  std::vector<geometry_msgs::Point> footprint =
+      request.use_padded_fp ? costmap->getRobotFootprint() : costmap->getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, request.safety_dist);
 
   // use footprint helper to get all the cells totally or partially within footprint polygon
@@ -614,7 +615,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   response.state = mbf_msgs::CheckPose::Response::FREE;
   if (footprint_cells.empty())
   {
-    // no cells within footprint polygon must mean that robot is at least partly outside of the map
+    // no cells within footprint polygon must mean that robot is at least partly outside the map
     response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPose::Response::OUTSIDE));
   }
   else
@@ -699,7 +700,7 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
       return false;
   }
 
-  // ensure costmap is active so cost reflects latest sensor readings
+  // ensure costmap is active so cost reflects the latest sensor readings
   costmap->checkActivate();
 
   // get target pose or current robot pose as x, y, yaw coordinates
@@ -710,7 +711,7 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
   {
     // unless we want to check just the cells directly traversed by the path, pad raw footprint
     // to the requested safety distance; note that we discard footprint_padding parameter effect
-    footprint = costmap->getUnpaddedRobotFootprint();
+    footprint = request.use_padded_fp ? costmap->getRobotFootprint() : costmap->getUnpaddedRobotFootprint();
     costmap_2d::padFootprint(footprint, request.safety_dist);
   }
 
@@ -752,7 +753,7 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
     if (cells_to_check.empty())
     {
       // if path_cells_only is true, this means that current path's pose is outside the map
-      // if not, no cells within footprint polygon means that robot is at least partly outside of the map
+      // if not, no cells within footprint polygon means that robot is at least partly outside the map
       response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::OUTSIDE));
     }
     else
