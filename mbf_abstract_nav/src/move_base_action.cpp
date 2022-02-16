@@ -526,6 +526,7 @@ bool MoveBaseAction::replanningActive() const
 void MoveBaseAction::replanningThread()
 {
   ros::Duration update_period(0.005);
+  ros::Rate update_rate(200);
   ros::Time last_replan_time(0.0);
 
   while (ros::ok())
@@ -553,16 +554,13 @@ void MoveBaseAction::replanningThread()
       }
       // else keep waiting for planning to complete (we already waited update_period in waitForResult)
     }
-    else if (!replanningActive())
-    {
-      update_period.sleep();
-    }
-    else if (ros::Time::now() - last_replan_time >= replanning_period_)
+    else if (replanningActive() && ros::Time::now() - last_replan_time >= replanning_period_)
     {
       ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
       action_client_get_path_.sendGoal(get_path_goal_);
       last_replan_time = ros::Time::now();
     }
+    update_rate.sleep();
   }
 }
 
