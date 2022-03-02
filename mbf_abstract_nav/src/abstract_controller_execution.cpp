@@ -411,8 +411,8 @@ void AbstractControllerExecution::run()
           else
           {
             setState(NO_LOCAL_CMD); // useful for server feedback
-            // we keep on moving if we have retries left or if the user has granted us some patience.
-            moving_ = max_retries_ || !patience_.isZero();
+            // keep trying if we have > 0 or -1 (infinite) retries
+            moving_ = max_retries_;
           }
           // could not compute a valid velocity command -> stop moving the robot
           publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
