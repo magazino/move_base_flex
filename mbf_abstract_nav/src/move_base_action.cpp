@@ -560,7 +560,7 @@ void MoveBaseAction::replanningThread()
     else if (ros::Time::now() - last_replan_time >= replanning_period_)
     {
       ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
-      action_client_get_path_.sendGoal(get_path_goal_);
+      action_client_get_path_.sendGoal(get_path_goal_, boost::bind(&MoveBaseAction::actionGetPathDone, this, _1, _2));
       last_replan_time = ros::Time::now();
     }
   }
