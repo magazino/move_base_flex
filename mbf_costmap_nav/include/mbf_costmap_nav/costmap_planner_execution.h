@@ -64,12 +64,14 @@ public:
    * @brief Constructor.
    * @param planner_name Name of the planner to use.
    * @param planner_ptr Shared pointer to the plugin to use.
-   * @param tf_listener_ptr Shared pointer to the tf-listener.
+   * @param robot_info Current robot state
    * @param costmap_ptr Shared pointer to the global costmap.
    * @param config Current server configuration (dynamic).
    */
-  CostmapPlannerExecution(const std::string& planner_name, const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
-                          const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+  CostmapPlannerExecution(const std::string& planner_name,
+                          const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
+                          const mbf_utility::RobotInformation& robot_info,
+                          const CostmapWrapper::Ptr& costmap_ptr,
                           const MoveBaseFlexConfig& config);
 
   /**

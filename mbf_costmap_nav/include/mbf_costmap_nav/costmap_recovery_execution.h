@@ -67,7 +67,7 @@ public:
    * @brief Constructor.
    * @param recovery_name Name of the recovery behavior to run.
    * @param recovery_ptr Shared pointer to the plugin to use.
-   * @param tf_listener_ptr Shared pointer to a common tf listener
+   * @param robot_info Current robot state
    * @param global_costmap Shared pointer to the global costmap.
    * @param local_costmap Shared pointer to the local costmap.
    * @param config Current server configuration (dynamic).
@@ -75,7 +75,7 @@ public:
   CostmapRecoveryExecution(
       const std::string &recovery_name,
       const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-      const TFPtr &tf_listener_ptr,
+      const mbf_utility::RobotInformation &robot_info,
       const CostmapWrapper::Ptr &global_costmap,
       const CostmapWrapper::Ptr &local_costmap,
       const MoveBaseFlexConfig &config);

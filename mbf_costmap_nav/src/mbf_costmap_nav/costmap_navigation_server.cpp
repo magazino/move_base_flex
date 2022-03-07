@@ -221,7 +221,7 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlan
   const CostmapWrapper::Ptr& costmap_ptr =
       findWithDefault(planner_name_to_costmap_ptr_, plugin_name, global_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
-      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), tf_listener_ptr_,
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), robot_info_,
       costmap_ptr, last_config_);
 }
 
@@ -232,8 +232,8 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
   const CostmapWrapper::Ptr& costmap_ptr =
       findWithDefault(controller_name_to_costmap_ptr_, plugin_name, local_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
-      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), vel_pub_, goal_pub_,
-      tf_listener_ptr_, costmap_ptr, last_config_);
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), robot_info_,
+      vel_pub_, goal_pub_, costmap_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
@@ -241,12 +241,8 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRec
     const mbf_abstract_core::AbstractRecovery::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
-      plugin_name,
-      boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr),
-      tf_listener_ptr_,
-      global_costmap_ptr_,
-      local_costmap_ptr_,
-      last_config_);
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr), robot_info_,
+      global_costmap_ptr_, local_costmap_ptr_, last_config_);
 }
 
 mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string &planner_type)

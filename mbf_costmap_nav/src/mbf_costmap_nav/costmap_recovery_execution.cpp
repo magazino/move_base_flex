@@ -47,11 +47,11 @@ namespace mbf_costmap_nav
 CostmapRecoveryExecution::CostmapRecoveryExecution(
     const std::string &recovery_name,
     const mbf_costmap_core::CostmapRecovery::Ptr &recovery_ptr,
-    const TFPtr &tf_listener_ptr,
+    const mbf_utility::RobotInformation &robot_info,
     const CostmapWrapper::Ptr &global_costmap,
     const CostmapWrapper::Ptr &local_costmap,
     const MoveBaseFlexConfig &config)
-      : AbstractRecoveryExecution(recovery_name, recovery_ptr, tf_listener_ptr, toAbstract(config)),
+      : AbstractRecoveryExecution(recovery_name, recovery_ptr, robot_info, toAbstract(config)),
         global_costmap_(global_costmap), local_costmap_(local_costmap)
 {
 }

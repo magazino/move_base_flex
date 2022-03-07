@@ -50,13 +50,13 @@ const double AbstractControllerExecution::DEFAULT_CONTROLLER_FREQUENCY = 100.0; 
 AbstractControllerExecution::AbstractControllerExecution(
     const std::string &name,
     const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
+    const mbf_utility::RobotInformation &robot_info,
     const ros::Publisher &vel_pub,
     const ros::Publisher &goal_pub,
-    const TFPtr &tf_listener_ptr,
     const MoveBaseFlexConfig &config) :
   AbstractExecutionBase(name),
-    controller_(controller_ptr), tf_listener_ptr(tf_listener_ptr), state_(INITIALIZED),
-    moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
+    controller_(controller_ptr), robot_info_(const_cast<mbf_utility::RobotInformation&>(robot_info)),
+    state_(INITIALIZED), moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
     loop_rate_(DEFAULT_CONTROLLER_FREQUENCY)
 {
   ros::NodeHandle nh;
@@ -163,22 +163,6 @@ std::vector<geometry_msgs::PoseStamped> AbstractControllerExecution::getNewPlan(
   new_plan_ = false;
   return plan_;
 }
-
-
-bool AbstractControllerExecution::computeRobotPose()
-{
-  if (!mbf_utility::getRobotPose(*tf_listener_ptr, robot_frame_, global_frame_,
-                                 ros::Duration(tf_timeout_), robot_pose_))
-  {
-    ROS_ERROR_STREAM("Could not get the robot pose in the global frame. - robot frame: \""
-                         << robot_frame_ << "\"   global frame: \"" << global_frame_);
-    message_ = "Could not get the robot pose";
-    outcome_ = mbf_msgs::ExePathResult::TF_ERROR;
-    return false;
-  }
-  return true;
-}
-
 
 uint32_t AbstractControllerExecution::computeVelocityCmd(const geometry_msgs::PoseStamped &robot_pose,
                                                          const geometry_msgs::TwistStamped &robot_velocity,
@@ -344,8 +328,10 @@ void AbstractControllerExecution::run()
       }
 
       // compute robot pose and store it in robot_pose_
-      if (!computeRobotPose())
+      if (!robot_info_.getRobotPose(robot_pose_))
       {
+        message_ = "Could not get the robot pose";
+        outcome_ = mbf_msgs::ExePathResult::TF_ERROR;
         publishZeroVelocity();
         setState(INTERNAL_ERROR);
         moving_ = false;
@@ -378,7 +364,8 @@ void AbstractControllerExecution::run()
 
         // call plugin to compute the next velocity command
         geometry_msgs::TwistStamped cmd_vel_stamped;
-        geometry_msgs::TwistStamped robot_velocity;   // TODO pass current velocity to the plugin!
+        geometry_msgs::TwistStamped robot_velocity;
+        robot_info_.getRobotVelocity(robot_velocity);
         outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
 
         if (outcome_ < 10)

@@ -45,13 +45,12 @@ namespace mbf_costmap_nav
 CostmapControllerExecution::CostmapControllerExecution(
     const std::string &controller_name,
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
+    const mbf_utility::RobotInformation &robot_info,
     const ros::Publisher &vel_pub,
     const ros::Publisher &goal_pub,
-    const TFPtr &tf_listener_ptr,
     const CostmapWrapper::Ptr &costmap_ptr,
     const MoveBaseFlexConfig &config)
-      : AbstractControllerExecution(controller_name, controller_ptr, vel_pub, goal_pub,
-                                    tf_listener_ptr, toAbstract(config)),
+      : AbstractControllerExecution(controller_name, controller_ptr, robot_info, vel_pub, goal_pub, toAbstract(config)),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
