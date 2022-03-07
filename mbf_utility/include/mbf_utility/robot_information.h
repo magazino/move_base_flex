@@ -39,6 +39,7 @@
 #ifndef MBF_UTILITY__ROBOT_INFORMATION_H_
 #define MBF_UTILITY__ROBOT_INFORMATION_H_
 
+#include <base_local_planner/odometry_helper_ros.h>
 #include <boost/shared_ptr.hpp>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -69,7 +70,20 @@ class RobotInformation
    */
   bool getRobotPose(geometry_msgs::PoseStamped &robot_pose) const;
 
-  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity, ros::Duration look_back_duration) const;
+  /**
+   * @brief Returns the current robot velocity, as provided by the odometry helper.
+   * @param robot_velocity Reference to the robot_velocity message object to be filled.
+   * @return true, if the current robot velocity could be obtained, false otherwise.
+   */
+  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity);
+
+  /**
+   * @brief Check whether the robot is stopped or not
+   * @param rot_stopped_velocity The rotational velocity below which the robot is considered stopped
+   * @param trans_stopped_velocity The translational velocity below which the robot is considered stopped
+   * @return true if the robot is stopped, false otherwise
+   */
+  bool isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity);
 
   const std::string& getGlobalFrame() const;
 
@@ -87,6 +101,8 @@ class RobotInformation
   const std::string &robot_frame_;
 
   const ros::Duration &tf_timeout_;
+
+  base_local_planner::OdometryHelperRos odom_helper_;
 
 };
 

@@ -36,6 +36,8 @@
  *
  */
 
+#include <base_local_planner/goal_functions.h>
+
 #include "mbf_utility/robot_information.h"
 #include "mbf_utility/navigation_utility.h"
 
@@ -46,7 +48,8 @@ RobotInformation::RobotInformation(TF &tf_listener,
                                    const std::string &global_frame,
                                    const std::string &robot_frame,
                                    const ros::Duration &tf_timeout)
- : tf_listener_(tf_listener), global_frame_(global_frame), robot_frame_(robot_frame), tf_timeout_(tf_timeout)
+ : tf_listener_(tf_listener), global_frame_(global_frame), robot_frame_(robot_frame), tf_timeout_(tf_timeout),
+   odom_helper_("odom")
 {
 
 }
@@ -65,10 +68,20 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
   return true;
 }
 
-bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity, ros::Duration look_back_duration) const
+bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity)
 {
-  // TODO implement and filter tf data to compute velocity.
-  return false;
+  nav_msgs::Odometry base_odom;
+  odom_helper_.getOdom(base_odom);
+  robot_velocity.header = base_odom.header;
+  robot_velocity.twist = base_odom.twist.twist;
+  return true;
+}
+
+bool RobotInformation::isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity)
+{
+  nav_msgs::Odometry base_odom;
+  odom_helper_.getOdom(base_odom);
+  return base_local_planner::stopped(base_odom, rot_stopped_velocity, trans_stopped_velocity);
 }
 
 const std::string& RobotInformation::getGlobalFrame() const {return global_frame_;};
