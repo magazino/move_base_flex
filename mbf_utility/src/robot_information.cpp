@@ -47,9 +47,10 @@ namespace mbf_utility
 RobotInformation::RobotInformation(TF &tf_listener,
                                    const std::string &global_frame,
                                    const std::string &robot_frame,
-                                   const ros::Duration &tf_timeout)
+                                   const ros::Duration &tf_timeout,
+                                   const std::string &odom_topic)
  : tf_listener_(tf_listener), global_frame_(global_frame), robot_frame_(robot_frame), tf_timeout_(tf_timeout),
-   odom_helper_("odom")
+   odom_helper_(odom_topic)
 {
 
 }

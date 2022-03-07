@@ -61,7 +61,8 @@ class RobotInformation
       TF &tf_listener,
       const std::string &global_frame,
       const std::string &robot_frame,
-      const ros::Duration &tf_timeout);
+      const ros::Duration &tf_timeout,
+      const std::string &odom_topic = "odom");
 
   /**
    * @brief Computes the current robot pose (robot_frame_) in the global frame (global_frame_).
