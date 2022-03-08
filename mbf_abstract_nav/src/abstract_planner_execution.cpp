@@ -47,9 +47,8 @@ AbstractPlannerExecution::AbstractPlannerExecution(const std::string& name,
                                                    const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
                                                    const mbf_utility::RobotInformation &robot_info,
                                                    const MoveBaseFlexConfig& config)
-  : AbstractExecutionBase(name)
+  : AbstractExecutionBase(name, robot_info)
   , planner_(planner_ptr)
-  , robot_info_(const_cast<mbf_utility::RobotInformation&>(robot_info))
   , state_(INITIALIZED)
   , max_retries_(0)
   , planning_(false)

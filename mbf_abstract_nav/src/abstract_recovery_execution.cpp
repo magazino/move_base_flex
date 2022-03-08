@@ -50,8 +50,8 @@ AbstractRecoveryExecution::AbstractRecoveryExecution(
     const mbf_abstract_core::AbstractRecovery::Ptr &recovery_ptr,
     const mbf_utility::RobotInformation &robot_info,
     const MoveBaseFlexConfig &config) :
-  AbstractExecutionBase(name),
-    behavior_(recovery_ptr), robot_info_(const_cast<mbf_utility::RobotInformation&>(robot_info)), state_(INITIALIZED)
+  AbstractExecutionBase(name, robot_info),
+    behavior_(recovery_ptr), state_(INITIALIZED)
 {
   // dynamically reconfigurable parameters
   reconfigure(config);

@@ -40,7 +40,8 @@
 
 namespace mbf_abstract_nav
 {
-AbstractExecutionBase::AbstractExecutionBase(const std::string& name) : outcome_(255), cancel_(false), name_(name)
+AbstractExecutionBase::AbstractExecutionBase(const std::string& name, const mbf_utility::RobotInformation& robot_info)
+  : outcome_(255), cancel_(false), name_(name), robot_info_(robot_info)
 {
 }
 

@@ -9,7 +9,8 @@ using namespace mbf_abstract_nav;
 // it basically runs until we cancel it.
 struct DummyExecutionBase : public AbstractExecutionBase
 {
-  DummyExecutionBase(const std::string& _name) : AbstractExecutionBase(_name)
+  DummyExecutionBase(const std::string& _name, const mbf_utility::RobotInformation& ri)
+    : AbstractExecutionBase(_name, ri)
   {
   }
 
@@ -41,9 +42,11 @@ using testing::Test;
 // the fixture owning the instance of the DummyExecutionBase
 struct AbstractExecutionFixture : public Test
 {
+  TF tf_;
   DummyExecutionBase impl_;
+  mbf_utility::RobotInformation ri_;
 
-  AbstractExecutionFixture() : impl_("foo")
+  AbstractExecutionFixture() : ri_(tf_, "global_frame", "local_frame", ros::Duration(), ""), impl_("foo", ri_)
   {
   }
 };
@@ -53,7 +56,7 @@ TEST_F(AbstractExecutionFixture, timeout)
   // start the thread
   impl_.start();
 
-  // make sure that we timeout and dont alter the outcome
+  // make sure that we timeout and don't alter the outcome
   EXPECT_EQ(impl_.waitForStateUpdate(boost::chrono::microseconds(60)), boost::cv_status::timeout);
   EXPECT_EQ(impl_.getOutcome(), 255);
 }

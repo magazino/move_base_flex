@@ -200,9 +200,6 @@ namespace mbf_abstract_nav
     //! the name of the loaded planner plugin
     std::string plugin_name_;
 
-    //! Reference to the current robot state
-    mbf_utility::RobotInformation &robot_info_;
-
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.
      */

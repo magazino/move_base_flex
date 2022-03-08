@@ -69,7 +69,7 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
   return true;
 }
 
-bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity)
+bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const
 {
   nav_msgs::Odometry base_odom;
   odom_helper_.getOdom(base_odom);
@@ -78,7 +78,7 @@ bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_veloc
   return true;
 }
 
-bool RobotInformation::isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity)
+bool RobotInformation::isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity) const
 {
   nav_msgs::Odometry base_odom;
   odom_helper_.getOdom(base_odom);

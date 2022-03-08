@@ -145,9 +145,6 @@ namespace mbf_abstract_nav
     //! the current loaded recovery behavior
     mbf_abstract_core::AbstractRecovery::Ptr behavior_;
 
-    //! Reference to the current robot state
-    mbf_utility::RobotInformation &robot_info_;
-
   private:
 
     /**

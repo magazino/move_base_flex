@@ -76,7 +76,7 @@ class RobotInformation
    * @param robot_velocity Reference to the robot_velocity message object to be filled.
    * @return true, if the current robot velocity could be obtained, false otherwise.
    */
-  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity);
+  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const;
 
   /**
    * @brief Check whether the robot is stopped or not
@@ -84,7 +84,7 @@ class RobotInformation
    * @param trans_stopped_velocity The translational velocity below which the robot is considered stopped
    * @return true if the robot is stopped, false otherwise
    */
-  bool isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity);
+  bool isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity) const;
 
   const std::string& getGlobalFrame() const;
 
@@ -103,7 +103,7 @@ class RobotInformation
 
   const ros::Duration &tf_timeout_;
 
-  base_local_planner::OdometryHelperRos odom_helper_;
+  mutable base_local_planner::OdometryHelperRos odom_helper_;
 
 };
 

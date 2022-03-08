@@ -14,7 +14,7 @@ using namespace mbf_abstract_nav;
 struct MockedExecution : public AbstractExecutionBase {
   typedef boost::shared_ptr<MockedExecution> Ptr;
 
-  MockedExecution() : AbstractExecutionBase("mocked_execution") {}
+  MockedExecution(const mbf_utility::RobotInformation& ri) : AbstractExecutionBase("mocked_execution", ri) {}
 
   MOCK_METHOD0(cancel, bool());
 
@@ -24,7 +24,7 @@ protected:
 
 using testing::Test;
 
-// fixture with access to the AbstracActionBase's internals
+// fixture with access to the AbstractActionBase's internals
 struct AbstractActionBaseFixture
     : public AbstractActionBase<mbf_msgs::GetPathAction, MockedExecution>,
       public Test {
@@ -35,7 +35,7 @@ struct AbstractActionBaseFixture
 
   AbstractActionBaseFixture()
       : test_name("action_base"),
-        ri(tf_, "global_frame", "local_frame", ros::Duration(0)),
+        ri(tf_, "global_frame", "local_frame", ros::Duration()),
         AbstractActionBase(test_name, ri)
   {
   }
@@ -46,7 +46,7 @@ struct AbstractActionBaseFixture
 TEST_F(AbstractActionBaseFixture, thread_stop)
 {
   unsigned char slot = 1;
-  concurrency_slots_[slot].execution.reset(new MockedExecution());
+  concurrency_slots_[slot].execution.reset(new MockedExecution(AbstractActionBaseFixture::ri));
   concurrency_slots_[slot].thread_ptr =
       threads_.create_thread(boost::bind(&AbstractActionBaseFixture::run, this,
                                          boost::ref(concurrency_slots_[slot])));
@@ -58,7 +58,7 @@ TEST_F(AbstractActionBaseFixture, cancelAll)
 {
   // spawn a bunch of threads
   for (unsigned char slot = 0; slot != 10; ++slot) {
-    concurrency_slots_[slot].execution.reset(new MockedExecution());
+    concurrency_slots_[slot].execution.reset(new MockedExecution(AbstractActionBaseFixture::ri));
     // set the expectation
     EXPECT_CALL(*concurrency_slots_[slot].execution, cancel())
         .WillRepeatedly(Return(true));

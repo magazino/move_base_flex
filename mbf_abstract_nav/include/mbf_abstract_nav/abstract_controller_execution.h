@@ -48,7 +48,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 
-#include <mbf_utility/robot_information.h>
 #include <mbf_utility/navigation_utility.h>
 #include <mbf_abstract_core/abstract_controller.h>
 
@@ -225,9 +224,6 @@ namespace mbf_abstract_nav
 
     //! The local planer to calculate the velocity command
     mbf_abstract_core::AbstractController::Ptr controller_;
-
-    //! Reference to the current robot state
-    mbf_utility::RobotInformation &robot_info_;
 
     //! The current cycle start time of the last cycle run. Will by updated each cycle.
     ros::Time last_call_time_;

@@ -54,8 +54,8 @@ AbstractControllerExecution::AbstractControllerExecution(
     const ros::Publisher &vel_pub,
     const ros::Publisher &goal_pub,
     const MoveBaseFlexConfig &config) :
-  AbstractExecutionBase(name),
-    controller_(controller_ptr), robot_info_(const_cast<mbf_utility::RobotInformation&>(robot_info)),
+  AbstractExecutionBase(name, robot_info),
+    controller_(controller_ptr),
     state_(INITIALIZED), moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
     loop_rate_(DEFAULT_CONTROLLER_FREQUENCY)
 {
