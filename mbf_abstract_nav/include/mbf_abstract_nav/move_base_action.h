@@ -170,6 +170,9 @@ class MoveBaseAction
   //! true, if recovery behavior for the MoveBase action is enabled.
   bool recovery_enabled_;
 
+  //! binds callback to handle replanning action which cancels current goal upon failure
+  bool stop_when_replan_fails_;
+
   std::vector<std::string> recovery_behaviors_;
 
   std::vector<std::string>::iterator current_recovery_behavior_;

@@ -82,6 +82,7 @@ void MoveBaseAction::reconfigure(
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
   recovery_enabled_ = config.recovery_enabled;
+  stop_when_replan_fails_ = config.stop_when_replan_fails;
 }
 
 void MoveBaseAction::cancel()
@@ -560,7 +561,14 @@ void MoveBaseAction::replanningThread()
     else if (ros::Time::now() - last_replan_time >= replanning_period_)
     {
       ROS_DEBUG_STREAM_NAMED("move_base", "Next replanning cycle, using the \"get_path\" action!");
-      action_client_get_path_.sendGoal(get_path_goal_, boost::bind(&MoveBaseAction::actionGetPathDone, this, _1, _2));
+      if (stop_when_replan_fails_)
+      {
+        action_client_get_path_.sendGoal(get_path_goal_, boost::bind(&MoveBaseAction::actionGetPathDone, this, _1, _2));
+      }
+      else
+      {
+        action_client_get_path_.sendGoal(get_path_goal_);
+      }
       last_replan_time = ros::Time::now();
     }
   }
