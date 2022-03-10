@@ -69,9 +69,11 @@ void ControllerAction::start(
   if(slot_it != concurrency_slots_.end() && slot_it->second.in_use)
   {
     boost::lock_guard<boost::mutex> goal_guard(goal_mtx_);
-    if(slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
-       goal_handle.getGoal()->controller.empty())
+    if ((slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
+         goal_handle.getGoal()->controller.empty()) &&
+        slot_it->second.goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::ACTIVE)
     {
+      ROS_DEBUG_STREAM_NAMED(name_, "Updating running controller goal of slot " << static_cast<int>(slot));
       update_plan = true;
       // Goal requests to run the same controller on the same concurrency slot already in use:
       // we update the goal handle and pass the new plan and tolerances from the action to the
