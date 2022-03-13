@@ -36,8 +36,6 @@
  *
  */
 
-#include <base_local_planner/goal_functions.h>
-
 #include "mbf_utility/robot_information.h"
 #include "mbf_utility/navigation_utility.h"
 
@@ -63,7 +61,7 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
   if (!tf_success)
   {
     ROS_ERROR_STREAM("Can not get the robot pose in the global frame. - robot frame: \""
-                         << robot_frame_ << "\"   global frame: \"" << global_frame_ << std::endl);
+                         << robot_frame_ << "\"   global frame: \"" << global_frame_);
     return false;
   }
   return true;
@@ -73,6 +71,11 @@ bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_veloc
 {
   nav_msgs::Odometry base_odom;
   odom_helper_.getOdom(base_odom);
+  if (base_odom.header.stamp.isZero())
+  {
+    ROS_ERROR_STREAM("No odometry messages received; robot velocity unknown");
+    return false;
+  }
   robot_velocity.header = base_odom.header;
   robot_velocity.twist = base_odom.twist.twist;
   return true;
@@ -82,7 +85,9 @@ bool RobotInformation::isRobotStopped(double rot_stopped_velocity, double trans_
 {
   nav_msgs::Odometry base_odom;
   odom_helper_.getOdom(base_odom);
-  return base_local_planner::stopped(base_odom, rot_stopped_velocity, trans_stopped_velocity);
+  return fabs(base_odom.twist.twist.angular.z) <= rot_stopped_velocity &&
+         fabs(base_odom.twist.twist.linear.x) <= trans_stopped_velocity &&
+         fabs(base_odom.twist.twist.linear.y) <= trans_stopped_velocity;
 }
 
 const std::string& RobotInformation::getGlobalFrame() const {return global_frame_;};

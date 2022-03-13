@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0.2)
 project(mbf_utility)
 
 find_package(catkin REQUIRED COMPONENTS
-  base_local_planner
   geometry_msgs
   roscpp
   tf
@@ -14,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES mbf_utility
-  CATKIN_DEPENDS base_local_planner geometry_msgs roscpp tf tf2 tf2_ros tf2_geometry_msgs
+  CATKIN_DEPENDS geometry_msgs roscpp tf tf2 tf2_ros tf2_geometry_msgs
 )
 
 include_directories(
@@ -25,6 +24,7 @@ include_directories(
 add_library(${PROJECT_NAME}
    src/navigation_utility.cpp
    src/robot_information.cpp
+   src/odometry_helper.cpp
 )
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

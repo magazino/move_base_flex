@@ -39,13 +39,13 @@
 #ifndef MBF_UTILITY__ROBOT_INFORMATION_H_
 #define MBF_UTILITY__ROBOT_INFORMATION_H_
 
-#include <base_local_planner/odometry_helper_ros.h>
 #include <boost/shared_ptr.hpp>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <ros/duration.h>
 #include <string>
 
+#include "mbf_utility/odometry_helper.h"
 #include "mbf_utility/types.h"
 
 namespace mbf_utility
@@ -103,7 +103,7 @@ class RobotInformation
 
   const ros::Duration &tf_timeout_;
 
-  mutable base_local_planner::OdometryHelperRos odom_helper_;
+  OdometryHelper odom_helper_;
 
 };
 

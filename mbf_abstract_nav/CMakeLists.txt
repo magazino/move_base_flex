@@ -93,7 +93,7 @@ if(CATKIN_ENABLE_TESTING)
   # gtests
   catkin_add_gtest(${MBF_ABSTRACT_SERVER_LIB}_gtest test/abstract_execution_base.cpp)
   target_link_libraries(${MBF_ABSTRACT_SERVER_LIB}_gtest ${MBF_ABSTRACT_SERVER_LIB})
-  
+
   # ros-tests
   add_rostest_gmock(abstract_action_base_test
     test/abstract_action_base.launch
