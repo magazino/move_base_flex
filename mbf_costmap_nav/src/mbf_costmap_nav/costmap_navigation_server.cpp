@@ -459,6 +459,7 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   abstract_config.planner_frequency = config.planner_frequency;
   abstract_config.planner_patience = config.planner_patience;
   abstract_config.planner_max_retries = config.planner_max_retries;
+  abstract_config.stop_when_replan_fails = config.stop_when_replan_fails;
   abstract_config.controller_frequency = config.controller_frequency;
   abstract_config.controller_patience = config.controller_patience;
   abstract_config.controller_max_retries = config.controller_max_retries;

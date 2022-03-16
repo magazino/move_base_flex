@@ -21,6 +21,8 @@ def add_mbf_abstract_nav_params(gen):
             "How long the planner will wait in seconds in an attempt to find a valid plan before giving up", 5.0, 0, 100)
     gen.add("planner_max_retries", int_t, 0,
             "How many times we will recall the planner in an attempt to find a valid plan before giving up", -1, -1, 1000)
+    gen.add("stop_when_replan_fails", bool_t, 0,
+            "Will cancel current goal when replanning fails", False)
 
     gen.add("controller_frequency", double_t, 0,
             "The rate in Hz at which to run the control loop and send velocity commands to the base", 20, 0, 100)

@@ -79,10 +79,10 @@ void MoveBaseAction::reconfigure(
     replanning_period_.fromSec(1.0 / config.planner_frequency);
   else
     replanning_period_.fromSec(0.0);
+  stop_when_replan_fails_ = config.stop_when_replan_fails;
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
   recovery_enabled_ = config.recovery_enabled;
-  stop_when_replan_fails_ = config.stop_when_replan_fails;
 }
 
 void MoveBaseAction::cancel()
