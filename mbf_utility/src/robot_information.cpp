@@ -69,11 +69,19 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
 
 bool RobotInformation::getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const
 {
+  if (odom_helper_.getOdomTopic().empty())
+  {
+    ROS_DEBUG_THROTTLE(2, "Odometry topic set as empty; ignoring retrieve velocity requests");
+    return true;
+  }
+
   nav_msgs::Odometry base_odom;
   odom_helper_.getOdom(base_odom);
   if (base_odom.header.stamp.isZero())
   {
-    ROS_ERROR_STREAM("No odometry messages received; robot velocity unknown");
+    ROS_WARN_STREAM_THROTTLE(2, "No messages received on topic " << odom_helper_.getOdomTopic()
+                                                                 << "; robot velocity unknown");
+    ROS_WARN_STREAM_THROTTLE(2, "You can disable these warnings by setting parameter 'odom_topic' as empty");
     return false;
   }
   robot_velocity.header = base_odom.header;

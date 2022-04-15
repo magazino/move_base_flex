@@ -181,7 +181,7 @@ TEST_F(ComputeRobotPoseFixture, arrivedGoal)
   plan.back().header.frame_id = global_frame_;
   plan.back().pose.orientation.w = 1;
 
-  // make the tolerates small
+  // make the tolerances small
   setNewPlan(plan, true, 1e-3, 1e-3);
 
   // call start
