@@ -46,9 +46,10 @@ namespace mbf_costmap_nav
 {
 CostmapPlannerExecution::CostmapPlannerExecution(const std::string& planner_name,
                                                  const mbf_costmap_core::CostmapPlanner::Ptr& planner_ptr,
-                                                 const TFPtr& tf_listener_ptr, const CostmapWrapper::Ptr& costmap_ptr,
+                                                 const mbf_utility::RobotInformation& robot_info,
+                                                 const CostmapWrapper::Ptr& costmap_ptr,
                                                  const MoveBaseFlexConfig& config)
-  : AbstractPlannerExecution(planner_name, planner_ptr, tf_listener_ptr, toAbstract(config)), costmap_ptr_(costmap_ptr)
+  : AbstractPlannerExecution(planner_name, planner_ptr, robot_info, toAbstract(config)), costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
   private_nh.param("planner_lock_costmap", lock_costmap_, true);
@@ -83,10 +84,10 @@ uint32_t CostmapPlannerExecution::makePlan(const geometry_msgs::PoseStamped &sta
   const std::string frame = costmap_ptr_->getGlobalFrameID();
   geometry_msgs::PoseStamped g_start, g_goal;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, start, g_start))
+  if (!mbf_utility::transformPose(robot_info_.getTransformListener(), frame, timeout, start, g_start))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
-  if (!mbf_utility::transformPose(*tf_listener_ptr_, frame, timeout, goal, g_goal))
+  if (!mbf_utility::transformPose(robot_info_.getTransformListener(), frame, timeout, goal, g_goal))
     return mbf_msgs::GetPathResult::TF_ERROR;
 
   if (lock_costmap_)

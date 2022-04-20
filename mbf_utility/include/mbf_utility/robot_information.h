@@ -45,6 +45,7 @@
 #include <ros/duration.h>
 #include <string>
 
+#include "mbf_utility/odometry_helper.h"
 #include "mbf_utility/types.h"
 
 namespace mbf_utility
@@ -60,7 +61,8 @@ class RobotInformation
       TF &tf_listener,
       const std::string &global_frame,
       const std::string &robot_frame,
-      const ros::Duration &tf_timeout);
+      const ros::Duration &tf_timeout,
+      const std::string &odom_topic = "odom");
 
   /**
    * @brief Computes the current robot pose (robot_frame_) in the global frame (global_frame_).
@@ -69,7 +71,20 @@ class RobotInformation
    */
   bool getRobotPose(geometry_msgs::PoseStamped &robot_pose) const;
 
-  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity, ros::Duration look_back_duration) const;
+  /**
+   * @brief Returns the current robot velocity, as provided by the odometry helper.
+   * @param robot_velocity Reference to the robot_velocity message object to be filled.
+   * @return true, if the current robot velocity could be obtained, false otherwise.
+   */
+  bool getRobotVelocity(geometry_msgs::TwistStamped &robot_velocity) const;
+
+  /**
+   * @brief Check whether the robot is stopped or not
+   * @param rot_stopped_velocity The rotational velocity below which the robot is considered stopped
+   * @param trans_stopped_velocity The translational velocity below which the robot is considered stopped
+   * @return true if the robot is stopped, false otherwise
+   */
+  bool isRobotStopped(double rot_stopped_velocity, double trans_stopped_velocity) const;
 
   const std::string& getGlobalFrame() const;
 
@@ -87,6 +102,8 @@ class RobotInformation
   const std::string &robot_frame_;
 
   const ros::Duration &tf_timeout_;
+
+  OdometryHelper odom_helper_;
 
 };
 

@@ -48,8 +48,8 @@
 #include <geometry_msgs/PoseStamped.h>
 
 #include <mbf_abstract_core/abstract_planner.h>
-#include <mbf_utility/types.h>
 
+#include <mbf_utility/robot_information.h>
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/abstract_execution_base.h"
@@ -82,20 +82,13 @@ namespace mbf_abstract_nav
      * @brief Constructor
      * @param name Name of this execution
      * @param planner_ptr Pointer to the planner
+     * @param robot_info Current robot state
      * @param config Initial configuration for this execution
      */
-    AbstractPlannerExecution(const std::string& name, const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+    AbstractPlannerExecution(const std::string& name,
+                             const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
+                             const mbf_utility::RobotInformation &robot_info,
                              const MoveBaseFlexConfig& config);
-
-    /**
-     * @brief Constructor
-     * @param name Name of this execution
-     * @param planner_ptr Pointer to the planner
-     * @param tf_listener_ptr Shared Pointer to a tf-listener.
-     * @param config Initial configuration for this execution
-     */
-    AbstractPlannerExecution(const std::string& name, const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr,
-                             const TFPtr& tf_listener_ptr, const MoveBaseFlexConfig& config);
 
     /**
      * @brief Destructor
@@ -206,9 +199,6 @@ namespace mbf_abstract_nav
 
     //! the name of the loaded planner plugin
     std::string plugin_name_;
-
-    //! shared pointer to a common TransformListener
-    const TFPtr tf_listener_ptr_;
 
     /**
      * @brief The main run method, a thread will execute this method. It contains the main planner execution loop.

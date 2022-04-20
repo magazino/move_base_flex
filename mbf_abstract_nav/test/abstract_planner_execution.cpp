@@ -27,13 +27,17 @@ using testing::InSequence;
 using testing::Return;
 using testing::Test;
 
+TFPtr TF_PTR;
+mbf_utility::RobotInformation::Ptr ROBOT_INFO_PTR;
+
 // setup the test-fixture
 struct AbstractPlannerExecutionFixture : public Test, public AbstractPlannerExecution
 {
   PoseStamped pose;  // dummy pose to call start
 
   AbstractPlannerExecutionFixture()
-    : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{ new AbstractPlannerMock() }, TFPtr(), MoveBaseFlexConfig{})
+    : AbstractPlannerExecution("foo", AbstractPlanner::Ptr{ new AbstractPlannerMock() },
+                               *ROBOT_INFO_PTR, MoveBaseFlexConfig{})
   {
   }
 
@@ -285,7 +289,14 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "read_types");
   ros::NodeHandle nh;
-  // suppress the logging since we don't want warnings to polute the test-outcome
+
+  // setup the tf-publisher and robot info as a global objects
+  TF_PTR.reset(new TF());
+  TF_PTR->setUsingDedicatedThread(true);
+  ros::Duration TF_TIMEOUT(1.0);
+  ROBOT_INFO_PTR.reset(new mbf_utility::RobotInformation(*TF_PTR, "global_frame", "robot_frame", TF_TIMEOUT, ""));
+
+  // suppress the logging since we don't want warnings to pollute the test-outcome
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Fatal))
   {
     ros::console::notifyLoggerLevelsChanged();

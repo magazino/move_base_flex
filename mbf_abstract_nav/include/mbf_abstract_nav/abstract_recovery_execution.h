@@ -46,8 +46,8 @@
 #include <vector>
 
 #include <mbf_abstract_core/abstract_recovery.h>
-#include <mbf_utility/types.h>
 
+#include <mbf_utility/robot_information.h>
 #include <mbf_utility/navigation_utility.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
@@ -79,12 +79,14 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Constructor
-     * @param condition Thread sleep condition variable, to wake up connected threads
-     * @param tf_listener_ptr Shared pointer to a common tf listener
+     * @param name Name of this execution
+     * @param recovery_ptr Pointer to the recovery plugin
+     * @param robot_info Current robot state
+     * @param config Initial configuration for this execution
      */
     AbstractRecoveryExecution(const std::string &name,
                               const mbf_abstract_core::AbstractRecovery::Ptr &recovery_ptr,
-                              const TFPtr &tf_listener_ptr,
+                              const mbf_utility::RobotInformation &robot_info,
                               const MoveBaseFlexConfig &config);
 
     /**
@@ -142,9 +144,6 @@ namespace mbf_abstract_nav
 
     //! the current loaded recovery behavior
     mbf_abstract_core::AbstractRecovery::Ptr behavior_;
-
-    //! shared pointer to common TransformListener
-    const TFPtr tf_listener_ptr_;
 
   private:
 

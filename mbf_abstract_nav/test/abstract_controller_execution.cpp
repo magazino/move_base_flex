@@ -43,13 +43,14 @@ struct AbstractControllerMock : public AbstractController
 
 ros::Publisher VEL_PUB, GOAL_PUB;
 TFPtr TF_PTR;
+mbf_utility::RobotInformation::Ptr ROBOT_INFO_PTR;
 
 // fixture for our tests
 struct AbstractControllerExecutionFixture : public Test, public AbstractControllerExecution
 {
   AbstractControllerExecutionFixture()
-    : AbstractControllerExecution("a name", AbstractController::Ptr(new AbstractControllerMock()), VEL_PUB, GOAL_PUB,
-                                  TF_PTR, MoveBaseFlexConfig{})
+    : AbstractControllerExecution("a name", AbstractController::Ptr(new AbstractControllerMock()), *ROBOT_INFO_PTR,
+                                  VEL_PUB, GOAL_PUB, MoveBaseFlexConfig{})
   {
   }
 
@@ -135,7 +136,7 @@ TEST_F(AbstractControllerExecutionFixture, internalError)
   ASSERT_TRUE(start());
 
   // wait for the status update
-  // note: this timeout must be larget then the default tf-timeout
+  // note: this timeout must be longer than the default tf-timeout
   waitForStateUpdate(boost::chrono::seconds(2));
   ASSERT_EQ(getState(), INTERNAL_ERROR);
 }
@@ -180,7 +181,7 @@ TEST_F(ComputeRobotPoseFixture, arrivedGoal)
   plan.back().header.frame_id = global_frame_;
   plan.back().pose.orientation.w = 1;
 
-  // make the toleraces small
+  // make the tolerances small
   setNewPlan(plan, true, 1e-3, 1e-3);
 
   // call start
@@ -261,7 +262,7 @@ TEST_F(FailureFixture, maxRetries)
 
 TEST_F(FailureFixture, noValidCmd)
 {
-  // test verfies the case where we don't exceed the patience or max-retries conditions
+  // test verifies the case where we don't exceed the patience or max-retries conditions
   // the expected output is NO_VALID_CMD
 
   // disable the retries logic
@@ -276,7 +277,7 @@ TEST_F(FailureFixture, noValidCmd)
 
 TEST_F(FailureFixture, patExceeded)
 {
-  // test verfies the case where we exceed the patience
+  // test verifies the case where we exceed the patience
   // the expected output is PAT_EXCEEDED
 
   // disable the retries logic and enable the patience logic: we cheat by setting it to a negative duration.
@@ -299,11 +300,13 @@ int main(int argc, char** argv)
   VEL_PUB = nh.advertise<Twist>("vel", 1);
   GOAL_PUB = nh.advertise<PoseStamped>("pose", 1);
 
-  // setup the tf-publisher as a global object
+  // setup the tf-publisher and robot info as a global objects
   TF_PTR.reset(new TF());
   TF_PTR->setUsingDedicatedThread(true);
+  ros::Duration TF_TIMEOUT(1.0);
+  ROBOT_INFO_PTR.reset(new mbf_utility::RobotInformation(*TF_PTR, "global_frame", "robot_frame", TF_TIMEOUT, ""));
 
-  // suppress the logging since we don't want warnings to polute the test-outcome
+  // suppress the logging since we don't want warnings to pollute the test-outcome
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Fatal))
   {
     ros::console::notifyLoggerLevelsChanged();

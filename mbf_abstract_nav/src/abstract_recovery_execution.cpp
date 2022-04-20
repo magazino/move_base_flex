@@ -48,10 +48,10 @@ namespace mbf_abstract_nav
 AbstractRecoveryExecution::AbstractRecoveryExecution(
     const std::string &name,
     const mbf_abstract_core::AbstractRecovery::Ptr &recovery_ptr,
-    const TFPtr &tf_listener_ptr,
+    const mbf_utility::RobotInformation &robot_info,
     const MoveBaseFlexConfig &config) :
-  AbstractExecutionBase(name),
-    behavior_(recovery_ptr), tf_listener_ptr_(tf_listener_ptr), state_(INITIALIZED)
+  AbstractExecutionBase(name, robot_info),
+    behavior_(recovery_ptr), state_(INITIALIZED)
 {
   // dynamically reconfigurable parameters
   reconfigure(config);

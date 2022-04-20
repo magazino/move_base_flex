@@ -50,7 +50,6 @@
 
 #include <mbf_utility/navigation_utility.h>
 #include <mbf_abstract_core/abstract_controller.h>
-#include <mbf_utility/types.h>
 
 #include "mbf_abstract_nav/MoveBaseFlexConfig.h"
 #include "mbf_abstract_nav/abstract_execution_base.h"
@@ -82,16 +81,19 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Constructor
-     * @param condition Thread sleep condition variable, to wake up connected threads
-     * @param controller_plugin_type The plugin type associated with the plugin to load
-     * @param tf_listener_ptr Shared pointer to a common tf listener
+     * @param name Name of this execution
+     * @param controller_ptr Pointer to the controller plugin
+     * @param robot_info Current robot state
+     * @param vel_pub Velocity publisher
+     * @param goal_pub Current goal publisher
+     * @param config Initial configuration for this execution
      */
     AbstractControllerExecution(
         const std::string &name,
         const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
+        const mbf_utility::RobotInformation &robot_info,
         const ros::Publisher &vel_pub,
         const ros::Publisher &goal_pub,
-        const TFPtr &tf_listener_ptr,
         const MoveBaseFlexConfig &config);
 
     /**
@@ -220,11 +222,8 @@ namespace mbf_abstract_nav
     //! the name of the loaded plugin
     std::string plugin_name_;
 
-    //! the local planer to calculate the velocity command
+    //! The local planer to calculate the velocity command
     mbf_abstract_core::AbstractController::Ptr controller_;
-
-    //! shared pointer to the shared tf listener
-    const TFPtr &tf_listener_ptr;
 
     //! The current cycle start time of the last cycle run. Will by updated each cycle.
     ros::Time last_call_time_;
@@ -274,12 +273,6 @@ namespace mbf_abstract_nav
      * @return true if the goal has been reached, false otherwise
      */
     bool reachedGoalCheck();
-
-    /**
-     * @brief Computes the robot pose;
-     * @return true if the robot pose has been computed successfully, false otherwise.
-     */
-    bool computeRobotPose();
 
     /**
      * @brief Sets the controller state. This method makes the communication of the state thread safe.

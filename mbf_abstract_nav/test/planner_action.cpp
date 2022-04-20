@@ -136,7 +136,8 @@ struct PlannerActionFixture : public Test
 
   void callAction(MockedActionServer::GoalHandle goal_handle)
   {
-    planner_action.start(goal_handle, boost::make_shared<AbstractPlannerExecution>("plugin", planner, tf, config));
+    planner_action.start(goal_handle,
+                         boost::make_shared<AbstractPlannerExecution>("plugin", planner, robot_info, config));
   }
 
   void cancelAction(MockedActionServer::GoalHandle goal_handle)

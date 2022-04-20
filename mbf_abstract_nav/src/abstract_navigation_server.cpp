@@ -59,7 +59,8 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
       tf_timeout_(private_nh_.param<double>("tf_timeout", 3.0)),
       global_frame_(private_nh_.param<std::string>("global_frame", "map")),
       robot_frame_(private_nh_.param<std::string>("robot_frame", "base_link")),
-      robot_info_(*tf_listener_ptr, global_frame_, robot_frame_, tf_timeout_),
+      robot_info_(*tf_listener_ptr, global_frame_, robot_frame_, tf_timeout_,
+                  private_nh_.param<std::string>("odom_topic", "odom")),
       controller_action_(name_action_exe_path, robot_info_),
       planner_action_(name_action_get_path, robot_info_),
       recovery_action_(name_action_recovery, robot_info_),
@@ -313,15 +314,16 @@ mbf_abstract_nav::AbstractPlannerExecution::Ptr AbstractNavigationServer::newPla
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractPlanner::Ptr &plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_name, plugin_ptr, last_config_);
+  return boost::make_shared<mbf_abstract_nav::AbstractPlannerExecution>(plugin_name, plugin_ptr,
+                                                                        robot_info_, last_config_);
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::newControllerExecution(
     const std::string &plugin_name,
     const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
 {
-  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_name, plugin_ptr, vel_pub_, goal_pub_,
-                                                                           tf_listener_ptr_, last_config_);
+  return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_name, plugin_ptr, robot_info_,
+                                                                           vel_pub_, goal_pub_, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(
@@ -329,7 +331,7 @@ mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRe
     const mbf_abstract_core::AbstractRecovery::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_abstract_nav::AbstractRecoveryExecution>(plugin_name, plugin_ptr,
-                                                                         tf_listener_ptr_, last_config_);
+                                                                         robot_info_, last_config_);
 }
 
 void AbstractNavigationServer::startActionServers()
