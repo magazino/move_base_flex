@@ -50,7 +50,7 @@ uint32_t WrapperLocalPlanner::computeVelocityCommands(
     std::string &message)
 {
   bool success = nav_core_plugin_->computeVelocityCommands(cmd_vel.twist);
-  message = success ? "Goal reached" : "Controller failed";
+  message = success ? "Valid command" : "Controller failed";
   return success ? 0 : 100;  // SUCCESS | FAILURE
 }
 
