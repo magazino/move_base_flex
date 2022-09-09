@@ -21,25 +21,27 @@ uint8 concurrency_slot
 ---
 
 # Predefined success codes:
-uint8 SUCCESS         = 0
+uint8 SUCCESS           = 0
 # 1..9 are reserved as plugin specific non-error results
 
 # Possible error codes:
-uint8 FAILURE         = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
-uint8 CANCELED        = 51  # The action has been canceled by a action client
-uint8 INVALID_START   = 52  #
-uint8 INVALID_GOAL    = 53
-uint8 NO_PATH_FOUND   = 54
-uint8 PAT_EXCEEDED    = 55
-uint8 EMPTY_PATH      = 56
-uint8 TF_ERROR        = 57
-uint8 NOT_INITIALIZED = 58
-uint8 INVALID_PLUGIN  = 59
-uint8 INTERNAL_ERROR  = 60
-uint8 OUT_OF_MAP      = 61
-uint8 MAP_ERROR       = 62
-uint8 STOPPED         = 63  # The planner execution has been stopped rigorously.
+uint8 FAILURE           = 50  # Unspecified failure, only used for old, non-mfb_core based plugins
+uint8 CANCELED          = 51  # The action has been canceled by a action client
+uint8 INVALID_START     = 52
+uint8 INVALID_GOAL      = 53
+uint8 NO_PATH_FOUND     = 54
+uint8 PAT_EXCEEDED      = 55
+uint8 EMPTY_PATH        = 56
+uint8 TF_ERROR          = 57
+uint8 NOT_INITIALIZED   = 58
+uint8 INVALID_PLUGIN    = 59
+uint8 INTERNAL_ERROR    = 60
+uint8 OUT_OF_MAP        = 61
+uint8 MAP_ERROR         = 62
+uint8 STOPPED           = 63  # The planner execution has been stopped rigorously
 
+uint8 ERROR_RANGE_START = 50
+uint8 ERROR_RANGE_END   = 99
 # 71..99 are reserved as plugin specific errors
 
 uint32 outcome

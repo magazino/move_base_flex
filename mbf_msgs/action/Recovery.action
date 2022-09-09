@@ -8,19 +8,21 @@ uint8 concurrency_slot
 ---
 
 # Predefined success codes:
-uint8 SUCCESS         = 0
+uint8 SUCCESS           = 0
 
 # Possible server codes:
-uint8 FAILURE         = 150
-uint8 CANCELED        = 151
-uint8 PAT_EXCEEDED    = 152
-uint8 TF_ERROR        = 153
-uint8 NOT_INITIALIZED = 154
-uint8 INVALID_PLUGIN  = 155
-uint8 INTERNAL_ERROR  = 156
-uint8 STOPPED         = 157  # The recovery behaviour execution has been stopped rigorously.
-uint8 IMPASSABLE      = 158  # Further execution would lead to a collision
+uint8 FAILURE           = 150
+uint8 CANCELED          = 151
+uint8 PAT_EXCEEDED      = 152
+uint8 TF_ERROR          = 153
+uint8 NOT_INITIALIZED   = 154
+uint8 INVALID_PLUGIN    = 155
+uint8 INTERNAL_ERROR    = 156
+uint8 STOPPED           = 157  # The recovery behaviour execution has been stopped rigorously
+uint8 IMPASSABLE        = 158  # Further execution would lead to a collision
 
+uint8 ERROR_RANGE_START = 150
+uint8 ERROR_RANGE_END   = 199
 # 171..199 are reserved as plugin specific errors
 
 uint32 outcome
