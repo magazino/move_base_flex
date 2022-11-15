@@ -107,13 +107,20 @@ bool getRobotPose(const TF &tf,
 double distance(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
 /**
- * @brief computes the smallest angle between two poses.
+ * @brief Computes the smallest angle between two poses.
  * @param pose1 pose 1
  * @param pose2 pose 2
  * @return smallest angle between pose 1 and pose 2.
  */
 double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseStamped &pose2);
 
+/**
+ * @brief Get a descriptive string for each possible MBF action outcome.
+ * @param outcome Input outcome
+ * @return Output descriptive string
+ */
+std::string outcome2str(unsigned int outcome);
+
 } /* namespace mbf_utility */
 
-#endif /* navigation_utility.h */
+#endif /* MBF_UTILITY__NAVIGATION_UTILITY_H_ */
