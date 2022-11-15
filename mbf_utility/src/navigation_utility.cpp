@@ -38,11 +38,16 @@
  *
  */
 
+#include <cmath>
+
 #include <tf/tf.h>
 
-#include "mbf_utility/navigation_utility.h"
+#include <mbf_msgs/MoveBaseResult.h>
+#include <mbf_msgs/GetPathResult.h>
+#include <mbf_msgs/ExePathResult.h>
+#include <mbf_msgs/RecoveryResult.h>
 
-#include <cmath>
+#include "mbf_utility/navigation_utility.h"
 
 namespace mbf_utility
 {
@@ -202,6 +207,68 @@ double angle(const geometry_msgs::PoseStamped &pose1, const geometry_msgs::PoseS
   tf::quaternionMsgToTF(q1, rot1);
   tf::quaternionMsgToTF(q2, rot2);
   return rot1.angleShortestPath(rot2);
+}
+
+std::string outcome2str(unsigned int outcome)
+{
+  switch (outcome)
+  {
+    case mbf_msgs::MoveBaseResult::SUCCESS:         return "Success";
+    case mbf_msgs::MoveBaseResult::FAILURE:         return "Failure";
+    case mbf_msgs::MoveBaseResult::CANCELED:        return "Canceled";
+    case mbf_msgs::MoveBaseResult::COLLISION:       return "Collision";
+    case mbf_msgs::MoveBaseResult::OSCILLATION:     return "Oscillation";
+    case mbf_msgs::MoveBaseResult::START_BLOCKED:   return "Start blocked";
+    case mbf_msgs::MoveBaseResult::GOAL_BLOCKED:    return "Goal blocked";
+    case mbf_msgs::MoveBaseResult::TF_ERROR:        return "TF Error";
+    case mbf_msgs::MoveBaseResult::INTERNAL_ERROR:  return "Internal Error";
+
+    case mbf_msgs::GetPathResult::FAILURE:          return "Failure";
+    case mbf_msgs::GetPathResult::CANCELED:         return "Canceled";
+    case mbf_msgs::GetPathResult::INVALID_START:    return "Invalid start";
+    case mbf_msgs::GetPathResult::INVALID_GOAL:     return "Invalid goal";
+    case mbf_msgs::GetPathResult::NO_PATH_FOUND:    return "No path found";
+    case mbf_msgs::GetPathResult::PAT_EXCEEDED:     return "Patience exceeded";
+    case mbf_msgs::GetPathResult::EMPTY_PATH:       return "Empty Path";
+    case mbf_msgs::GetPathResult::TF_ERROR:         return "TF Error";
+    case mbf_msgs::GetPathResult::NOT_INITIALIZED:  return "Not initialized";
+    case mbf_msgs::GetPathResult::INVALID_PLUGIN:   return "Invalid Plugin";
+    case mbf_msgs::GetPathResult::INTERNAL_ERROR:   return "Internal Error";
+    case mbf_msgs::GetPathResult::OUT_OF_MAP:       return "Out of map";
+    case mbf_msgs::GetPathResult::MAP_ERROR:        return "Map error";
+    case mbf_msgs::GetPathResult::STOPPED:          return "Stopped";
+
+    case mbf_msgs::ExePathResult::FAILURE:          return "Failure";
+    case mbf_msgs::ExePathResult::CANCELED:         return "Canceled";
+    case mbf_msgs::ExePathResult::NO_VALID_CMD:     return "No valid command";
+    case mbf_msgs::ExePathResult::PAT_EXCEEDED:     return "Patience exceeded";
+    case mbf_msgs::ExePathResult::COLLISION:        return "Collision";
+    case mbf_msgs::ExePathResult::OSCILLATION:      return "Oscillation";
+    case mbf_msgs::ExePathResult::ROBOT_STUCK:      return "Robot stuck";
+    case mbf_msgs::ExePathResult::MISSED_GOAL:      return "Missed Goal";
+    case mbf_msgs::ExePathResult::MISSED_PATH:      return "Missed Path";
+    case mbf_msgs::ExePathResult::BLOCKED_PATH:     return "Blocked Path";
+    case mbf_msgs::ExePathResult::INVALID_PATH:     return "Invalid Path";
+    case mbf_msgs::ExePathResult::TF_ERROR:         return "TF Error";
+    case mbf_msgs::ExePathResult::NOT_INITIALIZED:  return "Not initialized";
+    case mbf_msgs::ExePathResult::INVALID_PLUGIN:   return "Invalid Plugin";
+    case mbf_msgs::ExePathResult::INTERNAL_ERROR:   return "Internal Error";
+    case mbf_msgs::ExePathResult::OUT_OF_MAP:       return "Out of map";
+    case mbf_msgs::ExePathResult::MAP_ERROR:        return "Map error";
+    case mbf_msgs::ExePathResult::STOPPED:          return "Stopped";
+
+    case mbf_msgs::RecoveryResult::FAILURE:         return "Failure";
+    case mbf_msgs::RecoveryResult::CANCELED:        return "Canceled";
+    case mbf_msgs::RecoveryResult::PAT_EXCEEDED:    return "Patience exceeded";
+    case mbf_msgs::RecoveryResult::TF_ERROR:        return "TF Error";
+    case mbf_msgs::RecoveryResult::NOT_INITIALIZED: return "Not initialized";
+    case mbf_msgs::RecoveryResult::INVALID_PLUGIN:  return "Invalid Plugin";
+    case mbf_msgs::RecoveryResult::INTERNAL_ERROR:  return "Internal Error";
+    case mbf_msgs::RecoveryResult::IMPASSABLE:      return "Impassable";
+    case mbf_msgs::RecoveryResult::STOPPED:         return "Stopped";
+
+    default: return "unknown error code: " + std::to_string(outcome);
+  }
 }
 
 } /* namespace mbf_utility */
