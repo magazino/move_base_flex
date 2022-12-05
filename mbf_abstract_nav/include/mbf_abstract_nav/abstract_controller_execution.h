@@ -343,6 +343,10 @@ namespace mbf_abstract_nav
     //! whether move base flex should force the robot to stop on canceling navigation.
     bool force_stop_on_cancel_;
 
+    //! whether move base flex should force the robot to stop while retrying controller calls
+    //! (that is, until patience is exceeded or retries are exhausted).
+    bool force_stop_on_retry_;
+
     //! distance tolerance to the given goal pose
     double dist_tolerance_;
 
