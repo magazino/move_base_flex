@@ -66,6 +66,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   private_nh.param("robot_frame", robot_frame_, std::string("base_link"));
   private_nh.param("map_frame", global_frame_, std::string("map"));
   private_nh.param("force_stop_at_goal", force_stop_at_goal_, false);
+  private_nh.param("force_stop_on_retry", force_stop_on_retry_, true);
   private_nh.param("force_stop_on_cancel", force_stop_on_cancel_, false);
   private_nh.param("mbf_tolerance_check", mbf_tolerance_check_, false);
   private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
@@ -401,8 +402,18 @@ void AbstractControllerExecution::run()
             // keep trying if we have > 0 or -1 (infinite) retries
             moving_ = max_retries_;
           }
-          // could not compute a valid velocity command -> stop moving the robot
-          publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
+
+          // could not compute a valid velocity command
+          if (!moving_ || force_stop_on_retry_)
+          {
+            publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
+          }
+          else
+          {
+            // we are retrying compute velocity commands; we keep sending the command calculated by the plugin
+            // with the expectation that it's a sensible one (e.g. slow down while respecting acceleration limits)
+            vel_pub_.publish(cmd_vel_stamped.twist);
+          }
         }
 
         // set stamped values; timestamp and frame_id should be set by the plugin; otherwise setVelocityCmd will do
