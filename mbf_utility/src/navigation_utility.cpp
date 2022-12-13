@@ -247,6 +247,7 @@ std::string outcome2str(unsigned int outcome)
     case mbf_msgs::ExePathResult::ROBOT_STUCK:      return "Robot stuck";
     case mbf_msgs::ExePathResult::MISSED_GOAL:      return "Missed Goal";
     case mbf_msgs::ExePathResult::MISSED_PATH:      return "Missed Path";
+    case mbf_msgs::ExePathResult::BLOCKED_GOAL:     return "Blocked Goal";
     case mbf_msgs::ExePathResult::BLOCKED_PATH:     return "Blocked Path";
     case mbf_msgs::ExePathResult::INVALID_PATH:     return "Invalid Path";
     case mbf_msgs::ExePathResult::TF_ERROR:         return "TF Error";
