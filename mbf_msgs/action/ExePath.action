@@ -41,7 +41,10 @@ uint8 STOPPED           = 118  # The controller execution has been stopped rigor
 
 uint8 ERROR_RANGE_START = 100
 uint8 ERROR_RANGE_END   = 149
-# 121..149 are reserved as plugin specific errors
+
+# 121..149 are reserved as plugin specific errors:
+uint8 PLUGIN_ERROR_RANGE_START = 121
+uint8 PLUGIN_ERROR_RANGE_END   = 149
 
 uint32 outcome
 string message

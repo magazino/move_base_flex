@@ -42,7 +42,10 @@ uint8 STOPPED           = 63  # The planner execution has been stopped rigorousl
 
 uint8 ERROR_RANGE_START = 50
 uint8 ERROR_RANGE_END   = 99
-# 71..99 are reserved as plugin specific errors
+
+# 71..99 are reserved as plugin specific errors:
+uint8 PLUGIN_ERROR_RANGE_START = 71
+uint8 PLUGIN_ERROR_RANGE_END   = 99
 
 uint32 outcome
 string message
