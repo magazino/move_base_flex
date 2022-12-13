@@ -23,7 +23,10 @@ uint8 IMPASSABLE        = 158  # Further execution would lead to a collision
 
 uint8 ERROR_RANGE_START = 150
 uint8 ERROR_RANGE_END   = 199
-# 171..199 are reserved as plugin specific errors
+
+# 171..199 are reserved as plugin specific errors:
+uint8 PLUGIN_ERROR_RANGE_START = 171
+uint8 PLUGIN_ERROR_RANGE_END   = 199
 
 uint32 outcome
 string message
