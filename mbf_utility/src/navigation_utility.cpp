@@ -101,6 +101,12 @@ bool transformPose(const TF &tf,
     return false;
   }
 
+  if (target_frame == in.header.frame_id)
+  {
+    out = in;
+    return true;
+  }
+
   std::string error_msg;
 
 #ifdef USE_OLD_TF
