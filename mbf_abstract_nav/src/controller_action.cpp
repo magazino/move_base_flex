@@ -60,6 +60,13 @@ void ControllerAction::start(
     goal_handle.setCanceled();
     return;
   }
+  if (goal_handle.getGoal()->path.poses.empty())
+  {
+    mbf_msgs::ExePathResult result;
+    result.message = "Path is empty.";
+    result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
+    goal_handle.setRejected(result, result.message);
+  }
 
   uint8_t slot = goal_handle.getGoal()->concurrency_slot;
 
