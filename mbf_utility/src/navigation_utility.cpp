@@ -232,9 +232,9 @@ std::string outcome2str(unsigned int outcome)
   if (outcome == mbf_msgs::MoveBaseResult::GOAL_BLOCKED)
     return "Goal blocked";
   if (outcome == mbf_msgs::MoveBaseResult::TF_ERROR)
-    return "TF Error";
+    return "TF error";
   if (outcome == mbf_msgs::MoveBaseResult::INTERNAL_ERROR)
-    return "Internal Error";
+    return "Internal error";
 
   if (outcome == mbf_msgs::GetPathResult::FAILURE)
     return "Failure";
@@ -244,20 +244,24 @@ std::string outcome2str(unsigned int outcome)
     return "Invalid start";
   if (outcome == mbf_msgs::GetPathResult::INVALID_GOAL)
     return "Invalid goal";
+  if (outcome == mbf_msgs::GetPathResult::BLOCKED_START)
+    return "Blocked start";
+  if (outcome == mbf_msgs::GetPathResult::BLOCKED_GOAL)
+    return "Blocked goal";
   if (outcome == mbf_msgs::GetPathResult::NO_PATH_FOUND)
     return "No path found";
   if (outcome == mbf_msgs::GetPathResult::PAT_EXCEEDED)
     return "Patience exceeded";
   if (outcome == mbf_msgs::GetPathResult::EMPTY_PATH)
-    return "Empty Path";
+    return "Empty path";
   if (outcome == mbf_msgs::GetPathResult::TF_ERROR)
-    return "TF Error";
+    return "TF error";
   if (outcome == mbf_msgs::GetPathResult::NOT_INITIALIZED)
     return "Not initialized";
   if (outcome == mbf_msgs::GetPathResult::INVALID_PLUGIN)
-    return "Invalid Plugin";
+    return "Invalid plugin";
   if (outcome == mbf_msgs::GetPathResult::INTERNAL_ERROR)
-    return "Internal Error";
+    return "Internal error";
   if (outcome == mbf_msgs::GetPathResult::OUT_OF_MAP)
     return "Out of map";
   if (outcome == mbf_msgs::GetPathResult::MAP_ERROR)
@@ -285,21 +289,21 @@ std::string outcome2str(unsigned int outcome)
   if (outcome == mbf_msgs::ExePathResult::MISSED_GOAL)
     return "Missed Goal";
   if (outcome == mbf_msgs::ExePathResult::MISSED_PATH)
-    return "Missed Path";
+    return "Missed path";
   if (outcome == mbf_msgs::ExePathResult::BLOCKED_GOAL)
     return "Blocked Goal";
   if (outcome == mbf_msgs::ExePathResult::BLOCKED_PATH)
-    return "Blocked Path";
+    return "Blocked path";
   if (outcome == mbf_msgs::ExePathResult::INVALID_PATH)
-    return "Invalid Path";
+    return "Invalid path";
   if (outcome == mbf_msgs::ExePathResult::TF_ERROR)
-    return "TF Error";
+    return "TF error";
   if (outcome == mbf_msgs::ExePathResult::NOT_INITIALIZED)
     return "Not initialized";
   if (outcome == mbf_msgs::ExePathResult::INVALID_PLUGIN)
-    return "Invalid Plugin";
+    return "Invalid plugin";
   if (outcome == mbf_msgs::ExePathResult::INTERNAL_ERROR)
-    return "Internal Error";
+    return "Internal error";
   if (outcome == mbf_msgs::ExePathResult::OUT_OF_MAP)
     return "Out of map";
   if (outcome == mbf_msgs::ExePathResult::MAP_ERROR)
@@ -317,13 +321,13 @@ std::string outcome2str(unsigned int outcome)
   if (outcome == mbf_msgs::RecoveryResult::PAT_EXCEEDED)
     return "Patience exceeded";
   if (outcome == mbf_msgs::RecoveryResult::TF_ERROR)
-    return "TF Error";
+    return "TF error";
   if (outcome == mbf_msgs::RecoveryResult::NOT_INITIALIZED)
     return "Not initialized";
   if (outcome == mbf_msgs::RecoveryResult::INVALID_PLUGIN)
-    return "Invalid Plugin";
+    return "Invalid plugin";
   if (outcome == mbf_msgs::RecoveryResult::INTERNAL_ERROR)
-    return "Internal Error";
+    return "Internal error";
   if (outcome == mbf_msgs::RecoveryResult::IMPASSABLE)
     return "Impassable";
   if (outcome == mbf_msgs::RecoveryResult::STOPPED)
