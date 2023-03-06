@@ -63,7 +63,7 @@ void ControllerAction::start(
   if (goal_handle.getGoal()->path.poses.empty())
   {
     mbf_msgs::ExePathResult result;
-    result.message = "Path is empty.";
+    result.message = "Path is empty";
     result.outcome = mbf_msgs::ExePathResult::INVALID_PATH;
     goal_handle.setRejected(result, result.message);
   }
