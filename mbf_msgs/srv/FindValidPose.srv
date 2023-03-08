@@ -1,0 +1,27 @@
+# Find the closest valid pose to the given one, within the given linear and angular tolerances.
+# A pose is considered valid if the robot footprint there is entirely inside the map and not in
+# collision nor unknown space.
+# Alternatively this service can be use to find the closest valid pose to the robot's current one.
+
+uint8                      LOCAL_COSTMAP  = 1
+uint8                      GLOBAL_COSTMAP = 2
+
+geometry_msgs/PoseStamped  pose              # the starting pose from which we start the search
+float32                    safety_dist       # minimum distance allowed to the closest obstacle
+float32                    dist_tolerance    # maximum distance we can deviate from the given pose during the search
+float32                    angle_tolerance   # maximum angle we can rotate the given pose during the search
+uint8                      costmap           # costmap in which to check the pose
+bool                       current_pose      # check current robot pose instead (ignores pose field)
+bool                       use_padded_fp     # include footprint padding when checking cost; note that safety distance
+                                             # will be measured from the padded footprint
+---
+uint8                      FREE      =  0    # found pose is completely in traversable space
+uint8                      INSCRIBED =  1    # found pose is partially in inscribed space
+uint8                      LETHAL    =  2    # found pose is partially in collision
+uint8                      UNKNOWN   =  3    # found pose is partially in unknown space
+uint8                      OUTSIDE   =  4    # found pose is partially outside the map
+
+bool                       valid             # whether we found a valid pose
+uint8                      state             # found pose's state: FREE, INFLATED, LETHAL, UNKNOWN or OUTSIDE
+uint32                     cost              # found pose's cost (added cost of all cells covered by the footprint)
+geometry_msgs/PoseStamped  pose              # the pose found (filled only if valid is true)
