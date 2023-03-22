@@ -51,6 +51,7 @@
 
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
+#include "mbf_costmap_nav/search_helper.h"
 
 namespace mbf_costmap_nav
 {

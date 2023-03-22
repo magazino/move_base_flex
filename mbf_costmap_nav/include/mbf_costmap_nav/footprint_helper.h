@@ -48,7 +48,7 @@ namespace mbf_costmap_nav
 
 struct Cell
 {
-  unsigned int x, y;
+  unsigned int x, y, cost;
 };
 
 class FootprintHelper

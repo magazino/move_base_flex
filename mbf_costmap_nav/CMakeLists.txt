@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(mbf_costmap_nav)
 
+set(CMAKE_CXX_STANDARD 17)
+
 find_package(catkin REQUIRED
   COMPONENTS
   costmap_2d
@@ -76,6 +78,7 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_recovery_execution.cpp
   src/mbf_costmap_nav/costmap_wrapper.cpp
   src/mbf_costmap_nav/footprint_helper.cpp
+  src/mbf_costmap_nav/search_helper.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})
@@ -108,3 +111,19 @@ install(DIRECTORY include/${PROJECT_NAME}/
 catkin_install_python(PROGRAMS scripts/move_base_legacy_relay.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+#############
+## Test    ##
+#############
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(search_helper_test
+    test/search_helper.test
+    test/search_helper_test.cpp
+  )
+  target_link_libraries(search_helper_test
+    ${MBF_COSTMAP_2D_SERVER_LIB}
+  )
+endif()

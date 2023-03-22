@@ -19,6 +19,7 @@ add_service_files(
   CheckPoint.srv
   CheckPose.srv
   CheckPath.srv
+  FindValidPose.srv
 )
 
 add_action_files(
