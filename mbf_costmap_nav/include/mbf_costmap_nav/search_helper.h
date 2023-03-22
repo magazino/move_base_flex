@@ -91,7 +91,7 @@ public:
  * can add a new strategy).
  * The search stops when it finds a cell where the robot can be placed without colliding with obstacles (footprint +
  * padding).
- * For each cell, we test multiple angles (by default 8).
+ * For each cell, we test multiple angles.
  * The search is performed on the costmap given in the constructor.
  */
 class SearchHelper
@@ -121,8 +121,7 @@ public:
                                                          const bool use_padded_fp, const double safety_dist);
 
   /**
-   * @brief It checks if the pose of the footprint is valid, i.e., if cost !=
-   * INSCRIBED and cost != LETHAL and cost != NO_INFORMATION (if unknown_is_valid is false)
+   * @brief It checks if the pose of the footprint is valid, i.e., if cost != LETHAL and cost != NO_INFORMATION
    * @param costmap The costmap2D
    * @param footprint The footprint to check
    * @param pose_2d The pose to check the footprint
