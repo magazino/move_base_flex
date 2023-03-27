@@ -1,4 +1,8 @@
 <launch>
+  <arg name="viz_result" default="false" />
+  <arg name="results_dir"  default="$(env HOME)"/>
+  <node if="$(arg viz_result)"
+    name="bag_recorder" pkg="mbf_costmap_nav" type="record_bag_file.sh" args="$(arg results_dir)"/>
   <node pkg="tf2_ros" type="static_transform_publisher" name="broadcaster_b_m" args="0 0 0 0 0 0 base_link map" output="screen"/>
   <node name="ms" pkg="map_server" type="map_server" args="$(find costmap_2d)/test/TenByTen.yaml"/>
   

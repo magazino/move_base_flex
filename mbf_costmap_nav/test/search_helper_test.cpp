@@ -17,15 +17,29 @@ protected:
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{ tf_buffer };
   costmap_2d::Costmap2D* costmap;
+  ros::Subscriber map_sub;
+  nav_msgs::OccupancyGrid map;
+  ros::Publisher map_pub;
+
+  SearchHelperTest()
+  {
+    tf_buffer.setUsingDedicatedThread(true);
+  }
 
   void SetUp() override
   {
-    tf_buffer.setUsingDedicatedThread(true);
     if (!tf_buffer.canTransform("base_link", "map", ros::Time::now(), ros::Duration(5.0)))
     {
       FAIL() << "Cannot transform from base_link to map";
     }
     costmap = new costmap_2d::Costmap2D(10, 10, 1.0, 0.0, 0.0, 0);
+    map_sub = ros::NodeHandle().subscribe("map", 1, &SearchHelperTest::mapCb, this);
+    map_pub = ros::NodeHandle().advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+  }
+
+  void mapCb(const nav_msgs::OccupancyGrid& m)
+  {
+    map = m;
   }
 
   geometry_msgs::Point toPoint(double x, double y)
@@ -204,32 +218,39 @@ TEST_F(SearchHelperTest, isPoseValid)
 TEST_F(SearchHelperTest, findValidOrientation)
 {
   costmap->setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
+  std::optional<SearchHelperViz> viz;
   // square
   std::vector<geometry_msgs::Point> footprint = { toPoint(-0.5, -0.5), toPoint(0.5, -0.5), toPoint(0.5, 0.5),
                                                   toPoint(-0.5, 0.5) };
-  auto sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI_4 / 2, M_PI });
+  auto sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI_4 / 2, M_PI }, viz);
   ASSERT_TRUE(sol);
   EXPECT_NEAR(sol->theta, M_PI_4 / 2, 1e-6);
 
-  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI, 2 * M_PI });
+  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI, 2 * M_PI }, viz);
   ASSERT_FALSE(sol);
 
   // rectangle
   footprint = { toPoint(-0.5, -0.4), toPoint(1.0, -0.4), toPoint(1.0, 0.4), toPoint(-0.5, 0.4) };
-  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, 0), { M_PI_4, M_PI });
+  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, 0), { M_PI_4, M_PI }, viz);
   ASSERT_TRUE(sol);
   EXPECT_NEAR(sol->theta, M_PI_2, 1e-6);
 
-  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, -M_PI_2), { M_PI_4, M_PI });
+  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, -M_PI_2), { M_PI_4, M_PI }, viz);
   ASSERT_TRUE(sol);
   EXPECT_NEAR(sol->theta, -M_PI_2, 1e-6);
 }
 
 TEST_F(SearchHelperTest, search)
 {
+  ros::NodeHandle nh;
   costmap_2d::Costmap2DROS* cm = new costmap_2d::Costmap2DROS("search/global", tf_buffer);
+  SearchHelperViz viz(nh, cm->getGlobalFrameID());
+
   printMap(*(cm->getCostmap()));
   addObstacle(cm, 5.5, 5.5);
+  map.header.stamp = ros::Time::now();
+  map.data[cm->getCostmap()->getIndex(5, 5)] = 100;
+  map_pub.publish(map);
 
   /*
   y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
@@ -246,7 +267,7 @@ TEST_F(SearchHelperTest, search)
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
   SearchConfig config{ M_PI_4, M_PI, 5.0, false, 0.0, toPose2D(5.5, 5.5, 0) };
-  SearchHelper sh(cm, config);
+  SearchHelper sh(cm, config, std::nullopt, viz);
 
   geometry_msgs::Pose2D sol;
   ASSERT_TRUE(sh.search(sol));
@@ -255,6 +276,10 @@ TEST_F(SearchHelperTest, search)
   EXPECT_NEAR(sol.theta, -M_PI_4, 1e-6);
 
   addObstacle(cm, 6.5, 4.5);
+  map.header.stamp = ros::Time::now();
+  map.data[cm->getCostmap()->getIndex(6, 4)] = 100;
+  map_pub.publish(map);
+
   /*
   y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
   ------------------------------------------------------------
@@ -275,6 +300,10 @@ TEST_F(SearchHelperTest, search)
   EXPECT_NEAR(sol.theta, M_PI_4, 1e-6);
 
   addObstacle(cm, 5.5, 7.5);
+  map.header.stamp = ros::Time::now();
+  map.data[cm->getCostmap()->getIndex(5, 7)] = 100;
+  map_pub.publish(map);
+
   /*
   y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
   ------------------------------------------------------------
@@ -295,6 +324,10 @@ TEST_F(SearchHelperTest, search)
   EXPECT_NEAR(sol.theta, 3 * M_PI_4, 1e-6);
 
   addObstacle(cm, 3.5, 4.5);
+  map.header.stamp = ros::Time::now();
+  map.data[cm->getCostmap()->getIndex(3, 4)] = 100;
+  map_pub.publish(map);
+
   /*
   y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
   ------------------------------------------------------------

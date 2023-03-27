@@ -79,6 +79,7 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_wrapper.cpp
   src/mbf_costmap_nav/footprint_helper.cpp
   src/mbf_costmap_nav/search_helper.cpp
+  src/mbf_costmap_nav/search_helper_viz.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})

@@ -36,8 +36,9 @@
 #ifndef SEARCH_HELPER_H_
 #define SEARCH_HELPER_H_
 
-// mbf_costmap_nav
+// mbf
 #include "mbf_costmap_nav/footprint_helper.h"
+#include "mbf_costmap_nav/search_helper_viz.h"
 
 // std
 #include <optional>
@@ -46,6 +47,8 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose2D.h>
 #include <costmap_2d/costmap_2d_ros.h>
+#include <std_msgs/ColorRGBA.h>
+#include <visualization_msgs/MarkerArray.h>
 
 namespace mbf_costmap_nav
 {
@@ -101,9 +104,12 @@ private:
   SearchConfig config_;
   std::function<bool(const Cell, const Cell)> compare_strategy_;
 
+  mutable std::optional<SearchHelperViz> viz_;
+
 public:
   SearchHelper(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-               const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy = std::nullopt);
+               const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy = std::nullopt,
+               const std::optional<SearchHelperViz>& viz = std::nullopt);
 
   /**
    * @brief It returns the eight neighbors of the given cell
@@ -137,12 +143,14 @@ public:
    * @param footprint The footprint to check
    * @param pose_2d The pose to check the footprint
    * @param config The search configuration
+   * @param viz The visualization object
    * @return The first valid pose found, or an empty optional if no valid pose was found
    */
   static std::optional<geometry_msgs::Pose2D> findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
                                                                    const std::vector<geometry_msgs::Point>& footprint,
                                                                    const geometry_msgs::Pose2D& pose_2d,
-                                                                   const SearchConfig& config);
+                                                                   const SearchConfig& config,
+                                                                   std::optional<SearchHelperViz>& viz);
 
   /**
    * @brief It performs the search on the costmap, see the class description for more details.

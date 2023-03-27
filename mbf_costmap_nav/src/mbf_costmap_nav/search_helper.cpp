@@ -9,8 +9,9 @@ namespace mbf_costmap_nav
 {
 
 SearchHelper::SearchHelper(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-                           const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy)
-  : costmap_(costmap), config_(config)
+                           const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy,
+                           const std::optional<SearchHelperViz>& viz)
+  : costmap_(costmap), config_(config), viz_(viz)
 {
   Cell start;
   costmap_->getCostmap()->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
@@ -82,7 +83,7 @@ bool SearchHelper::isPoseValid(const costmap_2d::Costmap2D* costmap_2d,
 
 std::optional<geometry_msgs::Pose2D> SearchHelper::findValidOrientation(
     const costmap_2d::Costmap2D* costmap_2d, const std::vector<geometry_msgs::Point>& footprint,
-    const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config)
+    const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config, std::optional<SearchHelperViz>& viz)
 {
   // loop through angle increments and check if footprint is valid. If it is, return the pose
   geometry_msgs::Pose2D test_pose_2d = pose_2d;
@@ -94,7 +95,18 @@ std::optional<geometry_msgs::Pose2D> SearchHelper::findValidOrientation(
       test_pose_2d.theta = theta;
       if (isPoseValid(costmap_2d, footprint, test_pose_2d))
       {
+        if (viz)
+        {
+          viz->addSolution(test_pose_2d, footprint);
+        }
         return test_pose_2d;
+      }
+      else
+      {
+        if (viz)
+        {
+          viz->addBlocked(test_pose_2d, footprint);
+        }
       }
     }
   }
@@ -125,6 +137,12 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
   std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
   queue.push(start);
 
+  // restart markers
+  if (viz_)
+  {
+    viz_->deleteMarkers();
+  }
+
   while (!queue.empty())
   {
     Cell cell = queue.top();
@@ -136,11 +154,15 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
     if (cell.cost != costmap_2d::LETHAL_OBSTACLE && cell.cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
         cell.cost != costmap_2d::NO_INFORMATION)
     {
-      const auto pose = findValidOrientation(costmap2d, footprint, pose_2d, config_);
+      const auto pose = findValidOrientation(costmap2d, footprint, pose_2d, config_, viz_);
       if (pose)
       {
         ROS_DEBUG_STREAM("Found solution pose: " << pose->x << ", " << pose->y << ", " << pose->theta);
         best = pose.value();
+        if (viz_)
+        {
+          viz_->publish();
+        }
         return true;
       }
     }
@@ -148,6 +170,10 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
     {
       ROS_DEBUG_STREAM("Cell " << cell.x << ", " << cell.y << "; pose: (" << pose_2d.x << ", " << pose_2d.y << ", "
                                << pose_2d.theta << ") is an obstacle or unknown; skipping");
+      if (viz_)
+      {
+        viz_->addBlocked(pose_2d, footprint);
+      }
     }
 
     // adding neighbors to queue
@@ -176,7 +202,10 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
     }
   }
   ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");
+  if (viz_)
+  {
+    viz_->publish();
+  }
   return false;
 }
-
 } /* namespace mbf_costmap_nav */
