@@ -63,9 +63,16 @@ bool SearchHelper::isPoseValid(const costmap_2d::Costmap2D* costmap_2d,
     return false;
   }
 
-  for (int j = 0; j < cells_to_check.size(); ++j)
+  // create a map of cells to avoid duplicates
+  std::unordered_map<int, Cell> cells_to_check_map;
+  for (const auto& cell : cells_to_check)
   {
-    unsigned char cost = costmap_2d->getCost(cells_to_check[j].x, cells_to_check[j].y);
+    cells_to_check_map[costmap_2d->getIndex(cell.x, cell.y)] = cell;
+  }
+
+  for (const auto& [index, cell] : cells_to_check_map)
+  {
+    unsigned char cost = costmap_2d->getCost(cell.x, cell.y);
     switch (cost)
     {
       case costmap_2d::NO_INFORMATION:
@@ -132,6 +139,7 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
 
   Cell start;
   costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
+  start.cost = costmap2d->getCost(start.x, start.y);
   in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
 
   std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
