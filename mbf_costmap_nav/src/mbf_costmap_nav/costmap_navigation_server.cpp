@@ -52,6 +52,7 @@
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 #include "mbf_costmap_nav/search_helper.h"
+#include "mbf_costmap_nav/search_helper_viz.h"
 
 namespace mbf_costmap_nav
 {
@@ -175,6 +176,8 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
                                                       &CostmapNavigationServer::callServiceCheckPathCost, this);
   clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
                                                      &CostmapNavigationServer::callServiceClearCostmaps, this);
+  find_valid_pose_srv_ =
+      private_nh_.advertiseService("find_valid_pose", &CostmapNavigationServer::callServiceFindValidPose, this);
 
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
@@ -677,25 +680,12 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
 bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
                                                        mbf_msgs::CheckPath::Response &response)
 {
-  // selecting the requested costmap
-  CostmapWrapper::Ptr costmap;
-  std::string costmap_name;
-  switch (request.costmap)
+  CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
+  if (!costmap)
   {
-    case mbf_msgs::CheckPath::Request::LOCAL_COSTMAP:
-      costmap = local_costmap_ptr_;
-      costmap_name = "local costmap";
-      break;
-    case mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP:
-      costmap = global_costmap_ptr_;
-      costmap_name = "global costmap";
-      break;
-    default:
-      ROS_ERROR_STREAM("No valid costmap provided; options are "
-                       << mbf_msgs::CheckPath::Request::LOCAL_COSTMAP << ": local costmap, "
-                       << mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP << ": global costmap");
-      return false;
+    return false;
   }
+  std::string costmap_name = request.costmap == mbf_msgs::CheckPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
 
   // ensure costmap is active so cost reflects the latest sensor readings
   costmap->checkActivate();
@@ -823,6 +813,88 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request 
   // clear both costmaps
   local_costmap_ptr_->clear();
   global_costmap_ptr_->clear();
+  return true;
+}
+
+CostmapWrapper::Ptr CostmapNavigationServer::selectingRequestedCostmap(std::uint8_t costmap_type) const
+{
+  // selecting the requested costmap
+  CostmapWrapper::Ptr costmap;
+  switch (costmap_type)
+  {
+    case mbf_msgs::CheckPose::Request::LOCAL_COSTMAP:
+      return local_costmap_ptr_;
+      break;
+    case mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP:
+      return global_costmap_ptr_;
+      break;
+    default:
+      ROS_ERROR_STREAM("No valid costmap provided; options are "
+                       << mbf_msgs::CheckPose::Request::LOCAL_COSTMAP << ": local costmap, "
+                       << mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP << ": global costmap");
+      return costmap;
+  }
+}
+
+bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::Request& request,
+                                                       mbf_msgs::FindValidPose::Response& response)
+{
+  CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
+  if (!costmap)
+  {
+    return false;
+  }
+  std::string costmap_name = request.costmap == mbf_msgs::FindValidPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
+
+  // get target pose or current robot pose as x, y, yaw coordinates
+  std::string costmap_frame = costmap->getGlobalFrameID();
+  
+  geometry_msgs::PoseStamped pose;
+  if (request.current_pose)
+  {
+    if (!mbf_utility::getRobotPose(*tf_listener_ptr_, robot_frame_, costmap_frame, ros::Duration(0.5), pose))
+    {
+      ROS_ERROR_STREAM("Get robot pose on " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+  else
+  {
+    if (!mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, ros::Duration(0.5), request.pose, pose))
+    {
+      ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+
+  geometry_msgs::Pose2D goal;
+  goal.x = request.pose.pose.position.x;
+  goal.y = request.pose.pose.position.y;
+  goal.theta = tf::getYaw(request.pose.pose.orientation);
+
+  ros::NodeHandle private_nh("~");
+  // using 5 degrees as increment
+  SearchConfig config{ ANGLE_INCREMENT,      request.angle_tolerance, request.dist_tolerance,
+                       static_cast<bool>(request.use_padded_fp), request.safety_dist,     goal };
+  SearchHelperViz viz(private_nh, costmap_frame);
+  SearchHelper search_helper(costmap.get(), config, std::nullopt, viz);
+
+  // search for a valid pose
+  geometry_msgs::Pose2D solution;
+  if (!search_helper.search(solution))
+  {
+    ROS_ERROR_STREAM("No valid pose found on " << costmap_name << " frame '" << costmap_frame << "'; for target pose ["
+                                              << goal.x << ", " << goal.y << ", " << goal.theta << "]");
+    response.valid = false;
+    return true;
+  }
+
+  response.valid = true;
+  response.pose.pose.position.x = solution.x;
+  response.pose.pose.position.y = solution.y;
+  response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(solution.theta);
+  response.pose.header.frame_id = costmap_frame;
+  response.pose.header.stamp = ros::Time::now();
   return true;
 }
 

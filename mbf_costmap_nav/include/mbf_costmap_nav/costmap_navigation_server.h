@@ -47,6 +47,7 @@
 #include <mbf_msgs/CheckPath.h>
 #include <mbf_msgs/CheckPose.h>
 #include <mbf_msgs/CheckPoint.h>
+#include <mbf_msgs/FindValidPose.h>
 
 #include <nav_core/base_global_planner.h>
 #include <nav_core/base_local_planner.h>
@@ -192,6 +193,15 @@ private:
       const mbf_abstract_core::AbstractRecovery::Ptr &behavior_ptr);
 
   /**
+   * @brief If mbf_msgs::CheckPose::Request::LOCAL_COSTMAP the local costmap is returned
+   * if mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP, the global costmap is returned.
+   * Otherwise, it returns an empty pointer.
+   * @param costmap_type The type of the costmap to return
+   * @return A shared pointer to the requested costmap, if the costmap_type is valid, an empty pointer otherwise.
+  */
+  CostmapWrapper::Ptr selectingRequestedCostmap(mbf_msgs::CheckPose::Request::_costmap_type costmap_type) const;
+
+  /**
    * @brief Callback method for the check_point_cost service
    * @param request Request object, see the mbf_msgs/CheckPoint service definition file.
    * @param response Response object, see the mbf_msgs/CheckPoint service definition file.
@@ -225,6 +235,15 @@ private:
    * @return true, if the service completed successfully, false otherwise
    */
   bool callServiceClearCostmaps(std_srvs::Empty::Request &request, std_srvs::Empty::Response &response);
+
+  /**
+   * @brief Callback method for the find valid pose service
+   * @param request FindValidPose request object.
+   * @param response FindValidPose response object.
+   * @return true, if the service completed successfully, false otherwise
+   */
+  bool callServiceFindValidPose(mbf_msgs::FindValidPose::Request &request, 
+                                mbf_msgs::FindValidPose::Response &response);
 
   /**
    * @brief Reconfiguration method called by dynamic reconfigure.
@@ -275,6 +294,11 @@ private:
 
   //! Service Server for the clear_costmap service
   ros::ServiceServer clear_costmaps_srv_;
+
+  //! Service Server for the find_valid_pose service
+  ros::ServiceServer find_valid_pose_srv_;
+
+  static constexpr double ANGLE_INCREMENT = 5.0 * M_PI / 180.0; // 5 degrees
 };
 
 } /* namespace mbf_costmap_nav */
