@@ -17,5 +17,5 @@ uint8                      LETHAL    =  2    # robot is partially in collision
 uint8                      UNKNOWN   =  3    # robot is partially in unknown space
 uint8                      OUTSIDE   =  4    # robot is partially outside the map
 
-uint8                      state             # pose state: FREE, INFLATED, LETHAL, UNKNOWN or OUTSIDE
+uint8                      state             # pose state: FREE, INSCRIBED, LETHAL, UNKNOWN or OUTSIDE
 uint32                     cost              # total cost of all cells within footprint padded by safety_dist

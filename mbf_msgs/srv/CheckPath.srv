@@ -21,6 +21,6 @@ uint8                      UNKNOWN   =  3    # path is partially in unknown spac
 uint8                      OUTSIDE   =  4    # path is partially outside the map
 
 uint32                     last_checked      # index of the first pose along the path with return_on state or worse
-uint8                      state             # path worst state (until last_checked): FREE, INFLATED, LETHAL, UNKNOWN...
+uint8                      state             # path worst state (until last_checked): FREE, INSCRIBED, LETHAL, UNKNOWN...
 uint32                     cost              # cost of all cells traversed by path within footprint padded by safety_dist
                                              # or just by the path if path_cells_only is true
