@@ -844,11 +844,12 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
   {
     return false;
   }
-  std::string costmap_name = request.costmap == mbf_msgs::FindValidPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
+  std::string costmap_name =
+      request.costmap == mbf_msgs::FindValidPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
 
   // get target pose or current robot pose as x, y, yaw coordinates
   std::string costmap_frame = costmap->getGlobalFrameID();
-  
+
   geometry_msgs::PoseStamped pose;
   if (request.current_pose)
   {
@@ -874,8 +875,9 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
 
   ros::NodeHandle private_nh("~");
   // using 5 degrees as increment
-  SearchConfig config{ ANGLE_INCREMENT,      request.angle_tolerance, request.dist_tolerance,
-                       static_cast<bool>(request.use_padded_fp), request.safety_dist,     goal };
+  SearchConfig config{ ANGLE_INCREMENT,        request.angle_tolerance,
+                       request.dist_tolerance, static_cast<bool>(request.use_padded_fp),
+                       request.safety_dist,    goal };
   SearchHelperViz viz(private_nh, costmap_frame);
   SearchHelper search_helper(costmap.get(), config, std::nullopt, viz);
 
@@ -884,7 +886,7 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
   if (!search_helper.search(solution))
   {
     ROS_ERROR_STREAM("No valid pose found on " << costmap_name << " frame '" << costmap_frame << "'; for target pose ["
-                                              << goal.x << ", " << goal.y << ", " << goal.theta << "]");
+                                               << goal.x << ", " << goal.y << ", " << goal.theta << "]");
     response.valid = false;
     return true;
   }
