@@ -63,6 +63,28 @@ struct SearchConfig
   geometry_msgs::Pose2D goal;
 };
 
+struct SearchState
+{
+  unsigned char cost;
+  std::uint8_t state{ State::UNSET };
+
+  enum State
+  {
+    FREE = 0,
+    INSCRIBED = 1,
+    LETHAL = 2,
+    UNKNOWN = 3,
+    OUTSIDE = 4,
+    UNSET = 5
+  };
+};
+
+struct SearchSolution
+{
+  geometry_msgs::Pose2D pose;
+  SearchState search_state;
+};
+
 class EuclideanCompare
 {
 private:
@@ -100,6 +122,8 @@ public:
 class SearchHelper
 {
 private:
+  static constexpr auto LOGNAME = "search_helper";
+
   const costmap_2d::Costmap2DROS* costmap_;
   SearchConfig config_;
   std::function<bool(const Cell, const Cell)> compare_strategy_;
@@ -127,14 +151,18 @@ public:
                                                          const bool use_padded_fp, const double safety_dist);
 
   /**
-   * @brief It checks if the pose of the footprint is valid, i.e., if cost != LETHAL and cost != NO_INFORMATION
+   * @brief It gets the cost and state of the footprint by checking the max cost of all cells that the footprint covers
+   * It returns costmap_2d::LETHAL_OBSTACLE if any of the cells is lethal; otherwise, returns costmap_2d::NO_INFORMATION
+   * if any of the cells is unknown; otherwise the maximum cost of all cells.
+   * See FindValidPose msg for possible state values.
    * @param costmap The costmap2D
    * @param footprint The footprint to check
    * @param pose_2d The pose to check the footprint
-   * @return True if the pose is valid, false otherwise
+   * @return The SearchState of the footprint (FindValidPose.msg state and costmap cost)
    */
-  static bool isPoseValid(const costmap_2d::Costmap2D* costmap_2d, const std::vector<geometry_msgs::Point>& footprint,
-                          const geometry_msgs::Pose2D& pose_2d);
+  static SearchState getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
+                                       const std::vector<geometry_msgs::Point>& footprint,
+                                       const geometry_msgs::Pose2D& pose_2d);
 
   /**
    * @brief It loops in the given angle increments and checks if the pose of the footprint is valid (collision free)
@@ -144,21 +172,19 @@ public:
    * @param pose_2d The pose to check the footprint
    * @param config The search configuration
    * @param viz The visualization object
-   * @return The first valid pose found, or an empty optional if no valid pose was found
+   * @return A search solution for the given pose: best pose, state and cost
    */
-  static std::optional<geometry_msgs::Pose2D> findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
-                                                                   const std::vector<geometry_msgs::Point>& footprint,
-                                                                   const geometry_msgs::Pose2D& pose_2d,
-                                                                   const SearchConfig& config,
-                                                                   std::optional<SearchHelperViz>& viz);
+  static SearchSolution findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
+                                             const std::vector<geometry_msgs::Point>& footprint,
+                                             const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
+                                             std::optional<SearchHelperViz>& viz);
 
   /**
    * @brief It performs the search on the costmap, see the class description for more details.
-   * @param start The start cell
-   * @param[out] best The best cell found
-   * @return True if a cell was found, false otherwise
+   * @param goal The start cell
+   * @return A search solution for the given pose: best pose, state and cost
    */
-  bool search(geometry_msgs::Pose2D& best) const;
+  SearchSolution search() const;
 };
 
 } /* namespace mbf_costmap_nav */

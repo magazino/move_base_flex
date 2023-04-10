@@ -53,14 +53,15 @@ std::vector<geometry_msgs::Point> SearchHelper::safetyPadding(const costmap_2d::
   return footprint;
 }
 
-bool SearchHelper::isPoseValid(const costmap_2d::Costmap2D* costmap_2d,
-                               const std::vector<geometry_msgs::Point>& footprint, const geometry_msgs::Pose2D& pose_2d)
+SearchState SearchHelper::getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
+                                            const std::vector<geometry_msgs::Point>& footprint,
+                                            const geometry_msgs::Pose2D& pose_2d)
 {
   const auto cells_to_check =
       FootprintHelper::getFootprintCells(pose_2d.x, pose_2d.y, pose_2d.theta, footprint, *costmap_2d, true);
   if (cells_to_check.empty())
   {
-    return false;
+    return { costmap_2d::NO_INFORMATION, SearchState::OUTSIDE };
   }
 
   // create a map of cells to avoid duplicates
@@ -70,60 +71,96 @@ bool SearchHelper::isPoseValid(const costmap_2d::Costmap2D* costmap_2d,
     cells_to_check_map[costmap_2d->getIndex(cell.x, cell.y)] = cell;
   }
 
+  unsigned char max_cost = 0;
   for (const auto& [index, cell] : cells_to_check_map)
   {
     unsigned char cost = costmap_2d->getCost(cell.x, cell.y);
     switch (cost)
     {
-      case costmap_2d::NO_INFORMATION:
-        return false;
-        break;
       case costmap_2d::LETHAL_OBSTACLE:
-        return false;
+        return { costmap_2d::LETHAL_OBSTACLE, SearchState::LETHAL };
         break;
       default:
+        max_cost = std::max(max_cost, cost);
         break;
     }
   }
-  return true;
+  uint8_t state = max_cost == costmap_2d::INSCRIBED_INFLATED_OBSTACLE ? SearchState::INSCRIBED :
+                  max_cost == costmap_2d::NO_INFORMATION              ? SearchState::UNKNOWN :
+                                                                        SearchState::FREE;
+  return { max_cost, state };
 }
 
-std::optional<geometry_msgs::Pose2D> SearchHelper::findValidOrientation(
-    const costmap_2d::Costmap2D* costmap_2d, const std::vector<geometry_msgs::Point>& footprint,
-    const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config, std::optional<SearchHelperViz>& viz)
+SearchSolution SearchHelper::findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
+                                                  const std::vector<geometry_msgs::Point>& footprint,
+                                                  const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
+                                                  std::optional<SearchHelperViz>& viz)
 {
-  // loop through angle increments and check if footprint is valid. If it is, return the pose
-  geometry_msgs::Pose2D test_pose_2d = pose_2d;
+  bool found_unknown{ false };
+  SearchSolution sol;
+  sol.pose = pose_2d;
+
   double dyaw = 0;
   for (; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
   {
-    for (const auto& theta : { pose_2d.theta + dyaw, pose_2d.theta - dyaw })
+    const std::initializer_list<double> thetas =
+        dyaw == 0 ? std::initializer_list<double>{ pose_2d.theta } :
+                    std::initializer_list<double>{ pose_2d.theta + dyaw, pose_2d.theta - dyaw };
+    for (const auto& theta : thetas)
     {
-      test_pose_2d.theta = theta;
-      if (isPoseValid(costmap_2d, footprint, test_pose_2d))
+      sol.pose.theta = theta;
+      SearchState search_state = getFootprintState(costmap_2d, footprint, sol.pose);
+
+      switch (search_state.state)
       {
-        if (viz)
-        {
-          viz->addSolution(test_pose_2d, footprint);
-        }
-        return test_pose_2d;
-      }
-      else
-      {
-        if (viz)
-        {
-          viz->addBlocked(test_pose_2d, footprint);
-        }
+        case SearchState::FREE:
+        case SearchState::INSCRIBED:
+          if (viz)
+          {
+            viz->addSolution(sol.pose, footprint);
+          }
+          return { sol.pose, search_state };
+          break;
+        case SearchState::UNKNOWN:
+        case SearchState::OUTSIDE:
+          if (!found_unknown)
+          {
+            // we save the first unknown/outside pose, but we continue searching for a free pose
+            sol = { sol.pose, search_state };
+            found_unknown = true;
+          }
+          break;
+        case SearchState::LETHAL:
+          // if we didn't find a free pose or unknown/outside, we return lethal
+          if (!found_unknown)
+          {
+            sol.search_state = search_state;
+          }
+          if (viz)
+          {
+            viz->addBlocked(sol.pose, footprint);
+          }
+          break;
+        default:
+          ROS_ERROR_STREAM("Unknown state: " << search_state.state);
+          break;
       }
     }
   }
-  ROS_DEBUG_STREAM("No valid orientation found for pose x-y-theta ("
-                   << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
-                   << config.angle_tolerance << " and increment " << config.angle_increment);
-  return std::nullopt;
+
+  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::LETHAL, LOGNAME,
+                              "No valid orientation found for pose x-y-theta ("
+                                  << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
+                                  << config.angle_tolerance << " and increment " << config.angle_increment);
+
+  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME,
+                              "Solution is in unknown space for pose x-y-theta ("
+                                  << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
+                                  << config.angle_tolerance << " and increment " << config.angle_increment);
+  return sol;
 }
 
-bool SearchHelper::search(geometry_msgs::Pose2D& best) const
+SearchSolution SearchHelper::search() const
 {
   const auto costmap2d = costmap_->getCostmap();
 
@@ -134,9 +171,11 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
 
   std::vector<geometry_msgs::Point> footprint = safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
-  geometry_msgs::Pose2D pose_2d;
-  pose_2d.theta = config_.goal.theta;
+  SearchSolution sol;
+  sol.pose.theta = config_.goal.theta;
+  bool found_unknown{ false };
 
+  // initializing queue with the goal cell
   Cell start;
   costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
   start.cost = costmap2d->getCost(start.x, start.y);
@@ -156,32 +195,49 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
     Cell cell = queue.top();
     queue.pop();
 
-    costmap2d->mapToWorld(cell.x, cell.y, pose_2d.x, pose_2d.y);
-    ROS_DEBUG_STREAM("Checking Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << pose_2d.x << ", "
-                                        << pose_2d.y << ", " << pose_2d.theta << ")");
+    costmap2d->mapToWorld(cell.x, cell.y, sol.pose.x, sol.pose.y);
+    ROS_DEBUG_STREAM_NAMED(LOGNAME, "Checking Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x
+                                                       << ", " << sol.pose.y << ", " << sol.pose.theta << ")");
+
+    // Note: if the center of the robot is in costmap_2d::NO_INFORMATION, we don't accept it as a solution
     if (cell.cost != costmap_2d::LETHAL_OBSTACLE && cell.cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
         cell.cost != costmap_2d::NO_INFORMATION)
     {
-      const auto pose = findValidOrientation(costmap2d, footprint, pose_2d, config_, viz_);
-      if (pose)
+      const auto tested_sol = findValidOrientation(costmap2d, footprint, sol.pose, config_, viz_);
+      // if footprint is free or inscribed, we return the solution
+      if (tested_sol.search_state.state == SearchState::FREE || tested_sol.search_state.state == SearchState::INSCRIBED)
       {
-        ROS_DEBUG_STREAM("Found solution pose: " << pose->x << ", " << pose->y << ", " << pose->theta);
-        best = pose.value();
+        ROS_DEBUG_STREAM_NAMED(LOGNAME, "Found solution pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
+                                                                << ", " << tested_sol.pose.theta);
         if (viz_)
         {
           viz_->publish();
         }
-        return true;
+        return tested_sol;
       }
+
+      // if the state is outside or unknown, we save the first one we find
+      if ((tested_sol.search_state.state == SearchState::OUTSIDE ||
+           tested_sol.search_state.state == SearchState::UNKNOWN) &&
+          !found_unknown)
+      {
+        ROS_DEBUG_STREAM_NAMED(LOGNAME, "Found unknown/outside pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
+                                                                       << ", " << tested_sol.pose.theta);
+        sol = tested_sol;
+        found_unknown = true;
+      }
+
+      ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME,
+                                  "Footprint in cell " << cell.x << ", " << cell.y << "; pose: (" << sol.pose.x << ", "
+                                                       << sol.pose.y << ", " << sol.pose.theta
+                                                       << ") is in lethal obstacle or unknown; skipping");
     }
+
     else
     {
-      ROS_DEBUG_STREAM("Cell " << cell.x << ", " << cell.y << "; pose: (" << pose_2d.x << ", " << pose_2d.y << ", "
-                               << pose_2d.theta << ") is an obstacle or unknown; skipping");
-      if (viz_)
-      {
-        viz_->addBlocked(pose_2d, footprint);
-      }
+      ROS_DEBUG_STREAM_NAMED(LOGNAME, "Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x << ", "
+                                                << sol.pose.y << ", " << sol.pose.theta
+                                                << ") is in lethal obstacle or in unknown space; skipping");
     }
 
     // adding neighbors to queue
@@ -209,11 +265,30 @@ bool SearchHelper::search(geometry_msgs::Pose2D& best) const
       queue.push(neighbor);
     }
   }
-  ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");
+
+  if (found_unknown)
+  {
+    // the solution is a no information pose or outside
+    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME,
+                               "The best solution found has NO_INFORMATION cost");
+    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME,
+                               "The best solution found is outside the map");
+    if (viz_)
+    {
+      viz_->addSolution(sol.pose, footprint);
+      viz_->publish();
+    }
+    return sol;
+  }
+
+  ROS_INFO_STREAM("No solution found within tolerance of goal; ending search");
   if (viz_)
   {
     viz_->publish();
   }
-  return false;
+  sol.search_state.state = SearchState::LETHAL;
+  sol.search_state.cost = costmap_2d::LETHAL_OBSTACLE;
+  sol.pose = config_.goal;
+  return sol;
 }
 } /* namespace mbf_costmap_nav */

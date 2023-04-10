@@ -192,52 +192,74 @@ TEST_F(SearchHelperTest, safetyPadding)
   EXPECT_NEAR(-1.1f, footprint[2].y, 1e-6);
 }
 
-TEST_F(SearchHelperTest, isPoseValid)
+TEST_F(SearchHelperTest, getFootprintState)
 {
   std::vector<geometry_msgs::Point> footprint = { toPoint(-0.5, -0.5), toPoint(0.5, -0.5), toPoint(0.5, 0.5),
                                                   toPoint(-0.5, 0.5) };
 
-  auto test = [&]() {
-    EXPECT_FALSE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(5, 5, 0)));
-    EXPECT_FALSE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.6, 5, 0)));
-    EXPECT_FALSE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.6, 4.6, 0)));
-    EXPECT_FALSE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.6, 4.6, M_PI)));
-    EXPECT_FALSE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.5, 4.5, 0)));
-    EXPECT_TRUE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.4, 4.4, 0)));
-    EXPECT_TRUE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(4.5, 4.5, M_PI_4)));
-    EXPECT_TRUE(SearchHelper::isPoseValid(costmap, footprint, toPose2D(3, 5, 0)));
+  auto test = [&](std::uint8_t state) {
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(5, 5, 0)).state, state);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.6, 5, 0)).state, state);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.6, 4.6, 0)).state, state);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.6, 4.6, M_PI)).state, state);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.5, 4.5, 0)).state, state);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.4, 4.4, 0)).state, SearchState::FREE);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(4.5, 4.5, M_PI_4)).state, SearchState::FREE);
+    EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(3, 5, 0)).state, SearchState::FREE);
   };
 
+  // Test LETHAL
   costmap->setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
-  test();
+  test(SearchState::LETHAL);
 
+  // Test NO_INFORMATION
   costmap->setCost(5, 5, costmap_2d::NO_INFORMATION);
-  test();
+  test(SearchState::UNKNOWN);
+
+  // Test INSCRIBED
+  costmap->setCost(5, 5, costmap_2d::FREE_SPACE);
+  costmap->setCost(5, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap->setCost(6, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap->setCost(5, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap->setCost(4, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(5, 5, 0)).state, SearchState::INSCRIBED);
+
+  // Test OUTSIDE
+  EXPECT_EQ(SearchHelper::getFootprintState(costmap, footprint, toPose2D(0, 0, 0)).state, SearchState::OUTSIDE);
 }
 
 TEST_F(SearchHelperTest, findValidOrientation)
 {
   costmap->setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
   std::optional<SearchHelperViz> viz;
+
   // square
   std::vector<geometry_msgs::Point> footprint = { toPoint(-0.5, -0.5), toPoint(0.5, -0.5), toPoint(0.5, 0.5),
                                                   toPoint(-0.5, 0.5) };
   auto sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI_4 / 2, M_PI }, viz);
-  ASSERT_TRUE(sol);
-  EXPECT_NEAR(sol->theta, M_PI_4 / 2, 1e-6);
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.theta, M_PI_4 / 2, 1e-6);
 
   sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.6, 4.6, 0), { M_PI, 2 * M_PI }, viz);
-  ASSERT_FALSE(sol);
+  EXPECT_EQ(sol.search_state.state, SearchState::LETHAL);
 
   // rectangle
   footprint = { toPoint(-0.5, -0.4), toPoint(1.0, -0.4), toPoint(1.0, 0.4), toPoint(-0.5, 0.4) };
+
   sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, 0), { M_PI_4, M_PI }, viz);
-  ASSERT_TRUE(sol);
-  EXPECT_NEAR(sol->theta, M_PI_2, 1e-6);
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.theta, M_PI_2, 1e-6);
 
   sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, -M_PI_2), { M_PI_4, M_PI }, viz);
-  ASSERT_TRUE(sol);
-  EXPECT_NEAR(sol->theta, -M_PI_2, 1e-6);
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.theta, -M_PI_2, 1e-6);
+
+  // inscribed
+  costmap->setCost(4, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap->setCost(4, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  sol = SearchHelper::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, 0), { M_PI_4, M_PI_2 }, viz);
+  EXPECT_EQ(sol.search_state.state, SearchState::INSCRIBED);
+  EXPECT_NEAR(sol.pose.theta, M_PI_2, 1e-6);
 }
 
 TEST_F(SearchHelperTest, search)
@@ -266,14 +288,15 @@ TEST_F(SearchHelperTest, search)
   8.5 |  0    0    0     0     0     0    0     0     0     0
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
+
   SearchConfig config{ M_PI_4, M_PI, 5.0, false, 0.0, toPose2D(5.5, 5.5, 0) };
   SearchHelper sh(cm, config, std::nullopt, viz);
 
-  geometry_msgs::Pose2D sol;
-  ASSERT_TRUE(sh.search(sol));
-  EXPECT_NEAR(sol.x, 6.5, 1e-6);
-  EXPECT_NEAR(sol.y, 4.5, 1e-6);
-  EXPECT_NEAR(sol.theta, -M_PI_4, 1e-6);
+  auto sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 6.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 4.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, -M_PI_4, 1e-6);
 
   addObstacle(cm, 6.5, 4.5);
   map.header.stamp = ros::Time::now();
@@ -294,10 +317,12 @@ TEST_F(SearchHelperTest, search)
   8.5 |  0    0    0     0     0     0    0     0     0     0
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
-  ASSERT_TRUE(sh.search(sol));
-  EXPECT_NEAR(sol.x, 5.5, 1e-6);
-  EXPECT_NEAR(sol.y, 7.5, 1e-6);
-  EXPECT_NEAR(sol.theta, M_PI_4, 1e-6);
+
+  sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 5.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 7.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, M_PI_4, 1e-6);
 
   addObstacle(cm, 5.5, 7.5);
   map.header.stamp = ros::Time::now();
@@ -318,10 +343,12 @@ TEST_F(SearchHelperTest, search)
   8.5 |  0    0    0     0     0     0    0     0     0     0
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
-  ASSERT_TRUE(sh.search(sol));
-  EXPECT_NEAR(sol.x, 3.5, 1e-6);
-  EXPECT_NEAR(sol.y, 4.5, 1e-6);
-  EXPECT_NEAR(sol.theta, 3 * M_PI_4, 1e-6);
+
+  sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 3.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 4.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, 3 * M_PI_4, 1e-6);
 
   addObstacle(cm, 3.5, 4.5);
   map.header.stamp = ros::Time::now();
@@ -342,10 +369,12 @@ TEST_F(SearchHelperTest, search)
   8.5 |  0    0    0     0     0     0    0     0     0     0
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
-  ASSERT_TRUE(sh.search(sol));
-  EXPECT_NEAR(sol.x, 3.5, 1e-6);
-  EXPECT_NEAR(sol.y, 7.5, 1e-6);
-  EXPECT_NEAR(sol.theta, M_PI_4, 1e-6);
+
+  sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 3.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 7.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, M_PI_4, 1e-6);
 
   delete cm;
 }

@@ -882,21 +882,15 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
   SearchHelper search_helper(costmap.get(), config, std::nullopt, viz);
 
   // search for a valid pose
-  geometry_msgs::Pose2D solution;
-  if (!search_helper.search(solution))
-  {
-    ROS_ERROR_STREAM("No valid pose found on " << costmap_name << " frame '" << costmap_frame << "'; for target pose ["
-                                               << goal.x << ", " << goal.y << ", " << goal.theta << "]");
-    response.valid = false;
-    return true;
-  }
+  const auto sol = search_helper.search();
 
-  response.valid = true;
-  response.pose.pose.position.x = solution.x;
-  response.pose.pose.position.y = solution.y;
-  response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(solution.theta);
+  response.pose.pose.position.x = sol.pose.x;
+  response.pose.pose.position.y = sol.pose.y;
+  response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(sol.pose.theta);
   response.pose.header.frame_id = costmap_frame;
   response.pose.header.stamp = ros::Time::now();
+  response.state = sol.search_state.state;
+  response.cost = sol.search_state.cost;
   return true;
 }
 
