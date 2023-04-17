@@ -1,5 +1,5 @@
 // mbf
-#include "mbf_costmap_nav/search_helper_viz.h"
+#include "mbf_costmap_nav/free_pose_search_viz.h"
 
 // ros
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -7,16 +7,16 @@
 
 namespace mbf_costmap_nav
 {
-SearchHelperViz::SearchHelperViz(ros::NodeHandle& pnh, const std::string& frame_id)
+FreePoseSearchViz::FreePoseSearchViz(ros::NodeHandle& pnh, const std::string& frame_id)
   : pnh_(pnh)
   , frame_id_(frame_id)
   , marker_pub_(pnh_.advertise<visualization_msgs::MarkerArray>("search_markers", 1, false))
 {
 }
 
-void SearchHelperViz::addMarker(const geometry_msgs::Pose2D& pose_2d,
-                                const std::vector<geometry_msgs::Point>& footprint, const std::string& ns,
-                                const std_msgs::ColorRGBA& color)
+void FreePoseSearchViz::addMarker(const geometry_msgs::Pose2D& pose_2d,
+                                  const std::vector<geometry_msgs::Point>& footprint, const std::string& ns,
+                                  const std_msgs::ColorRGBA& color)
 {
   tf2::Quaternion q;
   q.setRPY(0, 0, pose_2d.theta);
@@ -48,7 +48,7 @@ void SearchHelperViz::addMarker(const geometry_msgs::Pose2D& pose_2d,
   marker_array_.markers.push_back(marker);
 }
 
-void SearchHelperViz::deleteMarkers()
+void FreePoseSearchViz::deleteMarkers()
 {
   visualization_msgs::MarkerArray marker_array;
   visualization_msgs::Marker marker;
@@ -60,8 +60,8 @@ void SearchHelperViz::deleteMarkers()
   marker_pub_.publish(marker_array);
 }
 
-void SearchHelperViz::addBlocked(const geometry_msgs::Pose2D& pose_2d,
-                                 const std::vector<geometry_msgs::Point>& footprint)
+void FreePoseSearchViz::addBlocked(const geometry_msgs::Pose2D& pose_2d,
+                                   const std::vector<geometry_msgs::Point>& footprint)
 {
   std_msgs::ColorRGBA color;
   color.r = 1;
@@ -69,8 +69,8 @@ void SearchHelperViz::addBlocked(const geometry_msgs::Pose2D& pose_2d,
   addMarker(pose_2d, footprint, BLOCKED_NS, color);
 }
 
-void SearchHelperViz::addSolution(const geometry_msgs::Pose2D& pose_2d,
-                                  const std::vector<geometry_msgs::Point>& footprint)
+void FreePoseSearchViz::addSolution(const geometry_msgs::Pose2D& pose_2d,
+                                    const std::vector<geometry_msgs::Point>& footprint)
 {
   std_msgs::ColorRGBA color;
   color.g = 1;
@@ -78,7 +78,7 @@ void SearchHelperViz::addSolution(const geometry_msgs::Pose2D& pose_2d,
   addMarker(pose_2d, footprint, SOLUTION_NS, color);
 }
 
-void SearchHelperViz::publish()
+void FreePoseSearchViz::publish()
 {
   marker_pub_.publish(marker_array_);
   ROS_DEBUG("Published %zu markers", marker_array_.markers.size());

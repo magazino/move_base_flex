@@ -1,5 +1,5 @@
 // mbf_costmap_nav
-#include "mbf_costmap_nav/search_helper.h"
+#include "mbf_costmap_nav/free_pose_search.h"
 
 // std
 #include <queue>
@@ -8,9 +8,9 @@
 namespace mbf_costmap_nav
 {
 
-SearchHelper::SearchHelper(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-                           const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy,
-                           const std::optional<SearchHelperViz>& viz)
+FreePoseSearch::FreePoseSearch(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
+                               const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy,
+                               const std::optional<FreePoseSearchViz>& viz)
   : costmap_(costmap), config_(config), viz_(viz)
 {
   Cell start;
@@ -20,7 +20,7 @@ SearchHelper::SearchHelper(const costmap_2d::Costmap2DROS* costmap, const Search
   compare_strategy_ = std::move(compare_strategy.value_or(euclidean_compare));
 }
 
-std::vector<Cell> SearchHelper::getNeighbors(const costmap_2d::Costmap2D* costmap_2d, const Cell& cell)
+std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D* costmap_2d, const Cell& cell)
 {
   std::vector<Cell> neighbors;
   neighbors.reserve(8);
@@ -43,8 +43,8 @@ std::vector<Cell> SearchHelper::getNeighbors(const costmap_2d::Costmap2D* costma
   return neighbors;
 }
 
-std::vector<geometry_msgs::Point> SearchHelper::safetyPadding(const costmap_2d::Costmap2DROS* costmap_2dros,
-                                                              const bool use_padded_fp, const double safety_dist)
+std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(const costmap_2d::Costmap2DROS* costmap_2dros,
+                                                                const bool use_padded_fp, const double safety_dist)
 
 {
   std::vector<geometry_msgs::Point> footprint;
@@ -53,9 +53,9 @@ std::vector<geometry_msgs::Point> SearchHelper::safetyPadding(const costmap_2d::
   return footprint;
 }
 
-SearchState SearchHelper::getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
-                                            const std::vector<geometry_msgs::Point>& footprint,
-                                            const geometry_msgs::Pose2D& pose_2d)
+SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
+                                              const std::vector<geometry_msgs::Point>& footprint,
+                                              const geometry_msgs::Pose2D& pose_2d)
 {
   const auto cells_to_check =
       FootprintHelper::getFootprintCells(pose_2d.x, pose_2d.y, pose_2d.theta, footprint, *costmap_2d, true);
@@ -91,10 +91,10 @@ SearchState SearchHelper::getFootprintState(const costmap_2d::Costmap2D* costmap
   return { max_cost, state };
 }
 
-SearchSolution SearchHelper::findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
-                                                  const std::vector<geometry_msgs::Point>& footprint,
-                                                  const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
-                                                  std::optional<SearchHelperViz>& viz)
+SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
+                                                    const std::vector<geometry_msgs::Point>& footprint,
+                                                    const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
+                                                    std::optional<FreePoseSearchViz>& viz)
 {
   bool found_unknown{ false };
   SearchSolution sol;
@@ -148,19 +148,19 @@ SearchSolution SearchHelper::findValidOrientation(const costmap_2d::Costmap2D* c
     }
   }
 
-  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::LETHAL, LOGNAME,
+  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
                               "No valid orientation found for pose x-y-theta ("
                                   << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
                                   << config.angle_tolerance << " and increment " << config.angle_increment);
 
-  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME,
+  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                               "Solution is in unknown space for pose x-y-theta ("
                                   << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
                                   << config.angle_tolerance << " and increment " << config.angle_increment);
   return sol;
 }
 
-SearchSolution SearchHelper::search() const
+SearchSolution FreePoseSearch::search() const
 {
   const auto costmap2d = costmap_->getCostmap();
 
@@ -196,8 +196,9 @@ SearchSolution SearchHelper::search() const
     queue.pop();
 
     costmap2d->mapToWorld(cell.x, cell.y, sol.pose.x, sol.pose.y);
-    ROS_DEBUG_STREAM_NAMED(LOGNAME, "Checking Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x
-                                                       << ", " << sol.pose.y << ", " << sol.pose.theta << ")");
+    ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Checking Cell: (" << cell.x << ", " << cell.y << ") with pose: ("
+                                                              << sol.pose.x << ", " << sol.pose.y << ", "
+                                                              << sol.pose.theta << ")");
 
     // Note: if the center of the robot is in costmap_2d::NO_INFORMATION, we don't accept it as a solution
     if (cell.cost != costmap_2d::LETHAL_OBSTACLE && cell.cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
@@ -207,8 +208,8 @@ SearchSolution SearchHelper::search() const
       // if footprint is free or inscribed, we return the solution
       if (tested_sol.search_state.state == SearchState::FREE || tested_sol.search_state.state == SearchState::INSCRIBED)
       {
-        ROS_DEBUG_STREAM_NAMED(LOGNAME, "Found solution pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
-                                                                << ", " << tested_sol.pose.theta);
+        ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found solution pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
+                                                                       << ", " << tested_sol.pose.theta);
         if (viz_)
         {
           viz_->publish();
@@ -221,13 +222,14 @@ SearchSolution SearchHelper::search() const
            tested_sol.search_state.state == SearchState::UNKNOWN) &&
           !found_unknown)
       {
-        ROS_DEBUG_STREAM_NAMED(LOGNAME, "Found unknown/outside pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
-                                                                       << ", " << tested_sol.pose.theta);
+        ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found unknown/outside pose: " << tested_sol.pose.x << ", "
+                                                                              << tested_sol.pose.y << ", "
+                                                                              << tested_sol.pose.theta);
         sol = tested_sol;
         found_unknown = true;
       }
 
-      ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME,
+      ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
                                   "Footprint in cell " << cell.x << ", " << cell.y << "; pose: (" << sol.pose.x << ", "
                                                        << sol.pose.y << ", " << sol.pose.theta
                                                        << ") is in lethal obstacle or unknown; skipping");
@@ -235,9 +237,9 @@ SearchSolution SearchHelper::search() const
 
     else
     {
-      ROS_DEBUG_STREAM_NAMED(LOGNAME, "Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x << ", "
-                                                << sol.pose.y << ", " << sol.pose.theta
-                                                << ") is in lethal obstacle or in unknown space; skipping");
+      ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x
+                                                       << ", " << sol.pose.y << ", " << sol.pose.theta
+                                                       << ") is in lethal obstacle or in unknown space; skipping");
     }
 
     // adding neighbors to queue
@@ -269,9 +271,9 @@ SearchSolution SearchHelper::search() const
   if (found_unknown)
   {
     // the solution is a no information pose or outside
-    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME,
+    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                                "The best solution found has NO_INFORMATION cost");
-    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME,
+    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
                                "The best solution found is outside the map");
     if (viz_)
     {

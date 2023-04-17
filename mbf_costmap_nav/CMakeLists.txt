@@ -78,8 +78,8 @@ add_library(${MBF_COSTMAP_2D_SERVER_LIB}
   src/mbf_costmap_nav/costmap_recovery_execution.cpp
   src/mbf_costmap_nav/costmap_wrapper.cpp
   src/mbf_costmap_nav/footprint_helper.cpp
-  src/mbf_costmap_nav/search_helper.cpp
-  src/mbf_costmap_nav/search_helper_viz.cpp
+  src/mbf_costmap_nav/free_pose_search.cpp
+  src/mbf_costmap_nav/free_pose_search_viz.cpp
 )
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${MBF_COSTMAP_2D_SERVER_LIB} ${MBF_NAV_CORE_WRAPPER_LIB})
@@ -120,11 +120,11 @@ catkin_install_python(PROGRAMS scripts/move_base_legacy_relay.py
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
 
-  add_rostest_gtest(search_helper_test
-    test/search_helper.test
-    test/search_helper_test.cpp
+  add_rostest_gtest(free_pose_search_test
+    test/free_pose_search.test
+    test/free_pose_search_test.cpp
   )
-  target_link_libraries(search_helper_test
+  target_link_libraries(free_pose_search_test
     ${MBF_COSTMAP_2D_SERVER_LIB}
   )
 endif()

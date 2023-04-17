@@ -38,10 +38,12 @@
 
 // mbf
 #include "mbf_costmap_nav/footprint_helper.h"
-#include "mbf_costmap_nav/search_helper_viz.h"
+#include "mbf_costmap_nav/free_pose_search_viz.h"
 
 // std
 #include <optional>
+#include <cstdint>
+#include <string_view>
 
 // ros
 #include <geometry_msgs/Point.h>
@@ -55,11 +57,11 @@ namespace mbf_costmap_nav
 
 struct SearchConfig
 {
-  double angle_increment;
-  double angle_tolerance;
-  double linear_tolerance;
-  bool use_padded_fp;
-  double safety_dist;
+  double angle_increment{ 5 * M_PI / 180 };  // 5 degrees
+  double angle_tolerance{ M_PI_2 };          // 90 degrees
+  double linear_tolerance{ 1.0 };            // 1 meter
+  bool use_padded_fp{ true };                // Padded footprint by default
+  double safety_dist{ 0.1 };                 // 10 cm
   geometry_msgs::Pose2D goal;
 };
 
@@ -85,6 +87,11 @@ struct SearchSolution
   SearchState search_state;
 };
 
+/**
+ * @brief Euclidean Compare parameter for priority queue, defined such that it returns true if its first argument comes
+ * last its second argument. The Euclidean distance is calculated from the start cell.
+ * The start cell is given in the constructor, and it is the goal of the search.
+ */
 class EuclideanCompare
 {
 private:
@@ -93,7 +100,7 @@ private:
   int start_y_;
 
 public:
-  EuclideanCompare(const Cell& start) : start_(start)
+  explicit EuclideanCompare(const Cell& start) : start_(start)
   {
     start_x_ = static_cast<int>(start.x);
     start_y_ = static_cast<int>(start.y);
@@ -119,21 +126,21 @@ public:
  * For each cell, we test multiple angles.
  * The search is performed on the costmap given in the constructor.
  */
-class SearchHelper
+class FreePoseSearch
 {
 private:
-  static constexpr auto LOGNAME = "search_helper";
+  static constexpr std::string_view LOGNAME = "free_pose_search";
 
   const costmap_2d::Costmap2DROS* costmap_;
   SearchConfig config_;
   std::function<bool(const Cell, const Cell)> compare_strategy_;
 
-  mutable std::optional<SearchHelperViz> viz_;
+  mutable std::optional<FreePoseSearchViz> viz_;
 
 public:
-  SearchHelper(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-               const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy = std::nullopt,
-               const std::optional<SearchHelperViz>& viz = std::nullopt);
+  FreePoseSearch(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
+                 const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy = std::nullopt,
+                 const std::optional<FreePoseSearchViz>& viz = std::nullopt);
 
   /**
    * @brief It returns the eight neighbors of the given cell
@@ -177,7 +184,7 @@ public:
   static SearchSolution findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
                                              const std::vector<geometry_msgs::Point>& footprint,
                                              const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
-                                             std::optional<SearchHelperViz>& viz);
+                                             std::optional<FreePoseSearchViz>& viz);
 
   /**
    * @brief It performs the search on the costmap, see the class description for more details.

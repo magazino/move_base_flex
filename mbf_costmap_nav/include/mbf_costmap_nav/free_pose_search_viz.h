@@ -45,7 +45,7 @@
 
 namespace mbf_costmap_nav
 {
-class SearchHelperViz
+class FreePoseSearchViz
 {
 private:
   using IdType = visualization_msgs::Marker::_id_type;
@@ -63,7 +63,7 @@ private:
                  const std::string& ns, const std_msgs::ColorRGBA& color);
 
 public:
-  SearchHelperViz(ros::NodeHandle& pnh, const std::string& frame_id);
+  FreePoseSearchViz(ros::NodeHandle& pnh, const std::string& frame_id);
 
   /**
    * @brief It adds a red marker for a footprint that is blocked by the obstacle in namespace "blocked_footprints"
