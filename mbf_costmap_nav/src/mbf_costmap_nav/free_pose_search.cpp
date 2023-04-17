@@ -8,19 +8,19 @@
 namespace mbf_costmap_nav
 {
 
-FreePoseSearch::FreePoseSearch(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-                               const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy,
+FreePoseSearch::FreePoseSearch(costmap_2d::Costmap2DROS& costmap, const SearchConfig& config,
+                               const std::optional<std::function<bool(const Cell&, const Cell&)>>& compare_strategy,
                                const std::optional<FreePoseSearchViz>& viz)
   : costmap_(costmap), config_(config), viz_(viz)
 {
   Cell start;
-  costmap_->getCostmap()->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
+  costmap_.getCostmap()->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
   ROS_DEBUG_STREAM("Start cell: " << start.x << ", " << start.y);
   EuclideanCompare euclidean_compare(start);
   compare_strategy_ = std::move(compare_strategy.value_or(euclidean_compare));
 }
 
-std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D* costmap_2d, const Cell& cell)
+std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D& costmap_2d, const Cell& cell)
 {
   std::vector<Cell> neighbors;
   neighbors.reserve(8);
@@ -34,31 +34,31 @@ std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D* cost
       }
       unsigned int x = cell.x + dx;
       unsigned int y = cell.y + dy;
-      if (x < costmap_2d->getSizeInCellsX() && y < costmap_2d->getSizeInCellsY() && x >= 0 && y >= 0)
+      if (x < costmap_2d.getSizeInCellsX() && y < costmap_2d.getSizeInCellsY() && x >= 0 && y >= 0)
       {
-        neighbors.push_back(Cell{ x, y, costmap_2d->getCost(x, y) });
+        neighbors.push_back(Cell{ x, y, costmap_2d.getCost(x, y) });
       }
     }
   }
   return neighbors;
 }
 
-std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(const costmap_2d::Costmap2DROS* costmap_2dros,
+std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(const costmap_2d::Costmap2DROS& costmap_2dros,
                                                                 const bool use_padded_fp, const double safety_dist)
 
 {
   std::vector<geometry_msgs::Point> footprint;
-  footprint = use_padded_fp ? costmap_2dros->getRobotFootprint() : costmap_2dros->getUnpaddedRobotFootprint();
+  footprint = use_padded_fp ? costmap_2dros.getRobotFootprint() : costmap_2dros.getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, safety_dist);
   return footprint;
 }
 
-SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
+SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D& costmap_2d,
                                               const std::vector<geometry_msgs::Point>& footprint,
                                               const geometry_msgs::Pose2D& pose_2d)
 {
   const auto cells_to_check =
-      FootprintHelper::getFootprintCells(pose_2d.x, pose_2d.y, pose_2d.theta, footprint, *costmap_2d, true);
+      FootprintHelper::getFootprintCells(pose_2d.x, pose_2d.y, pose_2d.theta, footprint, costmap_2d, true);
   if (cells_to_check.empty())
   {
     return { costmap_2d::NO_INFORMATION, SearchState::OUTSIDE };
@@ -68,13 +68,13 @@ SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D* costm
   std::unordered_map<int, Cell> cells_to_check_map;
   for (const auto& cell : cells_to_check)
   {
-    cells_to_check_map[costmap_2d->getIndex(cell.x, cell.y)] = cell;
+    cells_to_check_map[costmap_2d.getIndex(cell.x, cell.y)] = cell;
   }
 
   unsigned char max_cost = 0;
   for (const auto& [index, cell] : cells_to_check_map)
   {
-    unsigned char cost = costmap_2d->getCost(cell.x, cell.y);
+    unsigned char cost = costmap_2d.getCost(cell.x, cell.y);
     switch (cost)
     {
       case costmap_2d::LETHAL_OBSTACLE:
@@ -91,7 +91,7 @@ SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D* costm
   return { max_cost, state };
 }
 
-SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
+SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D& costmap_2d,
                                                     const std::vector<geometry_msgs::Point>& footprint,
                                                     const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
                                                     std::optional<FreePoseSearchViz>& viz)
@@ -100,8 +100,7 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D*
   SearchSolution sol;
   sol.pose = pose_2d;
 
-  double dyaw = 0;
-  for (; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
+  for (double dyaw = 0; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
   {
     const std::initializer_list<double> thetas =
         dyaw == 0 ? std::initializer_list<double>{ pose_2d.theta } :
@@ -162,14 +161,15 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D*
 
 SearchSolution FreePoseSearch::search() const
 {
-  const auto costmap2d = costmap_->getCostmap();
+  const auto costmap2d = costmap_.getCostmap();
 
   // lock costmap so content doesn't change while adding cell costs
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap2d->getMutex()));
 
   std::unordered_set<int> in_queue_or_visited;
 
-  std::vector<geometry_msgs::Point> footprint = safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
+  const std::vector<geometry_msgs::Point> footprint =
+      safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
   SearchSolution sol;
   sol.pose.theta = config_.goal.theta;
@@ -204,7 +204,7 @@ SearchSolution FreePoseSearch::search() const
     if (cell.cost != costmap_2d::LETHAL_OBSTACLE && cell.cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
         cell.cost != costmap_2d::NO_INFORMATION)
     {
-      const auto tested_sol = findValidOrientation(costmap2d, footprint, sol.pose, config_, viz_);
+      const auto tested_sol = findValidOrientation(*costmap2d, footprint, sol.pose, config_, viz_);
       // if footprint is free or inscribed, we return the solution
       if (tested_sol.search_state.state == SearchState::FREE || tested_sol.search_state.state == SearchState::INSCRIBED)
       {
@@ -243,7 +243,7 @@ SearchSolution FreePoseSearch::search() const
     }
 
     // adding neighbors to queue
-    std::vector<Cell> neighbors = getNeighbors(costmap2d, cell);
+    const std::vector<Cell> neighbors = getNeighbors(*costmap2d, cell);
     for (const Cell& neighbor : neighbors)
     {
       int cell_index = costmap2d->getIndex(neighbor.x, neighbor.y);

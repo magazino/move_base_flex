@@ -128,24 +128,25 @@ public:
  */
 class FreePoseSearch
 {
-private:
+protected:
   static constexpr std::string_view LOGNAME = "free_pose_search";
 
-  const costmap_2d::Costmap2DROS* costmap_;
+  costmap_2d::Costmap2DROS& costmap_;
   SearchConfig config_;
   std::function<bool(const Cell, const Cell)> compare_strategy_;
 
   mutable std::optional<FreePoseSearchViz> viz_;
 
 public:
-  FreePoseSearch(const costmap_2d::Costmap2DROS* costmap, const SearchConfig& config,
-                 const std::optional<std::function<bool(const Cell, const Cell)>>& compare_strategy = std::nullopt,
+  FreePoseSearch(costmap_2d::Costmap2DROS& costmap, const SearchConfig& config,
+                 const std::optional<std::function<bool(const Cell&, const Cell&)>>& compare_strategy = std::nullopt,
                  const std::optional<FreePoseSearchViz>& viz = std::nullopt);
+  virtual ~FreePoseSearch() = default;
 
   /**
    * @brief It returns the eight neighbors of the given cell
    */
-  static std::vector<Cell> getNeighbors(const costmap_2d::Costmap2D* costmap_2d, const Cell& cell);
+  static std::vector<Cell> getNeighbors(const costmap_2d::Costmap2D& costmap_2d, const Cell& cell);
 
   /**
    * @brief it pads the footprint with the given safety distance
@@ -154,7 +155,7 @@ public:
    * @param safety_dist The safety distance to pad the footprint
    * @return The padded footprint
    */
-  static std::vector<geometry_msgs::Point> safetyPadding(const costmap_2d::Costmap2DROS* costmap_2dros,
+  static std::vector<geometry_msgs::Point> safetyPadding(const costmap_2d::Costmap2DROS& costmap_2dros,
                                                          const bool use_padded_fp, const double safety_dist);
 
   /**
@@ -167,7 +168,7 @@ public:
    * @param pose_2d The pose to check the footprint
    * @return The SearchState of the footprint (FindValidPose.msg state and costmap cost)
    */
-  static SearchState getFootprintState(const costmap_2d::Costmap2D* costmap_2d,
+  static SearchState getFootprintState(const costmap_2d::Costmap2D& costmap_2d,
                                        const std::vector<geometry_msgs::Point>& footprint,
                                        const geometry_msgs::Pose2D& pose_2d);
 
@@ -181,7 +182,7 @@ public:
    * @param viz The visualization object
    * @return A search solution for the given pose: best pose, state and cost
    */
-  static SearchSolution findValidOrientation(const costmap_2d::Costmap2D* costmap_2d,
+  static SearchSolution findValidOrientation(const costmap_2d::Costmap2D& costmap_2d,
                                              const std::vector<geometry_msgs::Point>& footprint,
                                              const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
                                              std::optional<FreePoseSearchViz>& viz);
@@ -191,7 +192,7 @@ public:
    * @param goal The start cell
    * @return A search solution for the given pose: best pose, state and cost
    */
-  SearchSolution search() const;
+  virtual SearchSolution search() const;
 };
 
 } /* namespace mbf_costmap_nav */

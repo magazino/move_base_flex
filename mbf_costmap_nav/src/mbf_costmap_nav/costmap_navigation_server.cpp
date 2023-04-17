@@ -841,16 +841,16 @@ CostmapWrapper::Ptr CostmapNavigationServer::selectingRequestedCostmap(std::uint
 bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::Request& request,
                                                        mbf_msgs::FindValidPose::Response& response)
 {
-  CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
+  const CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
   if (!costmap)
   {
     return false;
   }
-  std::string costmap_name =
+  const std::string costmap_name =
       request.costmap == mbf_msgs::FindValidPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
 
   // get target pose or current robot pose as x, y, yaw coordinates
-  std::string costmap_frame = costmap->getGlobalFrameID();
+  const std::string costmap_frame = costmap->getGlobalFrameID();
 
   geometry_msgs::PoseStamped pose;
   if (request.current_pose)
@@ -877,17 +877,18 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
 
   ros::NodeHandle private_nh("~");
   // using 5 degrees as increment
-  SearchConfig config{ ANGLE_INCREMENT,        request.angle_tolerance,
-                       request.dist_tolerance, static_cast<bool>(request.use_padded_fp),
-                       request.safety_dist,    goal };
+  const SearchConfig config{ ANGLE_INCREMENT,        request.angle_tolerance,
+                             request.dist_tolerance, static_cast<bool>(request.use_padded_fp),
+                             request.safety_dist,    goal };
   FreePoseSearchViz viz(private_nh, costmap_frame);
-  FreePoseSearch search_helper(costmap.get(), config, std::nullopt, viz);
+  FreePoseSearch free_pose_search(*costmap.get(), config, std::nullopt, viz);
 
   // search for a valid pose
-  const auto sol = search_helper.search();
+  const auto sol = free_pose_search.search();
 
   response.pose.pose.position.x = sol.pose.x;
   response.pose.pose.position.y = sol.pose.y;
+  response.pose.pose.position.z = 0;
   response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(sol.pose.theta);
   response.pose.header.frame_id = costmap_frame;
   response.pose.header.stamp = ros::Time::now();

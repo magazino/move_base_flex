@@ -16,12 +16,12 @@ class SearchHelperTest : public ::testing::Test
 protected:
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{ tf_buffer };
-  costmap_2d::Costmap2D* costmap;
+  costmap_2d::Costmap2D costmap;
   ros::Subscriber map_sub;
   nav_msgs::OccupancyGrid map;
   ros::Publisher map_pub;
 
-  SearchHelperTest()
+  SearchHelperTest() : costmap(10, 10, 1.0, 0.0, 0.0, 0)
   {
     tf_buffer.setUsingDedicatedThread(true);
   }
@@ -32,7 +32,6 @@ protected:
     {
       FAIL() << "Cannot transform from base_link to map";
     }
-    costmap = new costmap_2d::Costmap2D(10, 10, 1.0, 0.0, 0.0, 0);
     map_sub = ros::NodeHandle().subscribe("map", 1, &SearchHelperTest::mapCb, this);
     map_pub = ros::NodeHandle().advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   }
@@ -59,10 +58,10 @@ protected:
     return pose;
   }
 
-  void addObstacle(costmap_2d::Costmap2DROS* cm, double x, double y)
+  void addObstacle(costmap_2d::Costmap2DROS& cm, double x, double y)
   {
     boost::shared_ptr<costmap_2d::ObstacleLayer> olayer;
-    std::vector<boost::shared_ptr<costmap_2d::Layer> >* plugins = cm->getLayeredCostmap()->getPlugins();
+    std::vector<boost::shared_ptr<costmap_2d::Layer> >* plugins = cm.getLayeredCostmap()->getPlugins();
     for (std::vector<boost::shared_ptr<costmap_2d::Layer> >::iterator pluginp = plugins->begin();
          pluginp != plugins->end(); ++pluginp)
     {
@@ -74,8 +73,8 @@ protected:
       }
     }
 
-    cm->updateMap();
-    printMap(*(cm->getCostmap()));
+    cm.updateMap();
+    printMap(*(cm.getCostmap()));
   }
 };
 
@@ -152,7 +151,7 @@ TEST_F(SearchHelperTest, getNeighbors)
 
 TEST_F(SearchHelperTest, safetyPadding)
 {
-  costmap_2d::Costmap2DROS* cm = new costmap_2d::Costmap2DROS("unpadded", tf_buffer);
+  costmap_2d::Costmap2DROS cm("unpadded", tf_buffer);
 
   auto footprint = FreePoseSearch::safetyPadding(cm, true, 0.1);
   EXPECT_EQ(3, footprint.size());
@@ -172,8 +171,8 @@ TEST_F(SearchHelperTest, safetyPadding)
   EXPECT_NEAR(-1.1f, footprint[2].x, 1e-6);
   EXPECT_NEAR(-1.1f, footprint[2].y, 1e-6);
 
-  cm = new costmap_2d::Costmap2DROS("padded", tf_buffer);
-  footprint = FreePoseSearch::safetyPadding(cm, true, 0.1);
+  costmap_2d::Costmap2DROS cm2("padded", tf_buffer);
+  footprint = FreePoseSearch::safetyPadding(cm2, true, 0.1);
   EXPECT_EQ(3, footprint.size());
   EXPECT_NEAR(1.6f, footprint[0].x, 1e-6);
   EXPECT_NEAR(1.6f, footprint[0].y, 1e-6);
@@ -182,7 +181,7 @@ TEST_F(SearchHelperTest, safetyPadding)
   EXPECT_NEAR(-1.6f, footprint[2].x, 1e-6);
   EXPECT_NEAR(-1.6f, footprint[2].y, 1e-6);
 
-  footprint = FreePoseSearch::safetyPadding(cm, false, 0.1);
+  footprint = FreePoseSearch::safetyPadding(cm2, false, 0.1);
   EXPECT_EQ(3, footprint.size());
   EXPECT_NEAR(1.1f, footprint[0].x, 1e-6);
   EXPECT_NEAR(1.1f, footprint[0].y, 1e-6);
@@ -210,19 +209,19 @@ TEST_F(SearchHelperTest, getFootprintState)
   };
 
   // Test LETHAL
-  costmap->setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
+  costmap.setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
   test(SearchState::LETHAL);
 
   // Test NO_INFORMATION
-  costmap->setCost(5, 5, costmap_2d::NO_INFORMATION);
+  costmap.setCost(5, 5, costmap_2d::NO_INFORMATION);
   test(SearchState::UNKNOWN);
 
   // Test INSCRIBED
-  costmap->setCost(5, 5, costmap_2d::FREE_SPACE);
-  costmap->setCost(5, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
-  costmap->setCost(6, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
-  costmap->setCost(5, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
-  costmap->setCost(4, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(5, 5, costmap_2d::FREE_SPACE);
+  costmap.setCost(5, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(6, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(5, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(4, 5, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
   EXPECT_EQ(FreePoseSearch::getFootprintState(costmap, footprint, toPose2D(5, 5, 0)).state, SearchState::INSCRIBED);
 
   // Test OUTSIDE
@@ -231,7 +230,7 @@ TEST_F(SearchHelperTest, getFootprintState)
 
 TEST_F(SearchHelperTest, findValidOrientation)
 {
-  costmap->setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
+  costmap.setCost(5, 5, costmap_2d::LETHAL_OBSTACLE);
   std::optional<FreePoseSearchViz> viz;
 
   // square
@@ -256,8 +255,8 @@ TEST_F(SearchHelperTest, findValidOrientation)
   EXPECT_NEAR(sol.pose.theta, -M_PI_2, 1e-6);
 
   // inscribed
-  costmap->setCost(4, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
-  costmap->setCost(4, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(4, 4, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
+  costmap.setCost(4, 6, costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
   sol = FreePoseSearch::findValidOrientation(costmap, footprint, toPose2D(4.5, 5.5, 0), { M_PI_4, M_PI_2 }, viz);
   EXPECT_EQ(sol.search_state.state, SearchState::INSCRIBED);
   EXPECT_NEAR(sol.pose.theta, M_PI_2, 1e-6);
@@ -266,13 +265,13 @@ TEST_F(SearchHelperTest, findValidOrientation)
 TEST_F(SearchHelperTest, search)
 {
   ros::NodeHandle nh;
-  costmap_2d::Costmap2DROS* cm = new costmap_2d::Costmap2DROS("search/global", tf_buffer);
-  FreePoseSearchViz viz(nh, cm->getGlobalFrameID());
+  costmap_2d::Costmap2DROS cm("search/global", tf_buffer);
+  FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
 
-  printMap(*(cm->getCostmap()));
+  printMap(*(cm.getCostmap()));
   addObstacle(cm, 5.5, 5.5);
   map.header.stamp = ros::Time::now();
-  map.data[cm->getCostmap()->getIndex(5, 5)] = 100;
+  map.data[cm.getCostmap()->getIndex(5, 5)] = 100;
   map_pub.publish(map);
 
   /*
@@ -301,7 +300,7 @@ TEST_F(SearchHelperTest, search)
 
   addObstacle(cm, 6.5, 4.5);
   map.header.stamp = ros::Time::now();
-  map.data[cm->getCostmap()->getIndex(6, 4)] = 100;
+  map.data[cm.getCostmap()->getIndex(6, 4)] = 100;
   map_pub.publish(map);
 
   /*
@@ -327,7 +326,7 @@ TEST_F(SearchHelperTest, search)
 
   addObstacle(cm, 5.5, 7.5);
   map.header.stamp = ros::Time::now();
-  map.data[cm->getCostmap()->getIndex(5, 7)] = 100;
+  map.data[cm.getCostmap()->getIndex(5, 7)] = 100;
   map_pub.publish(map);
 
   /*
@@ -353,7 +352,7 @@ TEST_F(SearchHelperTest, search)
 
   addObstacle(cm, 3.5, 4.5);
   map.header.stamp = ros::Time::now();
-  map.data[cm->getCostmap()->getIndex(3, 4)] = 100;
+  map.data[cm.getCostmap()->getIndex(3, 4)] = 100;
   map_pub.publish(map);
 
   /*
@@ -376,8 +375,6 @@ TEST_F(SearchHelperTest, search)
   EXPECT_NEAR(sol.pose.x, 3.5, 1e-6);
   EXPECT_NEAR(sol.pose.y, 7.5, 1e-6);
   EXPECT_NEAR(sol.pose.theta, M_PI_4, 1e-6);
-
-  delete cm;
 }
 
 }  // namespace mbf_costmap_nav::test

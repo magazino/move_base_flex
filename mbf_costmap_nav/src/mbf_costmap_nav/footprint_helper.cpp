@@ -114,7 +114,7 @@ void FootprintHelper::getLineCells(int x0, int x1, int y0, int y1, std::vector<C
 void FootprintHelper::supercover(int x0, int x1, int y0, int y1, std::vector<Cell>& pts)
 {
   {
-    auto POINT = [&pts](int y, int x) {
+    auto add_point = [&pts](int y, int x) {
       Cell pt;
       pt.x = x;
       pt.y = y;
@@ -129,7 +129,7 @@ void FootprintHelper::supercover(int x0, int x1, int y0, int y1, std::vector<Cel
     int ddy, ddx;        // compulsory variables: the double values of dy and dx
     int dx = x1 - x0;
     int dy = y1 - y0;
-    POINT(y0, x0);  // first point
+    add_point(y0, x0);  // first point
 
     // NB the last point can't be here, because of its previous point (which has to be verified)
     if (dy < 0)
@@ -167,16 +167,16 @@ void FootprintHelper::supercover(int x0, int x1, int y0, int y1, std::vector<Cel
           error -= ddx;
           // three cases (octant == right->right-top for directions below):
           if (error + errorprev < ddx)  // bottom square also
-            POINT(y - ystep, x);
+            add_point(y - ystep, x);
           else if (error + errorprev > ddx)  // left square also
-            POINT(y, x - xstep);
+            add_point(y, x - xstep);
           else
           {  // corner: bottom and left squares also
-            POINT(y - ystep, x);
-            POINT(y, x - xstep);
+            add_point(y - ystep, x);
+            add_point(y, x - xstep);
           }
         }
-        POINT(y, x);
+        add_point(y, x);
         errorprev = error;
       }
     }
@@ -192,16 +192,16 @@ void FootprintHelper::supercover(int x0, int x1, int y0, int y1, std::vector<Cel
           x += xstep;
           error -= ddy;
           if (error + errorprev < ddy)
-            POINT(y, x - xstep);
+            add_point(y, x - xstep);
           else if (error + errorprev > ddy)
-            POINT(y - ystep, x);
+            add_point(y - ystep, x);
           else
           {
-            POINT(y, x - xstep);
-            POINT(y - ystep, x);
+            add_point(y, x - xstep);
+            add_point(y - ystep, x);
           }
         }
-        POINT(y, x);
+        add_point(y, x);
         errorprev = error;
       }
     }
