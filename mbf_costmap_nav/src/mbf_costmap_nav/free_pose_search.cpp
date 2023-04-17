@@ -47,8 +47,8 @@ std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(const costmap_2d
                                                                 const bool use_padded_fp, const double safety_dist)
 
 {
-  std::vector<geometry_msgs::Point> footprint;
-  footprint = use_padded_fp ? costmap_2dros.getRobotFootprint() : costmap_2dros.getUnpaddedRobotFootprint();
+  std::vector<geometry_msgs::Point> footprint =
+      use_padded_fp ? costmap_2dros.getRobotFootprint() : costmap_2dros.getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, safety_dist);
   return footprint;
 }
@@ -72,7 +72,7 @@ SearchState FreePoseSearch::getFootprintState(const costmap_2d::Costmap2D& costm
   }
 
   unsigned char max_cost = 0;
-  for (const auto& [index, cell] : cells_to_check_map)
+  for (const auto& [_, cell] : cells_to_check_map)
   {
     unsigned char cost = costmap_2d.getCost(cell.x, cell.y);
     switch (cost)
@@ -96,7 +96,7 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
                                                     const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
                                                     std::optional<FreePoseSearchViz>& viz)
 {
-  bool found_unknown{ false };
+  bool found_unknown = false;
   SearchSolution sol;
   sol.pose = pose_2d;
 
