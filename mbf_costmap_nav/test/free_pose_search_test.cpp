@@ -8,27 +8,31 @@
 
 // mbf
 #include "mbf_costmap_nav/free_pose_search.h"
+#include "mbf_costmap_nav/costmap_navigation_server.h"
 
 namespace mbf_costmap_nav::test
 {
 class SearchHelperTest : public ::testing::Test
 {
 protected:
-  tf2_ros::Buffer tf_buffer;
-  tf2_ros::TransformListener tf_listener{ tf_buffer };
+  boost::shared_ptr<tf2_ros::Buffer> tf_buffer_ptr;
+  tf2_ros::TransformListener tf_listener;
   costmap_2d::Costmap2D costmap;
   ros::Subscriber map_sub;
   nav_msgs::OccupancyGrid map;
   ros::Publisher map_pub;
 
-  SearchHelperTest() : costmap(10, 10, 1.0, 0.0, 0.0, 0)
+  SearchHelperTest()
+    : tf_buffer_ptr(boost::make_shared<tf2_ros::Buffer>())
+    , tf_listener(*tf_buffer_ptr)
+    , costmap(10, 10, 1.0, 0.0, 0.0, 0)
   {
-    tf_buffer.setUsingDedicatedThread(true);
+    tf_buffer_ptr->setUsingDedicatedThread(true);
   }
 
   void SetUp() override
   {
-    if (!tf_buffer.canTransform("base_link", "map", ros::Time::now(), ros::Duration(5.0)))
+    if (!tf_buffer_ptr->canTransform("base_link", "map", ros::Time::now(), ros::Duration(5.0)))
     {
       FAIL() << "Cannot transform from base_link to map";
     }
@@ -151,7 +155,7 @@ TEST_F(SearchHelperTest, getNeighbors)
 
 TEST_F(SearchHelperTest, safetyPadding)
 {
-  costmap_2d::Costmap2DROS cm("unpadded", tf_buffer);
+  costmap_2d::Costmap2DROS cm("unpadded", *tf_buffer_ptr);
 
   auto footprint = FreePoseSearch::safetyPadding(cm, true, 0.1);
   EXPECT_EQ(3, footprint.size());
@@ -171,7 +175,7 @@ TEST_F(SearchHelperTest, safetyPadding)
   EXPECT_NEAR(-1.1f, footprint[2].x, 1e-6);
   EXPECT_NEAR(-1.1f, footprint[2].y, 1e-6);
 
-  costmap_2d::Costmap2DROS cm2("padded", tf_buffer);
+  costmap_2d::Costmap2DROS cm2("padded", *tf_buffer_ptr);
   footprint = FreePoseSearch::safetyPadding(cm2, true, 0.1);
   EXPECT_EQ(3, footprint.size());
   EXPECT_NEAR(1.6f, footprint[0].x, 1e-6);
@@ -265,7 +269,7 @@ TEST_F(SearchHelperTest, findValidOrientation)
 TEST_F(SearchHelperTest, search)
 {
   ros::NodeHandle nh;
-  costmap_2d::Costmap2DROS cm("search/global", tf_buffer);
+  costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
   FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
 
   printMap(*(cm.getCostmap()));
@@ -375,8 +379,43 @@ TEST_F(SearchHelperTest, search)
   EXPECT_NEAR(sol.pose.x, 3.5, 1e-6);
   EXPECT_NEAR(sol.pose.y, 7.5, 1e-6);
   EXPECT_NEAR(sol.pose.theta, M_PI_4, 1e-6);
+
+  // Non-zero orientation
+  SearchConfig config2{ M_PI_4, M_PI, 5.0, false, 0.0, toPose2D(1.5, 4.5, M_PI_4) };
+  FreePoseSearch sh2(cm, config2, std::nullopt, viz);
+  sol = sh2.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 1.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 4.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, M_PI_4, 1e-6);
 }
 
+TEST_F(SearchHelperTest, service_test)
+{
+  CostmapNavigationServer server(tf_buffer_ptr);
+
+  ros::ServiceClient client = ros::NodeHandle("~").serviceClient<mbf_msgs::FindValidPose>("find_valid_pose");
+  mbf_msgs::FindValidPose::Request req;
+  mbf_msgs::FindValidPose::Response res;
+
+  req.angle_tolerance = M_PI_4;
+  req.dist_tolerance = 1.0;
+  req.use_padded_fp = false;
+  req.costmap = mbf_msgs::FindValidPose::Request::GLOBAL_COSTMAP;
+  req.pose.header.frame_id = "map";
+  req.pose.header.stamp = ros::Time::now();
+  req.pose.pose.position.x = 1.525;
+  req.pose.pose.position.y = 4.525;
+  req.pose.pose.position.z = 0.0;
+  req.pose.pose.orientation = tf::createQuaternionMsgFromYaw(M_PI_4);
+
+  ASSERT_TRUE(client.call(req, res));
+  EXPECT_EQ(res.state, mbf_msgs::FindValidPose::Response::FREE);
+  EXPECT_NEAR(res.pose.pose.position.x, 1.525, 1e-6);
+  EXPECT_NEAR(res.pose.pose.position.y, 4.525, 1e-6);
+  EXPECT_NEAR(tf::getYaw(res.pose.pose.orientation), M_PI_4, 1e-6);
+  server.stop();
+}
 }  // namespace mbf_costmap_nav::test
 
 int main(int argc, char** argv)
