@@ -69,7 +69,11 @@ MoveBaseAction::MoveBaseAction(const std::string& name, const mbf_utility::Robot
 MoveBaseAction::~MoveBaseAction()
 {
   action_state_ = NONE;
-  replanning_thread_.join();
+  replanning_thread_shutdown_ = true;
+  if (replanning_thread_.joinable())
+  {
+    replanning_thread_.join();
+  }
 }
 
 void MoveBaseAction::reconfigure(
@@ -528,7 +532,7 @@ void MoveBaseAction::replanningThread()
   ros::Duration update_period(0.005);
   ros::Time last_replan_time(0.0);
 
-  while (ros::ok())
+  while (ros::ok() && !replanning_thread_shutdown_)
   {
     if (!action_client_get_path_.getState().isDone())
     {
