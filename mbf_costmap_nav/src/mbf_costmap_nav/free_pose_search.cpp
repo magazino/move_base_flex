@@ -102,7 +102,7 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
 
   for (double dyaw = 0; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
   {
-    const std::initializer_list<double> thetas =
+    const std::vector<double> thetas =
         dyaw == 0 ? std::initializer_list<double>{ pose_2d.theta } :
                     std::initializer_list<double>{ pose_2d.theta + dyaw, pose_2d.theta - dyaw };
     for (const auto& theta : thetas)
