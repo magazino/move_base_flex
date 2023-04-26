@@ -177,8 +177,10 @@ SearchSolution FreePoseSearch::search() const
 
   // initializing queue with the goal cell
   Cell start;
-  costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y);
-  start.cost = costmap2d->getCost(start.x, start.y);
+  if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y))
+    start.cost = costmap2d->getCost(start.x, start.y);
+  else
+    start.cost = costmap_2d::FREE_SPACE;  // outside of the map; TODO: if set to NO_INFORMATION, we won't find a solution
   in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
 
   std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
