@@ -98,6 +98,7 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
 {
   bool outside_or_unknown = false;
   SearchSolution sol;
+  SearchSolution outside_or_unknown_sol;
   sol.pose = pose_2d;
 
   for (double dyaw = 0; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
@@ -117,13 +118,16 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
           {
             viz->addSolution(sol.pose, footprint);
           }
+          ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found solution at: " << sol.pose.x << ", " << sol.pose.y << ", "
+                                                                       << sol.pose.theta
+                                                                       << " with state: " << search_state.state);
           return { sol.pose, search_state };
         case SearchState::UNKNOWN:
         case SearchState::OUTSIDE:
           if (!outside_or_unknown)
           {
             // we save the first unknown/outside pose, but we continue searching for a free pose
-            sol = { sol.pose, search_state };
+            outside_or_unknown_sol = { sol.pose, search_state };
             outside_or_unknown = true;
           }
           break;
@@ -145,15 +149,25 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
     }
   }
 
+  if (outside_or_unknown)
+  {
+    ROS_DEBUG_STREAM_COND_NAMED(outside_or_unknown_sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
+                                "Solution is in unknown space for pose x-y-theta ("
+                                    << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
+                                    << config.angle_tolerance << " and increment " << config.angle_increment);
+
+    ROS_DEBUG_STREAM_COND_NAMED(outside_or_unknown_sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
+                                "Solution is partially outside the map for pose x-y-theta ("
+                                    << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
+                                    << config.angle_tolerance << " and increment " << config.angle_increment);
+    return outside_or_unknown_sol;
+  }
+
   ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
                               "No valid orientation found for pose x-y-theta ("
                                   << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
                                   << config.angle_tolerance << " and increment " << config.angle_increment);
 
-  ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
-                              "Solution is in unknown space for pose x-y-theta ("
-                                  << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
-                                  << config.angle_tolerance << " and increment " << config.angle_increment);
   return sol;
 }
 
@@ -176,10 +190,19 @@ SearchSolution FreePoseSearch::search() const
   // initializing queue with the goal cell
   Cell start;
   if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y))
+  {
     start.cost = costmap2d->getCost(start.x, start.y);
+  }
   else
-    start.cost =
-        costmap_2d::FREE_SPACE;  // outside of the map; TODO: if set to NO_INFORMATION, we won't find a solution
+  {
+    // enforce bounds if goal is outside the map
+    // note that distance tolerance is wrt this new start cell
+    int cell_x, cell_y;
+    costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, cell_x, cell_y);
+    start.x = static_cast<unsigned int>(cell_x);
+    start.y = static_cast<unsigned int>(cell_y);
+    start.cost = costmap2d->getCost(start.x, start.y);
+  }
   in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
 
   std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);

@@ -416,6 +416,39 @@ TEST_F(SearchHelperTest, service_test)
   EXPECT_NEAR(tf::getYaw(res.pose.pose.orientation), M_PI_4, 1e-6);
   server.stop();
 }
+
+TEST_F(SearchHelperTest, enforce_bounds)
+{
+  ros::NodeHandle nh;
+  costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
+  FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
+
+  printMap(*(cm.getCostmap()));
+
+  /*
+  y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
+  ------------------------------------------------------------
+  0.5 |  G    0    0     0     0     0    0    254   254   254
+  1.5 |  0    0    0     0     0     0    0    254   254   254
+  2.5 |  0    0    0    254   254   254   0     0     0     0
+  3.5 |  0    0    0     0     0     0    0     0     0     0
+  4.5 |  0    0    0     0     0     0    0     0     0     0
+  5.5 |  0    0    0     0    254    0    0    254   254   254
+  6.5 |  0    0    0     0    254    0    0    254   254   254
+  7.5 |  0    0    0     0     0     0    0    254   254   254
+  8.5 |  0    0    0     0     0     0    0     0     0     0
+  9.5 |  0    0    0     0     0     0    0     0     0     0
+  */
+
+  SearchConfig config{ M_PI_4, M_PI, 0.5, false, 0.0, toPose2D(-1, -1, 0) };
+  FreePoseSearch sh(cm, config, std::nullopt, viz);
+
+  auto sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::OUTSIDE);
+  EXPECT_NEAR(sol.pose.x, 0.5, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 0.5, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, 0, 1e-6);
+}
 }  // namespace mbf_costmap_nav::test
 
 int main(int argc, char** argv)
