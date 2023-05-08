@@ -96,15 +96,14 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
                                                     const geometry_msgs::Pose2D& pose_2d, const SearchConfig& config,
                                                     std::optional<FreePoseSearchViz>& viz)
 {
-  bool found_unknown = false;
+  bool outside_or_unknown = false;
   SearchSolution sol;
   sol.pose = pose_2d;
 
   for (double dyaw = 0; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
   {
-    const std::vector<double> thetas =
-        dyaw == 0 ? std::initializer_list<double>{ pose_2d.theta } :
-                    std::initializer_list<double>{ pose_2d.theta + dyaw, pose_2d.theta - dyaw };
+    const std::vector<double> thetas = dyaw == 0 ? std::vector<double>{ pose_2d.theta } :
+                                                   std::vector<double>{ pose_2d.theta + dyaw, pose_2d.theta - dyaw };
     for (const auto& theta : thetas)
     {
       sol.pose.theta = theta;
@@ -119,19 +118,18 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
             viz->addSolution(sol.pose, footprint);
           }
           return { sol.pose, search_state };
-          break;
         case SearchState::UNKNOWN:
         case SearchState::OUTSIDE:
-          if (!found_unknown)
+          if (!outside_or_unknown)
           {
             // we save the first unknown/outside pose, but we continue searching for a free pose
             sol = { sol.pose, search_state };
-            found_unknown = true;
+            outside_or_unknown = true;
           }
           break;
         case SearchState::LETHAL:
           // if we didn't find a free pose or unknown/outside, we return lethal
-          if (!found_unknown)
+          if (!outside_or_unknown)
           {
             sol.search_state = search_state;
           }
@@ -173,14 +171,15 @@ SearchSolution FreePoseSearch::search() const
 
   SearchSolution sol;
   sol.pose.theta = config_.goal.theta;
-  bool found_unknown{ false };
+  bool outside_or_unknown{ false };
 
   // initializing queue with the goal cell
   Cell start;
   if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y))
     start.cost = costmap2d->getCost(start.x, start.y);
   else
-    start.cost = costmap_2d::FREE_SPACE;  // outside of the map; TODO: if set to NO_INFORMATION, we won't find a solution
+    start.cost =
+        costmap_2d::FREE_SPACE;  // outside of the map; TODO: if set to NO_INFORMATION, we won't find a solution
   in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
 
   std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
@@ -222,13 +221,13 @@ SearchSolution FreePoseSearch::search() const
       // if the state is outside or unknown, we save the first one we find
       if ((tested_sol.search_state.state == SearchState::OUTSIDE ||
            tested_sol.search_state.state == SearchState::UNKNOWN) &&
-          !found_unknown)
+          !outside_or_unknown)
       {
         ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found unknown/outside pose: " << tested_sol.pose.x << ", "
                                                                               << tested_sol.pose.y << ", "
                                                                               << tested_sol.pose.theta);
         sol = tested_sol;
-        found_unknown = true;
+        outside_or_unknown = true;
       }
 
       ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
@@ -285,7 +284,7 @@ SearchSolution FreePoseSearch::search() const
     return sol;
   }
 
-  ROS_INFO_STREAM("No solution found within tolerance of goal; ending search");
+  ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");
   if (viz_)
   {
     viz_->publish();

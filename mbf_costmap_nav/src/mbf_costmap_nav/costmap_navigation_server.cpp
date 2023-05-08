@@ -676,13 +676,11 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
 bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request& request,
                                                        mbf_msgs::CheckPath::Response& response)
 {
-  CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
+  const auto& [costmap_name, costmap] = requestedCostmap(request.costmap);
   if (!costmap)
   {
     return false;
   }
-  std::string costmap_name =
-      request.costmap == mbf_msgs::CheckPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
 
   // ensure costmap is active so cost reflects the latest sensor readings
   costmap->checkActivate();
@@ -818,36 +816,34 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request&
   return true;
 }
 
-CostmapWrapper::Ptr CostmapNavigationServer::selectingRequestedCostmap(std::uint8_t costmap_type) const
+std::pair<std::string, CostmapWrapper::Ptr> CostmapNavigationServer::requestedCostmap(std::uint8_t costmap_type) const
 {
   // selecting the requested costmap
   CostmapWrapper::Ptr costmap;
   switch (costmap_type)
   {
     case mbf_msgs::CheckPose::Request::LOCAL_COSTMAP:
-      return local_costmap_ptr_;
+      return { "local_costmap", local_costmap_ptr_ };
       break;
     case mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP:
-      return global_costmap_ptr_;
+      return { "global_costmap", global_costmap_ptr_ };
       break;
     default:
       ROS_ERROR_STREAM("No valid costmap provided; options are "
                        << mbf_msgs::CheckPose::Request::LOCAL_COSTMAP << ": local costmap, "
                        << mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP << ": global costmap");
-      return costmap;
+      return { "", costmap };
   }
 }
 
 bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::Request& request,
                                                        mbf_msgs::FindValidPose::Response& response)
 {
-  const CostmapWrapper::Ptr costmap = selectingRequestedCostmap(request.costmap);
+  const auto& [costmap_name, costmap] = requestedCostmap(request.costmap);
   if (!costmap)
   {
     return false;
   }
-  const std::string costmap_name =
-      request.costmap == mbf_msgs::FindValidPose::Request::LOCAL_COSTMAP ? "local costmap" : "global costmap";
 
   // get target pose or current robot pose as x, y, yaw coordinates
   const std::string costmap_frame = costmap->getGlobalFrameID();
