@@ -269,7 +269,7 @@ SearchSolution FreePoseSearch::search() const
     }
   }
 
-  if (found_unknown)
+  if (outside_or_unknown)
   {
     // the solution is a no information pose or outside
     ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
