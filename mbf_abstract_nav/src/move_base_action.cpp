@@ -57,6 +57,7 @@ MoveBaseAction::MoveBaseAction(const std::string& name, const mbf_utility::Robot
   , action_client_recovery_(private_nh_, "recovery")
   , oscillation_timeout_(0)
   , oscillation_distance_(0)
+  , replanning_thread_shutdown_(false)
   , recovery_enabled_(true)
   , behaviors_(behaviors)
   , action_state_(NONE)

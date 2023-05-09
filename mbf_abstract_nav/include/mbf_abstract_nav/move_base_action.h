@@ -166,7 +166,7 @@ class MoveBaseAction
 
   //! Replanning thread, running permanently
   boost::thread replanning_thread_;
-  bool replanning_thread_shutdown_{ false };
+  bool replanning_thread_shutdown_;
 
   //! true, if recovery behavior for the MoveBase action is enabled.
   bool recovery_enabled_;
