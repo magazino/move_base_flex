@@ -334,10 +334,10 @@ SearchSolution FreePoseSearch::search() const
   if (outside_or_unknown)
   {
     // the solution is a no information pose or outside
-    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
-                               "The best solution found has NO_INFORMATION cost");
-    ROS_INFO_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
-                               "The best solution found is outside the map");
+    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
+                                "The best solution found has NO_INFORMATION cost");
+    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
+                                "The best solution found is OUTSIDE the map");
     if (viz_)
     {
       viz_->addSolution(sol.pose, footprint);
