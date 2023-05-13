@@ -119,6 +119,7 @@ catkin_install_python(PROGRAMS scripts/move_base_legacy_relay.py
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
+  find_package(map_server REQUIRED)
 
   add_rostest_gtest(free_pose_search_test
     test/free_pose_search.test
