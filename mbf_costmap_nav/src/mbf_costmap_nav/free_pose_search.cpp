@@ -82,12 +82,12 @@ std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D& cost
   return neighbors;
 }
 
-std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(const costmap_2d::Costmap2DROS& costmap_2dros,
+std::vector<geometry_msgs::Point> FreePoseSearch::safetyPadding(costmap_2d::Costmap2DROS& costmap_2d_ros,
                                                                 const bool use_padded_fp, const double safety_dist)
 
 {
   std::vector<geometry_msgs::Point> footprint =
-      use_padded_fp ? costmap_2dros.getRobotFootprint() : costmap_2dros.getUnpaddedRobotFootprint();
+      use_padded_fp ? costmap_2d_ros.getRobotFootprint() : costmap_2d_ros.getUnpaddedRobotFootprint();
   costmap_2d::padFootprint(footprint, safety_dist);
   return footprint;
 }

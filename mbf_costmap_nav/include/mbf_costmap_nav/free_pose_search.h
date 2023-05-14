@@ -154,12 +154,12 @@ public:
 
   /**
    * @brief it pads the footprint with the given safety distance
-   * @param costmap_2dros
+   * @param costmap_2d_ros
    * @param use_padded_fp If true, it uses the padded footprint, otherwise the unpadded footprint
    * @param safety_dist The safety distance to pad the footprint
    * @return The padded footprint
    */
-  static std::vector<geometry_msgs::Point> safetyPadding(const costmap_2d::Costmap2DROS& costmap_2dros,
+  static std::vector<geometry_msgs::Point> safetyPadding(costmap_2d::Costmap2DROS& costmap_2d_ros,
                                                          const bool use_padded_fp, const double safety_dist);
 
   /**
