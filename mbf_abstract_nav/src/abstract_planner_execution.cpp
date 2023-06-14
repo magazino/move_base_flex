@@ -251,7 +251,7 @@ void AbstractPlannerExecution::run()
     {
       // call the planner
       std::vector<geometry_msgs::PoseStamped> plan;
-      double cost;
+      double cost = 0.0;
 
       // lock goal start mutex
       goal_start_mtx_.lock();
