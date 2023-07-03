@@ -1,0 +1,32 @@
+# Find the closest free pose to the given one, within the given linear and angular tolerances.
+#
+# A pose is considered free if the robot footprint there is entirely inside the map and neither in
+# collision nor unknown space.
+#
+# If no free pose can be found, but we find one partially in unknown space, or partially outside the map,
+# we will return it and set state to the corresponding option (unknown space takes precedence).
+# Otherwise state will be set to LETHAL.
+#
+# You can also instruct this service to use current robot's pose, instead of providing one.
+
+uint8                      LOCAL_COSTMAP  = 1
+uint8                      GLOBAL_COSTMAP = 2
+
+geometry_msgs/PoseStamped  pose              # the starting pose from which we start the search
+float32                    safety_dist       # minimum distance allowed to the closest obstacle
+float32                    dist_tolerance    # maximum distance we can deviate from the given pose during the search
+float32                    angle_tolerance   # maximum angle we can rotate the given pose during the search
+uint8                      costmap           # costmap in which to check the pose
+bool                       current_pose      # check current robot pose instead (ignores pose field)
+bool                       use_padded_fp     # include footprint padding when checking cost; note that safety distance
+                                             # will be measured from the padded footprint
+---
+uint8                      FREE      =  0    # found pose is completely in traversable space
+uint8                      INSCRIBED =  1    # found pose is partially in inscribed space
+uint8                      LETHAL    =  2    # found pose is partially in collision
+uint8                      UNKNOWN   =  3    # found pose is partially in unknown space
+uint8                      OUTSIDE   =  4    # found pose is partially outside the map
+
+uint8                      state             # found pose's state: FREE, INSCRIBED, LETHAL, UNKNOWN or OUTSIDE
+uint32                     cost              # found pose's cost (sum of costs over all cells covered by the footprint)
+geometry_msgs/PoseStamped  pose              # the pose found (filled only if state is not set to LETHAL)
