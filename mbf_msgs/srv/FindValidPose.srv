@@ -4,7 +4,7 @@
 # collision nor unknown space.
 #
 # If no free pose can be found, but we find one partially in unknown space, or partially outside the map,
-# we will return it and set state to the correspondent option (unknown space takes precedence).
+# we will return it and set state to the corresponding option (unknown space takes precedence).
 # Otherwise state will be set to LETHAL.
 #
 # You can also instruct this service to use current robot's pose, instead of providing one.
