@@ -28,5 +28,5 @@ uint8                      UNKNOWN   =  3    # found pose is partially in unknow
 uint8                      OUTSIDE   =  4    # found pose is partially outside the map
 
 uint8                      state             # found pose's state: FREE, INSCRIBED, LETHAL, UNKNOWN or OUTSIDE
-uint32                     cost              # found pose's cost (added cost of all cells covered by the footprint)
+uint32                     cost              # found pose's cost (sum of costs over all cells covered by the footprint)
 geometry_msgs/PoseStamped  pose              # the pose found (filled only if state is not set to LETHAL)
