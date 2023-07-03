@@ -1,6 +1,6 @@
 # Find the closest free pose to the given one, within the given linear and angular tolerances.
 #
-# A pose is considered free if the robot footprint there is entirely inside the map and not in
+# A pose is considered free if the robot footprint there is entirely inside the map and neither in
 # collision nor unknown space.
 #
 # If no free pose can be found, but we find one partially on unknown space, or outside the map,
