@@ -51,6 +51,8 @@
 
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
+#include "mbf_costmap_nav/free_pose_search.h"
+#include "mbf_costmap_nav/free_pose_search_viz.h"
 
 namespace mbf_costmap_nav
 {
@@ -153,27 +155,29 @@ StringToMap loadStringToMaps(const std::string& resource, const ros::NodeHandle&
   return StringToMap();
 }
 
-CostmapNavigationServer::CostmapNavigationServer(const TFPtr &tf_listener_ptr) :
-  AbstractNavigationServer(tf_listener_ptr),
-  recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery"),
-  nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior"),
-  controller_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapController"),
-  nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner"),
-  planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner"),
-  nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
-  global_costmap_ptr_(new CostmapWrapper("global_costmap", tf_listener_ptr_)),
-  local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_)),
-  setup_reconfigure_(false)
+CostmapNavigationServer::CostmapNavigationServer(const TFPtr& tf_listener_ptr)
+  : AbstractNavigationServer(tf_listener_ptr)
+  , recovery_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapRecovery")
+  , nav_core_recovery_plugin_loader_("nav_core", "nav_core::RecoveryBehavior")
+  , controller_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapController")
+  , nav_core_controller_plugin_loader_("nav_core", "nav_core::BaseLocalPlanner")
+  , planner_plugin_loader_("mbf_costmap_core", "mbf_costmap_core::CostmapPlanner")
+  , nav_core_planner_plugin_loader_("nav_core", "nav_core::BaseGlobalPlanner")
+  , global_costmap_ptr_(new CostmapWrapper("global_costmap", tf_listener_ptr_))
+  , local_costmap_ptr_(new CostmapWrapper("local_costmap", tf_listener_ptr_))
+  , setup_reconfigure_(false)
 {
   // advertise services and current goal topic
-  check_point_cost_srv_ = private_nh_.advertiseService("check_point_cost",
-                                                       &CostmapNavigationServer::callServiceCheckPointCost, this);
-  check_pose_cost_srv_ = private_nh_.advertiseService("check_pose_cost",
-                                                      &CostmapNavigationServer::callServiceCheckPoseCost, this);
-  check_path_cost_srv_ = private_nh_.advertiseService("check_path_cost",
-                                                      &CostmapNavigationServer::callServiceCheckPathCost, this);
-  clear_costmaps_srv_ = private_nh_.advertiseService("clear_costmaps",
-                                                     &CostmapNavigationServer::callServiceClearCostmaps, this);
+  check_point_cost_srv_ =
+      private_nh_.advertiseService("check_point_cost", &CostmapNavigationServer::callServiceCheckPointCost, this);
+  check_pose_cost_srv_ =
+      private_nh_.advertiseService("check_pose_cost", &CostmapNavigationServer::callServiceCheckPoseCost, this);
+  check_path_cost_srv_ =
+      private_nh_.advertiseService("check_path_cost", &CostmapNavigationServer::callServiceCheckPathCost, this);
+  clear_costmaps_srv_ =
+      private_nh_.advertiseService("clear_costmaps", &CostmapNavigationServer::callServiceClearCostmaps, this);
+  find_valid_pose_srv_ =
+      private_nh_.advertiseService("find_valid_pose", &CostmapNavigationServer::callServiceFindValidPose, this);
 
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
@@ -215,37 +219,34 @@ const Value& findWithDefault(const boost::unordered_map<Key, Value>& map, const 
 }
 
 mbf_abstract_nav::AbstractPlannerExecution::Ptr CostmapNavigationServer::newPlannerExecution(
-    const std::string &plugin_name,
-    const mbf_abstract_core::AbstractPlanner::Ptr &plugin_ptr)
+    const std::string& plugin_name, const mbf_abstract_core::AbstractPlanner::Ptr& plugin_ptr)
 {
   const CostmapWrapper::Ptr& costmap_ptr =
       findWithDefault(planner_name_to_costmap_ptr_, plugin_name, global_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapPlannerExecution>(
-      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), robot_info_,
-      costmap_ptr, last_config_);
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(plugin_ptr), robot_info_, costmap_ptr,
+      last_config_);
 }
 
 mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newControllerExecution(
-    const std::string &plugin_name,
-    const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
+    const std::string& plugin_name, const mbf_abstract_core::AbstractController::Ptr& plugin_ptr)
 {
   const CostmapWrapper::Ptr& costmap_ptr =
       findWithDefault(controller_name_to_costmap_ptr_, plugin_name, local_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
-      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), robot_info_,
-      vel_pub_, goal_pub_, costmap_ptr, last_config_);
+      plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), robot_info_, vel_pub_,
+      goal_pub_, costmap_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
-    const std::string &plugin_name,
-    const mbf_abstract_core::AbstractRecovery::Ptr &plugin_ptr)
+    const std::string& plugin_name, const mbf_abstract_core::AbstractRecovery::Ptr& plugin_ptr)
 {
   return boost::make_shared<mbf_costmap_nav::CostmapRecoveryExecution>(
       plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapRecovery>(plugin_ptr), robot_info_,
       global_costmap_ptr_, local_costmap_ptr_, last_config_);
 }
 
-mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string &planner_type)
+mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlugin(const std::string& planner_type)
 {
   mbf_abstract_core::AbstractPlanner::Ptr planner_ptr;
   try
@@ -255,35 +256,35 @@ mbf_abstract_core::AbstractPlanner::Ptr CostmapNavigationServer::loadPlannerPlug
     std::string planner_name = planner_plugin_loader_.getName(planner_type);
     ROS_DEBUG_STREAM("mbf_costmap_core-based planner plugin " << planner_name << " loaded.");
   }
-  catch (const pluginlib::PluginlibException &ex_mbf_core)
+  catch (const pluginlib::PluginlibException& ex_mbf_core)
   {
     ROS_DEBUG_STREAM("Failed to load the " << planner_type << " planner as a mbf_costmap_core-based plugin."
-                                          << " Try to load as a nav_core-based plugin. " << ex_mbf_core.what());
+                                           << " Try to load as a nav_core-based plugin. " << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-      boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr = nav_core_planner_plugin_loader_.createInstance(planner_type);
+      boost::shared_ptr<nav_core::BaseGlobalPlanner> nav_core_planner_ptr =
+          nav_core_planner_plugin_loader_.createInstance(planner_type);
       planner_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperGlobalPlanner>(nav_core_planner_ptr);
       std::string planner_name = nav_core_planner_plugin_loader_.getName(planner_type);
       ROS_DEBUG_STREAM("nav_core-based planner plugin " << planner_name << " loaded");
     }
-    catch (const pluginlib::PluginlibException &ex_nav_core)
+    catch (const pluginlib::PluginlibException& ex_nav_core)
     {
       ROS_FATAL_STREAM("Failed to load the " << planner_type << " planner, are you sure it's properly registered"
-          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
+                                             << " and that the containing library is built? " << ex_mbf_core.what()
+                                             << " " << ex_nav_core.what());
     }
   }
 
   return planner_ptr;
 }
 
-bool CostmapNavigationServer::initializePlannerPlugin(
-    const std::string &name,
-    const mbf_abstract_core::AbstractPlanner::Ptr &planner_ptr
-)
+bool CostmapNavigationServer::initializePlannerPlugin(const std::string& name,
+                                                      const mbf_abstract_core::AbstractPlanner::Ptr& planner_ptr)
 {
-  mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
+  mbf_costmap_core::CostmapPlanner::Ptr costmap_planner_ptr =
+      boost::static_pointer_cast<mbf_costmap_core::CostmapPlanner>(planner_ptr);
   ROS_DEBUG_STREAM("Initialize planner \"" << name << "\".");
 
   const CostmapWrapper::Ptr& costmap_ptr = findWithDefault(planner_name_to_costmap_ptr_, name, global_costmap_ptr_);
@@ -298,8 +299,8 @@ bool CostmapNavigationServer::initializePlannerPlugin(
   return true;
 }
 
-
-mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControllerPlugin(const std::string &controller_type)
+mbf_abstract_core::AbstractController::Ptr
+CostmapNavigationServer::loadControllerPlugin(const std::string& controller_type)
 {
   mbf_abstract_core::AbstractController::Ptr controller_ptr;
   try
@@ -308,31 +309,32 @@ mbf_abstract_core::AbstractController::Ptr CostmapNavigationServer::loadControll
     std::string controller_name = controller_plugin_loader_.getName(controller_type);
     ROS_DEBUG_STREAM("mbf_costmap_core-based controller plugin " << controller_name << " loaded.");
   }
-  catch (const pluginlib::PluginlibException &ex_mbf_core)
+  catch (const pluginlib::PluginlibException& ex_mbf_core)
   {
     ROS_DEBUG_STREAM("Failed to load the " << controller_type << " controller as a mbf_costmap_core-based plugin;"
-                                          << "  we will retry to load as a nav_core-based plugin. " << ex_mbf_core.what());
+                                           << "  we will retry to load as a nav_core-based plugin. "
+                                           << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
-      boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr
-          = nav_core_controller_plugin_loader_.createInstance(controller_type);
+      boost::shared_ptr<nav_core::BaseLocalPlanner> nav_core_controller_ptr =
+          nav_core_controller_plugin_loader_.createInstance(controller_type);
       controller_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperLocalPlanner>(nav_core_controller_ptr);
       std::string controller_name = nav_core_controller_plugin_loader_.getName(controller_type);
       ROS_DEBUG_STREAM("nav_core-based controller plugin " << controller_name << " loaded.");
     }
-    catch (const pluginlib::PluginlibException &ex_nav_core)
+    catch (const pluginlib::PluginlibException& ex_nav_core)
     {
       ROS_FATAL_STREAM("Failed to load the " << controller_type << " controller, are you sure it's properly registered"
-          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
+                                             << " and that the containing library is built? " << ex_mbf_core.what()
+                                             << " " << ex_nav_core.what());
     }
   }
   return controller_ptr;
 }
 
 bool CostmapNavigationServer::initializeControllerPlugin(
-    const std::string &name,
-    const mbf_abstract_core::AbstractController::Ptr &controller_ptr)
+    const std::string& name, const mbf_abstract_core::AbstractController::Ptr& controller_ptr)
 {
   ROS_DEBUG_STREAM("Initialize controller \"" << name << "\".");
 
@@ -350,15 +352,14 @@ bool CostmapNavigationServer::initializeControllerPlugin(
     return false;
   }
 
-  mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr
-      = boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
+  mbf_costmap_core::CostmapController::Ptr costmap_controller_ptr =
+      boost::static_pointer_cast<mbf_costmap_core::CostmapController>(controller_ptr);
   costmap_controller_ptr->initialize(name, tf_listener_ptr_.get(), costmap_ptr.get());
   ROS_DEBUG_STREAM("Controller plugin \"" << name << "\" initialized.");
   return true;
 }
 
-mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPlugin(
-    const std::string &recovery_type)
+mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPlugin(const std::string& recovery_type)
 {
   mbf_abstract_core::AbstractRecovery::Ptr recovery_ptr;
 
@@ -369,10 +370,10 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
     std::string recovery_name = recovery_plugin_loader_.getName(recovery_type);
     ROS_DEBUG_STREAM("mbf_costmap_core-based recovery behavior plugin " << recovery_name << " loaded.");
   }
-  catch (pluginlib::PluginlibException &ex_mbf_core)
+  catch (pluginlib::PluginlibException& ex_mbf_core)
   {
     ROS_DEBUG_STREAM("Failed to load the " << recovery_type << " recovery behavior as a mbf_costmap_core-based plugin;"
-        << " Retry to load as a nav_core-based plugin. " << ex_mbf_core.what());
+                                           << " Retry to load as a nav_core-based plugin. " << ex_mbf_core.what());
     try
     {
       // For plugins still based on old nav_core API, we load them and pass to a new MBF API that will act as wrapper
@@ -382,21 +383,21 @@ mbf_abstract_core::AbstractRecovery::Ptr CostmapNavigationServer::loadRecoveryPl
       recovery_ptr = boost::make_shared<mbf_nav_core_wrapper::WrapperRecoveryBehavior>(nav_core_recovery_ptr);
       std::string recovery_name = recovery_plugin_loader_.getName(recovery_type);
       ROS_DEBUG_STREAM("nav_core-based recovery behavior plugin " << recovery_name << " loaded.");
-
     }
-    catch (const pluginlib::PluginlibException &ex_nav_core)
+    catch (const pluginlib::PluginlibException& ex_nav_core)
     {
-      ROS_FATAL_STREAM("Failed to load the " << recovery_type << " recovery behavior, are you sure it's properly registered"
-          << " and that the containing library is built? " << ex_mbf_core.what() << " " << ex_nav_core.what());
+      ROS_FATAL_STREAM("Failed to load the "
+                       << recovery_type << " recovery behavior, are you sure it's properly registered"
+                       << " and that the containing library is built? " << ex_mbf_core.what() << " "
+                       << ex_nav_core.what());
     }
   }
 
   return recovery_ptr;
 }
 
-bool CostmapNavigationServer::initializeRecoveryPlugin(
-    const std::string &name,
-    const mbf_abstract_core::AbstractRecovery::Ptr &behavior_ptr)
+bool CostmapNavigationServer::initializeRecoveryPlugin(const std::string& name,
+                                                       const mbf_abstract_core::AbstractRecovery::Ptr& behavior_ptr)
 {
   ROS_DEBUG_STREAM("Initialize recovery behavior \"" << name << "\".");
 
@@ -425,7 +426,6 @@ bool CostmapNavigationServer::initializeRecoveryPlugin(
   return true;
 }
 
-
 void CostmapNavigationServer::stop()
 {
   AbstractNavigationServer::stop();
@@ -434,7 +434,7 @@ void CostmapNavigationServer::stop()
   global_costmap_ptr_->stop();
 }
 
-void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &config, uint32_t level)
+void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig& config, uint32_t level)
 {
   // Make sure we have the original configuration the first time we're called, so we can restore it if needed
   if (!setup_reconfigure_)
@@ -472,8 +472,8 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig &c
   last_config_ = config;
 }
 
-bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Request &request,
-                                                        mbf_msgs::CheckPoint::Response &response)
+bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Request& request,
+                                                        mbf_msgs::CheckPoint::Response& response)
 {
   // selecting the requested costmap
   CostmapWrapper::Ptr costmap;
@@ -490,8 +490,8 @@ bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Re
       break;
     default:
       ROS_ERROR_STREAM("No valid costmap provided; options are "
-                           << mbf_msgs::CheckPoint::Request::LOCAL_COSTMAP << ": local costmap, "
-                           << mbf_msgs::CheckPoint::Request::GLOBAL_COSTMAP << ": global costmap");
+                       << mbf_msgs::CheckPoint::Request::LOCAL_COSTMAP << ": local costmap, "
+                       << mbf_msgs::CheckPoint::Request::GLOBAL_COSTMAP << ": global costmap");
       return false;
   }
 
@@ -549,8 +549,8 @@ bool CostmapNavigationServer::callServiceCheckPointCost(mbf_msgs::CheckPoint::Re
   return true;
 }
 
-bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request &request,
-                                                       mbf_msgs::CheckPose::Response &response)
+bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Request& request,
+                                                       mbf_msgs::CheckPose::Response& response)
 {
   // selecting the requested costmap
   CostmapWrapper::Ptr costmap;
@@ -607,7 +607,7 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
 
   // use footprint helper to get all the cells totally or partially within footprint polygon
   std::vector<Cell> footprint_cells =
-    FootprintHelper::getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
+      FootprintHelper::getFootprintCells(x, y, yaw, footprint, *costmap->getCostmap(), true);
   response.state = mbf_msgs::CheckPose::Response::FREE;
   if (footprint_cells.empty())
   {
@@ -673,27 +673,13 @@ bool CostmapNavigationServer::callServiceCheckPoseCost(mbf_msgs::CheckPose::Requ
   return true;
 }
 
-bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request &request,
-                                                       mbf_msgs::CheckPath::Response &response)
+bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Request& request,
+                                                       mbf_msgs::CheckPath::Response& response)
 {
-  // selecting the requested costmap
-  CostmapWrapper::Ptr costmap;
-  std::string costmap_name;
-  switch (request.costmap)
+  const auto& [costmap_name, costmap] = requestedCostmap(request.costmap);
+  if (!costmap)
   {
-    case mbf_msgs::CheckPath::Request::LOCAL_COSTMAP:
-      costmap = local_costmap_ptr_;
-      costmap_name = "local costmap";
-      break;
-    case mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP:
-      costmap = global_costmap_ptr_;
-      costmap_name = "global costmap";
-      break;
-    default:
-      ROS_ERROR_STREAM("No valid costmap provided; options are "
-                       << mbf_msgs::CheckPath::Request::LOCAL_COSTMAP << ": local costmap, "
-                       << mbf_msgs::CheckPath::Request::GLOBAL_COSTMAP << ": global costmap");
-      return false;
+    return false;
   }
 
   // ensure costmap is active so cost reflects the latest sensor readings
@@ -773,7 +759,8 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
             response.state = std::max(response.state, static_cast<uint8_t>(mbf_msgs::CheckPath::Response::INSCRIBED));
             response.cost += cost * (request.inscrib_cost_mult ? request.inscrib_cost_mult : 1.0);
             break;
-          default:response.cost += cost;
+          default:
+            response.cost += cost;
             break;
         }
       }
@@ -786,23 +773,27 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
       {
         case mbf_msgs::CheckPath::Response::OUTSIDE:
           ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes outside the map "
-                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+                                      << "(cost = " << response.cost << "; safety distance = " << request.safety_dist
+                                      << ")");
           break;
         case mbf_msgs::CheckPath::Response::UNKNOWN:
           ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes in unknown space! "
-                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+                                      << "(cost = " << response.cost << "; safety distance = " << request.safety_dist
+                                      << ")");
           break;
         case mbf_msgs::CheckPath::Response::LETHAL:
           ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes in collision! "
-                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+                                      << "(cost = " << response.cost << "; safety distance = " << request.safety_dist
+                                      << ")");
           break;
         case mbf_msgs::CheckPath::Response::INSCRIBED:
           ROS_DEBUG_STREAM("At pose " << i << " [" << x << ", " << y << ", " << yaw << "] path goes near an obstacle "
-                           << "(cost = " << response.cost << "; safety distance = " << request.safety_dist << ")");
+                                      << "(cost = " << response.cost << "; safety distance = " << request.safety_dist
+                                      << ")");
           break;
         case mbf_msgs::CheckPath::Response::FREE:
-          ROS_DEBUG_STREAM("Path is entirely free (maximum cost = "
-                           << response.cost << "; safety distance = " << request.safety_dist << ")");
+          ROS_DEBUG_STREAM("Path is entirely free (maximum cost = " << response.cost << "; safety distance = "
+                                                                    << request.safety_dist << ")");
           break;
       }
 
@@ -816,12 +807,89 @@ bool CostmapNavigationServer::callServiceCheckPathCost(mbf_msgs::CheckPath::Requ
   return true;
 }
 
-bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request &request,
-                                                       std_srvs::Empty::Response &response)
+bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request& request,
+                                                       std_srvs::Empty::Response& response)
 {
   // clear both costmaps
   local_costmap_ptr_->clear();
   global_costmap_ptr_->clear();
+  return true;
+}
+
+std::pair<std::string, CostmapWrapper::Ptr> CostmapNavigationServer::requestedCostmap(std::uint8_t costmap_type) const
+{
+  // selecting the requested costmap
+  CostmapWrapper::Ptr costmap;
+  switch (costmap_type)
+  {
+    case mbf_msgs::CheckPose::Request::LOCAL_COSTMAP:
+      return { "local_costmap", local_costmap_ptr_ };
+      break;
+    case mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP:
+      return { "global_costmap", global_costmap_ptr_ };
+      break;
+    default:
+      ROS_ERROR_STREAM("No valid costmap provided; options are "
+                       << mbf_msgs::CheckPose::Request::LOCAL_COSTMAP << ": local costmap, "
+                       << mbf_msgs::CheckPose::Request::GLOBAL_COSTMAP << ": global costmap");
+      return { "", costmap };
+  }
+}
+
+bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::Request& request,
+                                                       mbf_msgs::FindValidPose::Response& response)
+{
+  const auto& [costmap_name, costmap] = requestedCostmap(request.costmap);
+  if (!costmap)
+  {
+    return false;
+  }
+
+  // get target pose or current robot pose as x, y, yaw coordinates
+  const std::string costmap_frame = costmap->getGlobalFrameID();
+
+  geometry_msgs::PoseStamped pose;
+  if (request.current_pose)
+  {
+    if (!mbf_utility::getRobotPose(*tf_listener_ptr_, robot_frame_, costmap_frame, ros::Duration(0.5), pose))
+    {
+      ROS_ERROR_STREAM("Get robot pose on " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+  else
+  {
+    if (!mbf_utility::transformPose(*tf_listener_ptr_, costmap_frame, ros::Duration(0.5), request.pose, pose))
+    {
+      ROS_ERROR_STREAM("Transform target pose to " << costmap_name << " frame '" << costmap_frame << "' failed");
+      return false;
+    }
+  }
+
+  geometry_msgs::Pose2D goal;
+  goal.x = request.pose.pose.position.x;
+  goal.y = request.pose.pose.position.y;
+  goal.theta = tf::getYaw(request.pose.pose.orientation);
+
+  ros::NodeHandle private_nh("~");
+  // using 5 degrees as increment
+  const SearchConfig config{ ANGLE_INCREMENT,        request.angle_tolerance,
+                             request.dist_tolerance, static_cast<bool>(request.use_padded_fp),
+                             request.safety_dist,    goal };
+  FreePoseSearchViz viz(private_nh, costmap_frame);
+  FreePoseSearch free_pose_search(*costmap.get(), config, std::nullopt, viz);
+
+  // search for a valid pose
+  const auto sol = free_pose_search.search();
+
+  response.pose.pose.position.x = sol.pose.x;
+  response.pose.pose.position.y = sol.pose.y;
+  response.pose.pose.position.z = 0;
+  response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(sol.pose.theta);
+  response.pose.header.frame_id = costmap_frame;
+  response.pose.header.stamp = ros::Time::now();
+  response.state = sol.search_state.state;
+  response.cost = sol.search_state.cost;
   return true;
 }
 

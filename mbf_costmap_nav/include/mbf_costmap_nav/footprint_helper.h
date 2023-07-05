@@ -48,7 +48,7 @@ namespace mbf_costmap_nav
 
 struct Cell
 {
-  unsigned int x, y;
+  unsigned int x, y, cost;
 };
 
 class FootprintHelper
@@ -65,6 +65,17 @@ public:
   static std::vector<Cell> getFootprintCells(double x, double y, double theta,
                                              const std::vector<geometry_msgs::Point>& footprint_spec,
                                              const costmap_2d::Costmap2D&, bool fill);
+
+    /**
+   * @brief  Supercover algorithm is a modified Bresenham which prints ALL the points (not only one point per axis) the ideal line contains
+   * ref: http://eugen.dedu.free.fr/projects/bresenham/
+   * @param  x0 The x coordinate of the first point
+   * @param  x1 The x coordinate of the second point
+   * @param  y0 The y coordinate of the first point
+   * @param  y1 The y coordinate of the second point
+   * @param  pts Will be filled with the cells that lie on the line in the grid
+   */
+  static void supercover(int x0, int x1, int y0, int y1, std::vector<Cell>& pts);
 
   /**
    * @brief  Use Bresenham's algorithm to trace a line between two points in a grid

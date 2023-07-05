@@ -111,6 +111,102 @@ void FootprintHelper::getLineCells(int x0, int x1, int y0, int y1, std::vector<C
   }
 }
 
+void FootprintHelper::supercover(int x0, int x1, int y0, int y1, std::vector<Cell>& pts)
+{
+  {
+    auto add_point = [&pts](int y, int x) {
+      Cell pt;
+      pt.x = x;
+      pt.y = y;
+      pts.push_back(pt);
+    };
+
+    int i;               // loop counter
+    int ystep, xstep;    // the step on y and x axis
+    int error;           // the error accumulated during the increment
+    int errorprev;       // *vision the previous value of the error variable
+    int y = y0, x = x0;  // the line points
+    int ddy, ddx;        // compulsory variables: the double values of dy and dx
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    add_point(y0, x0);  // first point
+
+    // NB the last point can't be here, because of its previous point (which has to be verified)
+    if (dy < 0)
+    {
+      ystep = -1;
+      dy = -dy;
+    }
+    else
+    {
+      ystep = 1;
+    }
+    if (dx < 0)
+    {
+      xstep = -1;
+      dx = -dx;
+    }
+    else
+    {
+      xstep = 1;
+    }
+
+    ddy = 2 * dy;  // work with double values for full precision
+    ddx = 2 * dx;
+    if (ddx >= ddy)
+    {  // first octant (0 <= slope <= 1)
+      // compulsory initialization (even for errorprev, needed when dx==dy)
+      errorprev = error = dx;  // start in the middle of the square
+      for (i = 0; i < dx; i++)
+      {  // do not use the first point (already done)
+        x += xstep;
+        error += ddy;
+        if (error > ddx)
+        {  // increment y if AFTER the middle ( > )
+          y += ystep;
+          error -= ddx;
+          // three cases (octant == right->right-top for directions below):
+          if (error + errorprev < ddx)  // bottom square also
+            add_point(y - ystep, x);
+          else if (error + errorprev > ddx)  // left square also
+            add_point(y, x - xstep);
+          else
+          {  // corner: bottom and left squares also
+            add_point(y - ystep, x);
+            add_point(y, x - xstep);
+          }
+        }
+        add_point(y, x);
+        errorprev = error;
+      }
+    }
+    else
+    {  // the same as above
+      errorprev = error = dy;
+      for (i = 0; i < dy; i++)
+      {
+        y += ystep;
+        error += ddx;
+        if (error > ddy)
+        {
+          x += xstep;
+          error -= ddy;
+          if (error + errorprev < ddy)
+            add_point(y, x - xstep);
+          else if (error + errorprev > ddy)
+            add_point(y - ystep, x);
+          else
+          {
+            add_point(y, x - xstep);
+            add_point(y - ystep, x);
+          }
+        }
+        add_point(y, x);
+        errorprev = error;
+      }
+    }
+  }
+}
 
 void FootprintHelper::getFillCells(std::vector<Cell>& footprint){
   //quick bubble sort to sort pts by x
