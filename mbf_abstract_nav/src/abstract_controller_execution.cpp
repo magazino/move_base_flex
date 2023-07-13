@@ -186,33 +186,37 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
   // TODO so there should be no loss of information in the feedback stream
 }
 
-bool AbstractControllerExecution::checkVelocityDiff(const geometry_msgs::TwistStamped &robot_velocity,
-                                                        const geometry_msgs::TwistStamped &cmd_velocity)
+bool AbstractControllerExecution::checkVelocityDiff(const geometry_msgs::TwistStamped& robot_velocity,
+                                                    const geometry_msgs::TwistStamped& cmd_velocity)
 {
-  //linear total and angular total
+  // linear total and angular total
   double robot_linear_total;
   double robot_angular_total;
 
   double cmd_linear_total;
   double cmd_angular_total;
 
-  //compute linear velocity magnitude
-  robot_linear_total = sqrt(pow(robot_velocity.twist.linear.x,2.0) + pow(robot_velocity.twist.linear.y,2.0) + 
-                            pow(robot_velocity.twist.linear.z,2.0));
-  cmd_linear_total = sqrt(pow(cmd_velocity.twist.linear.x,2.0) + pow(cmd_velocity.twist.linear.y,2.0) + pow(cmd_velocity.twist.linear.z,2.0));
-  
-  //compute angular velocity magnitude
-  robot_angular_total = sqrt(pow(robot_velocity.twist.angular.x,2.0) + 
-                             pow(robot_velocity.twist.angular.y,2.0) + pow(robot_velocity.twist.angular.z,2.0));
-  cmd_angular_total = sqrt(pow(cmd_velocity.twist.angular.x,2.0) + pow(cmd_velocity.twist.angular.y,2.0) + pow(cmd_velocity.twist.angular.z,2.0));
+  // compute linear velocity magnitude
+  robot_linear_total = sqrt(pow(robot_velocity.twist.linear.x, 2.0) + pow(robot_velocity.twist.linear.y, 2.0) +
+                            pow(robot_velocity.twist.linear.z, 2.0));
+  cmd_linear_total = sqrt(pow(cmd_velocity.twist.linear.x, 2.0) + pow(cmd_velocity.twist.linear.y, 2.0) +
+                          pow(cmd_velocity.twist.linear.z, 2.0));
+
+  // compute angular velocity magnitude
+  robot_angular_total = sqrt(pow(robot_velocity.twist.angular.x, 2.0) + pow(robot_velocity.twist.angular.y, 2.0) +
+                             pow(robot_velocity.twist.angular.z, 2.0));
+  cmd_angular_total = sqrt(pow(cmd_velocity.twist.angular.x, 2.0) + pow(cmd_velocity.twist.angular.y, 2.0) +
+                           pow(cmd_velocity.twist.angular.z, 2.0));
 
   bool diff = false;
 
-  if (robot_linear_total+robot_angular_total < 1e-06) //if robot is stopped/disabled
-  { 
-    if (cmd_linear_total+cmd_angular_total > 0.01) //but there is non-zero velocity command
+  if (robot_linear_total + robot_angular_total < 1e-06)  // if robot is stopped/disabled
+  {
+    if (cmd_linear_total + cmd_angular_total > 0.01)
+    { // but if there is non-zero velocity command
       ROS_INFO("robot velocity mismatched");
-      diff = true; //we have a mismatched
+      diff = true;  // we have a mismatched
+    }
   }
   return diff;
 }
@@ -405,27 +409,28 @@ void AbstractControllerExecution::run()
         geometry_msgs::TwistStamped robot_velocity;
         robot_info_.getRobotVelocity(robot_velocity);
 
-        if (vel_check) //if we need to check the velocity
+        if (vel_check) // if we need to check the velocity
         {
-          bool mismatched = checkVelocityDiff(robot_velocity, getVelocityCmd()); //check if there is a mismatch
-          if (!mismatched) 
-          //if there is no abnormality, reset the first mismatched time
-          { 
+          bool mismatched = checkVelocityDiff(robot_velocity, getVelocityCmd());  // check if there is a mismatch
+          if (!mismatched)
+          // if there is no abnormality, reset the first mismatched time
+          {
             ROS_DEBUG("Robot velocity check is ok");
             first_mismatched_time_ = ros::Time::now();
           }
-          else //if there is abnormality
+          else  // if there is abnormality
           {
-            if (ros::Time::now()-first_mismatched_time_ > ros::Duration(disabled_tolerance_sec_))
-            //the robot is not behaving as it should for more than 5 seconds
+            if (ros::Time::now() - first_mismatched_time_ > ros::Duration(disabled_tolerance_sec_))
+            // the robot is not behaving as it should for more than 5 seconds
             {
-              ROS_ERROR("Robot is not moving and it does not follow the velocity command for %d seconds.Please check the state of the robot!",
-              disabled_tolerance_sec_);
-              first_mismatched_time_ = ros::Time::now(); //reset to check again if needed
+              ROS_ERROR("Robot is not moving and does not follow the velocity command for %d seconds.Please check "
+                        "the state of the robot!",
+                        disabled_tolerance_sec_);
+              first_mismatched_time_ = ros::Time::now();  // reset to check again if needed
             }
           }
         }
-        else //if no need to check the robot velocity, reset the first mismatched time
+        else  // if no need to check the robot velocity, reset the first mismatched time
         {
           first_mismatched_time_ = ros::Time::now();
         }

@@ -224,8 +224,9 @@ namespace mbf_abstract_nav
      * @param robot_velocity the robot's actual velocity
      * @param cmd_velocity the commanded velocity to the robot
      * @return true if there is a mismatched, false otherwise
-    */
-    bool checkVelocityDiff(const geometry_msgs::TwistStamped &robot_velocity, const geometry_msgs::TwistStamped &cmd_velocity);
+     */
+    bool checkVelocityDiff(const geometry_msgs::TwistStamped& robot_velocity,
+                           const geometry_msgs::TwistStamped& cmd_velocity);
 
     //! the name of the loaded plugin
     std::string plugin_name_;
