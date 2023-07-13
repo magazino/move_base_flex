@@ -72,6 +72,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
   private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
   private_nh.param("tf_timeout", tf_timeout_, 1.0);
+  private_nh.param("disabled_tolerance_sec", disabled_tolerance_sec_, 5);
 
   // dynamically reconfigurable parameters
   reconfigure(config);
@@ -185,6 +186,37 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
   // TODO so there should be no loss of information in the feedback stream
 }
 
+bool AbstractControllerExecution::checkVelocityDiff(const geometry_msgs::TwistStamped &robot_velocity,
+                                                        const geometry_msgs::TwistStamped &cmd_velocity)
+{
+  //linear total and angular total
+  double robot_linear_total;
+  double robot_angular_total;
+
+  double cmd_linear_total;
+  double cmd_angular_total;
+
+  //compute linear velocity magnitude
+  robot_linear_total = sqrt(pow(robot_velocity.twist.linear.x,2.0) + pow(robot_velocity.twist.linear.y,2.0) + 
+                            pow(robot_velocity.twist.linear.z,2.0));
+  cmd_linear_total = sqrt(pow(cmd_velocity.twist.linear.x,2.0) + pow(cmd_velocity.twist.linear.y,2.0) + pow(cmd_velocity.twist.linear.z,2.0));
+  
+  //compute angular velocity magnitude
+  robot_angular_total = sqrt(pow(robot_velocity.twist.angular.x,2.0) + 
+                             pow(robot_velocity.twist.angular.y,2.0) + pow(robot_velocity.twist.angular.z,2.0));
+  cmd_angular_total = sqrt(pow(cmd_velocity.twist.angular.x,2.0) + pow(cmd_velocity.twist.angular.y,2.0) + pow(cmd_velocity.twist.angular.z,2.0));
+
+  bool diff = false;
+
+  if (robot_linear_total+robot_angular_total < 1e-06) //if robot is stopped/disabled
+  { 
+    if (cmd_linear_total+cmd_angular_total > 0.01) //but there is non-zero velocity command
+      ROS_INFO("robot velocity mismatched");
+      diff = true; //we have a mismatched
+  }
+  return diff;
+}
+
 geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd() const
 {
   boost::lock_guard<boost::mutex> guard(vel_cmd_mtx_);
@@ -278,6 +310,8 @@ void AbstractControllerExecution::run()
   last_valid_cmd_time_ = ros::Time();
   int retries = 0;
   int seq = 0;
+  first_mismatched_time_ = ros::Time();
+  bool vel_check = false;
 
   try
   {
@@ -301,6 +335,7 @@ void AbstractControllerExecution::run()
         // cannot tell what the problem is, but anyway we command the robot to stop to avoid crashes
         publishZeroVelocity();
         loop_rate_.sleep();
+        vel_check = false;
         continue;
       }
 
@@ -352,6 +387,7 @@ void AbstractControllerExecution::run()
         setState(ARRIVED_GOAL);
         // goal reached, tell it the controller
         moving_ = false;
+        vel_check = false;
         condition_.notify_all();
         // if not, keep moving
       }
@@ -368,6 +404,32 @@ void AbstractControllerExecution::run()
         geometry_msgs::TwistStamped cmd_vel_stamped;
         geometry_msgs::TwistStamped robot_velocity;
         robot_info_.getRobotVelocity(robot_velocity);
+
+        if (vel_check) //if we need to check the velocity
+        {
+          bool mismatched = checkVelocityDiff(robot_velocity, getVelocityCmd()); //check if there is a mismatch
+          if (!mismatched) 
+          //if there is no abnormality, reset the first mismatched time
+          { 
+            ROS_DEBUG("Robot velocity check is ok");
+            first_mismatched_time_ = ros::Time::now();
+          }
+          else //if there is abnormality
+          {
+            if (ros::Time::now()-first_mismatched_time_ > ros::Duration(disabled_tolerance_sec_))
+            //the robot is not behaving as it should for more than 5 seconds
+            {
+              ROS_ERROR("Robot is not moving and it does not follow the velocity command for %d seconds.Please check the state of the robot!",
+              disabled_tolerance_sec_);
+              first_mismatched_time_ = ros::Time::now(); //reset to check again if needed
+            }
+          }
+        }
+        else //if no need to check the robot velocity, reset the first mismatched time
+        {
+          first_mismatched_time_ = ros::Time::now();
+        }
+
         outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
 
         if (outcome_ < 10)
@@ -376,6 +438,7 @@ void AbstractControllerExecution::run()
           vel_pub_.publish(cmd_vel_stamped.twist);
           last_valid_cmd_time_ = ros::Time::now();
           retries = 0;
+          vel_check = true;
         }
         else if (outcome_ == mbf_msgs::ExePathResult::CANCELED)
         {
@@ -402,18 +465,21 @@ void AbstractControllerExecution::run()
             setState(NO_LOCAL_CMD); // useful for server feedback
             // keep trying if we have > 0 or -1 (infinite) retries
             moving_ = max_retries_;
+            vel_check = false;
           }
 
           // could not compute a valid velocity command
           if (!moving_ || force_stop_on_retry_)
           {
             publishZeroVelocity(); // command the robot to stop; we still feedback command calculated by the plugin
+            vel_check = false;
           }
           else
           {
             // we are retrying compute velocity commands; we keep sending the command calculated by the plugin
             // with the expectation that it's a sensible one (e.g. slow down while respecting acceleration limits)
             vel_pub_.publish(cmd_vel_stamped.twist);
+            vel_check = true;
           }
         }
 

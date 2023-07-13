@@ -219,6 +219,14 @@ namespace mbf_abstract_nav
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
+    /**
+     * @brief Check if the robot's actual velocity is following the cmd_vel
+     * @param robot_velocity the robot's actual velocity
+     * @param cmd_velocity the commanded velocity to the robot
+     * @return true if there is a mismatched, false otherwise
+    */
+    bool checkVelocityDiff(const geometry_msgs::TwistStamped &robot_velocity, const geometry_msgs::TwistStamped &cmd_velocity);
+
     //! the name of the loaded plugin
     std::string plugin_name_;
 
@@ -233,6 +241,9 @@ namespace mbf_abstract_nav
 
     //! The time the controller responded with a success output (output < 10).
     ros::Time last_valid_cmd_time_;
+
+    //The first time when the actual robot velocity is abnormal comparing to the velocity command
+    ros::Time first_mismatched_time_;
 
     //! The maximum number of retries
     int max_retries_;
@@ -364,6 +375,9 @@ namespace mbf_abstract_nav
 
     //! replaces parameter angle_tolerance_ for the action
     double action_angle_tolerance_;
+
+    int disabled_tolerance_sec_;
+
   };
 
 } /* namespace mbf_abstract_nav */
