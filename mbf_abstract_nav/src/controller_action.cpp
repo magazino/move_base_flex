@@ -313,7 +313,7 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
       case AbstractControllerExecution::ROBOT_DISABLED:
         ROS_FATAL_STREAM_NAMED(name_, "Robot stopped and ignored velocity commands!");
         controller_active = false;
-        fillExePathResult(mbf_msgs::ExePathResult::STOPPED,"Robot disabled and ignored velocity commands: ",result);
+        fillExePathResult(mbf_msgs::ExePathResult::ROBOT_STUCK,"Robot disabled and ignored velocity commands: ",result);
         goal_handle.setAborted(result, result.message);
         break;
 

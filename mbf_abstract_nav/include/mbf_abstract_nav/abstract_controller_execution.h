@@ -221,12 +221,11 @@ namespace mbf_abstract_nav
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
     /**
-     * @brief Check if the robot's actual velocity is ignoring the cmd_vel
-     * @param robot_stopped true if robot is stopped, false otherwise
-     * @param cmd_velocity the commanded velocity being published to the robot
-     * @return true if there the ignoring time exceeded tolerance, false otherwise
+     * @brief Check if the robot is ignoring the cmd_vel longer than threshold time
+     * @param cmd_velocity the latest cmd_vel being published to the robot
+     * @return true if cmd_vel is being ignored by the robot longer than tolerance time, false otherwise
      */
-    bool checkVelocityIgnore(const bool& robot_stopped, const geometry_msgs::TwistStamped& cmd_velocity);
+    bool checkVelocityIgnore(const geometry_msgs::Twist& cmd_velocity);
 
     //! the name of the loaded plugin
     std::string plugin_name_;
@@ -379,9 +378,6 @@ namespace mbf_abstract_nav
 
     //! time duration for checking if the robot is ignoring cmd_vel
     double robot_ignore_check_tolerance_;
-
-    //! robot ignore velocity feature enable/disable
-    bool robot_ignore_vel_enabled_;
 
   };
 
