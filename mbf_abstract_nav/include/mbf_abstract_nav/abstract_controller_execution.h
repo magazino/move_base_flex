@@ -222,10 +222,10 @@ namespace mbf_abstract_nav
 
     /**
      * @brief Check if the robot is ignoring the cmd_vel longer than threshold time
-     * @param cmd_velocity the latest cmd_vel being published to the robot
+     * @param cmd_vel the latest cmd_vel being published by the controller
      * @return true if cmd_vel is being ignored by the robot longer than tolerance time, false otherwise
      */
-    bool checkVelocityIgnore(const geometry_msgs::Twist& cmd_velocity);
+    bool checkCmdVelIgnored(const geometry_msgs::Twist& cmd_vel);
 
     //! the name of the loaded plugin
     std::string plugin_name_;
@@ -376,8 +376,8 @@ namespace mbf_abstract_nav
     //! replaces parameter angle_tolerance_ for the action
     double action_angle_tolerance_;
 
-    //! time duration for checking if the robot is ignoring cmd_vel
-    double robot_ignore_check_tolerance_;
+    //! time tolerance for checking if the robot is ignoring cmd_vel
+    double cmd_vel_ignored_tolerance_;
 
   };
 

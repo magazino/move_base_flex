@@ -72,7 +72,7 @@ AbstractControllerExecution::AbstractControllerExecution(
   private_nh.param("dist_tolerance", dist_tolerance_, 0.1);
   private_nh.param("angle_tolerance", angle_tolerance_, M_PI / 18.0);
   private_nh.param("tf_timeout", tf_timeout_, 1.0);
-  private_nh.param("robot_ignore_check_tolerance", robot_ignore_check_tolerance_, 5.0);
+  private_nh.param("cmd_vel_ignored_tolerance", cmd_vel_ignored_tolerance_, 5.0);
 
   // dynamically reconfigurable parameters
   reconfigure(config);
@@ -186,41 +186,45 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
   // TODO so there should be no loss of information in the feedback stream
 }
 
-bool AbstractControllerExecution::checkVelocityIgnore(const geometry_msgs::Twist& cmd_velocity)
+bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist& cmd_vel)
 {
-  bool ignored_exceed_tolerance = false;
+  // check if the velocity ignore check is enabled or not
+  if (cmd_vel_ignored_tolerance_ <= 0.0)
+  {
+    return false;
+  }
 
-  bool robot_stopped = robot_info_.isRobotStopped(1e-3, 1e-3);
+  const bool robot_stopped = robot_info_.isRobotStopped(1e-3, 1e-3);
 
   // compute linear and angular velocity magnitude
-  const double cmd_linear = std::hypot(cmd_velocity.linear.x, cmd_velocity.linear.y);
-  const double cmd_angular = std::abs(cmd_velocity.angular.z);
+  const double cmd_linear = std::hypot(cmd_vel.linear.x, cmd_vel.linear.y);
+  const double cmd_angular = std::abs(cmd_vel.angular.z);
 
-  bool cmd_is_not_zero = (cmd_linear > 0.01 || cmd_angular > 0.01);
+  const bool cmd_is_zero = (cmd_linear < 0.01 && cmd_angular < 0.01);
 
   // no need to check
-  if (!robot_stopped || !cmd_is_not_zero)
+  if (!robot_stopped || cmd_is_zero)
   {
     first_ignored_time_ = ros::Time::now();
     return false;
   }
 
   // check if robot ignores the cmd_vel
-  double ignored_duration = (ros::Time::now() - first_ignored_time_).toSec();
+  const double ignored_duration = (ros::Time::now() - first_ignored_time_).toSec();
   ROS_WARN_THROTTLE(1,
-                    "Robot ignores velocity command for %.2f seconds.\n The cmd_vel being ignored is: (x=%.2f, "
+                    "Robot is ignoring velocity command for %.2f seconds. (Commanded velocity: x=%.2f, "
                     "y=%.2f, w=%.2f)",
-                    ignored_duration, cmd_velocity.linear.x, cmd_velocity.linear.y, cmd_velocity.angular.z);
+                    ignored_duration, cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
 
-  if (ignored_duration > robot_ignore_check_tolerance_)
+  if (ignored_duration > cmd_vel_ignored_tolerance_)
   {
     // the robot is ignoring the velocity command more the threshold time
-    ROS_ERROR("Robot is disabled and the time it ignored velocity command exceeded the tolerance time: %.2f seconds",
-              robot_ignore_check_tolerance_);
-    ignored_exceed_tolerance = true;  // return true
+    ROS_ERROR("Robot is ignoring velocity command for more than the tolerance time: %.2f seconds",
+              cmd_vel_ignored_tolerance_);
+    return true;  // return true
   }
 
-  return ignored_exceed_tolerance;
+  return false;
 }
 
 geometry_msgs::TwistStamped AbstractControllerExecution::getVelocityCmd() const
@@ -318,8 +322,6 @@ void AbstractControllerExecution::run()
   int seq = 0;
   first_ignored_time_ = ros::Time::now();
 
-  // check if the velocity ignore check is enabled or not
-  bool robot_ignore_vel_enabled = (robot_ignore_check_tolerance_ > 0.0);
  
   try
   {
@@ -419,8 +421,8 @@ void AbstractControllerExecution::run()
           vel_pub_.publish(cmd_vel_stamped.twist);
           last_valid_cmd_time_ = ros::Time::now();
           retries = 0;
-          // check if robot ignores velocity command
-          if (robot_ignore_vel_enabled && checkVelocityIgnore(cmd_vel_stamped.twist))
+          // check if robot is ignoring velocity command
+          if (checkCmdVelIgnored(cmd_vel_stamped.twist))
           {
             setState(ROBOT_DISABLED);
             moving_ = false;
