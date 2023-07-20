@@ -412,7 +412,6 @@ void AbstractControllerExecution::run()
         geometry_msgs::TwistStamped cmd_vel_stamped;
         geometry_msgs::TwistStamped robot_velocity;
         robot_info_.getRobotVelocity(robot_velocity);
-
         outcome_ = computeVelocityCmd(robot_pose_, robot_velocity, cmd_vel_stamped, message_ = "");
 
         if (outcome_ < 10)
