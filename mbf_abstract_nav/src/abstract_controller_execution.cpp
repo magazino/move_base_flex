@@ -190,7 +190,12 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
 {
   // check if the velocity ignore check is enabled or not
   if (cmd_vel_ignored_tolerance_ <= 0.0)
-  {
+  { 
+    // set to zero if not already zero
+    if (!first_ignored_time_.is_zero())
+    {
+      first_ignored_time_ = ros::Time();
+    }
     return false;
   }
 
@@ -200,13 +205,24 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
   const double cmd_linear = std::hypot(cmd_vel.linear.x, cmd_vel.linear.y);
   const double cmd_angular = std::abs(cmd_vel.angular.z);
 
-  const bool cmd_is_zero = (cmd_linear < 0.01 && cmd_angular < 0.01);
+  const bool cmd_is_zero = cmd_linear < 1e-3 && cmd_angular < 1e-3;
 
-  // no need to check
+  // velocity is not being ignored
   if (!robot_stopped || cmd_is_zero)
   {
-    first_ignored_time_ = ros::Time::now();
+    // set to zero if not already zero
+    if (!first_ignored_time_.is_zero())
+    {
+      first_ignored_time_ = ros::Time();
+    }
     return false;
+  }
+
+  // check if first_ignored_time_ is zero or not
+  if (first_ignored_time_.is_zero())
+  {
+    // set first_ignored_time_ to now if it was zero
+    first_ignored_time_ = ros::Time::now();
   }
 
   // check if robot ignores the cmd_vel
@@ -219,9 +235,9 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
   if (ignored_duration > cmd_vel_ignored_tolerance_)
   {
     // the robot is ignoring the velocity command more the threshold time
-    ROS_ERROR("Robot is ignoring velocity command for more than the tolerance time: %.2f seconds",
+    ROS_ERROR("Robot is ignoring velocity command for more than %.2f seconds. Tolerance exceeded!",
               cmd_vel_ignored_tolerance_);
-    return true;  // return true
+    return true;
   }
 
   return false;
@@ -320,9 +336,8 @@ void AbstractControllerExecution::run()
   last_valid_cmd_time_ = ros::Time();
   int retries = 0;
   int seq = 0;
-  first_ignored_time_ = ros::Time::now();
+  first_ignored_time_ = ros::Time();
 
- 
   try
   {
     while (moving_ && ros::ok())
