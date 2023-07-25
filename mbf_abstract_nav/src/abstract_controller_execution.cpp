@@ -188,14 +188,9 @@ void AbstractControllerExecution::setVelocityCmd(const geometry_msgs::TwistStamp
 
 bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist& cmd_vel)
 {
-  // check if the velocity ignore check is enabled or not
+  // check if the velocity ignored check is enabled or not
   if (cmd_vel_ignored_tolerance_ <= 0.0)
   { 
-    // set to zero if not already zero
-    if (!first_ignored_time_.is_zero())
-    {
-      first_ignored_time_ = ros::Time();
-    }
     return false;
   }
 
@@ -210,7 +205,6 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
   // velocity is not being ignored
   if (!robot_stopped || cmd_is_zero)
   {
-    // set to zero if not already zero
     if (!first_ignored_time_.is_zero())
     {
       first_ignored_time_ = ros::Time();
@@ -218,14 +212,12 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
     return false;
   }
 
-  // check if first_ignored_time_ is zero or not
   if (first_ignored_time_.is_zero())
   {
     // set first_ignored_time_ to now if it was zero
     first_ignored_time_ = ros::Time::now();
   }
 
-  // check if robot ignores the cmd_vel
   const double ignored_duration = (ros::Time::now() - first_ignored_time_).toSec();
   ROS_WARN_THROTTLE(1,
                     "Robot is ignoring velocity command for %.2f seconds. (Commanded velocity: x=%.2f, "
