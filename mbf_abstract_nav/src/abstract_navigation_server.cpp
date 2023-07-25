@@ -147,7 +147,7 @@ void AbstractNavigationServer::callActionGetPath(ActionServerGetPath::GoalHandle
     mbf_msgs::GetPathResult result;
     result.outcome = mbf_msgs::GetPathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.planner + "\"!";
-    ROS_WARN_STREAM_NAMED("get_path", result.message);
+    ROS_ERROR_STREAM_NAMED("get_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -205,7 +205,7 @@ void AbstractNavigationServer::callActionExePath(ActionServerExePath::GoalHandle
     mbf_msgs::ExePathResult result;
     result.outcome = mbf_msgs::ExePathResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.controller + "\"!";
-    ROS_WARN_STREAM_NAMED("exe_path", result.message);
+    ROS_ERROR_STREAM_NAMED("exe_path", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
@@ -264,7 +264,7 @@ void AbstractNavigationServer::callActionRecovery(ActionServerRecovery::GoalHand
     mbf_msgs::RecoveryResult result;
     result.outcome = mbf_msgs::RecoveryResult::INVALID_PLUGIN;
     result.message = "No plugin loaded with the given name \"" + goal.behavior + "\"!";
-    ROS_WARN_STREAM_NAMED("recovery", result.message);
+    ROS_ERROR_STREAM_NAMED("recovery", result.message);
     goal_handle.setRejected(result, result.message);
     return;
   }
