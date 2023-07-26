@@ -202,9 +202,9 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
 
   const bool cmd_is_zero = cmd_linear < 1e-3 && cmd_angular < 1e-3;
 
-  // velocity is not being ignored
   if (!robot_stopped || cmd_is_zero)
   {
+    // velocity is not being ignored
     if (!first_ignored_time_.is_zero())
     {
       first_ignored_time_ = ros::Time();
@@ -219,10 +219,6 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
   }
 
   const double ignored_duration = (ros::Time::now() - first_ignored_time_).toSec();
-  ROS_WARN_THROTTLE(1,
-                    "Robot is ignoring velocity command for %.2f seconds. (Commanded velocity: x=%.2f, "
-                    "y=%.2f, w=%.2f)",
-                    ignored_duration, cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
 
   if (ignored_duration > cmd_vel_ignored_tolerance_)
   {
@@ -231,6 +227,11 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
               cmd_vel_ignored_tolerance_);
     return true;
   }
+
+  ROS_WARN_THROTTLE(1,
+                    "Robot is ignoring velocity command for %.2f seconds. (Commanded velocity: x=%.2f, "
+                    "y=%.2f, w=%.2f)",
+                    ignored_duration, cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
 
   return false;
 }

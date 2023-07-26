@@ -242,7 +242,7 @@ namespace mbf_abstract_nav
     //! The time the controller responded with a success output (output < 10).
     ros::Time last_valid_cmd_time_;
 
-    //! The first time when the robot is ignoring velocity command
+    //! The time when the robot started ignoring velocity commands
     ros::Time first_ignored_time_;
 
     //! The maximum number of retries
