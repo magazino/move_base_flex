@@ -205,10 +205,7 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
   if (!robot_stopped || cmd_is_zero)
   {
     // velocity is not being ignored
-    if (!first_ignored_time_.is_zero())
-    {
-      first_ignored_time_ = ros::Time();
-    }
+    first_ignored_time_ = ros::Time();
     return false;
   }
 
@@ -222,7 +219,6 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
 
   if (ignored_duration > cmd_vel_ignored_tolerance_)
   {
-    // the robot is ignoring the velocity command more the threshold time
     ROS_ERROR("Robot is ignoring velocity command for more than %.2f seconds. Tolerance exceeded!",
               cmd_vel_ignored_tolerance_);
     return true;
