@@ -310,6 +310,13 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
         goal_handle.setAborted(result, result.message);
         break;
 
+      case AbstractControllerExecution::ROBOT_DISABLED:
+        controller_active = false;
+        fillExePathResult(mbf_msgs::ExePathResult::ROBOT_STUCK,
+                          "Robot ignored velocity commands for more than tolerance time!", result);
+        goal_handle.setAborted(result, result.message);
+        break;
+
       default:
         std::stringstream ss;
         ss << "Internal error: Unknown state in a move base flex controller execution with the number: "

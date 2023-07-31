@@ -135,20 +135,21 @@ namespace mbf_abstract_nav
      */
     enum ControllerState
     {
-      INITIALIZED,  ///< Controller has been initialized successfully.
-      STARTED,      ///< Controller has been started.
-      PLANNING,     ///< Executing the plugin.
-      NO_PLAN,      ///< The controller has been started without a plan.
-      MAX_RETRIES,  ///< Exceeded the maximum number of retries without a valid command.
-      PAT_EXCEEDED, ///< Exceeded the patience time without a valid command.
-      EMPTY_PLAN,   ///< Received an empty plan.
-      INVALID_PLAN, ///< Received an invalid plan that the controller plugin rejected.
-      NO_LOCAL_CMD, ///< Received no velocity command by the plugin, in the current cycle.
-      GOT_LOCAL_CMD,///< Got a valid velocity command from the plugin.
-      ARRIVED_GOAL, ///< The robot arrived the goal.
-      CANCELED,     ///< The controller has been canceled.
-      STOPPED,      ///< The controller has been stopped!
-      INTERNAL_ERROR///< An internal error occurred.
+      INITIALIZED,     ///< Controller has been initialized successfully.
+      STARTED,         ///< Controller has been started.
+      PLANNING,        ///< Executing the plugin.
+      NO_PLAN,         ///< The controller has been started without a plan.
+      MAX_RETRIES,     ///< Exceeded the maximum number of retries without a valid command.
+      PAT_EXCEEDED,    ///< Exceeded the patience time without a valid command.
+      EMPTY_PLAN,      ///< Received an empty plan.
+      INVALID_PLAN,    ///< Received an invalid plan that the controller plugin rejected.
+      NO_LOCAL_CMD,    ///< Received no velocity command by the plugin, in the current cycle.
+      GOT_LOCAL_CMD,   ///< Got a valid velocity command from the plugin.
+      ARRIVED_GOAL,    ///< The robot arrived the goal.
+      CANCELED,        ///< The controller has been canceled.
+      STOPPED,         ///< The controller has been stopped!
+      INTERNAL_ERROR,  ///< An internal error occurred.
+      ROBOT_DISABLED   ///< The robot is stuck and ignored velocity command
     };
 
     /**
@@ -219,6 +220,13 @@ namespace mbf_abstract_nav
      */
     void setVelocityCmd(const geometry_msgs::TwistStamped &vel_cmd_stamped);
 
+    /**
+     * @brief Check if the robot is ignoring the cmd_vel longer than threshold time
+     * @param cmd_vel the latest cmd_vel being published by the controller
+     * @return true if cmd_vel is being ignored by the robot longer than tolerance time, false otherwise
+     */
+    bool checkCmdVelIgnored(const geometry_msgs::Twist& cmd_vel);
+
     //! the name of the loaded plugin
     std::string plugin_name_;
 
@@ -233,6 +241,9 @@ namespace mbf_abstract_nav
 
     //! The time the controller responded with a success output (output < 10).
     ros::Time last_valid_cmd_time_;
+
+    //! The time when the robot started ignoring velocity commands
+    ros::Time first_ignored_time_;
 
     //! The maximum number of retries
     int max_retries_;
@@ -364,6 +375,10 @@ namespace mbf_abstract_nav
 
     //! replaces parameter angle_tolerance_ for the action
     double action_angle_tolerance_;
+
+    //! time tolerance for checking if the robot is ignoring cmd_vel
+    double cmd_vel_ignored_tolerance_;
+
   };
 
 } /* namespace mbf_abstract_nav */
