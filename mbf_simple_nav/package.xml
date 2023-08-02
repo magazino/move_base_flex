@@ -24,9 +24,11 @@
     <depend>std_srvs</depend>
     <depend>nav_msgs</depend>
     <depend>geometry_msgs</depend>
-    <depend>mbf_abstract_nav</depend>
     <depend>mbf_abstract_core</depend>
+    <depend>mbf_abstract_nav</depend>
     <depend>mbf_msgs</depend>
+    <depend>mbf_simple_core</depend>
+
 
     <depend>tf2</depend>
     <depend>tf2_ros</depend>

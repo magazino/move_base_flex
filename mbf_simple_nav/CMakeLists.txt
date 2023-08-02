@@ -7,9 +7,10 @@ find_package(catkin REQUIRED
   actionlib_msgs
   dynamic_reconfigure
   geometry_msgs
+  mbf_abstract_core
   mbf_abstract_nav
   mbf_msgs
-  mbf_abstract_core
+  mbf_simple_core
   nav_msgs
   pluginlib
   roscpp
@@ -18,6 +19,7 @@ find_package(catkin REQUIRED
   tf
   tf2
   tf2_ros
+  
   )
 
 find_package(Boost COMPONENTS thread chrono REQUIRED)
@@ -33,9 +35,10 @@ catkin_package(
   actionlib_msgs
   dynamic_reconfigure
   geometry_msgs
+  mbf_abstract_core
   mbf_abstract_nav
   mbf_msgs
-  mbf_abstract_core
+  mbf_simple_core
   nav_msgs
   pluginlib
   roscpp
