@@ -219,15 +219,16 @@ bool AbstractControllerExecution::checkCmdVelIgnored(const geometry_msgs::Twist&
 
   if (ignored_duration > cmd_vel_ignored_tolerance_)
   {
-    ROS_ERROR("Robot is ignoring velocity command for more than %.2f seconds. Tolerance exceeded!",
+    ROS_ERROR("Robot is ignoring velocity commands for more than %.2f seconds. Tolerance exceeded!",
               cmd_vel_ignored_tolerance_);
     return true;
   }
-
-  ROS_WARN_THROTTLE(1,
-                    "Robot is ignoring velocity command for %.2f seconds. (Commanded velocity: x=%.2f, "
-                    "y=%.2f, w=%.2f)",
-                    ignored_duration, cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
+  else if (ignored_duration > 1.0)
+  {
+    ROS_WARN_THROTTLE(1,
+                      "Robot is ignoring velocity commands for %.2f seconds (last command: vx=%.2f, vy=%.2f, w=%.2f)",
+                      ignored_duration, cmd_vel.linear.x, cmd_vel.linear.y, cmd_vel.angular.z);
+  }
 
   return false;
 }
