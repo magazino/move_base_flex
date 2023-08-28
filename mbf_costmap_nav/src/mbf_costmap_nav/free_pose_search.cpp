@@ -241,32 +241,40 @@ SearchSolution FreePoseSearch::search() const
       safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
   SearchSolution sol;
+  Cell test_cell;
   sol.pose.theta = config_.goal.theta;
   bool outside_or_unknown{ false };
 
-  // initializing queue with the goal cell
   // enforce bounds if goal is outside the map
-  // note that distance tolerance is wrt this new start cell
-  Cell start;
-  int cell_x, cell_y;
-  costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, cell_x, cell_y);
-  start.x = static_cast<unsigned int>(cell_x);
-  start.y = static_cast<unsigned int>(cell_y);
-  start.cost = costmap2d->getCost(start.x, start.y);
+  int test_cell_x, test_cell_y;
+  costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, test_cell_x, test_cell_y);
+  test_cell.x = static_cast<unsigned int>(test_cell_x);
+  test_cell.y = static_cast<unsigned int>(test_cell_y);
+  test_cell.cost = costmap2d->getCost(test_cell.x, test_cell.y);
 
-  // check if the start cell is within tolerance and add it to the queue if it is
-  geometry_msgs::Pose2D start_world_pose;
-  costmap2d->mapToWorld(start.x, start.y, start_world_pose.x, start_world_pose.y);
-  if (std::hypot(start_world_pose.x - config_.goal.x, start_world_pose.y - config_.goal.y) <= config_.linear_tolerance)
+  // the cell center might be different from the goal pose (depends on costmap resolution)
+  geometry_msgs::Pose2D test_pose;
+  costmap2d->mapToWorld(test_cell.x, test_cell.y, test_pose.x, test_pose.y);
+
+  int cell_no_bounds_x, cell_no_bounds_y;
+  costmap2d->worldToMapNoBounds(config_.goal.x, config_.goal.y, cell_no_bounds_x, cell_no_bounds_y);
+  // if goal in bounds, we start the search from the goal pose and continue from the goal cell's center
+  if (cell_no_bounds_x == test_cell_x && cell_no_bounds_y == test_cell_y)
   {
-    queue.push(start);
-    in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
+    sol.pose.x = config_.goal.x;
+    sol.pose.y = config_.goal.y;
+    // check if the start cell is within tolerance and add it to the queue
+    if (std::hypot(test_pose.x - config_.goal.x, test_pose.y - config_.goal.y) <= config_.linear_tolerance)
+    {
+      queue.push(test_cell);
+      in_queue_or_visited.insert(costmap2d->getIndex(test_cell.x, test_cell.y));
+    }
   }
-
-  Cell test_cell = start;
-  // start the algorithm with the goal pose (not start cell)
-  sol.pose.x = config_.goal.x;
-  sol.pose.y = config_.goal.y;
+  else
+  {
+    sol.pose.x = test_pose.x;
+    sol.pose.y = test_pose.y;
+  }
 
   while (true)
   {

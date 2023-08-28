@@ -488,6 +488,75 @@ TEST_F(SearchHelperTest, enforce_bounds)
   EXPECT_NEAR(sol.pose.y, 0.5, 1e-6);
   EXPECT_NEAR(sol.pose.theta, 0, 1e-6);
 }
+
+TEST_F(SearchHelperTest, goal_not_centered)
+{
+  ros::NodeHandle nh;
+  costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
+  FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
+
+  printMap(*(cm.getCostmap()));
+  map.header.stamp = ros::Time::now();
+  map_pub.publish(map);
+
+  /*
+  y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
+  ------------------------------------------------------------
+  0.5 |  0    0    0     0     0     0    0    254   254   254
+  1.5 |  0    0    0     0     0     0    0    254   254   254
+  2.5 |  0    0    0    254   254   254   0     0     0     0
+  3.5 |  0    0    0     0     0     0    0     0     0     0
+  4.5 |  0    0    0     0     0     0    0     0     0     0
+  5.5 |  0    0    0     0    254    0    0    254   254   254
+  6.5 |  0    G    0     0    254    0    0    254   254   254
+  7.5 |  0    0    0     0     0     0    0    254   254   254
+  8.5 |  0    0    0     0     0     0    0     0     0     0
+  9.5 |  0    0    0     0     0     0    0     0     0     0
+  */
+
+  SearchConfig config{ M_PI_4, M_PI, 5.0, false, 0.0, toPose2D(1.345, 6.66, 0) };
+  FreePoseSearch sh(cm, config, std::nullopt, viz);
+
+  auto sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::FREE);
+  EXPECT_NEAR(sol.pose.x, 1.345, 1e-6);
+  EXPECT_NEAR(sol.pose.y, 6.66, 1e-6);
+  EXPECT_NEAR(sol.pose.theta, 0, 1e-6);
+}
+
+TEST_F(SearchHelperTest, goal_not_centered_small_tolerance)
+{
+  ros::NodeHandle nh;
+  costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
+  FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
+
+  printMap(*(cm.getCostmap()));
+  map.header.stamp = ros::Time::now();
+  map_pub.publish(map);
+
+  /*
+  y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
+  ------------------------------------------------------------
+  0.5 |  0    0    0     0     0     0    0    254   254   254
+  1.5 |  0    0    0     0     0     0    0    254   254   254
+  2.5 |  0    0    0    254   254   254   0     0     0     0
+  3.5 |  0    0    0     0     0     0    0     0     0     0
+  4.5 |  0    0    0     0     0     0    0     0     0     0
+  5.5 |  0    0    0     0    254    0    0    254   254   254
+  6.5 |  0    0    0     0    254    0    0    254   254   254
+  7.5 |  0    0    0     0     0     G    0    254   254   254
+  8.5 |  0    0    0     0     0     0    0     0     0     0
+  9.5 |  0    0    0     0     0     0    0     0     0     0
+  */
+
+  // tolerance is less than cell resolution
+  SearchConfig config{ M_PI_4, M_PI, 0.1, false, 0.0, toPose2D(5.5, 7.1, 0) };
+  FreePoseSearch sh(cm, config, std::nullopt, viz);
+
+  // goal pose is not valid, but the goal cell is valid (5.5, 7.5, 0.785398); however that is above tolerance (0.1)
+  auto sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::LETHAL);
+}
 }  // namespace mbf_costmap_nav::test
 
 int main(int argc, char** argv)
