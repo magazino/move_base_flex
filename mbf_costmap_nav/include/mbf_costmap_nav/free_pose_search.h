@@ -207,7 +207,7 @@ private:
   bool isPoseValid(const unsigned char cost) const;
 
   /**
-   * @brief Check if state is collision-free; criteria: state free or inscribed
+   * @brief Check if state is non-lethal; criteria: state free or inscribed
    * @param state
    * @return true if state is free or inscribed
    */

@@ -257,10 +257,9 @@ SearchSolution FreePoseSearch::search() const
   geometry_msgs::Pose2D test_pose;
   costmap2d->mapToWorld(test_cell.x, test_cell.y, test_pose.x, test_pose.y);
 
-  int cell_no_bounds_x, cell_no_bounds_y;
-  costmap2d->worldToMapNoBounds(config_.goal.x, config_.goal.y, cell_no_bounds_x, cell_no_bounds_y);
   // if goal in bounds, we start the search from the goal pose and continue from the goal cell's center
-  if (cell_no_bounds_x == test_cell_x && cell_no_bounds_y == test_cell_y)
+  unsigned int dummy_x, dummy_y;
+  if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y))
   {
     sol.pose.x = config_.goal.x;
     sol.pose.y = config_.goal.y;
