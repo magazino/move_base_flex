@@ -240,45 +240,57 @@ SearchSolution FreePoseSearch::search() const
   const std::vector<geometry_msgs::Point> footprint =
       safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
-  SearchSolution sol;
-  SearchSolution unknow_outside_sol;
-  Cell test_cell;
-  sol.pose.theta = config_.goal.theta;
-  bool outside_or_unknown{ false };
+  // enforce bounds if goal is outside the map; and get the pose of the center of the cell
+  Cell goal_cell;
+  geometry_msgs::Pose2D goal_cell_pose;  // this is the pose of the center of the goal cell (not the goal pose)
+  int goal_cell_x, goal_cell_y;
+  costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, goal_cell_x, goal_cell_y);
+  goal_cell.x = static_cast<unsigned int>(goal_cell_x);
+  goal_cell.y = static_cast<unsigned int>(goal_cell_y);
+  goal_cell.cost = costmap2d->getCost(goal_cell.x, goal_cell.y);
+  costmap2d->mapToWorld(goal_cell.x, goal_cell.y, goal_cell_pose.x, goal_cell_pose.y);
 
-  // enforce bounds if goal is outside the map
-  int test_cell_x, test_cell_y;
-  costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, test_cell_x, test_cell_y);
-  test_cell.x = static_cast<unsigned int>(test_cell_x);
-  test_cell.y = static_cast<unsigned int>(test_cell_y);
-  test_cell.cost = costmap2d->getCost(test_cell.x, test_cell.y);
-
-  // the cell center might be different from the goal pose (depends on costmap resolution)
-  geometry_msgs::Pose2D test_pose;
-  costmap2d->mapToWorld(test_cell.x, test_cell.y, test_pose.x, test_pose.y);
-
-  // if goal in bounds, we start the search from the goal pose and continue from the goal cell's center
+  // if goal in bounds, we start the search from the goal pose (not goal_cell_pose) and continue from the goal cell
+  bool goal_pose_tested{ false };
   unsigned int dummy_x, dummy_y;
   if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y))
   {
-    sol.pose.x = config_.goal.x;
-    sol.pose.y = config_.goal.y;
     // check if the start cell is within tolerance and add it to the queue
-    if (std::hypot(test_pose.x - config_.goal.x, test_pose.y - config_.goal.y) <= config_.linear_tolerance)
+    if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
     {
-      queue.push(test_cell);
-      in_queue_or_visited.insert(costmap2d->getIndex(test_cell.x, test_cell.y));
+      queue.push(goal_cell);
+      in_queue_or_visited.insert(costmap2d->getIndex(goal_cell.x, goal_cell.y));
     }
   }
   else
   {
-    sol.pose.x = test_pose.x;
-    sol.pose.y = test_pose.y;
-    in_queue_or_visited.insert(costmap2d->getIndex(test_cell.x, test_cell.y));
+    // if out of bounds, we start the search from the goal cell
+    goal_pose_tested = true;
+    queue.push(goal_cell);
+    in_queue_or_visited.insert(costmap2d->getIndex(goal_cell.x, goal_cell.y));
   }
 
-  while (true)
+  SearchSolution sol;
+  sol.pose.theta = config_.goal.theta;
+  SearchSolution unknow_outside_sol;
+  bool outside_or_unknown{ false };
+  while (!queue.empty() || !goal_pose_tested)
   {
+    Cell test_cell;
+    if (!goal_pose_tested)
+    {
+      test_cell = goal_cell;
+      sol.pose.x = config_.goal.x;
+      sol.pose.y = config_.goal.y;
+      goal_pose_tested = true;
+    }
+    else
+    {
+      test_cell = queue.top();
+      queue.pop();
+      costmap2d->mapToWorld(test_cell.x, test_cell.y, sol.pose.x, sol.pose.y);
+    }
+
     ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Checking Cell: (" << test_cell.x << ", " << test_cell.y << ") with pose: ("
                                                               << sol.pose.x << ", " << sol.pose.y << ", "
                                                               << sol.pose.theta << ")");
@@ -347,15 +359,6 @@ SearchSolution FreePoseSearch::search() const
       in_queue_or_visited.insert(cell_index);
       queue.push(neighbor);
     }
-
-    if (queue.empty())
-    {
-      break;
-    }
-
-    test_cell = queue.top();
-    queue.pop();
-    costmap2d->mapToWorld(test_cell.x, test_cell.y, sol.pose.x, sol.pose.y);
   }  // end while
 
   if (outside_or_unknown)
