@@ -250,39 +250,33 @@ SearchSolution FreePoseSearch::search() const
   goal_cell.cost = costmap2d->getCost(goal_cell.x, goal_cell.y);
   costmap2d->mapToWorld(goal_cell.x, goal_cell.y, goal_cell_pose.x, goal_cell_pose.y);
 
-  // if goal in bounds, we start the search from the goal pose (not goal_cell_pose) and continue from the goal cell
-  bool goal_pose_tested{ false };
+  bool test_goal_pose{ true };
   unsigned int dummy_x, dummy_y;
-  if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y))
+  if (!costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y))
   {
-    // check if the start cell is within tolerance and add it to the queue
-    if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
-    {
-      queue.push(goal_cell);
-      in_queue_or_visited.insert(costmap2d->getIndex(goal_cell.x, goal_cell.y));
-    }
+    // if goal not in bounds, we don't start the search from the goal pose
+    test_goal_pose = false;
   }
-  else
+
+  // add goal cell to queue if it is within linear tolerance
+  if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
   {
-    // if out of bounds, we start the search from the goal cell
-    goal_pose_tested = true;
     queue.push(goal_cell);
     in_queue_or_visited.insert(costmap2d->getIndex(goal_cell.x, goal_cell.y));
   }
 
   SearchSolution sol;
   sol.pose.theta = config_.goal.theta;
-  SearchSolution unknow_outside_sol;
-  bool outside_or_unknown{ false };
-  while (!queue.empty() || !goal_pose_tested)
+  std::optional<SearchSolution> no_info_sol;
+  while (!queue.empty() || test_goal_pose)
   {
     Cell test_cell;
-    if (!goal_pose_tested)
+    if (test_goal_pose)
     {
       test_cell = goal_cell;
       sol.pose.x = config_.goal.x;
       sol.pose.y = config_.goal.y;
-      goal_pose_tested = true;
+      test_goal_pose = false;
     }
     else
     {
@@ -314,13 +308,12 @@ SearchSolution FreePoseSearch::search() const
       // if the state is outside or unknown, we save the first one we find
       if ((tested_sol.search_state.state == SearchState::OUTSIDE ||
            tested_sol.search_state.state == SearchState::UNKNOWN) &&
-          !outside_or_unknown)
+          !no_info_sol)
       {
         ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found unknown/outside pose: " << tested_sol.pose.x << ", "
                                                                               << tested_sol.pose.y << ", "
                                                                               << tested_sol.pose.theta);
-        unknow_outside_sol = tested_sol;
-        outside_or_unknown = true;
+        no_info_sol = tested_sol;
       }
 
       ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
@@ -361,19 +354,19 @@ SearchSolution FreePoseSearch::search() const
     }
   }  // end while
 
-  if (outside_or_unknown)
+  if (no_info_sol)
   {
     // the solution is a no information pose or outside
-    ROS_DEBUG_STREAM_COND_NAMED(unknow_outside_sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(no_info_sol->search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                                 "The best solution found has NO_INFORMATION cost");
-    ROS_DEBUG_STREAM_COND_NAMED(unknow_outside_sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(no_info_sol->search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
                                 "The best solution found is OUTSIDE the map");
     if (viz_)
     {
-      viz_->addSolution(unknow_outside_sol.pose, footprint);
+      viz_->addSolution(no_info_sol->pose, footprint);
       viz_->publish();
     }
-    return unknow_outside_sol;
+    return no_info_sol.value();
   }
 
   ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");

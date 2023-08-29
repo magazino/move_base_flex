@@ -456,6 +456,36 @@ TEST_F(SearchHelperTest, service_test)
   server.stop();
 }
 
+TEST_F(SearchHelperTest, enforce_bounds_no_tolerance)
+{
+  ros::NodeHandle nh;
+  costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
+  FreePoseSearchViz viz(nh, cm.getGlobalFrameID());
+
+  printMap(*(cm.getCostmap()));
+
+  /*
+  y/x   0.5  1.5  2.5   3.5   4.5   5.5  6.5   7.5   8.5   9.5
+  ----G-------------------------------------------------------
+  0.5 |  0    0    0     0     0     0    0    254   254   254
+  1.5 |  0    0    0     0     0     0    0    254   254   254
+  2.5 |  0    0    0    254   254   254   0     0     0     0
+  3.5 |  0    0    0     0     0     0    0     0     0     0
+  4.5 |  0    0    0     0     0     0    0     0     0     0
+  5.5 |  0    0    0     0    254    0    0    254   254   254
+  6.5 |  0    0    0     0    254    0    0    254   254   254
+  7.5 |  0    0    0     0     0     0    0    254   254   254
+  8.5 |  0    0    0     0     0     0    0     0     0     0
+  9.5 |  0    0    0     0     0     0    0     0     0     0
+  */
+
+  SearchConfig config{ M_PI_4, M_PI, 0.5, false, 0.0, toPose2D(-1, -1, 0) };
+  FreePoseSearch sh(cm, config, std::nullopt, viz);
+
+  auto sol = sh.search();
+  EXPECT_EQ(sol.search_state.state, SearchState::LETHAL);
+}
+
 TEST_F(SearchHelperTest, enforce_bounds)
 {
   ros::NodeHandle nh;
@@ -479,7 +509,7 @@ TEST_F(SearchHelperTest, enforce_bounds)
   9.5 |  0    0    0     0     0     0    0     0     0     0
   */
 
-  SearchConfig config{ M_PI_4, M_PI, 0.5, false, 0.0, toPose2D(-1, -1, 0) };
+  SearchConfig config{ M_PI_4, M_PI, std::sqrt(2 * 1.5 * 1.5), false, 0.0, toPose2D(-1, -1, 0) };
   FreePoseSearch sh(cm, config, std::nullopt, viz);
 
   auto sol = sh.search();
@@ -489,7 +519,7 @@ TEST_F(SearchHelperTest, enforce_bounds)
   EXPECT_NEAR(sol.pose.theta, 0, 1e-6);
 }
 
-TEST_F(SearchHelperTest, enforce_bounds_with_tolerance)
+TEST_F(SearchHelperTest, enforce_bounds_within_tolerance)
 {
   ros::NodeHandle nh;
   costmap_2d::Costmap2DROS cm("search/global", *tf_buffer_ptr);
