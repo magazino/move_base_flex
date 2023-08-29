@@ -241,6 +241,7 @@ SearchSolution FreePoseSearch::search() const
       safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
   SearchSolution sol;
+  SearchSolution unknow_outside_sol;
   Cell test_cell;
   sol.pose.theta = config_.goal.theta;
   bool outside_or_unknown{ false };
@@ -274,6 +275,7 @@ SearchSolution FreePoseSearch::search() const
   {
     sol.pose.x = test_pose.x;
     sol.pose.y = test_pose.y;
+    in_queue_or_visited.insert(costmap2d->getIndex(test_cell.x, test_cell.y));
   }
 
   while (true)
@@ -306,7 +308,7 @@ SearchSolution FreePoseSearch::search() const
         ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found unknown/outside pose: " << tested_sol.pose.x << ", "
                                                                               << tested_sol.pose.y << ", "
                                                                               << tested_sol.pose.theta);
-        sol = tested_sol;
+        unknow_outside_sol = tested_sol;
         outside_or_unknown = true;
       }
 
@@ -360,16 +362,16 @@ SearchSolution FreePoseSearch::search() const
   if (outside_or_unknown)
   {
     // the solution is a no information pose or outside
-    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(unknow_outside_sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                                 "The best solution found has NO_INFORMATION cost");
-    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(unknow_outside_sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
                                 "The best solution found is OUTSIDE the map");
     if (viz_)
     {
-      viz_->addSolution(sol.pose, footprint);
+      viz_->addSolution(unknow_outside_sol.pose, footprint);
       viz_->publish();
     }
-    return sol;
+    return unknow_outside_sol;
   }
 
   ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");
