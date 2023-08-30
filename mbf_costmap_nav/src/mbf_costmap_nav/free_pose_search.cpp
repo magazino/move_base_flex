@@ -250,13 +250,9 @@ SearchSolution FreePoseSearch::search() const
   goal_cell.cost = costmap2d->getCost(goal_cell.x, goal_cell.y);
   costmap2d->mapToWorld(goal_cell.x, goal_cell.y, goal_cell_pose.x, goal_cell_pose.y);
 
-  bool test_goal_pose{ true };
   unsigned int dummy_x, dummy_y;
-  if (!costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y))
-  {
-    // if goal not in bounds, we don't start the search from the goal pose
-    test_goal_pose = false;
-  }
+  // don't start the search from the goal pose if goal is not within bounds
+  bool test_goal_pose = costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y);
 
   // add goal cell to queue if it is within linear tolerance
   if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
