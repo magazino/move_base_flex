@@ -241,31 +241,31 @@ SearchSolution FreePoseSearch::search() const
       safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
 
   // enforce bounds if goal is outside the map; and get the pose of the center of the cell
-  Cell goal_cell;
-  geometry_msgs::Pose2D goal_cell_pose;  // this is the pose of the center of the goal cell (not the goal pose)
   int goal_cell_x, goal_cell_y;
   costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, goal_cell_x, goal_cell_y);
-  goal_cell.x = static_cast<unsigned int>(goal_cell_x);
-  goal_cell.y = static_cast<unsigned int>(goal_cell_y);
-  goal_cell.cost = costmap2d->getCost(goal_cell.x, goal_cell.y);
-  costmap2d->mapToWorld(goal_cell.x, goal_cell.y, goal_cell_pose.x, goal_cell_pose.y);
+  Cell goal_cell = { static_cast<unsigned int>(goal_cell_x), static_cast<unsigned int>(goal_cell_y),
+                     costmap2d->getCost(goal_cell_x, goal_cell_y) };
 
-  unsigned int dummy_x, dummy_y;
-  // don't start the search from the goal pose if goal is not within bounds
-  bool test_goal_pose = costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y);
+  // this is the pose of the center of the goal cell (not the goal pose)
+  geometry_msgs::Pose2D goal_cell_pose;
+  costmap2d->mapToWorld(goal_cell_x, goal_cell_y, goal_cell_pose.x, goal_cell_pose.y);
 
   // add goal cell to queue if it is within linear tolerance
   if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
   {
     queue.push(goal_cell);
-    in_queue_or_visited.insert(costmap2d->getIndex(goal_cell.x, goal_cell.y));
+    in_queue_or_visited.insert(costmap2d->getIndex(goal_cell_x, goal_cell_y));
   }
 
+  // don't start the search from the goal pose if goal is not within bounds
+  unsigned int dummy_x, dummy_y;
+  bool test_goal_pose = costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y);
+
   SearchSolution sol;
-  sol.pose.theta = config_.goal.theta;
   std::optional<SearchSolution> no_info_sol;
   while (!queue.empty() || test_goal_pose)
   {
+    sol.pose.theta = config_.goal.theta;
     Cell test_cell;
     if (test_goal_pose)
     {
@@ -326,7 +326,7 @@ SearchSolution FreePoseSearch::search() const
 
     // adding neighbors to queue
     const std::vector<Cell> neighbors = getNeighbors(*costmap2d, test_cell);
-    for (const Cell& neighbor : neighbors)
+    for (const auto& neighbor : neighbors)
     {
       int cell_index = costmap2d->getIndex(neighbor.x, neighbor.y);
       if (in_queue_or_visited.find(cell_index) != in_queue_or_visited.end())
