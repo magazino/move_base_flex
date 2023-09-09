@@ -197,6 +197,21 @@ public:
    * @return A search solution for the given pose: best pose, state and cost
    */
   virtual SearchSolution search() const;
+
+private:
+  /**
+   * @brief Check if pose is collision-free; criteria: cost is not LETHAL, INSCRIBED and NO_INFORMATION
+   * @param cost
+   * @return true if cost is not LETHAL, INSCRIBED and NO_INFORMATION
+   */
+  bool isPoseValid(const unsigned char cost) const;
+
+  /**
+   * @brief Check if state is non-lethal; criteria: state free or inscribed
+   * @param state
+   * @return true if state is free or inscribed
+   */
+  bool isStateValid(const std::uint8_t state) const;
 };
 
 } /* namespace mbf_costmap_nav */

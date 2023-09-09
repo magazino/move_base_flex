@@ -59,6 +59,17 @@ FreePoseSearch::FreePoseSearch(costmap_2d::Costmap2DROS& costmap, const SearchCo
   compare_strategy_ = std::move(compare_strategy.value_or(euclidean_compare));
 }
 
+bool FreePoseSearch::isPoseValid(const unsigned char cost) const
+{
+  return cost != costmap_2d::LETHAL_OBSTACLE && cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
+         cost != costmap_2d::NO_INFORMATION;
+}
+
+bool FreePoseSearch::isStateValid(const std::uint8_t state) const
+{
+  return state == mbf_costmap_nav::SearchState::FREE || state == mbf_costmap_nav::SearchState::INSCRIBED;
+}
+
 std::vector<Cell> FreePoseSearch::getNeighbors(const costmap_2d::Costmap2D& costmap_2d, const Cell& cell)
 {
   std::vector<Cell> neighbors;
@@ -212,64 +223,74 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
 
 SearchSolution FreePoseSearch::search() const
 {
-  const auto costmap2d = costmap_.getCostmap();
-
-  // lock costmap so content doesn't change while adding cell costs
-  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap2d->getMutex()));
-
-  std::unordered_set<int> in_queue_or_visited;
-
-  const std::vector<geometry_msgs::Point> footprint =
-      safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
-
-  SearchSolution sol;
-  sol.pose.theta = config_.goal.theta;
-  bool outside_or_unknown{ false };
-
-  // initializing queue with the goal cell
-  Cell start;
-  if (costmap2d->worldToMap(config_.goal.x, config_.goal.y, start.x, start.y))
-  {
-    start.cost = costmap2d->getCost(start.x, start.y);
-  }
-  else
-  {
-    // enforce bounds if goal is outside the map
-    // note that distance tolerance is wrt this new start cell
-    int cell_x, cell_y;
-    costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, cell_x, cell_y);
-    start.x = static_cast<unsigned int>(cell_x);
-    start.y = static_cast<unsigned int>(cell_y);
-    start.cost = costmap2d->getCost(start.x, start.y);
-  }
-  in_queue_or_visited.insert(costmap2d->getIndex(start.x, start.y));
-
-  std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
-  queue.push(start);
-
   // restart markers
   if (viz_)
   {
     viz_->deleteMarkers();
   }
 
-  while (!queue.empty())
-  {
-    Cell cell = queue.top();
-    queue.pop();
+  const auto costmap2d = costmap_.getCostmap();
 
-    costmap2d->mapToWorld(cell.x, cell.y, sol.pose.x, sol.pose.y);
-    ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Checking Cell: (" << cell.x << ", " << cell.y << ") with pose: ("
+  // lock costmap so content doesn't change while adding cell costs
+  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap2d->getMutex()));
+
+  std::unordered_set<int> in_queue_or_visited;
+  std::priority_queue<Cell, std::vector<Cell>, decltype(compare_strategy_)> queue(compare_strategy_);
+
+  const std::vector<geometry_msgs::Point> footprint =
+      safetyPadding(costmap_, config_.use_padded_fp, config_.safety_dist);
+
+  // enforce bounds if goal is outside the map; and get the pose of the center of the cell
+  int goal_cell_x, goal_cell_y;
+  costmap2d->worldToMapEnforceBounds(config_.goal.x, config_.goal.y, goal_cell_x, goal_cell_y);
+  Cell goal_cell = { static_cast<unsigned int>(goal_cell_x), static_cast<unsigned int>(goal_cell_y),
+                     costmap2d->getCost(goal_cell_x, goal_cell_y) };
+
+  // this is the pose of the center of the goal cell (not the goal pose)
+  geometry_msgs::Pose2D goal_cell_pose;
+  costmap2d->mapToWorld(goal_cell_x, goal_cell_y, goal_cell_pose.x, goal_cell_pose.y);
+
+  // add goal cell to queue if it is within linear tolerance
+  if (std::hypot(goal_cell_pose.x - config_.goal.x, goal_cell_pose.y - config_.goal.y) <= config_.linear_tolerance)
+  {
+    queue.push(goal_cell);
+    in_queue_or_visited.insert(costmap2d->getIndex(goal_cell_x, goal_cell_y));
+  }
+
+  // don't start the search from the goal pose if goal is not within bounds
+  unsigned int dummy_x, dummy_y;
+  bool test_goal_pose = costmap2d->worldToMap(config_.goal.x, config_.goal.y, dummy_x, dummy_y);
+
+  SearchSolution sol;
+  std::optional<SearchSolution> no_info_sol;
+  while (!queue.empty() || test_goal_pose)
+  {
+    sol.pose.theta = config_.goal.theta;
+    Cell test_cell;
+    if (test_goal_pose)
+    {
+      test_cell = goal_cell;
+      sol.pose.x = config_.goal.x;
+      sol.pose.y = config_.goal.y;
+      test_goal_pose = false;
+    }
+    else
+    {
+      test_cell = queue.top();
+      queue.pop();
+      costmap2d->mapToWorld(test_cell.x, test_cell.y, sol.pose.x, sol.pose.y);
+    }
+
+    ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Checking Cell: (" << test_cell.x << ", " << test_cell.y << ") with pose: ("
                                                               << sol.pose.x << ", " << sol.pose.y << ", "
                                                               << sol.pose.theta << ")");
 
     // Note: if the center of the robot is in costmap_2d::NO_INFORMATION, we don't accept it as a solution
-    if (cell.cost != costmap_2d::LETHAL_OBSTACLE && cell.cost != costmap_2d::INSCRIBED_INFLATED_OBSTACLE &&
-        cell.cost != costmap_2d::NO_INFORMATION)
+    if (isPoseValid(test_cell.cost))
     {
       const auto tested_sol = findValidOrientation(*costmap2d, footprint, sol.pose, config_, viz_);
       // if footprint is free or inscribed, we return the solution
-      if (tested_sol.search_state.state == SearchState::FREE || tested_sol.search_state.state == SearchState::INSCRIBED)
+      if (isStateValid(tested_sol.search_state.state))
       {
         ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found solution pose: " << tested_sol.pose.x << ", " << tested_sol.pose.y
                                                                        << ", " << tested_sol.pose.theta);
@@ -283,31 +304,29 @@ SearchSolution FreePoseSearch::search() const
       // if the state is outside or unknown, we save the first one we find
       if ((tested_sol.search_state.state == SearchState::OUTSIDE ||
            tested_sol.search_state.state == SearchState::UNKNOWN) &&
-          !outside_or_unknown)
+          !no_info_sol)
       {
         ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Found unknown/outside pose: " << tested_sol.pose.x << ", "
                                                                               << tested_sol.pose.y << ", "
                                                                               << tested_sol.pose.theta);
-        sol = tested_sol;
-        outside_or_unknown = true;
+        no_info_sol = tested_sol;
       }
 
       ROS_DEBUG_STREAM_COND_NAMED(tested_sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
-                                  "Footprint in cell " << cell.x << ", " << cell.y << "; pose: (" << sol.pose.x << ", "
-                                                       << sol.pose.y << ", " << sol.pose.theta
+                                  "Footprint in cell " << test_cell.x << ", " << test_cell.y << "; pose: ("
+                                                       << sol.pose.x << ", " << sol.pose.y << ", " << sol.pose.theta
                                                        << ") is in lethal obstacle or unknown; skipping");
     }
-
     else
     {
-      ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Cell: (" << cell.x << ", " << cell.y << ") with pose: (" << sol.pose.x
-                                                       << ", " << sol.pose.y << ", " << sol.pose.theta
+      ROS_DEBUG_STREAM_NAMED(LOGNAME.data(), "Cell: (" << test_cell.x << ", " << test_cell.y << ") with pose: ("
+                                                       << sol.pose.x << ", " << sol.pose.y << ", " << sol.pose.theta
                                                        << ") is in lethal obstacle or in unknown space; skipping");
     }
 
     // adding neighbors to queue
-    const std::vector<Cell> neighbors = getNeighbors(*costmap2d, cell);
-    for (const Cell& neighbor : neighbors)
+    const std::vector<Cell> neighbors = getNeighbors(*costmap2d, test_cell);
+    for (const auto& neighbor : neighbors)
     {
       int cell_index = costmap2d->getIndex(neighbor.x, neighbor.y);
       if (in_queue_or_visited.find(cell_index) != in_queue_or_visited.end())
@@ -329,21 +348,21 @@ SearchSolution FreePoseSearch::search() const
       in_queue_or_visited.insert(cell_index);
       queue.push(neighbor);
     }
-  }
+  }  // end while
 
-  if (outside_or_unknown)
+  if (no_info_sol)
   {
     // the solution is a no information pose or outside
-    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(no_info_sol->search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                                 "The best solution found has NO_INFORMATION cost");
-    ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
+    ROS_DEBUG_STREAM_COND_NAMED(no_info_sol->search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
                                 "The best solution found is OUTSIDE the map");
     if (viz_)
     {
-      viz_->addSolution(sol.pose, footprint);
+      viz_->addSolution(no_info_sol->pose, footprint);
       viz_->publish();
     }
-    return sol;
+    return no_info_sol.value();
   }
 
   ROS_DEBUG_STREAM("No solution found within tolerance of goal; ending search");
