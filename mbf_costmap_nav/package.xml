@@ -16,6 +16,7 @@
 
     <depend>actionlib</depend>
     <depend>actionlib_msgs</depend>
+    <depend>angles</depend>
     <depend>costmap_2d</depend>
     <depend>dynamic_reconfigure</depend>
     <depend>geometry_msgs</depend>
