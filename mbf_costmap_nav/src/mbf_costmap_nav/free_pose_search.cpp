@@ -151,10 +151,15 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
   SearchSolution outside_or_unknown_sol;
   sol.pose = pose_2d;
 
-  for (double dyaw = 0; dyaw <= config.angle_tolerance; dyaw += config.angle_increment)
+  const double reduced_tol = std::min(config.angle_tolerance - std::numeric_limits<double>::epsilon() * M_PI, M_PI);
+  const int num_steps = 1 + std::max(0, static_cast<int>(std::ceil(reduced_tol / config.angle_max_step_size)));
+  const double increment = reduced_tol / std::max(1, num_steps - 1);
+  for (int i = 0; i < num_steps; ++i)
   {
-    const std::vector<double> thetas = dyaw == 0 ? std::vector<double>{ pose_2d.theta } :
-                                                   std::vector<double>{ pose_2d.theta + dyaw, pose_2d.theta - dyaw };
+    const std::vector<double> thetas =
+        i == 0 ? std::vector<double>{ pose_2d.theta } :
+                 std::vector<double>{ pose_2d.theta + i * increment, pose_2d.theta - i * increment };
+
     for (const auto& theta : thetas)
     {
       sol.pose.theta = theta;
@@ -204,19 +209,19 @@ SearchSolution FreePoseSearch::findValidOrientation(const costmap_2d::Costmap2D&
     ROS_DEBUG_STREAM_COND_NAMED(outside_or_unknown_sol.search_state.state == SearchState::UNKNOWN, LOGNAME.data(),
                                 "Solution is in unknown space for pose x-y-theta ("
                                     << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
-                                    << config.angle_tolerance << " and increment " << config.angle_increment);
+                                    << config.angle_tolerance << " and increment " << config.angle_max_step_size);
 
     ROS_DEBUG_STREAM_COND_NAMED(outside_or_unknown_sol.search_state.state == SearchState::OUTSIDE, LOGNAME.data(),
                                 "Solution is partially outside the map for pose x-y-theta ("
                                     << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
-                                    << config.angle_tolerance << " and increment " << config.angle_increment);
+                                    << config.angle_tolerance << " and increment " << config.angle_max_step_size);
     return outside_or_unknown_sol;
   }
 
   ROS_DEBUG_STREAM_COND_NAMED(sol.search_state.state == SearchState::LETHAL, LOGNAME.data(),
                               "No valid orientation found for pose x-y-theta ("
                                   << pose_2d.x << ", " << pose_2d.y << ", " << pose_2d.theta << ") with tolerance "
-                                  << config.angle_tolerance << " and increment " << config.angle_increment);
+                                  << config.angle_tolerance << " and increment " << config.angle_max_step_size);
 
   return sol;
 }
