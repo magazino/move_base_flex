@@ -887,12 +887,10 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
   response.pose.pose.position.y = sol.pose.y;
   response.pose.pose.position.z = 0;
 
-  // if the difference between solution angle and requested angle is less than ANGLE_INCREMENT,
-  // use the requested one to avoid violating a very small angle_tolerance (e.g. 0)
+  // if solution angle and requested angle are the same (after conversion),
+  // use the requested (quaternion) one to avoid violating a very small angle_tolerance (e.g. 0)
   response.pose.pose.orientation =
-      std::abs(angles::shortest_angular_distance(goal.theta, sol.pose.theta)) < ANGLE_INCREMENT ?
-          request.pose.pose.orientation :
-          tf::createQuaternionMsgFromYaw(sol.pose.theta);
+      goal.theta == sol.pose.theta ? request.pose.pose.orientation : tf::createQuaternionMsgFromYaw(sol.pose.theta);
 
   const double linear_dist = std::hypot(goal.x - sol.pose.x, goal.y - sol.pose.y);
   const double angular_dist =
