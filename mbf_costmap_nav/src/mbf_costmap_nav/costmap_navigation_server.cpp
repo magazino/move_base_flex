@@ -48,6 +48,7 @@
 #include <nav_core_wrapper/wrapper_local_planner.h>
 #include <nav_core_wrapper/wrapper_recovery_behavior.h>
 #include <xmlrpcpp/XmlRpc.h>
+#include <angles/angles.h>
 
 #include "mbf_costmap_nav/footprint_helper.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
@@ -885,7 +886,24 @@ bool CostmapNavigationServer::callServiceFindValidPose(mbf_msgs::FindValidPose::
   response.pose.pose.position.x = sol.pose.x;
   response.pose.pose.position.y = sol.pose.y;
   response.pose.pose.position.z = 0;
-  response.pose.pose.orientation = tf::createQuaternionMsgFromYaw(sol.pose.theta);
+
+  // if solution angle and requested angle are the same (after conversion),
+  // use the requested (quaternion) one to avoid violating a very small angle_tolerance (e.g. 0)
+  response.pose.pose.orientation =
+      goal.theta == sol.pose.theta ? request.pose.pose.orientation : tf::createQuaternionMsgFromYaw(sol.pose.theta);
+
+  const double linear_dist = std::hypot(goal.x - sol.pose.x, goal.y - sol.pose.y);
+  const double angular_dist =
+      std::abs(angles::shortest_angular_distance(goal.theta, tf::getYaw(response.pose.pose.orientation)));
+  ROS_DEBUG_STREAM("Solution distance: " << linear_dist << ", angle: " << angular_dist);
+
+  // checking if the solution does not violate the requested distance and angle tolerance
+  if (linear_dist > request.dist_tolerance || angular_dist > request.angle_tolerance)
+  {
+    ROS_ERROR_STREAM("Solution violates requested distance and/or angle tolerance");
+    return false;
+  }
+
   response.pose.header.frame_id = costmap_frame;
   response.pose.header.stamp = ros::Time::now();
   response.state = sol.search_state.state;

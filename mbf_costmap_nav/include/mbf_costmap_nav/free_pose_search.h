@@ -61,11 +61,11 @@ namespace mbf_costmap_nav
 
 struct SearchConfig
 {
-  double angle_increment{ 5 * M_PI / 180 };  // 5 degrees
-  double angle_tolerance{ M_PI_2 };          // 90 degrees
-  double linear_tolerance{ 1.0 };            // 1 meter
-  bool use_padded_fp{ true };                // Padded footprint by default
-  double safety_dist{ 0.1 };                 // 10 cm
+  double angle_max_step_size{ 5 * M_PI / 180 };  // 5 degrees
+  double angle_tolerance{ M_PI_2 };              // 90 degrees
+  double linear_tolerance{ 1.0 };                // 1 meter
+  bool use_padded_fp{ true };                    // Padded footprint by default
+  double safety_dist{ 0.1 };                     // 10 cm
   geometry_msgs::Pose2D goal;
 };
 

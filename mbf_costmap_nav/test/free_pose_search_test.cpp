@@ -49,6 +49,7 @@
 #include "mbf_costmap_nav/free_pose_search.h"
 #include "mbf_costmap_nav/costmap_navigation_server.h"
 
+#include <tf2/utils.h>
 namespace mbf_costmap_nav::test
 {
 class SearchHelperTest : public ::testing::Test
@@ -622,6 +623,32 @@ TEST_F(SearchHelperTest, goal_not_centered_small_tolerance)
   // goal pose is not valid, but the goal cell is valid (5.5, 7.5, 0.785398); however that is above tolerance (0.1)
   auto sol = sh.search();
   EXPECT_EQ(sol.search_state.state, SearchState::LETHAL);
+}
+
+TEST_F(SearchHelperTest, service_zero_tolerance_test)
+{
+  CostmapNavigationServer server(tf_buffer_ptr);
+
+  ros::ServiceClient client = ros::NodeHandle("~").serviceClient<mbf_msgs::FindValidPose>("find_valid_pose");
+  mbf_msgs::FindValidPose::Request req;
+  mbf_msgs::FindValidPose::Response res;
+
+  req.angle_tolerance = 0;
+  req.dist_tolerance = 0;
+  req.use_padded_fp = false;
+  req.costmap = mbf_msgs::FindValidPose::Request::GLOBAL_COSTMAP;
+  req.pose.header.frame_id = "map";
+  req.pose.header.stamp = ros::Time::now();
+  req.pose.pose.position.x = 1.5345;
+  req.pose.pose.position.y = 4.666;
+  req.pose.pose.orientation = tf::createQuaternionMsgFromYaw(0.001);
+
+  ASSERT_TRUE(client.call(req, res));
+  EXPECT_EQ(res.state, mbf_msgs::FindValidPose::Response::FREE);
+  EXPECT_EQ(res.pose.pose.position.x, 1.5345);
+  EXPECT_EQ(res.pose.pose.position.y, 4.666);
+  EXPECT_EQ(tf2::getYaw(res.pose.pose.orientation), tf2::getYaw(req.pose.pose.orientation));
+  server.stop();
 }
 }  // namespace mbf_costmap_nav::test
 
