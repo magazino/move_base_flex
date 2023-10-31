@@ -122,6 +122,9 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
   double oscillation_distance;
   private_nh.param("oscillation_distance", oscillation_distance, 0.03);
 
+  double oscillation_angle;
+  private_nh.param("oscillation_angle", oscillation_angle, M_PI);
+
   mbf_msgs::ExePathResult result;
   mbf_msgs::ExePathFeedback feedback;
 
@@ -276,7 +279,8 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
         if (!oscillation_timeout.isZero())
         {
           // check if oscillating
-          if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance)
+          if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance ||
+              mbf_utility::angle(robot_pose_, oscillation_pose) >= oscillation_angle)
           {
             last_oscillation_reset = ros::Time::now();
             oscillation_pose = robot_pose_;
