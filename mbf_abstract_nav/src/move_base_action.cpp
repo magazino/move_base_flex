@@ -150,6 +150,7 @@ void MoveBaseAction::start(GoalHandle &goal_handle)
     return;
   }
   goal_pose_ = goal.target_pose;
+  last_oscillation_pose_ = robot_pose_;
 
   // wait for server connections
   if (!action_client_get_path_.waitForServer(connection_timeout) ||
