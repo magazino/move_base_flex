@@ -70,6 +70,7 @@ mbf_abstract_nav::MoveBaseFlexConfig CostmapControllerExecution::toAbstract(cons
   abstract_config.controller_max_retries = config.controller_max_retries;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
   abstract_config.oscillation_distance = config.oscillation_distance;
+  abstract_config.oscillation_angle = config.oscillation_angle;
   return abstract_config;
 }
 
