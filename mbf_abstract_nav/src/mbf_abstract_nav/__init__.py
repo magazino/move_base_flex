@@ -38,3 +38,5 @@ def add_mbf_abstract_nav_params(gen):
             "How long in seconds to allow for oscillation before executing recovery behaviors", 0.0, 0, 60)
     gen.add("oscillation_distance", double_t, 0,
             "How far in meters the robot must move to be considered not to be oscillating", 0.5, 0, 10)
+    gen.add("oscillation_angle", double_t, 0,
+            "How far in radian the robot must rotate to be considered not to be oscillating", 3.14, 0, 6.28)
