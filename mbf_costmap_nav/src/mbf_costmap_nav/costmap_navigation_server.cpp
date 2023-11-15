@@ -463,6 +463,7 @@ void CostmapNavigationServer::reconfigure(mbf_costmap_nav::MoveBaseFlexConfig& c
   abstract_config.recovery_patience = config.recovery_patience;
   abstract_config.oscillation_timeout = config.oscillation_timeout;
   abstract_config.oscillation_distance = config.oscillation_distance;
+  abstract_config.oscillation_angle = config.oscillation_angle;
   abstract_config.restore_defaults = config.restore_defaults;
   mbf_abstract_nav::AbstractNavigationServer::reconfigure(abstract_config, level);
 

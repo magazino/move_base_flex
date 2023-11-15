@@ -134,6 +134,9 @@ class MoveBaseAction
   //! minimal move distance to not detect an oscillation
   double oscillation_distance_;
 
+  //! minimal rotation to not detect an oscillation
+  double oscillation_angle_;
+
   GoalHandle goal_handle_;
 
   std::string name_;

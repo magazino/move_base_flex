@@ -57,6 +57,7 @@ MoveBaseAction::MoveBaseAction(const std::string& name, const mbf_utility::Robot
   , action_client_recovery_(private_nh_, "recovery")
   , oscillation_timeout_(0)
   , oscillation_distance_(0)
+  , oscillation_angle_(0)
   , replanning_thread_shutdown_(false)
   , recovery_enabled_(true)
   , behaviors_(behaviors)
@@ -86,6 +87,7 @@ void MoveBaseAction::reconfigure(
     replanning_period_.fromSec(0.0);
   oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
   oscillation_distance_ = config.oscillation_distance;
+  oscillation_angle_ = config.oscillation_angle;
   recovery_enabled_ = config.recovery_enabled;
 }
 
@@ -198,7 +200,8 @@ void MoveBaseAction::actionExePathFeedback(
   {
     // check if oscillating
     // moved more than the minimum oscillation distance
-    if (mbf_utility::distance(robot_pose_, last_oscillation_pose_) >= oscillation_distance_)
+    if (mbf_utility::distance(robot_pose_, last_oscillation_pose_) >= oscillation_distance_ ||
+        mbf_utility::angle(robot_pose_, last_oscillation_pose_) >= oscillation_angle_)
     {
       last_oscillation_reset_ = ros::Time::now();
       last_oscillation_pose_ = robot_pose_;
