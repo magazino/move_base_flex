@@ -115,23 +115,25 @@ def mb_reconf_cb(config, level):
 
 
 if __name__ == '__main__':
-    rospy.init_node("move_base")
+    rospy.init_node("move_base_legacy_relay")
+    node_name = rospy.get_param('~move_base_flex_node_name', 'move_base_flex')
+    move_base_node_name = rospy.get_param('~move_base_node_name', 'move_base')
 
     # TODO what happens with malformed target goal???  FAILURE  or INVALID_POSE
     # txt must be:  "Aborting on goal because it was sent with an invalid quaternion"   
 
     # move_base_flex get_path and move_base action clients
-    mbf_mb_ac = actionlib.SimpleActionClient("move_base_flex/move_base", mbf_msgs.MoveBaseAction)
-    mbf_gp_ac = actionlib.SimpleActionClient("move_base_flex/get_path", mbf_msgs.GetPathAction)
+    mbf_mb_ac = actionlib.SimpleActionClient(node_name + "/move_base", mbf_msgs.MoveBaseAction)
+    mbf_gp_ac = actionlib.SimpleActionClient(node_name + "/get_path", mbf_msgs.GetPathAction)
     mbf_mb_ac.wait_for_server(rospy.Duration(20))
     mbf_gp_ac.wait_for_server(rospy.Duration(10))
 
     # move_base_flex dynamic reconfigure client
-    mbf_drc = Client("move_base_flex", timeout=10)
+    mbf_drc = Client(node_name, timeout=10)
 
     # move_base simple topic and action server
     mb_sg = rospy.Subscriber('move_base_simple/goal', PoseStamped, simple_goal_cb)
-    mb_as = actionlib.SimpleActionServer('move_base', mb_msgs.MoveBaseAction, mb_execute_cb, auto_start=False)
+    mb_as = actionlib.SimpleActionServer(move_base_node_name, mb_msgs.MoveBaseAction, mb_execute_cb, auto_start=False)
     mb_as.start()
 
     # move_base make_plan service
