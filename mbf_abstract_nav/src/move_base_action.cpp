@@ -531,7 +531,7 @@ bool MoveBaseAction::replanningActive() const
 void MoveBaseAction::replanningThread()
 {
   ros::Duration update_period(0.005);
-  ros::Time last_replan_time(0.0);
+  ros::Time last_replan_time = ros::Time::now();
 
   while (ros::ok() && !replanning_thread_shutdown_)
   {
@@ -560,6 +560,7 @@ void MoveBaseAction::replanningThread()
     }
     else if (!replanningActive())
     {
+      last_replan_time = ros::Time::now();
       update_period.sleep();
     }
     else if (ros::Time::now() - last_replan_time >= replanning_period_)
