@@ -52,11 +52,10 @@ AbstractControllerExecution::AbstractControllerExecution(
     const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
     const mbf_utility::RobotInformation &robot_info,
     const ros::Publisher &vel_pub,
-    const ros::Publisher &goal_pub,
     const MoveBaseFlexConfig &config) :
   AbstractExecutionBase(name, robot_info),
     controller_(controller_ptr),
-    state_(INITIALIZED), moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub), current_goal_pub_(goal_pub),
+    state_(INITIALIZED), moving_(false), max_retries_(0), patience_(0), vel_pub_(vel_pub),
     loop_rate_(DEFAULT_CONTROLLER_FREQUENCY)
 {
   ros::NodeHandle nh;
@@ -375,7 +374,6 @@ void AbstractControllerExecution::run()
           condition_.notify_all();
           return;
         }
-        current_goal_pub_.publish(plan.back());
       }
 
       // compute robot pose and store it in robot_pose_

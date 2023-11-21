@@ -95,6 +95,8 @@ protected:
   geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose
   geometry_msgs::PoseStamped goal_pose_;  ///< Current goal pose
 
+  //! Publish the current goal pose (the last pose of the path we are following)
+  ros::Publisher goal_pub_;
 };
 }
 

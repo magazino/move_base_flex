@@ -50,9 +50,9 @@ PlannerAction::PlannerAction(
     const mbf_utility::RobotInformation &robot_info)
   : AbstractActionBase(name, robot_info), path_seq_count_(0)
 {
-  ros::NodeHandle private_nh("~");
   // informative topics: current navigation goal
-  current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
+  ros::NodeHandle private_nh("~");
+  goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("planner_goal", 1);
 }
 
 void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &execution)
@@ -67,7 +67,7 @@ void PlannerAction::runImpl(GoalHandle &goal_handle, AbstractPlannerExecution &e
 
   double tolerance = goal.tolerance;
   bool use_start_pose = goal.use_start_pose;
-  current_goal_pub_.publish(goal.target_pose);
+  goal_pub_.publish(goal.target_pose);
 
   bool planner_active = true;
 

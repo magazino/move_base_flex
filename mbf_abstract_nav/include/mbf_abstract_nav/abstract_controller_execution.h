@@ -85,7 +85,6 @@ namespace mbf_abstract_nav
      * @param controller_ptr Pointer to the controller plugin
      * @param robot_info Current robot state
      * @param vel_pub Velocity publisher
-     * @param goal_pub Current goal publisher
      * @param config Initial configuration for this execution
      */
     AbstractControllerExecution(
@@ -93,7 +92,6 @@ namespace mbf_abstract_nav
         const mbf_abstract_core::AbstractController::Ptr &controller_ptr,
         const mbf_utility::RobotInformation &robot_info,
         const ros::Publisher &vel_pub,
-        const ros::Publisher &goal_pub,
         const MoveBaseFlexConfig &config);
 
     /**
@@ -329,9 +327,6 @@ namespace mbf_abstract_nav
 
     //! publisher for the current velocity command
     ros::Publisher vel_pub_;
-
-    //! publisher for the current goal
-    ros::Publisher current_goal_pub_;
 
     //! the current controller state
     AbstractControllerExecution::ControllerState state_;

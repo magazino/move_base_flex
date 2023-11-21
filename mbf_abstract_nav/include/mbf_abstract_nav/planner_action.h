@@ -80,7 +80,7 @@ class PlannerAction : public AbstractActionBase<mbf_msgs::GetPathAction, Abstrac
  private:
 
   //! Publisher to publish the current goal pose, which is used for path planning
-  ros::Publisher current_goal_pub_;
+  ros::Publisher goal_pub_;
 
   //! Path sequence counter
   unsigned int path_seq_count_;

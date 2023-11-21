@@ -342,9 +342,6 @@ typedef boost::shared_ptr<dynamic_reconfigure::Server<mbf_abstract_nav::MoveBase
     //! cmd_vel publisher for all controller execution objects
     ros::Publisher vel_pub_;
 
-    //! current_goal publisher for all controller execution objects
-    ros::Publisher goal_pub_;
-
     //! current robot state
     mbf_utility::RobotInformation robot_info_;
 

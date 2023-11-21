@@ -66,12 +66,8 @@ AbstractNavigationServer::AbstractNavigationServer(const TFPtr &tf_listener_ptr)
       recovery_action_(name_action_recovery, robot_info_),
       move_base_action_(name_action_move_base, robot_info_, recovery_plugin_manager_.getLoadedNames())
 {
-  ros::NodeHandle nh;
-
-  goal_pub_ = nh.advertise<geometry_msgs::PoseStamped>("current_goal", 1);
-
   // init cmd_vel publisher for the robot velocity
-  vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  vel_pub_ = ros::NodeHandle().advertise<geometry_msgs::Twist>("cmd_vel", 1);
 
   action_server_get_path_ptr_ = ActionServerGetPathPtr(
     new ActionServerGetPath(
@@ -323,7 +319,7 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr AbstractNavigationServer::new
     const mbf_abstract_core::AbstractController::Ptr &plugin_ptr)
 {
   return boost::make_shared<mbf_abstract_nav::AbstractControllerExecution>(plugin_name, plugin_ptr, robot_info_,
-                                                                           vel_pub_, goal_pub_, last_config_);
+                                                                           vel_pub_, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr AbstractNavigationServer::newRecoveryExecution(

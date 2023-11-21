@@ -48,6 +48,9 @@ ControllerAction::ControllerAction(
     const mbf_utility::RobotInformation &robot_info)
     : AbstractActionBase(action_name, robot_info)
 {
+  // informative topics: current navigation goal
+  ros::NodeHandle private_nh("~");
+  goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("controller_goal", 1);
 }
 
 void ControllerAction::start(
@@ -85,6 +88,7 @@ void ControllerAction::start(
                                 goal_handle.getGoal()->angle_tolerance);
       // Update also goal pose, so the feedback remains consistent
       goal_pose_ = goal_handle.getGoal()->path.poses.back();
+      goal_pub_.publish(goal_pose_);
       mbf_msgs::ExePathResult result;
       fillExePathResult(mbf_msgs::ExePathResult::CANCELED, "Goal preempted by a new plan", result);
       concurrency_slots_[slot].goal_handle.setCanceled(result, result.message);
@@ -146,6 +150,7 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
   }
 
   goal_pose_ = plan.back();
+  goal_pub_.publish(goal_pose_);
   ROS_DEBUG_STREAM_NAMED(name_, "Called action \""
       << name_ << "\" with plan:" << std::endl
       << "frame: \"" << goal.path.header.frame_id << "\" " << std::endl

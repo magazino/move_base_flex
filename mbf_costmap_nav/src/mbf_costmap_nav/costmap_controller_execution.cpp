@@ -47,10 +47,9 @@ CostmapControllerExecution::CostmapControllerExecution(
     const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
     const mbf_utility::RobotInformation &robot_info,
     const ros::Publisher &vel_pub,
-    const ros::Publisher &goal_pub,
     const CostmapWrapper::Ptr &costmap_ptr,
     const MoveBaseFlexConfig &config)
-      : AbstractControllerExecution(controller_name, controller_ptr, robot_info, vel_pub, goal_pub, toAbstract(config)),
+      : AbstractControllerExecution(controller_name, controller_ptr, robot_info, vel_pub, toAbstract(config)),
         costmap_ptr_(costmap_ptr)
 {
   ros::NodeHandle private_nh("~");
