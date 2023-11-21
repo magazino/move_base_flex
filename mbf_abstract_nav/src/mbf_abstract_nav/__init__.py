@@ -39,4 +39,4 @@ def add_mbf_abstract_nav_params(gen):
     gen.add("oscillation_distance", double_t, 0,
             "How far in meters the robot must move to be considered not to be oscillating", 0.5, 0, 10)
     gen.add("oscillation_angle", double_t, 0,
-            "How far in radian the robot must rotate to be considered not to be oscillating", 3.14, 0, 6.28)
+            "How far in radians the robot must rotate to be considered not to be oscillating", math.pi, 0, 2*math.pi)
