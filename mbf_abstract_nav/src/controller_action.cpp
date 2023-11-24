@@ -53,6 +53,15 @@ ControllerAction::ControllerAction(
   goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("controller_goal", 1);
 }
 
+void ControllerAction::reconfigure(mbf_abstract_nav::MoveBaseFlexConfig& config, uint32_t level)
+{
+  AbstractActionBase::reconfigure(config, level);
+
+  oscillation_timeout_ = ros::Duration(config.oscillation_timeout);
+  oscillation_distance_ = config.oscillation_distance;
+  oscillation_angle_ = config.oscillation_angle;
+}
+
 void ControllerAction::start(
     GoalHandle &goal_handle,
     typename AbstractControllerExecution::Ptr execution_ptr
@@ -118,16 +127,6 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
   robot_pose_ = geometry_msgs::PoseStamped();
 
   ros::NodeHandle private_nh("~");
-
-  double oscillation_timeout_tmp;
-  private_nh.param("oscillation_timeout", oscillation_timeout_tmp, 0.0);
-  ros::Duration oscillation_timeout(oscillation_timeout_tmp);
-
-  double oscillation_distance;
-  private_nh.param("oscillation_distance", oscillation_distance, 0.03);
-
-  double oscillation_angle;
-  private_nh.param("oscillation_angle", oscillation_angle, M_PI);
 
   mbf_msgs::ExePathResult result;
   mbf_msgs::ExePathFeedback feedback;
@@ -281,16 +280,16 @@ void ControllerAction::runImpl(GoalHandle &goal_handle, AbstractControllerExecut
         break;
 
       case AbstractControllerExecution::GOT_LOCAL_CMD:
-        if (!oscillation_timeout.isZero())
+        if (!oscillation_timeout_.isZero())
         {
           // check if oscillating
-          if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance ||
-              mbf_utility::angle(robot_pose_, oscillation_pose) >= oscillation_angle)
+          if (mbf_utility::distance(robot_pose_, oscillation_pose) >= oscillation_distance_ ||
+              mbf_utility::angle(robot_pose_, oscillation_pose) >= oscillation_angle_)
           {
             last_oscillation_reset = ros::Time::now();
             oscillation_pose = robot_pose_;
           }
-          else if (last_oscillation_reset + oscillation_timeout < ros::Time::now())
+          else if (last_oscillation_reset + oscillation_timeout_ < ros::Time::now())
           {
             ROS_WARN_STREAM_NAMED(name_, "The controller is oscillating for "
                 << (ros::Time::now() - last_oscillation_reset).toSec() << "s");

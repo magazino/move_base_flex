@@ -198,8 +198,7 @@ public:
     slot.in_use = false;
   }
 
-  virtual void reconfigureAll(
-      mbf_abstract_nav::MoveBaseFlexConfig &config, uint32_t level)
+  virtual void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig& config, uint32_t level)
   {
     boost::lock_guard<boost::mutex> guard(slot_map_mtx_);
 

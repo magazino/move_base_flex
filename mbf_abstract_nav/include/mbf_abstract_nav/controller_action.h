@@ -59,6 +59,8 @@ public:
 
   ControllerAction(const std::string& name, const mbf_utility::RobotInformation& robot_info);
 
+  void reconfigure(mbf_abstract_nav::MoveBaseFlexConfig& config, uint32_t level) override;
+
   /**
    * @brief Start controller action.
    * Override abstract action version to allow updating current plan without stopping execution.
@@ -87,6 +89,15 @@ protected:
 
   //! Publish the current goal pose (the last pose of the path we are following)
   ros::Publisher goal_pub_;
+
+  //! timeout after a oscillation is detected
+  ros::Duration oscillation_timeout_;
+
+  //! minimal move distance to not detect an oscillation
+  double oscillation_distance_;
+
+  //! minimal rotation to not detect an oscillation
+  double oscillation_angle_;
 };
 }  // namespace mbf_abstract_nav
 
