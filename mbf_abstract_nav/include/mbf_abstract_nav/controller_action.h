@@ -90,7 +90,7 @@ protected:
   //! Publish the current goal pose (the last pose of the path we are following)
   ros::Publisher goal_pub_;
 
-  //! timeout after a oscillation is detected
+  //! timeout after an oscillation is detected
   ros::Duration oscillation_timeout_;
 
   //! minimal move distance to not detect an oscillation
