@@ -180,6 +180,9 @@ CostmapNavigationServer::CostmapNavigationServer(const TFPtr& tf_listener_ptr)
   find_valid_pose_srv_ =
       private_nh_.advertiseService("find_valid_pose", &CostmapNavigationServer::callServiceFindValidPose, this);
 
+  force_update_costmaps_srv_ =
+      private_nh_.advertiseService("force_update_costmaps", &CostmapNavigationServer::callForceUpdateCostmaps, this);
+
   // dynamic reconfigure server for mbf_costmap_nav configuration; also include abstract server parameters
   dsrv_costmap_ = boost::make_shared<dynamic_reconfigure::Server<mbf_costmap_nav::MoveBaseFlexConfig> >(private_nh_);
   dsrv_costmap_->setCallback(boost::bind(&CostmapNavigationServer::reconfigure, this, _1, _2));
@@ -815,6 +818,20 @@ bool CostmapNavigationServer::callServiceClearCostmaps(std_srvs::Empty::Request&
   // clear both costmaps
   local_costmap_ptr_->clear();
   global_costmap_ptr_->clear();
+  return true;
+}
+
+bool CostmapNavigationServer::callForceUpdateCostmaps(std_srvs::Empty::Request& request,
+                                                      std_srvs::Empty::Response& response)
+{
+  // force update both costmaps
+  for (auto costmap : { local_costmap_ptr_, global_costmap_ptr_ })
+  {
+    costmap->checkActivate();
+    costmap->updateMap();
+    costmap->checkDeactivate();
+  }
+
   return true;
 }
 

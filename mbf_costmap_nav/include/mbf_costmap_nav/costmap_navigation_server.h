@@ -218,7 +218,7 @@ private:
   bool callServiceCheckPathCost(mbf_msgs::CheckPath::Request& request, mbf_msgs::CheckPath::Response& response);
 
   /**
-   * @brief Callback method for the make_plan service
+   * @brief Callback method for the clear_costmaps service
    * @param request Empty request object.
    * @param response Empty response object.
    * @return true, if the service completed successfully, false otherwise
@@ -232,6 +232,14 @@ private:
    * @return true, if the service completed successfully, false otherwise
    */
   bool callServiceFindValidPose(mbf_msgs::FindValidPose::Request& request, mbf_msgs::FindValidPose::Response& response);
+
+  /**
+   * @brief Callback method for the force_update_costmaps service
+   * @param request Empty request object.
+   * @param response Empty response object.
+   * @return true, if the service completed successfully, false otherwise
+   */
+  bool callForceUpdateCostmaps(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
   /**
    * @brief Reconfiguration method called by dynamic reconfigure.
@@ -285,6 +293,9 @@ private:
 
   //! Service Server for the find_valid_pose service
   ros::ServiceServer find_valid_pose_srv_;
+
+  //! Service Server for the force_update_costmap service
+  ros::ServiceServer force_update_costmaps_srv_;
 
   static constexpr double ANGLE_INCREMENT = 5.0 * M_PI / 180.0;  // 5 degrees
 };
