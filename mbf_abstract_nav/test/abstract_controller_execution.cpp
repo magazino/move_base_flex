@@ -41,7 +41,7 @@ struct AbstractControllerMock : public AbstractController
   MOCK_METHOD0(cancel, bool());
 };
 
-ros::Publisher VEL_PUB, GOAL_PUB;
+ros::Publisher VEL_PUB;
 TFPtr TF_PTR;
 mbf_utility::RobotInformation::Ptr ROBOT_INFO_PTR;
 
@@ -50,7 +50,7 @@ struct AbstractControllerExecutionFixture : public Test, public AbstractControll
 {
   AbstractControllerExecutionFixture()
     : AbstractControllerExecution("a name", AbstractController::Ptr(new AbstractControllerMock()), *ROBOT_INFO_PTR,
-                                  VEL_PUB, GOAL_PUB, MoveBaseFlexConfig{})
+                                  VEL_PUB, MoveBaseFlexConfig{})
   {
   }
 
@@ -298,7 +298,6 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   // setup the pubs as global objects
   VEL_PUB = nh.advertise<Twist>("vel", 1);
-  GOAL_PUB = nh.advertise<PoseStamped>("pose", 1);
 
   // setup the tf-publisher and robot info as a global objects
   TF_PTR.reset(new TF());

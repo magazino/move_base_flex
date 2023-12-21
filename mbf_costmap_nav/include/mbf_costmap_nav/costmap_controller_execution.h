@@ -67,7 +67,6 @@ public:
    * @param controller_ptr Shared pointer to the plugin to use.
    * @param robot_info Current robot state
    * @param vel_pub Velocity commands publisher.
-   * @param goal_pub Goal pose publisher (just vor visualization).
    * @param costmap_ptr Shared pointer to the local costmap.
    * @param config Current server configuration (dynamic).
    */
@@ -76,7 +75,6 @@ public:
       const mbf_costmap_core::CostmapController::Ptr &controller_ptr,
       const mbf_utility::RobotInformation &robot_info,
       const ros::Publisher &vel_pub,
-      const ros::Publisher &goal_pub,
       const CostmapWrapper::Ptr &costmap_ptr,
       const MoveBaseFlexConfig &config);
 

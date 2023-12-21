@@ -52,15 +52,12 @@
 namespace mbf_abstract_nav
 {
 
-class ControllerAction :
-    public AbstractActionBase<mbf_msgs::ExePathAction, AbstractControllerExecution>
+class ControllerAction : public AbstractActionBase<mbf_msgs::ExePathAction, AbstractControllerExecution>
 {
- public:
-
+public:
   typedef boost::shared_ptr<ControllerAction> Ptr;
 
-  ControllerAction(const std::string &name,
-                   const mbf_utility::RobotInformation &robot_info);
+  ControllerAction(const std::string& name, const mbf_utility::RobotInformation& robot_info);
 
   /**
    * @brief Start controller action.
@@ -68,18 +65,13 @@ class ControllerAction :
    * @param goal_handle Reference to the goal handle received on action execution callback.
    * @param execution_ptr Pointer to the execution descriptor.
    */
-  void start(
-      GoalHandle &goal_handle,
-      typename AbstractControllerExecution::Ptr execution_ptr
-  );
+  void start(GoalHandle& goal_handle, typename AbstractControllerExecution::Ptr execution_ptr);
 
-  void runImpl(GoalHandle &goal_handle, AbstractControllerExecution& execution);
+  void runImpl(GoalHandle& goal_handle, AbstractControllerExecution& execution);
 
 protected:
-  void publishExePathFeedback(
-          GoalHandle &goal_handle,
-          uint32_t outcome, const std::string &message,
-          const geometry_msgs::TwistStamped &current_twist);
+  void publishExePathFeedback(GoalHandle& goal_handle, uint32_t outcome, const std::string& message,
+                              const geometry_msgs::TwistStamped& current_twist);
 
   /**
    * @brief Utility method to fill the ExePath action result in a single line
@@ -87,17 +79,15 @@ protected:
    * @param message ExePath action message
    * @param result The action result to fill
    */
-  void fillExePathResult(
-        uint32_t outcome, const std::string &message,
-        mbf_msgs::ExePathResult &result);
+  void fillExePathResult(uint32_t outcome, const std::string& message, mbf_msgs::ExePathResult& result);
 
-  boost::mutex goal_mtx_; ///< lock goal handle for updating it while running
-  geometry_msgs::PoseStamped robot_pose_; ///< Current robot pose
-  geometry_msgs::PoseStamped goal_pose_;  ///< Current goal pose
+  boost::mutex goal_mtx_;                  ///< lock goal handle for updating it while running
+  geometry_msgs::PoseStamped robot_pose_;  ///< Current robot pose
+  geometry_msgs::PoseStamped goal_pose_;   ///< Current goal pose
 
+  //! Publish the current goal pose (the last pose of the path we are following)
+  ros::Publisher goal_pub_;
 };
-}
+}  // namespace mbf_abstract_nav
 
-
-
-#endif //MBF_ABSTRACT_NAV__CONTROLLER_ACTION_H_
+#endif  // MBF_ABSTRACT_NAV__CONTROLLER_ACTION_H_

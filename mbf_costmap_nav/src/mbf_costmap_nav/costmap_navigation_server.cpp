@@ -238,7 +238,7 @@ mbf_abstract_nav::AbstractControllerExecution::Ptr CostmapNavigationServer::newC
       findWithDefault(controller_name_to_costmap_ptr_, plugin_name, local_costmap_ptr_);
   return boost::make_shared<mbf_costmap_nav::CostmapControllerExecution>(
       plugin_name, boost::static_pointer_cast<mbf_costmap_core::CostmapController>(plugin_ptr), robot_info_, vel_pub_,
-      goal_pub_, costmap_ptr, last_config_);
+      costmap_ptr, last_config_);
 }
 
 mbf_abstract_nav::AbstractRecoveryExecution::Ptr CostmapNavigationServer::newRecoveryExecution(
