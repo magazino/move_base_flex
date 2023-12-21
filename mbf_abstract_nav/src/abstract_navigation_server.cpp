@@ -363,9 +363,9 @@ void AbstractNavigationServer::reconfigure(
     // if someone sets restore defaults on the parameter server, prevent looping
     config.restore_defaults = false;
   }
-  planner_action_.reconfigureAll(config, level);
-  controller_action_.reconfigureAll(config, level);
-  recovery_action_.reconfigureAll(config, level);
+  planner_action_.reconfigure(config, level);
+  controller_action_.reconfigure(config, level);
+  recovery_action_.reconfigure(config, level);
   move_base_action_.reconfigure(config, level);
 
   last_config_ = config;
