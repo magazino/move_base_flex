@@ -121,6 +121,8 @@ class MoveBaseAction
     move_base_result.final_pose = robot_pose_;
   }
 
+  mbf_msgs::MoveBaseResult move_base_result_;
+
   mbf_msgs::ExePathGoal exe_path_goal_;
   mbf_msgs::GetPathGoal get_path_goal_;
   mbf_msgs::RecoveryGoal recovery_goal_;
