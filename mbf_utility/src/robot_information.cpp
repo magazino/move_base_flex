@@ -61,7 +61,7 @@ bool RobotInformation::getRobotPose(geometry_msgs::PoseStamped &robot_pose) cons
   if (!tf_success)
   {
     ROS_ERROR_STREAM("Can not get the robot pose in the global frame. - robot frame: \""
-                         << robot_frame_ << "\"   global frame: \"" << global_frame_);
+                         << robot_frame_ << "\"   global frame: \"" << global_frame_ << "\"");
     return false;
   }
   return true;
