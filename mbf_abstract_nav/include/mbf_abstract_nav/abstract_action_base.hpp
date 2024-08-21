@@ -143,7 +143,7 @@ public:
         // if there is already a plugin running on the same slot, cancel it
         slot_it->second.execution->cancel();
 
-        // TODO + WARNING: this will block the main thread for an arbitrary time during which we won't execute callbacks
+        // WARNING: this will block the main thread for an arbitrary time during which we won't execute callbacks
         if (slot_it->second.thread_ptr->joinable()) {
           slot_it->second.thread_ptr->join();
         }
