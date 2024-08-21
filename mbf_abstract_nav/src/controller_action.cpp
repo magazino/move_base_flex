@@ -81,9 +81,10 @@ void ControllerAction::start(
   if(slot_it != concurrency_slots_.end() && slot_it->second.in_use)
   {
     boost::lock_guard<boost::mutex> goal_guard(goal_mtx_);
+    const auto slot_status = slot_it->second.goal_handle.getGoalStatus().status;
     if ((slot_it->second.execution->getName() == goal_handle.getGoal()->controller ||
          goal_handle.getGoal()->controller.empty()) &&
-        slot_it->second.goal_handle.getGoalStatus().status == actionlib_msgs::GoalStatus::ACTIVE)
+        (slot_status == actionlib_msgs::GoalStatus::ACTIVE || slot_status == actionlib_msgs::GoalStatus::PREEMPTING))
     {
       ROS_DEBUG_STREAM_NAMED(name_, "Updating running controller goal of slot " << static_cast<int>(slot));
       update_plan = true;
